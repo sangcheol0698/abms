@@ -1,8 +1,12 @@
+import net.ltgt.gradle.errorprone.errorprone
+import net.ltgt.gradle.errorprone.CheckSeverity
+
 plugins {
     java
     id("org.springframework.boot") version "3.5.4"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
+    id("net.ltgt.errorprone") version "4.0.1"
 }
 
 group = "kr.co.abacus"
@@ -38,9 +42,30 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
+    compileOnly("org.jspecify:jspecify:1.0.0")
+    errorprone("com.google.errorprone:error_prone_core:2.28.0")
+    errorprone("com.uber.nullaway:nullaway:0.12.3")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.errorprone {
+        disableWarningsInGeneratedCode.set(true)
+        isEnabled.set(true)
+        check("NullAway", CheckSeverity.ERROR)
+        option("NullAway:OnlyNullMarked", "true")
+        option("NullAway:UseJSpecify", "true")
+        option("NullAway:ExcludedFieldAnnotations", "jakarta.persistence.*")
+    }
+
+    if (name.contains("test", ignoreCase = true)) {
+        options.errorprone {
+            disable("NullAway")
+        }
+    }
 }
 
 tasks.withType<Test> {
