@@ -1,37 +1,78 @@
 package kr.co.abacus.abms.domain.employee;
 
+import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EmployeeTest {
 
+    Employee employee;
+
+    @BeforeEach
+    void init() {
+        employee = createEmployee();
+    }
+
     @Test
     void create() {
-        EmployeeCreateRequest request = new EmployeeCreateRequest(
-            "testUser@email.com",
-            "홍길동",
-            LocalDate.of(2025, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeStatus.ACTIVE,
-            EmployeeGrade.JUNIOR
-        );
-
-        Employee employee = Employee.create(request);
-
         assertThat(employee.getEmail().address()).isEqualTo("testUser@email.com");
         assertThat(employee.getName()).isEqualTo("홍길동");
         assertThat(employee.getJoinDate()).isEqualTo(LocalDate.of(2025, 1, 1));
         assertThat(employee.getBirthDate()).isEqualTo(LocalDate.of(1990, 1, 1));
         assertThat(employee.getPosition()).isEqualTo(EmployeePosition.MANAGER);
         assertThat(employee.getType()).isEqualTo(EmployeeType.FULL_TIME);
+        assertThat(employee.getGrade()).isEqualTo(EmployeeGrade.SENIOR);
+        assertThat(employee.getMemo()).isEqualTo("This is a memo for the employee.");
+
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+    }
+
+    @Test
+    void resign() {
+        employee.resign(LocalDate.of(2025, 12, 31));
+
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.RESIGNED);
+        assertThat(employee.getResignationDate()).isEqualTo(LocalDate.of(2025, 12, 31));
+    }
+
+    @Test
+    void resignAlreadyResigned() {
+        employee.resign(LocalDate.of(2025, 12, 31));
+
+        assertThatThrownBy(() -> employee.resign(LocalDate.of(2026, 1, 1)))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("이미 퇴사한 직원입니다.");
+    }
+
+    @Test
+    void update() {
+        EmployeeUpdateRequest updateRequest = createEmployeeUpdateRequest();
+
+        employee.updateInfo(updateRequest);
+
+        assertThat(employee.getEmail().address()).isEqualTo("testUser@email.com");
+        assertThat(employee.getName()).isEqualTo("김철수");
+        assertThat(employee.getJoinDate()).isEqualTo(LocalDate.of(2025, 1, 1));
+        assertThat(employee.getBirthDate()).isEqualTo(LocalDate.of(1990, 1, 1));
+        assertThat(employee.getPosition()).isEqualTo(EmployeePosition.DIRECTOR);
+        assertThat(employee.getType()).isEqualTo(EmployeeType.PART_TIME);
+        assertThat(employee.getGrade()).isEqualTo(EmployeeGrade.JUNIOR);
+        assertThat(employee.getMemo()).isEqualTo("Updated memo for the employee.");
+    }
+
+    @Test
+    void updateResignedEmployee() {
+        employee.resign(LocalDate.of(2025, 12, 31));
+
+        EmployeeUpdateRequest updateRequest = createEmployeeUpdateRequest();
+
+        assertThatThrownBy(() -> employee.updateInfo(updateRequest))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("퇴사한 직원은 정보를 수정할 수 없습니다.");
     }
 
 }
