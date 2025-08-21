@@ -1,9 +1,8 @@
-package kr.co.abacus.abms.domain.employee;
+package kr.co.abacus.abms.domain.shared;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class EmailTest {

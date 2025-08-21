@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.domain.share;
+package kr.co.abacus.abms.domain.shared;
 
 import java.util.regex.Pattern;
 
@@ -6,7 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
-public record Email(@Column(name = "email_address", nullable = false) String address) {
+public record Email(String address) {
 
     public static final Pattern EMAIL_PATTERN
         = Pattern.compile(

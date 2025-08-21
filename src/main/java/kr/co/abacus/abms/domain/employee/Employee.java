@@ -3,8 +3,8 @@ package kr.co.abacus.abms.domain.employee;
 import static java.util.Objects.*;
 
 import java.time.LocalDate;
-import java.util.Objects;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -17,6 +17,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 
 import kr.co.abacus.abms.domain.AbstractEntity;
+import kr.co.abacus.abms.domain.shared.Email;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,6 +36,7 @@ public class Employee extends AbstractEntity {
 
     @Embedded
     @NaturalId
+    @AttributeOverride(name = "email", column = @Column(name = "email_address", nullable = false))
     private Email email;
 
     @Column(name = "join_date", nullable = false)
