@@ -74,6 +74,7 @@ public class Employee extends AbstractEntity {
         employee.position = requireNonNull(request.position());
         employee.type = requireNonNull(request.type());
         employee.status = requireNonNull(request.status());
+        employee.grade = requireNonNull(request.grade());
 
         return employee;
     }

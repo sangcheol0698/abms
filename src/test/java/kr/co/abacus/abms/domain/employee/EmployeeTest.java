@@ -19,7 +19,8 @@ class EmployeeTest {
             LocalDate.of(1990, 1, 1),
             EmployeePosition.MANAGER,
             EmployeeType.FULL_TIME,
-            EmployeeStatus.ACTIVE
+            EmployeeStatus.ACTIVE,
+            EmployeeGrade.JUNIOR
         );
 
         Employee employee = Employee.create(request);
