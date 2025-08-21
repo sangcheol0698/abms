@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.domain.employee;
+package kr.co.abacus.abms.domain.share;
 
 import java.util.regex.Pattern;
 
