@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.domain.employee;
 
 import static java.util.Objects.*;
+import static org.springframework.util.Assert.*;
 
 import java.time.LocalDate;
 
@@ -36,7 +37,7 @@ public class Employee extends AbstractEntity {
 
     @Embedded
     @NaturalId
-    @AttributeOverride(name = "email", column = @Column(name = "email_address", nullable = false))
+    @AttributeOverride(name = "address", column = @Column(name = "email_address", nullable = false))
     private Email email;
 
     @Column(name = "join_date", nullable = false)
@@ -61,8 +62,11 @@ public class Employee extends AbstractEntity {
     @Column(name = "grade", nullable = false)
     private EmployeeGrade grade;
 
-    @Column(name = "leave_date")
-    private LocalDate leaveDate;
+    @Column(name = "resignation_date")
+    private LocalDate resignationDate;
+
+    @Column(name = "memo", columnDefinition = "TEXT")
+    private String memo;
 
     public static Employee create(EmployeeCreateRequest request) {
         Employee employee = new Employee();
@@ -73,10 +77,33 @@ public class Employee extends AbstractEntity {
         employee.birthDate = requireNonNull(request.birthDate());
         employee.position = requireNonNull(request.position());
         employee.type = requireNonNull(request.type());
-        employee.status = requireNonNull(request.status());
         employee.grade = requireNonNull(request.grade());
+        employee.memo = request.memo();
+
+        employee.status = EmployeeStatus.ACTIVE;
 
         return employee;
+    }
+
+    public void resign(LocalDate resignationDate) {
+        state(status != EmployeeStatus.RESIGNED, "이미 퇴사한 직원입니다.");
+
+        this.resignationDate = requireNonNull(resignationDate);
+
+        this.status = EmployeeStatus.RESIGNED;
+    }
+
+    public void updateInfo(EmployeeUpdateRequest request) {
+        state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 정보를 수정할 수 없습니다.");
+
+        this.name = requireNonNull(request.name());
+        this.email = new Email(requireNonNull(request.email()));
+        this.joinDate = requireNonNull(request.joinDate());
+        this.birthDate = requireNonNull(request.birthDate());
+        this.position = requireNonNull(request.position());
+        this.type = requireNonNull(request.type());
+        this.grade = requireNonNull(request.grade());
+        this.memo = request.memo();
     }
 
 }

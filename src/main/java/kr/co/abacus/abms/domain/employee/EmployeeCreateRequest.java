@@ -13,8 +13,8 @@ public record EmployeeCreateRequest(
     @NotNull LocalDate birthDate,
     @NotNull EmployeePosition position,
     @NotNull EmployeeType type,
-    @NotNull EmployeeStatus status,
-    @NotNull EmployeeGrade grade
+    @NotNull EmployeeGrade grade,
+    String memo
 ) {
 
 }
