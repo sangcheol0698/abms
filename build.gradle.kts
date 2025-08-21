@@ -41,6 +41,7 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
+    implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0")
 
     compileOnly("org.jspecify:jspecify:1.0.0")
     errorprone("com.google.errorprone:error_prone_core:2.28.0")
