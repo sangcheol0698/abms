@@ -100,6 +100,16 @@ class EmployeeCreatorTest {
     }
 
     @Test
+    void updateInfoFail_invalidEmail() {
+        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+
+        flushAndClear();
+
+        assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest("updateUser", null)))
+            .isInstanceOf(ConstraintViolationException.class);
+    }
+
+    @Test
     void resign() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")); // 입사일: 2025, 1, 1
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
