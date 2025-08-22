@@ -1,36 +1,72 @@
 package kr.co.abacus.abms.application;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import kr.co.abacus.abms.adapter.integration.EmployeeRepository;
 import kr.co.abacus.abms.application.provided.EmployeeCreator;
+import kr.co.abacus.abms.application.provided.EmployeeFinder;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
+import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 import kr.co.abacus.abms.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
+@Validated
 @Transactional
 @Service
 public class EmployeeModifyService implements EmployeeCreator {
 
+    private final EmployeeFinder employeeFinder;
     private final EmployeeRepository employeeRepository;
 
     @Override
-    public Employee create(EmployeeCreateRequest request) {
-        checkDuplicateEmail(request);
+    public Employee create(EmployeeCreateRequest createRequest) {
+        checkDuplicateEmail(createRequest.email());
 
-        Employee employee = Employee.create(request);
-        employeeRepository.save(employee);
+        Employee employee = Employee.create(createRequest);
 
-        return employee;
+        return employeeRepository.save(employee);
     }
 
-    private void checkDuplicateEmail(EmployeeCreateRequest request) {
-        if (employeeRepository.existsByEmail(new Email(request.email()))) {
-            throw new DuplicateEmailException("이미 존재하는 이메일입니다: " + request.email());
+    @Override
+    public Employee updateInfo(UUID id, EmployeeUpdateRequest updateRequest) {
+        checkDuplicateEmail(updateRequest.email());
+
+        Employee employee = employeeFinder.find(id);
+
+        employee.updateInfo(updateRequest);
+
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee resign(UUID id, LocalDate resignationDate) {
+        Employee employee = employeeFinder.find(id);
+
+        employee.resign(resignationDate);
+
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee takeLeave(UUID id) {
+        Employee employee = employeeFinder.find(id);
+
+        employee.takeLeave();
+
+        return employeeRepository.save(employee);
+    }
+
+    private void checkDuplicateEmail(String email) {
+        if (employeeRepository.existsByEmail(new Email(email))) {
+            throw new DuplicateEmailException("이미 존재하는 이메일입니다: " + email);
         }
     }
 
