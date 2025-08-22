@@ -77,7 +77,7 @@ class EmployeeTest {
 
         employee.updateInfo(updateRequest);
 
-        assertThat(employee.getEmail().address()).isEqualTo("testUser@email.com");
+        assertThat(employee.getEmail().address()).isEqualTo("updateUser@email.com");
         assertThat(employee.getName()).isEqualTo("김철수");
         assertThat(employee.getJoinDate()).isEqualTo(LocalDate.of(2025, 1, 1));
         assertThat(employee.getBirthDate()).isEqualTo(LocalDate.of(1990, 1, 1));
