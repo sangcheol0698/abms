@@ -49,6 +49,29 @@ class EmployeeTest {
     }
 
     @Test
+    void resignBeforeJoinDate() {
+        assertThatThrownBy(() -> employee.resign(LocalDate.of(2024, 12, 31)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("퇴사일은 입사일 이후여야 합니다.");
+    }
+
+    @Test
+    void takeLeave() {
+        employee.takeLeave();
+
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ON_LEAVE);
+    }
+
+    @Test
+    void takeLeaveFail() {
+        employee.resign(LocalDate.of(2025, 12, 31));
+
+        assertThatThrownBy(() -> employee.takeLeave())
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("활동 중인 직원만 휴가를 신청할 수 있습니다.");
+    }
+
+    @Test
     void update() {
         EmployeeUpdateRequest updateRequest = createEmployeeUpdateRequest();
 

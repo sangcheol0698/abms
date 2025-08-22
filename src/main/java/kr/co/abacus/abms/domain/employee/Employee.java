@@ -87,10 +87,17 @@ public class Employee extends AbstractEntity {
 
     public void resign(LocalDate resignationDate) {
         state(status != EmployeeStatus.RESIGNED, "이미 퇴사한 직원입니다.");
+        isTrue(resignationDate.isAfter(joinDate), "퇴사일은 입사일 이후여야 합니다.");
 
         this.resignationDate = requireNonNull(resignationDate);
 
         this.status = EmployeeStatus.RESIGNED;
+    }
+
+    public void takeLeave() {
+        state(status == EmployeeStatus.ACTIVE, "활동 중인 직원만 휴가를 신청할 수 있습니다.");
+
+        this.status = EmployeeStatus.ON_LEAVE;
     }
 
     public void updateInfo(EmployeeUpdateRequest request) {
