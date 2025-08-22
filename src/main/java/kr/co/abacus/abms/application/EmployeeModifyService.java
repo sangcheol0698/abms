@@ -37,9 +37,9 @@ public class EmployeeModifyService implements EmployeeCreator {
 
     @Override
     public Employee updateInfo(UUID id, EmployeeUpdateRequest updateRequest) {
-        checkDuplicateEmail(updateRequest.email());
-
         Employee employee = employeeFinder.find(id);
+
+        if (isEmailChanged(updateRequest, employee)) checkDuplicateEmail(updateRequest.email());
 
         employee.updateInfo(updateRequest);
 
@@ -68,6 +68,10 @@ public class EmployeeModifyService implements EmployeeCreator {
         if (employeeRepository.existsByEmail(new Email(email))) {
             throw new DuplicateEmailException("이미 존재하는 이메일입니다: " + email);
         }
+    }
+
+    private static boolean isEmailChanged(EmployeeUpdateRequest updateRequest, Employee employee) {
+        return !employee.getEmail().address().equals(updateRequest.email());
     }
 
 }
