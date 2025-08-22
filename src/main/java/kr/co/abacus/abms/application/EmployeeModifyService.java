@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import kr.co.abacus.abms.adapter.integration.EmployeeRepository;
+import kr.co.abacus.abms.application.required.EmployeeRepository;
 import kr.co.abacus.abms.application.provided.EmployeeCreator;
 import kr.co.abacus.abms.application.provided.EmployeeFinder;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
@@ -60,6 +60,15 @@ public class EmployeeModifyService implements EmployeeCreator {
         Employee employee = employeeFinder.find(id);
 
         employee.takeLeave();
+
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee activate(UUID id) {
+        Employee employee = employeeFinder.find(id);
+
+        employee.activate();
 
         return employeeRepository.save(employee);
     }

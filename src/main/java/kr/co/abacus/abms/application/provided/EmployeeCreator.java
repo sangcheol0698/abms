@@ -22,4 +22,6 @@ public interface EmployeeCreator {
 
     Employee takeLeave(UUID id);
 
+    Employee activate(UUID id);
+
 }

@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.adapter.integration.EmployeeRepository;
+import kr.co.abacus.abms.application.required.EmployeeRepository;
 import kr.co.abacus.abms.application.provided.EmployeeFinder;
 import kr.co.abacus.abms.domain.employee.Employee;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class EmployeeQueryService implements EmployeeFinder {
 
     @Override
     public Employee find(UUID id) {
-        return employeeRepository.findById(id)
+        return employeeRepository.findByIdAndDeletedFalse(id)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 직원입니다: " + id));
     }
 
