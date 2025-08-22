@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.config;
+package kr.co.abacus.abms.adapter.persistence.config;
 
 import java.util.Locale;
 
