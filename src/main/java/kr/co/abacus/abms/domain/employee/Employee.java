@@ -14,9 +14,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.NaturalIdCache;
-
 import kr.co.abacus.abms.domain.AbstractEntity;
 import kr.co.abacus.abms.domain.shared.Email;
 import lombok.AccessLevel;
@@ -25,7 +22,6 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@NaturalIdCache
 @Entity
 @Table(name = "employee", uniqueConstraints = {
     @UniqueConstraint(name = "UK_MEMBER_EMAIL_ADDRESS", columnNames = "email_address")
@@ -36,7 +32,6 @@ public class Employee extends AbstractEntity {
     private String name;
 
     @Embedded
-    @NaturalId
     @AttributeOverride(name = "address", column = @Column(name = "email_address", nullable = false))
     private Email email;
 
