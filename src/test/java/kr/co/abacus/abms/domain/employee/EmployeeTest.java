@@ -68,7 +68,7 @@ class EmployeeTest {
 
         assertThatThrownBy(() -> employee.takeLeave())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("활동 중인 직원만 휴가를 신청할 수 있습니다.");
+            .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
     }
 
     @Test

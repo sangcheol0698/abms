@@ -8,6 +8,10 @@ public class EmployeeFixture {
         return Employee.create(createEmployeeCreateRequest("testUser@email.com"));
     }
 
+    public static EmployeeCreateRequest createEmployeeCreateRequest() {
+        return createEmployeeCreateRequest("testUser@email.com");
+    }
+
     public static EmployeeCreateRequest createEmployeeCreateRequest(String email) {
         return new EmployeeCreateRequest(
             email,
