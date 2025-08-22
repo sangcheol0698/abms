@@ -36,7 +36,6 @@ class EmployeeCreatorTest {
     @Test
     void create() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
-
         flushAndClear();
 
         assertThat(employee.getId()).isNotNull();
@@ -46,6 +45,7 @@ class EmployeeCreatorTest {
     @Test
     void duplicateEmail() {
         employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")))
             .isInstanceOf(DuplicateEmailException.class)
@@ -55,15 +55,12 @@ class EmployeeCreatorTest {
     @Test
     void updateInfo() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
-
         flushAndClear();
 
         employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest());
-
         flushAndClear();
 
         Employee updatedEmployee = employeeFinder.find(employee.getId());
-
         assertThat(updatedEmployee.getEmail().address()).isEqualTo("updateUser@email.com");
         assertThat(updatedEmployee.getName()).isEqualTo("김철수");
         assertThat(updatedEmployee.getJoinDate()).isEqualTo(LocalDate.of(2025, 1, 1));
@@ -78,7 +75,6 @@ class EmployeeCreatorTest {
     void updateInfoFail_duplicateEmail() {
         Employee employee1 = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
         Employee employee2 = employeeCreator.create(createEmployeeCreateRequest("testUser2@email.com"));
-
         flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.updateInfo(employee1.getId(), createEmployeeUpdateRequest(employee1.getName(), employee2.getEmail().address())))
@@ -89,7 +85,6 @@ class EmployeeCreatorTest {
     @Test
     void updateInfoFail_invalidName() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
-
         flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest("", "updateUser@email.com")))
@@ -102,7 +97,6 @@ class EmployeeCreatorTest {
     @Test
     void updateInfoFail_invalidEmail() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
-
         flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest("updateUser", null)))
@@ -112,16 +106,13 @@ class EmployeeCreatorTest {
     @Test
     void resign() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")); // 입사일: 2025, 1, 1
+        flushAndClear();
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
 
-        flushAndClear();
-
         employeeCreator.resign(employee.getId(), LocalDate.of(2025, 12, 31));
-
         flushAndClear();
 
         Employee resignedEmployee = employeeFinder.find(employee.getId());
-
         assertThat(resignedEmployee.getStatus()).isEqualTo(EmployeeStatus.RESIGNED);
         assertThat(resignedEmployee.getResignationDate()).isEqualTo(LocalDate.of(2025, 12, 31));
     }
@@ -129,8 +120,8 @@ class EmployeeCreatorTest {
     @Test
     void resignFail_alreadyResigned() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")); // 입사일: 2025, 1, 1
-        employeeCreator.resign(employee.getId(), LocalDate.of(2025, 12, 31));
 
+        employeeCreator.resign(employee.getId(), LocalDate.of(2025, 12, 31));
         flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.resign(employee.getId(), LocalDate.of(2026, 1, 1)))
@@ -141,7 +132,6 @@ class EmployeeCreatorTest {
     @Test
     void resignFail_beforeJoinDate() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")); // 입사일: 2025, 1, 1
-
         flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.resign(employee.getId(), LocalDate.of(2024, 12, 31)))
@@ -152,16 +142,13 @@ class EmployeeCreatorTest {
     @Test
     void takeLeave() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        flushAndClear();
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
 
-        flushAndClear();
-
         employeeCreator.takeLeave(employee.getId());
-
         flushAndClear();
 
         Employee onLeaveEmployee = employeeFinder.find(employee.getId());
-
         assertThat(onLeaveEmployee.getStatus()).isEqualTo(EmployeeStatus.ON_LEAVE);
     }
 
@@ -169,12 +156,25 @@ class EmployeeCreatorTest {
     void takeLeaveFail_notActive() {
         Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
         employeeCreator.resign(employee.getId(), LocalDate.of(2025, 12, 31));
-
         flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.takeLeave(employee.getId()))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("활동 중인 직원만 휴가를 신청할 수 있습니다.");
+            .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
+    }
+
+    @Test
+    void activate() {
+        Employee employee = employeeCreator.create(createEmployeeCreateRequest());
+        employeeCreator.resign(employee.getId(), LocalDate.of(2025, 12, 31)); // 퇴사 처리
+        flushAndClear();
+
+        employeeCreator.activate(employee.getId());
+        flushAndClear();
+
+        Employee activatedEmployee = employeeFinder.find(employee.getId());
+        assertThat(activatedEmployee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+        assertThat(activatedEmployee.getResignationDate()).isNull();
     }
 
     private void flushAndClear() {
