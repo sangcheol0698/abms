@@ -38,8 +38,10 @@ public abstract class BaseEntity {
     @Column(nullable = false)
     private Boolean deleted = false;
 
+    @Nullable
     private LocalDateTime deletedAt;
 
+    @Nullable
     private String deletedBy;
 
     public void softDelete(String deletedBy) {

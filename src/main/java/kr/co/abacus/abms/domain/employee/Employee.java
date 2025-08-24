@@ -98,6 +98,13 @@ public class Employee extends AbstractEntity {
         this.status = EmployeeStatus.ON_LEAVE;
     }
 
+    public void activate() {
+        state(status != EmployeeStatus.ACTIVE, "이미 재직 중인 직원입니다.");
+
+        this.status = EmployeeStatus.ACTIVE;
+        this.resignationDate = null;
+    }
+
     public void updateInfo(EmployeeUpdateRequest request) {
         state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 정보를 수정할 수 없습니다.");
 
@@ -111,11 +118,12 @@ public class Employee extends AbstractEntity {
         this.memo = request.memo();
     }
 
-    public void activate() {
-        state(status != EmployeeStatus.ACTIVE, "이미 재직 중인 직원입니다.");
+    @Override
+    public void softDelete(String deletedBy) {
+        state(!isDeleted(), "이미 삭제된 직원입니다.");
 
-        this.status = EmployeeStatus.ACTIVE;
-        this.resignationDate = null;
+        super.softDelete(deletedBy);
+        this.email = new Email("deleted." + System.currentTimeMillis() + "." + email.address());
     }
 
 }

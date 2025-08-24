@@ -98,4 +98,39 @@ class EmployeeTest {
             .hasMessage("퇴사한 직원은 정보를 수정할 수 없습니다.");
     }
 
+    @Test
+    void activate() {
+        employee.takeLeave();
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ON_LEAVE);
+
+        employee.activate();
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+    }
+
+    @Test
+    void activateAlreadyActive() {
+        assertThatThrownBy(() -> employee.activate())
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("이미 재직 중인 직원입니다.");
+    }
+
+    @Test
+    void softDelete() {
+        employee.softDelete("adminUser");
+
+        assertThat(employee.isDeleted()).isTrue();
+        assertThat(employee.getDeletedBy()).isEqualTo("adminUser");
+        assertThat(employee.getEmail().address()).startsWith("deleted.");
+        assertThat(employee.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void softDeleteFail() {
+        employee.softDelete("adminUser");
+
+        assertThatThrownBy(() -> employee.softDelete("anotherUser"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("이미 삭제된 직원입니다.");
+    }
+
 }
