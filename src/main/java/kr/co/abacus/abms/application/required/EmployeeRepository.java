@@ -14,6 +14,8 @@ public interface EmployeeRepository extends Repository<Employee, UUID> {
 
     boolean existsByEmail(Email email);
 
+    Optional<Employee> findById(UUID id);
+
     Optional<Employee> findByIdAndDeletedFalse(UUID id);
 
 }

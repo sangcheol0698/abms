@@ -73,6 +73,15 @@ public class EmployeeModifyService implements EmployeeCreator {
         return employeeRepository.save(employee);
     }
 
+    @Override
+    public Employee delete(UUID id, String deleteBy) {
+        Employee employee = employeeFinder.find(id);
+
+        employee.softDelete(deleteBy);
+
+        return employeeRepository.save(employee);
+    }
+
     private void checkDuplicateEmail(String email) {
         if (employeeRepository.existsByEmail(new Email(email))) {
             throw new DuplicateEmailException("이미 존재하는 이메일입니다: " + email);

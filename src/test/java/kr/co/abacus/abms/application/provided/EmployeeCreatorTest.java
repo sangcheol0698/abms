@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.co.abacus.abms.application.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
@@ -32,6 +33,9 @@ class EmployeeCreatorTest {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     @Test
     void create() {
@@ -69,6 +73,19 @@ class EmployeeCreatorTest {
         assertThat(updatedEmployee.getType()).isEqualTo(EmployeeType.PART_TIME);
         assertThat(updatedEmployee.getGrade()).isEqualTo(EmployeeGrade.JUNIOR);
         assertThat(updatedEmployee.getMemo()).isEqualTo("Updated memo for the employee.");
+    }
+
+    @Test
+    void updateInfo_noChangeEmail() {
+        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        flushAndClear();
+
+        // 이메일이 변경되지 않은 경우, 이메일 중복 체크를 하지 않음
+        employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest(employee.getName(), employee.getEmail().address()));
+        flushAndClear();
+
+        Employee updatedEmployee = employeeFinder.find(employee.getId());
+        assertThat(updatedEmployee.getEmail().address()).isEqualTo("testUser@email.com");
     }
 
     @Test
@@ -175,6 +192,31 @@ class EmployeeCreatorTest {
         Employee activatedEmployee = employeeFinder.find(employee.getId());
         assertThat(activatedEmployee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
         assertThat(activatedEmployee.getResignationDate()).isNull();
+    }
+
+    @Test
+    void activateFail_alreadyActive() {
+        Employee employee = employeeCreator.create(createEmployeeCreateRequest());
+        flushAndClear();
+
+        assertThatThrownBy(() -> employeeCreator.activate(employee.getId()))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("이미 재직 중인 직원입니다.");
+    }
+
+    @Test
+    void delete() {
+        Employee employee = employeeCreator.create(createEmployeeCreateRequest());
+        flushAndClear();
+
+        employeeCreator.delete(employee.getId(), "adminUser");
+        flushAndClear();
+
+        Employee deletedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(deletedEmployee.isDeleted()).isTrue();
+        assertThat(deletedEmployee.getDeletedBy()).isEqualTo("adminUser");
+        assertThat(deletedEmployee.getEmail().address()).startsWith("deleted.");
+        assertThat(deletedEmployee.getDeletedAt()).isNotNull();
     }
 
     private void flushAndClear() {

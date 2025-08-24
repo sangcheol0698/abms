@@ -24,4 +24,6 @@ public interface EmployeeCreator {
 
     Employee activate(UUID id);
 
+    Employee delete(UUID id, String deleteBy);
+
 }
