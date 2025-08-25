@@ -1,25 +1,20 @@
 package kr.co.abacus.abms.application.provided;
 
-import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
-import static org.assertj.core.api.Assertions.*;
-
-import java.time.LocalDate;
-
 import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
-
+import kr.co.abacus.abms.application.required.EmployeeRepository;
+import kr.co.abacus.abms.domain.employee.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.application.required.EmployeeRepository;
-import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
-import kr.co.abacus.abms.domain.employee.Employee;
-import kr.co.abacus.abms.domain.employee.EmployeeGrade;
-import kr.co.abacus.abms.domain.employee.EmployeePosition;
-import kr.co.abacus.abms.domain.employee.EmployeeStatus;
-import kr.co.abacus.abms.domain.employee.EmployeeType;
+import java.time.LocalDate;
+
+import static kr.co.abacus.abms.domain.employee.EmployeeFixture.createEmployeeCreateRequest;
+import static kr.co.abacus.abms.domain.employee.EmployeeFixture.createEmployeeUpdateRequest;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Transactional
 @SpringBootTest
@@ -54,6 +49,12 @@ class EmployeeCreatorTest {
         assertThatThrownBy(() -> employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")))
             .isInstanceOf(DuplicateEmailException.class)
             .hasMessageContaining("이미 존재하는 이메일입니다");
+    }
+
+    @Test
+    void invalidName() {
+        assertThatThrownBy(() -> employeeCreator.create(createEmployeeCreateRequest("testUser@email.com", "a".repeat(11))))
+            .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test

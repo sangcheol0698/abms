@@ -5,23 +5,31 @@ import java.time.LocalDate;
 public class EmployeeFixture {
 
     public static Employee createEmployee() {
-        return Employee.create(createEmployeeCreateRequest("testUser@email.com"));
+        return Employee.create(createEmployeeCreateRequest());
+    }
+
+    public static Employee createEmployee(String email, String name) {
+        return Employee.create(createEmployeeCreateRequest(email, name));
     }
 
     public static EmployeeCreateRequest createEmployeeCreateRequest() {
-        return createEmployeeCreateRequest("testUser@email.com");
+        return createEmployeeCreateRequest("testUser@email.com", "홍길동");
     }
 
     public static EmployeeCreateRequest createEmployeeCreateRequest(String email) {
+        return createEmployeeCreateRequest(email, "홍길동");
+    }
+
+    public static EmployeeCreateRequest createEmployeeCreateRequest(String email, String name) {
         return new EmployeeCreateRequest(
-            email,
-            "홍길동",
-            LocalDate.of(2025, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            "This is a memo for the employee."
+                email,
+                name,
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                "This is a memo for the employee."
         );
     }
 
@@ -35,14 +43,14 @@ public class EmployeeFixture {
 
     public static EmployeeUpdateRequest createEmployeeUpdateRequest(String name, String email) {
         return new EmployeeUpdateRequest(
-            email,
-            name,
-            LocalDate.of(2025, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.DIRECTOR,
-            EmployeeType.PART_TIME,
-            EmployeeGrade.JUNIOR,
-            "Updated memo for the employee."
+                email,
+                name,
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.DIRECTOR,
+                EmployeeType.PART_TIME,
+                EmployeeGrade.JUNIOR,
+                "Updated memo for the employee."
         );
     }
 
