@@ -4,25 +4,14 @@ import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
-import kr.co.abacus.abms.support.IntegrationTestBase;
+import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
-@AutoConfigureMockMvc
-class EmployeeApiTest extends IntegrationTestBase {
-
-    @Autowired
-    private MockMvcTester mvcTester;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void create() throws JsonProcessingException {
