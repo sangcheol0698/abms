@@ -92,7 +92,6 @@ public class EmployeeModifyService implements EmployeeCreator {
     }
 
     private void validateDepartmentExists(UUID departmentId) {
-        // DepartmentFinder.find()가 존재하지 않으면 IllegalArgumentException을 던짐
         departmentFinder.find(departmentId);
     }
 
