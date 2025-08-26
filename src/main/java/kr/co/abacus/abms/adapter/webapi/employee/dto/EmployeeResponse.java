@@ -8,7 +8,7 @@ import kr.co.abacus.abms.domain.employee.Employee;
 public record EmployeeResponse(
     UUID departmentId,
     String departmentName,
-    String id,
+    String employeeId,
     String name,
     String email,
     String position,
