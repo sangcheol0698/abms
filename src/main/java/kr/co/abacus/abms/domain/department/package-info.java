@@ -1,0 +1,1 @@
+package kr.co.abacus.abms.domain.department;
