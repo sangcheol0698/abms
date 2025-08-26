@@ -4,6 +4,7 @@ import static java.util.Objects.*;
 import static org.springframework.util.Assert.*;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -26,9 +27,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "employee", uniqueConstraints = {
-    @UniqueConstraint(name = "UK_MEMBER_EMAIL_ADDRESS", columnNames = "email_address")
+    @UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")
 })
 public class Employee extends AbstractEntity {
+
+    @Column(name = "department_id", nullable = false)
+    private UUID departmentId;
 
     @Column(name = "name", nullable = false, length = 10)
     private String name;
@@ -44,7 +48,7 @@ public class Employee extends AbstractEntity {
     private LocalDate birthDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "position", nullable = false)
+    @Column(name = "position", nullable = false, length = 20)
     private EmployeePosition position;
 
     @Enumerated(EnumType.STRING)
@@ -70,6 +74,7 @@ public class Employee extends AbstractEntity {
     public static Employee create(EmployeeCreateRequest request) {
         Employee employee = new Employee();
 
+        employee.departmentId = requireNonNull(request.departmentId());
         employee.name = requireNonNull(request.name());
         employee.email = new Email(requireNonNull(request.email()));
         employee.joinDate = requireNonNull(request.joinDate());
@@ -108,6 +113,7 @@ public class Employee extends AbstractEntity {
     public void updateInfo(EmployeeUpdateRequest request) {
         state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 정보를 수정할 수 없습니다.");
 
+        this.departmentId = requireNonNull(request.departmentId());
         this.name = requireNonNull(request.name());
         this.email = new Email(requireNonNull(request.email()));
         this.joinDate = requireNonNull(request.joinDate());
