@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.application.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.provided.EmployeeCreator;
@@ -27,17 +28,15 @@ public class EmployeeApi {
     private final EmployeeFinder employeeFinder;
     private final DepartmentFinder departmentFinder;
 
-    @PostMapping("/employees")
-    public EmployeeResponse createEmployee(@RequestBody @Valid EmployeeCreateRequest request) {
-        Department department = departmentFinder.find(request.departmentId());
-
+    @PostMapping("/api/employees")
+    public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request) {
         Employee employee = employeeCreator.create(request);
 
-        return EmployeeResponse.of(employee, department);
+        return EmployeeCreateResponse.of(employee);
     }
 
-    @GetMapping("/employees/{id}")
-    public EmployeeResponse getEmployee(@PathVariable UUID id) {
+    @GetMapping("api/employees/{id}")
+    public EmployeeResponse find(@PathVariable UUID id) {
         Employee employee = employeeFinder.find(id);
 
         Department department = departmentFinder.find(employee.getDepartmentId());

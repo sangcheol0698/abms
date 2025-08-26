@@ -4,42 +4,27 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.UUID;
 
-import jakarta.persistence.EntityManager;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.application.required.DepartmentRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
+import kr.co.abacus.abms.domain.department.DepartmentType;
+import kr.co.abacus.abms.support.IntegrationTestBase;
 
-@Transactional
-@SpringBootTest
-class DepartmentFinderTest {
+class DepartmentFinderTest extends IntegrationTestBase {
 
     @Autowired
     private DepartmentFinder departmentFinder;
 
-    @Autowired
-    private EntityManager entityManager;
-
-    @Autowired
-    private DepartmentRepository departmentRepository;
-
     @Test
     void find() {
-        Department savedDepartment = DepartmentFixture.createRootDepartment();
-        departmentRepository.save(savedDepartment);
-        entityManager.flush();
-        entityManager.clear();
-
-        Department foundDepartment = departmentFinder.find(savedDepartment.getId());
-        assertThat(foundDepartment.getId()).isEqualTo(savedDepartment.getId());
-        assertThat(foundDepartment.getName()).isEqualTo(savedDepartment.getName());
-        assertThat(foundDepartment.getCode()).isEqualTo(savedDepartment.getCode());
-        assertThat(foundDepartment.getType()).isEqualTo(savedDepartment.getType());
+        // 베이스 클래스에서 이미 testCompany가 생성되어 있음
+        Department foundDepartment = departmentFinder.find(getDefaultDepartmentId());
+        
+        assertThat(foundDepartment.getId()).isEqualTo(getDefaultDepartmentId());
+        assertThat(foundDepartment.getName()).isEqualTo("테스트회사");
+        assertThat(foundDepartment.getCode()).isEqualTo("TEST_COMPANY");
     }
 
     @Test
@@ -50,15 +35,17 @@ class DepartmentFinderTest {
 
     @Test
     void findDeleted() {
-        Department savedDepartment = DepartmentFixture.createRootDepartment();
-        departmentRepository.save(savedDepartment);
-        entityManager.flush();
+        // 새로운 부서를 만들어서 삭제 테스트 - 고유한 코드 사용
+        Department newDepartment = Department.createRoot(
+            DepartmentFixture.createDepartmentCreateRequest("삭제테스트회사", "DELETE_TEST_COMPANY", DepartmentType.COMPANY)
+        );
+        departmentRepository.save(newDepartment);
+        flush();
 
-        savedDepartment.softDelete("testUser");
-        entityManager.flush();
-        entityManager.clear();
+        newDepartment.softDelete("testUser");
+        flushAndClear();
 
-        assertThatThrownBy(() -> departmentFinder.find(savedDepartment.getId()))
+        assertThatThrownBy(() -> departmentFinder.find(newDepartment.getId()))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

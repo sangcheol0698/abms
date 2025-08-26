@@ -1,22 +1,17 @@
 package kr.co.abacus.abms.application.provided;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.UUID;
 
-import jakarta.persistence.EntityManager;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeFixture;
+import kr.co.abacus.abms.support.IntegrationTestBase;
 
-@Transactional
-@SpringBootTest
-class EmployeeFinderTest {
+class EmployeeFinderTest extends IntegrationTestBase {
 
     @Autowired
     private EmployeeFinder employeeFinder;
@@ -24,35 +19,32 @@ class EmployeeFinderTest {
     @Autowired
     private EmployeeCreator employeeCreator;
 
-    @Autowired
-    private EntityManager entityManager;
-
     @Test
     void find() {
-        Employee savedEmployee = employeeCreator.create(EmployeeFixture.createEmployeeCreateRequest());
-        entityManager.flush();
-        entityManager.clear();
+        Employee savedEmployee = employeeCreator.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
+        flushAndClear();
 
         Employee foundEmployee = employeeFinder.find(savedEmployee.getId());
-        assertEquals(savedEmployee, foundEmployee);
+        assertThat(foundEmployee).isEqualTo(savedEmployee);
     }
 
     @Test
     void findNotFound() {
-        assertThrows(IllegalArgumentException.class, () -> employeeFinder.find(UUID.randomUUID()));
+        assertThatThrownBy(() -> employeeFinder.find(UUID.randomUUID()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void findDeleted() {
-        Employee savedEmployee = employeeCreator.create(EmployeeFixture.createEmployeeCreateRequest());
-        entityManager.flush();
+        Employee savedEmployee = employeeCreator.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
+        flush();
 
         // Soft delete the employee
         savedEmployee.softDelete("testUser");
-        entityManager.flush();
-        entityManager.clear();
+        flushAndClear();
 
-        assertThrows(IllegalArgumentException.class, () -> employeeFinder.find(savedEmployee.getId()));
+        assertThatThrownBy(() -> employeeFinder.find(savedEmployee.getId()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
 }

@@ -1,24 +1,19 @@
 package kr.co.abacus.abms.application.provided;
 
-import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
 import kr.co.abacus.abms.application.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.*;
+import kr.co.abacus.abms.support.IntegrationTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
-import static kr.co.abacus.abms.domain.employee.EmployeeFixture.createEmployeeCreateRequest;
-import static kr.co.abacus.abms.domain.employee.EmployeeFixture.createEmployeeUpdateRequest;
+import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@Transactional
-@SpringBootTest
-class EmployeeCreatorTest {
+class EmployeeCreatorTest extends IntegrationTestBase {
 
     @Autowired
     private EmployeeCreator employeeCreator;
@@ -27,45 +22,44 @@ class EmployeeCreatorTest {
     private EmployeeFinder employeeFinder;
 
     @Autowired
-    private EntityManager entityManager;
-
-    @Autowired
     private EmployeeRepository employeeRepository;
 
     @Test
     void create() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flushAndClear();
 
         assertThat(employee.getId()).isNotNull();
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+        assertThat(employee.getDepartmentId()).isEqualTo(getDefaultDepartmentId());
     }
 
     @Test
     void duplicateEmail() {
-        employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")))
+        assertThatThrownBy(() -> employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com")))
             .isInstanceOf(DuplicateEmailException.class)
             .hasMessageContaining("이미 존재하는 이메일입니다");
     }
 
     @Test
     void invalidName() {
-        assertThatThrownBy(() -> employeeCreator.create(createEmployeeCreateRequest("testUser@email.com", "a".repeat(11))))
+        assertThatThrownBy(() -> employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com", "a".repeat(11))))
             .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test
     void updateInfo() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flushAndClear();
 
-        employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest());
+        employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(getTestDivisionId()));
         flushAndClear();
 
         Employee updatedEmployee = employeeFinder.find(employee.getId());
+        assertThat(updatedEmployee.getDepartmentId()).isEqualTo(getTestDivisionId());
         assertThat(updatedEmployee.getEmail().address()).isEqualTo("updateUser@email.com");
         assertThat(updatedEmployee.getName()).isEqualTo("김철수");
         assertThat(updatedEmployee.getJoinDate()).isEqualTo(LocalDate.of(2025, 1, 1));
@@ -78,11 +72,11 @@ class EmployeeCreatorTest {
 
     @Test
     void updateInfo_noChangeEmail() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flushAndClear();
 
         // 이메일이 변경되지 않은 경우, 이메일 중복 체크를 하지 않음
-        employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest(employee.getName(), employee.getEmail().address()));
+        employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(employee.getDepartmentId(), employee.getName(), employee.getEmail().address()));
         flushAndClear();
 
         Employee updatedEmployee = employeeFinder.find(employee.getId());
@@ -91,39 +85,39 @@ class EmployeeCreatorTest {
 
     @Test
     void updateInfoFail_duplicateEmail() {
-        Employee employee1 = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
-        Employee employee2 = employeeCreator.create(createEmployeeCreateRequest("testUser2@email.com"));
+        Employee employee1 = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
+        Employee employee2 = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser2@email.com"));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeCreator.updateInfo(employee1.getId(), createEmployeeUpdateRequest(employee1.getName(), employee2.getEmail().address())))
+        assertThatThrownBy(() -> employeeCreator.updateInfo(employee1.getId(), createEmployeeUpdateRequestWithDepartment(employee1.getDepartmentId(), employee1.getName(), employee2.getEmail().address())))
             .isInstanceOf(DuplicateEmailException.class)
             .hasMessageContaining("이미 존재하는 이메일입니다");
     }
 
     @Test
     void updateInfoFail_invalidName() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest("", "updateUser@email.com")))
+        assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(employee.getDepartmentId(), "", "updateUser@email.com")))
             .isInstanceOf(ConstraintViolationException.class);
 
-        assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest("a".repeat(11), "updateUser@email.com")))
+        assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(employee.getDepartmentId(), "a".repeat(11), "updateUser@email.com")))
             .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test
     void updateInfoFail_invalidEmail() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequest("updateUser", null)))
+        assertThatThrownBy(() -> employeeCreator.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(employee.getDepartmentId(), "updateUser", null)))
             .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test
     void resign() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")); // 입사일: 2025, 1, 1
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com")); // 입사일: 2025, 1, 1
         flushAndClear();
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
 
@@ -137,7 +131,7 @@ class EmployeeCreatorTest {
 
     @Test
     void resignFail_alreadyResigned() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")); // 입사일: 2025, 1, 1
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com")); // 입사일: 2025, 1, 1
 
         employeeCreator.resign(employee.getId(), LocalDate.of(2025, 12, 31));
         flushAndClear();
@@ -149,7 +143,7 @@ class EmployeeCreatorTest {
 
     @Test
     void resignFail_beforeJoinDate() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com")); // 입사일: 2025, 1, 1
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com")); // 입사일: 2025, 1, 1
         flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.resign(employee.getId(), LocalDate.of(2024, 12, 31)))
@@ -159,7 +153,7 @@ class EmployeeCreatorTest {
 
     @Test
     void takeLeave() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flushAndClear();
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
 
@@ -172,7 +166,7 @@ class EmployeeCreatorTest {
 
     @Test
     void takeLeaveFail_notActive() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest("testUser@email.com"));
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         employeeCreator.resign(employee.getId(), LocalDate.of(2025, 12, 31));
         flushAndClear();
 
@@ -183,7 +177,7 @@ class EmployeeCreatorTest {
 
     @Test
     void activate() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest());
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com", "홍길동"));
         employeeCreator.resign(employee.getId(), LocalDate.of(2025, 12, 31)); // 퇴사 처리
         flushAndClear();
 
@@ -197,7 +191,7 @@ class EmployeeCreatorTest {
 
     @Test
     void activateFail_alreadyActive() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest());
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com", "홍길동"));
         flushAndClear();
 
         assertThatThrownBy(() -> employeeCreator.activate(employee.getId()))
@@ -207,7 +201,7 @@ class EmployeeCreatorTest {
 
     @Test
     void delete() {
-        Employee employee = employeeCreator.create(createEmployeeCreateRequest());
+        Employee employee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com", "홍길동"));
         flushAndClear();
 
         employeeCreator.delete(employee.getId(), "adminUser");
@@ -220,9 +214,5 @@ class EmployeeCreatorTest {
         assertThat(deletedEmployee.getDeletedAt()).isNotNull();
     }
 
-    private void flushAndClear() {
-        entityManager.flush();
-        entityManager.clear();
-    }
 
 }

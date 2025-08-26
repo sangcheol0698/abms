@@ -13,7 +13,9 @@ public record EmployeeResponse(
     String email,
     String position,
     String status,
-    String type
+    String grade,
+    String type,
+    String memo
 ) {
 
     public static EmployeeResponse of(Employee employee, Department department) {
@@ -25,7 +27,9 @@ public record EmployeeResponse(
             employee.getEmail().address(),
             employee.getPosition().getDescription(),
             employee.getStatus().getDescription(),
-            employee.getType().getDescription()
+            employee.getGrade().getDescription(),
+            employee.getType().getDescription(),
+            employee.getMemo()
         );
     }
 

@@ -7,9 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import kr.co.abacus.abms.application.required.EmployeeRepository;
+import kr.co.abacus.abms.application.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.provided.EmployeeCreator;
 import kr.co.abacus.abms.application.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
@@ -25,9 +26,11 @@ public class EmployeeModifyService implements EmployeeCreator {
 
     private final EmployeeFinder employeeFinder;
     private final EmployeeRepository employeeRepository;
+    private final DepartmentFinder departmentFinder;
 
     @Override
     public Employee create(EmployeeCreateRequest createRequest) {
+        validateDepartmentExists(createRequest.departmentId());
         checkDuplicateEmail(createRequest.email());
 
         Employee employee = Employee.create(createRequest);
@@ -39,7 +42,13 @@ public class EmployeeModifyService implements EmployeeCreator {
     public Employee updateInfo(UUID id, EmployeeUpdateRequest updateRequest) {
         Employee employee = employeeFinder.find(id);
 
-        if (isEmailChanged(updateRequest, employee)) checkDuplicateEmail(updateRequest.email());
+        if (isDepartmentChanged(updateRequest, employee)) {
+            validateDepartmentExists(updateRequest.departmentId());
+        }
+        
+        if (isEmailChanged(updateRequest, employee)) {
+            checkDuplicateEmail(updateRequest.email());
+        }
 
         employee.updateInfo(updateRequest);
 
@@ -82,10 +91,19 @@ public class EmployeeModifyService implements EmployeeCreator {
         return employeeRepository.save(employee);
     }
 
+    private void validateDepartmentExists(UUID departmentId) {
+        // DepartmentFinder.find()가 존재하지 않으면 IllegalArgumentException을 던짐
+        departmentFinder.find(departmentId);
+    }
+
     private void checkDuplicateEmail(String email) {
         if (employeeRepository.existsByEmail(new Email(email))) {
             throw new DuplicateEmailException("이미 존재하는 이메일입니다: " + email);
         }
+    }
+
+    private static boolean isDepartmentChanged(EmployeeUpdateRequest updateRequest, Employee employee) {
+        return !employee.getDepartmentId().equals(updateRequest.departmentId());
     }
 
     private static boolean isEmailChanged(EmployeeUpdateRequest updateRequest, Employee employee) {
