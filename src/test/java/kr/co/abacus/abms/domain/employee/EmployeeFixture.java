@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.domain.employee;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class EmployeeFixture {
 
@@ -18,6 +19,7 @@ public class EmployeeFixture {
 
     public static EmployeeCreateRequest createEmployeeCreateRequest(String email, String name) {
         return new EmployeeCreateRequest(
+                UUID.randomUUID(),
                 email,
                 name,
                 LocalDate.of(2025, 1, 1),
@@ -39,6 +41,7 @@ public class EmployeeFixture {
 
     public static EmployeeUpdateRequest createEmployeeUpdateRequest(String name, String email) {
         return new EmployeeUpdateRequest(
+                UUID.randomUUID(),
                 email,
                 name,
                 LocalDate.of(2025, 1, 1),

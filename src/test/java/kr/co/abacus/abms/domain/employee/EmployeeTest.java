@@ -27,7 +27,6 @@ class EmployeeTest {
         assertThat(employee.getType()).isEqualTo(EmployeeType.FULL_TIME);
         assertThat(employee.getGrade()).isEqualTo(EmployeeGrade.SENIOR);
         assertThat(employee.getMemo()).isEqualTo("This is a memo for the employee.");
-
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
     }
 
