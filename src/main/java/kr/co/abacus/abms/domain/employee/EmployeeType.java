@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum EmployeeType {
 
     FULL_TIME("정직원"),
-    FREELANCE("프리랜서"),
+    FREELANCER("프리랜서"),
     OUTSOURCING("외주"),
     PART_TIME("반프리");
 

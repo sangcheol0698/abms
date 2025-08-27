@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public enum EmployeePosition {
 
-    STAFF("사원"),
-    SENIOR("선임"),
+    ASSOCIATE("사원"),
+    STAFF("선임"),
     LEADER("책임"),
     MANAGER("팀장"),
     SENIOR_MANAGER("수석"),
