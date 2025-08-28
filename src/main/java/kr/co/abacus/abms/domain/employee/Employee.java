@@ -124,6 +124,14 @@ public class Employee extends AbstractEntity {
         this.memo = request.memo();
     }
 
+    public void promote(EmployeePosition newPosition) {
+        state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 승진할 수 없습니다.");
+
+        isTrue(newPosition.getRank() >= this.position.getRank(), "현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
+
+        this.position = requireNonNull(newPosition);
+    }
+
     @Override
     public void softDelete(String deletedBy) {
         state(!isDeleted(), "이미 삭제된 직원입니다.");

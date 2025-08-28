@@ -114,6 +114,29 @@ class EmployeeTest {
     }
 
     @Test
+    void promote() {
+        employee.promote(EmployeePosition.DIRECTOR);
+
+        assertThat(employee.getPosition()).isEqualTo(EmployeePosition.DIRECTOR);
+    }
+
+    @Test
+    void promoteFail() {
+        assertThatThrownBy(() -> employee.promote(EmployeePosition.STAFF))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
+    }
+
+    @Test
+    void promoteResignedEmployee() {
+        employee.resign(LocalDate.of(2025, 12, 31));
+
+        assertThatThrownBy(() -> employee.promote(EmployeePosition.DIRECTOR))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("퇴사한 직원은 승진할 수 없습니다.");
+    }
+
+    @Test
     void softDelete() {
         employee.softDelete("adminUser");
 
