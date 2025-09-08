@@ -6,7 +6,7 @@ plugins {
     id("org.springframework.boot") version "3.5.5"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
-    id("net.ltgt.errorprone") version "4.0.1"
+    id("net.ltgt.errorprone") version "4.3.0"
 }
 
 group = "kr.co.abacus"
@@ -46,7 +46,7 @@ dependencies {
     implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0")
 
     compileOnly("org.jspecify:jspecify:1.0.0")
-    errorprone("com.google.errorprone:error_prone_core:2.28.0")
+    errorprone("com.google.errorprone:error_prone_core:2.41.0")
     errorprone("com.uber.nullaway:nullaway:0.12.3")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
