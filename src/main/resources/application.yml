@@ -4,7 +4,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
+  docker:
+    compose:
+      lifecycle-management: start_only
 logging:
   level:
     p6spy: debug
