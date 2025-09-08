@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.required;
+package kr.co.abacus.abms.application.department.required;
 
 import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 
 @Transactional

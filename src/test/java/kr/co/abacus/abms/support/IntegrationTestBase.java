@@ -9,14 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.application.required.DepartmentRepository;
+import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 
 /**
  * 통합 테스트를 위한 베이스 클래스
- * 
+ *
  * 공통 설정:
  * - Spring Boot 테스트 컨텍스트
  * - 트랜잭션 관리
@@ -29,7 +29,7 @@ public abstract class IntegrationTestBase {
 
     @Autowired
     protected EntityManager entityManager;
-    
+
     @Autowired
     protected DepartmentRepository departmentRepository;
 
@@ -54,7 +54,7 @@ public abstract class IntegrationTestBase {
 
         // 본부 생성 (저장된 회사를 상위 부서로 사용)
         testDivision = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트본부", "TEST_DIV", DepartmentType.DIVISION), 
+            DepartmentFixture.createDepartmentCreateRequest("테스트본부", "TEST_DIV", DepartmentType.DIVISION),
             testCompany
         );
         departmentRepository.save(testDivision);
@@ -62,7 +62,7 @@ public abstract class IntegrationTestBase {
 
         // 팀 생성 (저장된 본부를 상위 부서로 사용)
         testTeam = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM), 
+            DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM),
             testDivision
         );
         departmentRepository.save(testTeam);

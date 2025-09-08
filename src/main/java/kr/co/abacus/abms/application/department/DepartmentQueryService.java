@@ -1,14 +1,16 @@
-package kr.co.abacus.abms.application;
+package kr.co.abacus.abms.application.department;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.application.provided.DepartmentFinder;
-import kr.co.abacus.abms.application.required.DepartmentRepository;
-import kr.co.abacus.abms.domain.department.Department;
 import lombok.RequiredArgsConstructor;
+
+import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
+import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.domain.department.Department;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

@@ -22,7 +22,7 @@ class DepartmentTest {
     void createSubDepartment() {
         Department parent = createRootDepartment();
         DepartmentCreateRequest request = createSubDepartmentCreateRequest();
-        
+
         Department subDepartment = Department.create(request, parent);
 
         assertThat(subDepartment.getName()).isEqualTo("연구개발본부");
@@ -45,11 +45,11 @@ class DepartmentTest {
     void hierarchicalRelationship() {
         Department company = createRootDepartment();
         Department division = Department.create(
-            createDepartmentCreateRequest("연구개발본부", "RND", DepartmentType.DIVISION), 
+            createDepartmentCreateRequest("연구개발본부", "RND", DepartmentType.DIVISION),
             company
         );
         Department team = Department.create(
-            createDepartmentCreateRequest("플랫폼팀", "PLATFORM", DepartmentType.TEAM), 
+            createDepartmentCreateRequest("플랫폼팀", "PLATFORM", DepartmentType.TEAM),
             division
         );
 
@@ -69,17 +69,17 @@ class DepartmentTest {
     @Test
     void multipleChildDepartments() {
         Department parent = createRootDepartment();
-        
+
         Department child1 = Department.create(
-            createDepartmentCreateRequest("연구개발본부", "RND", DepartmentType.DIVISION), 
+            createDepartmentCreateRequest("연구개발본부", "RND", DepartmentType.DIVISION),
             parent
         );
         Department child2 = Department.create(
-            createDepartmentCreateRequest("경영기획본부", "PLANNING", DepartmentType.DIVISION), 
+            createDepartmentCreateRequest("경영기획본부", "PLANNING", DepartmentType.DIVISION),
             parent
         );
         Department child3 = Department.create(
-            createDepartmentCreateRequest("영업본부", "SALES", DepartmentType.DIVISION), 
+            createDepartmentCreateRequest("영업본부", "SALES", DepartmentType.DIVISION),
             parent
         );
 

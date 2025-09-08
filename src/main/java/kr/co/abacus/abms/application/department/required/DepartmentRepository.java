@@ -1,5 +1,6 @@
-package kr.co.abacus.abms.application.required;
+package kr.co.abacus.abms.application.department.required;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,5 +15,7 @@ public interface DepartmentRepository extends Repository<Department, UUID> {
     Optional<Department> findByIdAndDeletedFalse(UUID id);
 
     Optional<Department> findByCodeAndDeletedFalse(String code);
+
+    List<Department> findAll();
 
 }

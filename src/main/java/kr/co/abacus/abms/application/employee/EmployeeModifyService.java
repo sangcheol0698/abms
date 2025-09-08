@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application;
+package kr.co.abacus.abms.application.employee;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -7,16 +7,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import kr.co.abacus.abms.application.provided.DepartmentFinder;
-import kr.co.abacus.abms.application.provided.EmployeeCreator;
-import kr.co.abacus.abms.application.provided.EmployeeFinder;
-import kr.co.abacus.abms.application.required.EmployeeRepository;
+import lombok.RequiredArgsConstructor;
+
+import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
+import kr.co.abacus.abms.application.employee.provided.EmployeeCreator;
+import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 import kr.co.abacus.abms.domain.shared.Email;
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Validated
@@ -45,7 +46,7 @@ public class EmployeeModifyService implements EmployeeCreator {
         if (isDepartmentChanged(updateRequest, employee)) {
             validateDepartmentExists(updateRequest.departmentId());
         }
-        
+
         if (isEmailChanged(updateRequest, employee)) {
             checkDuplicateEmail(updateRequest.email());
         }

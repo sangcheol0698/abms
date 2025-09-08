@@ -8,7 +8,7 @@ public enum EmployeeGrade {
     JUNIOR("초급", 1),
     MID_LEVEL("중급", 2),
     SENIOR("고급", 3),
-    EXPERT("특급",  4);
+    EXPERT("특급", 4);
 
     private final String description;
     private final int level;

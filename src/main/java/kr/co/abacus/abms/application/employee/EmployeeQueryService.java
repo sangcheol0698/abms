@@ -1,14 +1,15 @@
-package kr.co.abacus.abms.application;
+package kr.co.abacus.abms.application.employee;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.application.required.EmployeeRepository;
-import kr.co.abacus.abms.application.provided.EmployeeFinder;
-import kr.co.abacus.abms.domain.employee.Employee;
 import lombok.RequiredArgsConstructor;
+
+import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.domain.employee.Employee;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

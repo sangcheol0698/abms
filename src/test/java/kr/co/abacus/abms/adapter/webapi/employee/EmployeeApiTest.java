@@ -1,27 +1,28 @@
 package kr.co.abacus.abms.adapter.webapi.employee;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
-import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
-import kr.co.abacus.abms.application.provided.EmployeeCreator;
-import kr.co.abacus.abms.application.required.EmployeeRepository;
-import kr.co.abacus.abms.domain.employee.Employee;
-import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
-import kr.co.abacus.abms.domain.employee.EmployeeStatus;
-import kr.co.abacus.abms.support.ApiIntegrationTestBase;
+import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
+import static kr.co.abacus.abms.support.AssertThatUtils.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+
+import java.io.UnsupportedEncodingException;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
-import java.io.UnsupportedEncodingException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
-import static kr.co.abacus.abms.domain.employee.EmployeeFixture.createEmployeeCreateRequestWithDepartment;
-import static kr.co.abacus.abms.support.AssertThatUtils.equalsTo;
-import static kr.co.abacus.abms.support.AssertThatUtils.notNull;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
+import kr.co.abacus.abms.application.employee.provided.EmployeeCreator;
+import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
+import kr.co.abacus.abms.domain.employee.EmployeeStatus;
+import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 class EmployeeApiTest extends ApiIntegrationTestBase {
 

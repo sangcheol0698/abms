@@ -17,4 +17,5 @@ class AbmsApplicationTests {
             mocked.verify(() -> SpringApplication.run(AbmsApplication.class, new String[0]));
         }
     }
+
 }

@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test;
 
 class AbstractEntityTest {
 
-    static class DummyEntity extends AbstractEntity {}
+    static class DummyEntity extends AbstractEntity {
+
+    }
 
     @Test
     @DisplayName("동일한 UUID를 가진 엔티티는 equals=true, hashCode도 동일")
@@ -50,4 +52,5 @@ class AbstractEntityTest {
         f.setAccessible(true);
         f.set(entity, id);
     }
+
 }

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * API 통합 테스트를 위한 베이스 클래스
- * 
+ *
  * 기본 IntegrationTestBase 기능에 추가로:
  * - MockMvc 테스트 지원
  * - JSON 직렬화/역직렬화 지원

@@ -16,7 +16,6 @@ public enum EmployeePosition {
     VICE_PRESIDENT("부사장", 8),
     PRESIDENT("사장", 9);
 
-
     private final String description;
     private final int rank;
 

@@ -38,4 +38,5 @@ public class ArchUnitLearningTest {
             .should().onlyDependOnClassesThat().resideInAnyPackage("..domain..", "java..")
             .check(classes);
     }
+
 }

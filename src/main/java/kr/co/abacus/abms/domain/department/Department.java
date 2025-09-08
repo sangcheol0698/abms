@@ -4,6 +4,7 @@ import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,10 +22,11 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.jspecify.annotations.Nullable;
 
-import kr.co.abacus.abms.domain.AbstractEntity;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import kr.co.abacus.abms.domain.AbstractEntity;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -45,6 +47,10 @@ public class Department extends AbstractEntity {
     @Column(name = "department_type", nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private DepartmentType type;
+
+    @Nullable
+    @Column(name = "leader_employee_id", length = 32)
+    private UUID leaderEmployeeId;
 
     @Nullable
     @JoinColumn(name = "department_parent_id")
@@ -73,6 +79,8 @@ public class Department extends AbstractEntity {
         department.code = requireNonNull(request.code());
         department.name = requireNonNull(request.name());
         department.type = requireNonNull(request.type());
+        department.leaderEmployeeId = request.leaderEmployeeId();
+
         department.setParent(parent);
 
         return department;

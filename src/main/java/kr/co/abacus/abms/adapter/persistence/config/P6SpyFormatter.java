@@ -75,4 +75,5 @@ public class P6SpyFormatter implements MessageFormattingStrategy {
             || lowerSql.startsWith(DROP)
             || lowerSql.startsWith(COMMENT);
     }
+
 }

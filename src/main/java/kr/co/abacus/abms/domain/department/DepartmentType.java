@@ -17,5 +17,4 @@ public enum DepartmentType {
     DepartmentType(String description) {
         this.description = description;
     }
-
 }

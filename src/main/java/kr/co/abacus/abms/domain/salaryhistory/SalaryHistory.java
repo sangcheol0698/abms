@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import kr.co.abacus.abms.domain.AbstractEntity;
 import kr.co.abacus.abms.domain.shared.Money;
 import kr.co.abacus.abms.domain.shared.Period;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

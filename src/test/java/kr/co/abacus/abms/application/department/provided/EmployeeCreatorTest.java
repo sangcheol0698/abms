@@ -1,17 +1,25 @@
-package kr.co.abacus.abms.application.provided;
+package kr.co.abacus.abms.application.department.provided;
 
-import jakarta.validation.ConstraintViolationException;
-import kr.co.abacus.abms.application.required.EmployeeRepository;
-import kr.co.abacus.abms.domain.employee.*;
-import kr.co.abacus.abms.support.IntegrationTestBase;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 
-import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import jakarta.validation.ConstraintViolationException;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import kr.co.abacus.abms.application.employee.provided.EmployeeCreator;
+import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeStatus;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.support.IntegrationTestBase;
 
 class EmployeeCreatorTest extends IntegrationTestBase {
 
@@ -213,6 +221,5 @@ class EmployeeCreatorTest extends IntegrationTestBase {
         assertThat(deletedEmployee.getEmail().address()).startsWith("deleted.");
         assertThat(deletedEmployee.getDeletedAt()).isNotNull();
     }
-
 
 }

@@ -12,4 +12,5 @@ public class P6SpyEventListener extends JdbcEventListener {
     public void onAfterGetConnection(ConnectionInformation connectionInformation, SQLException e) {
         P6SpyOptions.getActiveInstance().setLogMessageFormat(P6SpyFormatter.class.getName());
     }
+
 }

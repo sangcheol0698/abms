@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.provided;
+package kr.co.abacus.abms.application.department.provided;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -7,6 +7,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.co.abacus.abms.application.employee.provided.EmployeeCreator;
+import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeFixture;
 import kr.co.abacus.abms.support.IntegrationTestBase;

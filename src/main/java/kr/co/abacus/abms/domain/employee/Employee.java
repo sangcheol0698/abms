@@ -17,18 +17,17 @@ import jakarta.persistence.UniqueConstraint;
 
 import org.jspecify.annotations.Nullable;
 
-import kr.co.abacus.abms.domain.AbstractEntity;
-import kr.co.abacus.abms.domain.shared.Email;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import kr.co.abacus.abms.domain.AbstractEntity;
+import kr.co.abacus.abms.domain.shared.Email;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "employee", uniqueConstraints = {
-    @UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")
-})
+@Table(name = "employee", uniqueConstraints = {@UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")})
 public class Employee extends AbstractEntity {
 
     @Column(name = "department_id", nullable = false)

@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.provided;
+package kr.co.abacus.abms.application.department.provided;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -21,7 +21,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
     void find() {
         // 베이스 클래스에서 이미 testCompany가 생성되어 있음
         Department foundDepartment = departmentFinder.find(getDefaultDepartmentId());
-        
+
         assertThat(foundDepartment.getId()).isEqualTo(getDefaultDepartmentId());
         assertThat(foundDepartment.getName()).isEqualTo("테스트회사");
         assertThat(foundDepartment.getCode()).isEqualTo("TEST_COMPANY");
@@ -47,6 +47,12 @@ class DepartmentFinderTest extends IntegrationTestBase {
 
         assertThatThrownBy(() -> departmentFinder.find(newDepartment.getId()))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getOrganizationTree() {
+        // 베이스 클래스에서 이미 testCompany가 생성되어 있음
+        departmentFinder.getOrganizationTree();
     }
 
 }

@@ -17,4 +17,5 @@ public class P6SpyConfig {
     public P6SpyFormatter p6SpyCustomFormatter() {
         return new P6SpyFormatter();
     }
+
 }
