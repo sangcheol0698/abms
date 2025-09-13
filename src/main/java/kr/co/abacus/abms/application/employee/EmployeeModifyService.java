@@ -1,6 +1,6 @@
 package kr.co.abacus.abms.application.employee;
 
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.employee.provided.EmployeeCreator;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
@@ -25,7 +25,7 @@ public class EmployeeModifyService implements EmployeeCreator {
 
     private final EmployeeFinder employeeFinder;
     private final EmployeeRepository employeeRepository;
-    private final DepartmentRepository departmentRepository;
+    private final DepartmentFinder departmentFinder;
 
     @Override
     public Employee create(EmployeeCreateRequest createRequest) {
@@ -91,9 +91,7 @@ public class EmployeeModifyService implements EmployeeCreator {
     }
 
     private void validateDepartmentExists(UUID departmentId) {
-        if (!departmentRepository.existsById(departmentId)) {
-            throw new IllegalArgumentException("존재하지 않는 부서입니다: " + departmentId);
-        }
+        departmentFinder.find(departmentId);
     }
 
     private void checkDuplicateEmail(String email) {

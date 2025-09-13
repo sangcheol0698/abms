@@ -11,6 +11,4 @@ public interface DepartmentRepository extends Repository<Department, UUID> {
     Department save(Department department);
 
     Optional<Department> findByIdAndDeletedFalse(UUID id);
-
-    boolean existsById(UUID departmentId);
 }
