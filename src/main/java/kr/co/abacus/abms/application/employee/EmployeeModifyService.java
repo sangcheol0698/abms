@@ -1,7 +1,7 @@
 package kr.co.abacus.abms.application.employee;
 
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
-import kr.co.abacus.abms.application.employee.provided.EmployeeCreator;
+import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @Validated
 @Transactional
 @Service
-public class EmployeeModifyService implements EmployeeCreator {
+public class EmployeeModifyService implements EmployeeManager {
 
     private final EmployeeFinder employeeFinder;
     private final EmployeeRepository employeeRepository;

@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.co.abacus.abms.application.employee.provided.EmployeeCreator;
+import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeFixture;
@@ -19,11 +19,11 @@ class EmployeeFinderTest extends IntegrationTestBase {
     private EmployeeFinder employeeFinder;
 
     @Autowired
-    private EmployeeCreator employeeCreator;
+    private EmployeeManager employeeManager;
 
     @Test
     void find() {
-        Employee savedEmployee = employeeCreator.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
+        Employee savedEmployee = employeeManager.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flushAndClear();
 
         Employee foundEmployee = employeeFinder.find(savedEmployee.getId());
@@ -38,7 +38,7 @@ class EmployeeFinderTest extends IntegrationTestBase {
 
     @Test
     void findDeleted() {
-        Employee savedEmployee = employeeCreator.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
+        Employee savedEmployee = employeeManager.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "testUser@email.com"));
         flush();
 
         // Soft delete the employee

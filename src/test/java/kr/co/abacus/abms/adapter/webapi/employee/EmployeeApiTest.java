@@ -17,7 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
-import kr.co.abacus.abms.application.employee.provided.EmployeeCreator;
+import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
@@ -30,7 +30,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     private EmployeeRepository employeeRepository;
 
     @Autowired
-    private EmployeeCreator employeeCreator;
+    private EmployeeManager employeeManager;
 
     @Test
     void create() throws JsonProcessingException, UnsupportedEncodingException {
@@ -69,7 +69,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void create_duplicateEmail() throws JsonProcessingException {
-        employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId()));
+        employeeManager.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId()));
 
         EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId());
         String responseJson = objectMapper.writeValueAsString(request);
@@ -84,7 +84,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void find() throws UnsupportedEncodingException, JsonProcessingException {
-        Employee savedEmployee = employeeCreator.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId()));
+        Employee savedEmployee = employeeManager.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId()));
 
         MvcTestResult result = mvcTester.get().uri("/api/employees/{id}", savedEmployee.getId()).exchange();
 

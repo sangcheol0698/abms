@@ -1,18 +1,17 @@
 package kr.co.abacus.abms.application.employee.provided;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
 import jakarta.validation.Valid;
-
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
 /**
  * 직원 생성 및 수정
  */
-public interface EmployeeCreator {
+public interface EmployeeManager {
 
     Employee create(@Valid EmployeeCreateRequest request);
 
