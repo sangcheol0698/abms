@@ -1,7 +1,5 @@
-package kr.co.abacus.abms.application.department.provided;
+package kr.co.abacus.abms.application.employee.provided;
 
-import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeFixture;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;

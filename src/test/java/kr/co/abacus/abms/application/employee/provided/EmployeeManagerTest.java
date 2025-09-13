@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.department.provided;
+package kr.co.abacus.abms.application.employee.provided;
 
 import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
@@ -10,8 +10,6 @@ import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
-import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;

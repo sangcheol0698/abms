@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.department.required;
+package kr.co.abacus.abms.application.employee.required;
 
 import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
