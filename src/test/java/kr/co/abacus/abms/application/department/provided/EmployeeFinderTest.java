@@ -1,17 +1,18 @@
 package kr.co.abacus.abms.application.department.provided;
 
-import static org.assertj.core.api.Assertions.*;
-
-import java.util.UUID;
-
+import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeFixture;
+import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
+import kr.co.abacus.abms.support.IntegrationTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
-import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
-import kr.co.abacus.abms.domain.employee.Employee;
-import kr.co.abacus.abms.domain.employee.EmployeeFixture;
-import kr.co.abacus.abms.support.IntegrationTestBase;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class EmployeeFinderTest extends IntegrationTestBase {
 
@@ -33,7 +34,7 @@ class EmployeeFinderTest extends IntegrationTestBase {
     @Test
     void findNotFound() {
         assertThatThrownBy(() -> employeeFinder.find(UUID.randomUUID()))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(EmployeeNotFoundException.class);
     }
 
     @Test
@@ -46,7 +47,7 @@ class EmployeeFinderTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> employeeFinder.find(savedEmployee.getId()))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(EmployeeNotFoundException.class);
     }
 
 }

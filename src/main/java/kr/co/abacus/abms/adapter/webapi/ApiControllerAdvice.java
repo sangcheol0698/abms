@@ -1,15 +1,16 @@
 package kr.co.abacus.abms.adapter.webapi;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-
+import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
+import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
+import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @RestControllerAdvice
 public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
@@ -24,7 +25,12 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.CONFLICT, exception);
     }
 
-    private static ProblemDetail getProblemDetail(HttpStatus httpStatus, Exception exception) {
+    @ExceptionHandler({EmployeeNotFoundException.class, DepartmentNotFoundException.class})
+    public ProblemDetail handleNotFoundException(Exception exception) {
+        return getProblemDetail(HttpStatus.NOT_FOUND, exception);
+    }
+
+    private ProblemDetail getProblemDetail(HttpStatus httpStatus, Exception exception) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(httpStatus, exception.getMessage());
 
         problemDetail.setProperty("timestamp", LocalDateTime.now(ZoneId.systemDefault()));

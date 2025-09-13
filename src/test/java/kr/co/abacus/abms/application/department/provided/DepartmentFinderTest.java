@@ -2,6 +2,7 @@ package kr.co.abacus.abms.application.department.provided;
 
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
+import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
     @Test
     void findNotFound() {
         assertThatThrownBy(() -> departmentFinder.find(UUID.randomUUID()))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(DepartmentNotFoundException.class);
     }
 
     @Test
@@ -46,7 +47,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> departmentFinder.find(newDepartment.getId()))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(DepartmentNotFoundException.class);
     }
 
 }
