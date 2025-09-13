@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 
 @Transactional

@@ -3,6 +3,7 @@ package kr.co.abacus.abms.application.department.provided;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.support.IntegrationTestBase;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
