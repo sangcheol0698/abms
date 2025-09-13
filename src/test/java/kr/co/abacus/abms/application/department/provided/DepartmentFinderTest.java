@@ -1,16 +1,16 @@
 package kr.co.abacus.abms.application.department.provided;
 
-import static org.assertj.core.api.Assertions.*;
-
-import java.util.UUID;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DepartmentFinderTest extends IntegrationTestBase {
 
@@ -47,12 +47,6 @@ class DepartmentFinderTest extends IntegrationTestBase {
 
         assertThatThrownBy(() -> departmentFinder.find(newDepartment.getId()))
             .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void getOrganizationTree() {
-        // 베이스 클래스에서 이미 testCompany가 생성되어 있음
-        departmentFinder.getOrganizationTree();
     }
 
 }

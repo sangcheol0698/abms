@@ -40,6 +40,9 @@ dependencies {
     runtimeOnly("com.h2database:h2")
     runtimeOnly("com.mysql:mysql-connector-j")
 
+    implementation("io.github.openfeign.querydsl:querydsl-jpa:7.0")
+    annotationProcessor("io.github.openfeign.querydsl:querydsl-apt:7.0:jakarta")
+
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
@@ -66,7 +69,10 @@ tasks.withType<JavaCompile>().configureEach {
     options.errorprone {
         disableWarningsInGeneratedCode.set(true)
         isEnabled.set(true)
+        excludedPaths.set(".*/build/generated/.*")
+
         check("NullAway", CheckSeverity.ERROR)
+
         option("NullAway:OnlyNullMarked", "true")
         option("NullAway:UseJSpecify", "true")
         option("NullAway:ExcludedFieldAnnotations", "jakarta.persistence.*")
