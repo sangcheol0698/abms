@@ -1,12 +1,11 @@
 package kr.co.abacus.abms.application.department.required;
 
+import kr.co.abacus.abms.domain.department.Department;
+import org.springframework.data.repository.Repository;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import org.springframework.data.repository.Repository;
-
-import kr.co.abacus.abms.domain.department.Department;
 
 public interface DepartmentRepository extends Repository<Department, UUID> {
 
@@ -18,4 +17,5 @@ public interface DepartmentRepository extends Repository<Department, UUID> {
 
     List<Department> findAll();
 
+    boolean existsById(UUID departmentId);
 }

@@ -1,12 +1,11 @@
 package kr.co.abacus.abms.application.employee.required;
 
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.repository.Repository;
-
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.shared.Email;
+import org.springframework.data.repository.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
 
 public interface EmployeeRepository extends Repository<Employee, UUID> {
 
@@ -18,4 +17,5 @@ public interface EmployeeRepository extends Repository<Employee, UUID> {
 
     Optional<Employee> findByIdAndDeletedFalse(UUID id);
 
+    boolean existsByEmailAndIdNot(Email email, UUID employeeId);
 }
