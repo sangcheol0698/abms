@@ -3,19 +3,18 @@ package kr.co.abacus.abms.application.employee.required;
 import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.List;
+
 import jakarta.persistence.EntityManager;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.support.IntegrationTestBase;
 
-@Transactional
-@SpringBootTest
-class EmployeeRepositoryTest {
+class EmployeeRepositoryTest extends IntegrationTestBase {
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -91,6 +90,20 @@ class EmployeeRepositoryTest {
         // 소프트 삭제된 직원은 이메일 중복체크 대상이 아님
         boolean existsAfterDelete = employeeRepository.existsByEmail(savedEmployee.getEmail());
         assertThat(existsAfterDelete).isFalse();
+    }
+
+    @Test
+    @DisplayName("id list로 직원 조회")
+    void findAllByIdInAndDeletedFalse() {
+        Employee employee1 = createEmployee("testUser1@email.com");
+        Employee employee2 = createEmployee("testUser2@email.com");
+        Employee savedEmployee1 = employeeRepository.save(employee1);
+        Employee savedEmployee2 = employeeRepository.save(employee2);
+        entityManager.flush();
+        entityManager.clear();
+
+        List<Employee> employees = employeeRepository.findAllByIdInAndDeletedFalse(List.of(savedEmployee1.getId(), savedEmployee2.getId()));
+        assertThat(employees).containsExactlyInAnyOrder(savedEmployee1, savedEmployee2);
     }
 
 }

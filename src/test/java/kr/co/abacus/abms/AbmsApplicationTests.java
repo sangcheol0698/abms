@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class AbmsApplicationTests {
+import kr.co.abacus.abms.support.IntegrationTestBase;
+
+class AbmsApplicationTests extends IntegrationTestBase {
 
     @Test
     void run() {

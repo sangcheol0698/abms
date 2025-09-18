@@ -38,7 +38,7 @@ public class DepartmentFixture {
     }
 
     public static DepartmentCreateRequest createDepartmentCreateRequest(String name, String code, DepartmentType type) {
-        return new DepartmentCreateRequest(null, code, name, type, null);
+        return new DepartmentCreateRequest(code, name, type, null);
     }
 
     public static DepartmentCreateRequest createDepartmentCreateRequest(String name, String code) {

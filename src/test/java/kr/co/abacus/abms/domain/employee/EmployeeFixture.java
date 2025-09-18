@@ -7,9 +7,12 @@ import kr.co.abacus.abms.domain.department.DepartmentFixture;
 
 public class EmployeeFixture {
 
-    // 기존 메서드들 - 도메인 테스트 호환성 유지 (랜덤 UUID 사용)
     public static Employee createEmployee() {
         return Employee.create(createEmployeeCreateRequest());
+    }
+
+    public static Employee createEmployee(String email) {
+        return Employee.create(createEmployeeCreateRequest(email));
     }
 
     public static EmployeeCreateRequest createEmployeeCreateRequest() {

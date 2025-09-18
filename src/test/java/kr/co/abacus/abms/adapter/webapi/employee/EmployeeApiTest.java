@@ -6,7 +6,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 import java.io.UnsupportedEncodingException;
+import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,8 +19,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
+import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.department.DepartmentFixture;
+import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
@@ -32,9 +38,32 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Autowired
     private EmployeeManager employeeManager;
 
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
+    private UUID companyId;
+
+    @BeforeEach
+    void setUpDepartments() {
+        Department company = DepartmentFixture.createTestCompany();
+        departmentRepository.save(company);
+        Department division = Department.create(
+            DepartmentFixture.createDepartmentCreateRequest("테스트본부", "TEST_DIV", DepartmentType.DIVISION),
+            company
+        );
+        departmentRepository.save(division);
+        Department team = Department.create(
+            DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM),
+            division
+        );
+        departmentRepository.save(team);
+        flushAndClear();
+        companyId = company.getId();
+    }
+
     @Test
     void create() throws JsonProcessingException, UnsupportedEncodingException {
-        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId());
+        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId);
         String responseJson = objectMapper.writeValueAsString(request);
 
         MvcTestResult result = mvcTester.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
@@ -58,7 +87,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void create_invalidEmail() throws JsonProcessingException {
-        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId(), "invalid-email");
+        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId, "invalid-email");
         String responseJson = objectMapper.writeValueAsString(request);
 
         assertThat(mvcTester.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
@@ -69,9 +98,9 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void create_duplicateEmail() throws JsonProcessingException {
-        employeeManager.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId()));
+        employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId));
 
-        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId());
+        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId);
         String responseJson = objectMapper.writeValueAsString(request);
 
         MvcTestResult result = mvcTester.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
@@ -84,7 +113,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void find() throws UnsupportedEncodingException, JsonProcessingException {
-        Employee savedEmployee = employeeManager.create(createEmployeeCreateRequestWithDepartment(getDefaultDepartmentId()));
+        Employee savedEmployee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId));
 
         MvcTestResult result = mvcTester.get().uri("/api/employees/{id}", savedEmployee.getId()).exchange();
 

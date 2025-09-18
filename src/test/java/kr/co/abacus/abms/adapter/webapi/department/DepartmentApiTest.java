@@ -1,24 +1,22 @@
-package kr.co.abacus.abms.application.department.provided;
+package kr.co.abacus.abms.adapter.webapi.department;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
-import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.department.DepartmentType;
-import kr.co.abacus.abms.support.IntegrationTestBase;
+import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
-class DepartmentFinderTest extends IntegrationTestBase {
-
-    @Autowired
-    private DepartmentFinder departmentFinder;
+class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Autowired
     private DepartmentRepository departmentRepository;
@@ -34,28 +32,26 @@ class DepartmentFinderTest extends IntegrationTestBase {
             company
         );
         departmentRepository.save(division);
-        Department team = Department.create(
+        Department team1 = Department.create(
             DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM),
             division
         );
-        departmentRepository.save(team);
+        Department team2 = Department.create(
+            DepartmentFixture.createDepartmentCreateRequest("테스트팀2", "TEST_TEAM2", DepartmentType.TEAM),
+            division
+        );
+        departmentRepository.save(team1);
+        departmentRepository.save(team2);
         flushAndClear();
+
         companyId = company.getId();
     }
 
     @Test
-    void find() {
-        Department foundDepartment = departmentFinder.find(companyId);
+    void getOrganizationChart() {
+        MvcTestResult result = mvcTester.get().uri("/api/departments/organization-chart").exchange();
 
-        assertThat(foundDepartment.getId()).isEqualTo(companyId);
-        assertThat(foundDepartment.getName()).isEqualTo("테스트회사");
-        assertThat(foundDepartment.getCode()).isEqualTo("TEST_COMPANY");
-    }
-
-    @Test
-    void findNotFound() {
-        assertThatThrownBy(() -> departmentFinder.find(UUID.randomUUID()))
-            .isInstanceOf(DepartmentNotFoundException.class);
+        assertThat(result).apply(print()).hasStatusOk();
     }
 
 }
