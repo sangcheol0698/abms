@@ -38,3 +38,6 @@ out/
 
 # Claude-specific files
 .claude/
+
+# Logs
+spy.log
