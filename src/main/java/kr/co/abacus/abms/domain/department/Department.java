@@ -97,4 +97,8 @@ public class Department extends AbstractEntity {
         }
     }
 
+    public boolean isRoot() {
+        return parent == null;
+    }
+
 }
