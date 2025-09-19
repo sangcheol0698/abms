@@ -37,19 +37,15 @@ public class DepartmentQueryService implements DepartmentFinder {
 
     @Override
     public OrganizationChartModel getOrganizationChart() {
-        List<Department> allDepartments = departmentRepository.findAllByDeletedFalse();
+        List<Department> allDepartments = departmentRepository.findAllByDeletedFalseWithChildren();
 
         Map<UUID, Employee> leadersMap = getLeadersMap(allDepartments);
 
-        List<Department> roots = allDepartments.stream()
+        Department root = allDepartments.stream()
             .filter(Department::isRoot)
-            .toList();
+            .findFirst()
+            .orElseThrow(() -> new DepartmentNotFoundException("최상위 부서가 존재하지 않습니다"));
 
-        if (roots.size() != 1) {
-            throw new IllegalStateException("최상위 부서(root)가 하나가 아닙니다. 데이터 확인이 필요합니다.");
-        }
-
-        Department root = roots.getFirst();
         return buildOrganizationChartModel(root, leadersMap);
     }
 

@@ -15,7 +15,7 @@ public interface DepartmentRepository extends Repository<Department, UUID> {
 
     Optional<Department> findByIdAndDeletedFalse(UUID id);
 
-    @Query("SELECT DISTINCT d FROM Department d JOIN FETCH d.children WHERE d.deleted = false")
-    List<Department> findAllByDeletedFalse();
+    @Query("SELECT DISTINCT d FROM Department d LEFT JOIN FETCH d.children WHERE d.deleted = false")
+    List<Department> findAllByDeletedFalseWithChildren();
 
 }

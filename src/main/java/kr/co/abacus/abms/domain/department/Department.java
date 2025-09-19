@@ -25,9 +25,11 @@ import org.jspecify.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import kr.co.abacus.abms.domain.AbstractEntity;
 
+@ToString(callSuper = true)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @NaturalIdCache
@@ -55,6 +57,7 @@ public class Department extends AbstractEntity {
     @Nullable
     @JoinColumn(name = "department_parent_id")
     @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     private Department parent;
 
     @OneToMany(mappedBy = "parent", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
@@ -66,6 +69,7 @@ public class Department extends AbstractEntity {
         department.code = requireNonNull(request.code());
         department.name = requireNonNull(request.name());
         department.type = requireNonNull(request.type());
+        department.leaderEmployeeId = request.leaderEmployeeId();
         department.parent = null;
 
         return department;

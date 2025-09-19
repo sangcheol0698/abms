@@ -36,12 +36,12 @@ class DepartmentRepositoryTest extends IntegrationTestBase {
     }
 
     @Test
-    void findAllByDeletedFalse() {
-        List<Department> departmentsFindAll = departmentRepository.findAllByDeletedFalse();
+    void findAllByDeletedFalseWithChildren() {
+        List<Department> departmentsFindAll = departmentRepository.findAllByDeletedFalseWithChildren();
         Department department = departmentsFindAll.getFirst();
         department.softDelete("testAdmin");
 
-        List<Department> departmentsByDeletedFalse = departmentRepository.findAllByDeletedFalse();
+        List<Department> departmentsByDeletedFalse = departmentRepository.findAllByDeletedFalseWithChildren();
         assertThat(departmentsByDeletedFalse).hasSize(departmentsFindAll.size() - 1);
     }
 
