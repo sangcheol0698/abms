@@ -23,4 +23,6 @@ public interface EmployeeRepository extends Repository<Employee, UUID> {
 
     List<Employee> findAllByIdInAndDeletedFalse(List<UUID> leaderIds);
 
+    List<Employee> findAllByDepartmentIdInAndDeletedFalse(List<UUID> departmentIds);
+
 }

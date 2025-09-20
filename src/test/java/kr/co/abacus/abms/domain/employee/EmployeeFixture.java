@@ -16,16 +16,16 @@ public class EmployeeFixture {
     }
 
     public static EmployeeCreateRequest createEmployeeCreateRequest() {
-        return createEmployeeCreateRequest("testUser@email.com", "홍길동");
+        return createEmployeeCreateRequest("testUser@email.com", "홍길동", UUID.randomUUID());
     }
 
     public static EmployeeCreateRequest createEmployeeCreateRequest(String email) {
-        return createEmployeeCreateRequest(email, "홍길동");
+        return createEmployeeCreateRequest(email, "홍길동", UUID.randomUUID());
     }
 
-    public static EmployeeCreateRequest createEmployeeCreateRequest(String email, String name) {
+    public static EmployeeCreateRequest createEmployeeCreateRequest(String email, String name, UUID departmentId) {
         return new EmployeeCreateRequest(
-            UUID.randomUUID(),  // 도메인 테스트에서는 랜덤 UUID 사용
+            departmentId,
             email,
             name,
             LocalDate.of(2025, 1, 1),
@@ -47,17 +47,7 @@ public class EmployeeFixture {
     }
 
     public static EmployeeCreateRequest createEmployeeCreateRequestWithDepartment(UUID departmentId, String email, String name) {
-        return new EmployeeCreateRequest(
-            departmentId,  // 실제 부서 ID 사용
-            email,
-            name,
-            LocalDate.of(2025, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            "This is a memo for the employee."
-        );
+        return createEmployeeCreateRequest(email, name, departmentId);
     }
 
     // 기본 테스트 부서를 사용하는 편의 메서드 - 주의: 통합 테스트에서는 IntegrationTestBase의 getDefaultDepartmentId()를 직접 사용하세요

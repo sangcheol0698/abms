@@ -11,7 +11,7 @@ public record OrganizationChartResponse(
     String departmentName,
     String departmentCode,
     String departmentType,
-    LeaderResponse leader,
+    LeaderResponse departmentLeader,
     List<OrganizationChartResponse> children
 ) {
 

@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartResponse;
+import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartWithEmployeesResponse;
+import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationEmployeeResponse;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
@@ -58,6 +60,9 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         departmentRepository.save(team1);
         departmentRepository.save(team2);
         flushAndClear();
+
+        employeeRepository.save(Employee.create(EmployeeFixture.createEmployeeCreateRequest("team2@email.com", "김철수", team1.getId())));
+        flushAndClear();
     }
 
     @Test
@@ -74,7 +79,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         );
 
         assertDepartmentNode(response, company, 1);
-        assertThat(response.leader().employeeName()).isEqualTo("홍길동");
+        assertThat(response.departmentLeader().employeeName()).isEqualTo("홍길동");
 
         OrganizationChartResponse divisionNode = response.children().getFirst();
         assertDepartmentNode(divisionNode, division, 2);
@@ -84,7 +89,49 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
             .containsExactlyInAnyOrder(team1.getName(), team2.getName());
     }
 
+    @Test
+    @DisplayName("전체 부서와 직원을 같이 조회한다")
+    void getOrganizationChartWithEmployees() throws Exception {
+        MvcTestResult mvcTestResult = mvcTester.get().uri("/api/departments/organization-chart/employees")
+            .exchange();
+
+        assertThat(mvcTestResult).apply(print()).hasStatusOk();
+
+        OrganizationChartWithEmployeesResponse response = objectMapper.readValue(
+            mvcTestResult.getMvcResult().getResponse().getContentAsString(),
+            OrganizationChartWithEmployeesResponse.class
+        );
+
+        assertDepartmentNode(response, company, 1);
+        assertThat(response.departmentLeader().employeeName()).isEqualTo("홍길동");
+
+        OrganizationChartWithEmployeesResponse divisionNode = response.children().getFirst();
+        assertDepartmentNode(divisionNode, division, 2);
+
+        assertThat(divisionNode.children())
+            .extracting(OrganizationChartWithEmployeesResponse::departmentName)
+            .containsExactlyInAnyOrder(team1.getName(), team2.getName());
+
+        OrganizationChartWithEmployeesResponse team1Response = response.children().getFirst().children().stream()
+            .filter(node -> node.departmentId().equals(team1.getId()))
+            .findFirst()
+            .orElseThrow();
+        assertDepartmentNode(team1Response, team1, 0);
+
+        assertThat(team1Response.employees()).hasSize(1)
+            .extracting(OrganizationEmployeeResponse::employeeName)
+            .containsExactly("김철수");
+    }
+
     private void assertDepartmentNode(OrganizationChartResponse node, Department expected, int expectedChildrenSize) {
+        assertThat(node.departmentId()).isEqualTo(expected.getId());
+        assertThat(node.departmentName()).isEqualTo(expected.getName());
+        assertThat(node.departmentCode()).isEqualTo(expected.getCode());
+        assertThat(node.departmentType()).isEqualTo(expected.getType().getDescription()); // Enum -> String 변환 로직에 맞게 수정
+        assertThat(node.children()).hasSize(expectedChildrenSize);
+    }
+
+    private void assertDepartmentNode(OrganizationChartWithEmployeesResponse node, Department expected, int expectedChildrenSize) {
         assertThat(node.departmentId()).isEqualTo(expected.getId());
         assertThat(node.departmentName()).isEqualTo(expected.getName());
         assertThat(node.departmentCode()).isEqualTo(expected.getCode());

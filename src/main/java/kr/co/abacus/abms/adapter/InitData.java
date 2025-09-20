@@ -84,6 +84,52 @@ public class InitData {
                 "TEST_TEAM2", "테스트팀2", DepartmentType.DIVISION, employee2.getId()), division
             )
         );
+
+        Employee employee3 = employeeRepository.save(
+            Employee.create(new EmployeeCreateRequest(
+                team1.getId(),
+                "test3@email.com",
+                "홍길동",
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                "This is a memo for the employee."
+            ))
+        );
+
+        Employee employee4 = employeeRepository.save(
+            Employee.create(new EmployeeCreateRequest(
+                team1.getId(),
+                "test4@email.com",
+                "홍길동",
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                "This is a memo for the employee."
+            ))
+        );
+
+        Employee employee5 = employeeRepository.save(
+            Employee.create(new EmployeeCreateRequest(
+                team1.getId(),
+                "test5@email.com",
+                "홍길동",
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                "This is a memo for the employee."
+            ))
+        );
+
+        employeeRepository.save(employee3);
+        employeeRepository.save(employee4);
+        employeeRepository.save(employee5);
     }
 
 }
