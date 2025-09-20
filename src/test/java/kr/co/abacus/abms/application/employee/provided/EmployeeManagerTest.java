@@ -47,12 +47,12 @@ class EmployeeManagerTest extends IntegrationTestBase {
         Department company = DepartmentFixture.createTestCompany();
         departmentRepository.save(company);
         Department division = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트본부", "TEST_DIV", DepartmentType.DIVISION),
+            DepartmentFixture.createDepartmentCreateRequest("테스트본부", "TEST_DIV", DepartmentType.DIVISION, null),
             company
         );
         departmentRepository.save(division);
         Department team = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM),
+            DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM, null),
             division
         );
         departmentRepository.save(team);

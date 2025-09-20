@@ -45,11 +45,11 @@ class DepartmentTest {
     void hierarchicalRelationship() {
         Department company = createRootDepartment();
         Department division = Department.create(
-            createDepartmentCreateRequest("연구개발본부", "RND", DepartmentType.DIVISION),
+            createDepartmentCreateRequest("연구개발본부", "RND", DepartmentType.DIVISION, null),
             company
         );
         Department team = Department.create(
-            createDepartmentCreateRequest("플랫폼팀", "PLATFORM", DepartmentType.TEAM),
+            createDepartmentCreateRequest("플랫폼팀", "PLATFORM", DepartmentType.TEAM, null),
             division
         );
 
@@ -71,15 +71,15 @@ class DepartmentTest {
         Department parent = createRootDepartment();
 
         Department child1 = Department.create(
-            createDepartmentCreateRequest("연구개발본부", "RND", DepartmentType.DIVISION),
+            createDepartmentCreateRequest("연구개발본부", "RND", DepartmentType.DIVISION, null),
             parent
         );
         Department child2 = Department.create(
-            createDepartmentCreateRequest("경영기획본부", "PLANNING", DepartmentType.DIVISION),
+            createDepartmentCreateRequest("경영기획본부", "PLANNING", DepartmentType.DIVISION, null),
             parent
         );
         Department child3 = Department.create(
-            createDepartmentCreateRequest("영업본부", "SALES", DepartmentType.DIVISION),
+            createDepartmentCreateRequest("영업본부", "SALES", DepartmentType.DIVISION, null),
             parent
         );
 
