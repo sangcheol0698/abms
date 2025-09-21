@@ -1,5 +1,14 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
+import 'reflect-metadata';
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import router from '@/core/router';
+import '@/index.css';
+import { configureContainer } from '@/core/di/container';
 
-createApp(App).mount('#app')
+configureContainer();
+
+const app = createApp(App);
+app.use(createPinia());
+app.use(router);
+app.mount('#app');
