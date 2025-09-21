@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.domain.salaryhistory;
 
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -9,13 +10,13 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import kr.co.abacus.abms.domain.AbstractEntity;
-import kr.co.abacus.abms.domain.shared.Money;
-import kr.co.abacus.abms.domain.shared.Period;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import kr.co.abacus.abms.domain.AbstractEntity;
+import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.shared.Period;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -43,6 +44,10 @@ public class SalaryHistory extends AbstractEntity {
         salaryHistory.period = Objects.requireNonNull(period);
 
         return salaryHistory;
+    }
+
+    public void close(LocalDate endDate) {
+        this.period = new Period(this.period.startDate(), endDate);
     }
 
 }
