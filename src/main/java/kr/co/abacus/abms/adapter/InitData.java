@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import jakarta.annotation.PostConstruct;
 
@@ -33,11 +32,27 @@ public class InitData {
 
     @PostConstruct
     public void init() {
+        Department root = departmentRepository.save(Department.createRoot(
+            new DepartmentCreateRequest("TEST_CODE3", "테스트부서", DepartmentType.DIVISION, null)
+        ));
+
+        Department division = departmentRepository.save(Department.create(
+            new DepartmentCreateRequest("TEST_CODE4", "테스트부서2", DepartmentType.DIVISION, null), root
+        ));
+
+        Department team = departmentRepository.save(Department.create(
+            new DepartmentCreateRequest("TEST_CODE5", "테스트팀", DepartmentType.TEAM, null), division
+        ));
+
+        Department subDepartment = departmentRepository.save(Department.create(
+            new DepartmentCreateRequest("TEST_CODE6", "테스트부서3", DepartmentType.DIVISION, null), team
+        ));
+
         Employee employee = employeeRepository.save(
             Employee.create(new EmployeeCreateRequest(
-                UUID.randomUUID(),  // 도메인 테스트에서는 랜덤 UUID 사용
+                team.getId(),  // 도메인 테스트에서는 랜덤 UUID 사용
                 "test@email.com",
-                "박상철",
+                "이상진",
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(1990, 1, 1),
                 EmployeePosition.MANAGER,
@@ -49,59 +64,35 @@ public class InitData {
 
         Employee employee2 = employeeRepository.save(
             Employee.create(new EmployeeCreateRequest(
-                UUID.randomUUID(),  // 도메인 테스트에서는 랜덤 UUID 사용
+                team.getId(),  // 도메인 테스트에서는 랜덤 UUID 사용
                 "test2@email.com",
-                "홍길동",
+                "박상철",
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
-                EmployeeType.FULL_TIME,
-                EmployeeGrade.SENIOR,
+                EmployeePosition.LEADER,
+                EmployeeType.FREELANCER,
+                EmployeeGrade.EXPERT,
                 "This is a memo for the employee."
             ))
         );
 
-        Department root = departmentRepository.save(
-            Department.createRoot(new DepartmentCreateRequest(
-                "TEST_CODE1", "테스트회사", DepartmentType.COMPANY, employee.getId()
-            ))
-        );
-
-        Department division = departmentRepository.save(
-            Department.create(new DepartmentCreateRequest(
-                "TEST_CODE2", "테스트본부", DepartmentType.DIVISION, employee2.getId()), root
-            )
-        );
-
-        Department team1 = departmentRepository.save(
-            Department.create(new DepartmentCreateRequest(
-                "TEST_TEAM1", "테스트팀1", DepartmentType.DIVISION, employee2.getId()), division
-            )
-        );
-
-        Department team2 = departmentRepository.save(
-            Department.create(new DepartmentCreateRequest(
-                "TEST_TEAM2", "테스트팀2", DepartmentType.DIVISION, employee2.getId()), division
-            )
-        );
-
         Employee employee3 = employeeRepository.save(
             Employee.create(new EmployeeCreateRequest(
-                team1.getId(),
+                division.getId(),
                 "test3@email.com",
-                "홍길동",
+                "오혜영",
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
+                EmployeePosition.ASSOCIATE,
                 EmployeeType.FULL_TIME,
-                EmployeeGrade.SENIOR,
+                EmployeeGrade.JUNIOR,
                 "This is a memo for the employee."
             ))
         );
 
         Employee employee4 = employeeRepository.save(
             Employee.create(new EmployeeCreateRequest(
-                team1.getId(),
+                team.getId(),
                 "test4@email.com",
                 "홍길동",
                 LocalDate.of(2025, 1, 1),
@@ -115,18 +106,34 @@ public class InitData {
 
         Employee employee5 = employeeRepository.save(
             Employee.create(new EmployeeCreateRequest(
-                team1.getId(),
+                root.getId(),
                 "test5@email.com",
-                "홍길동",
+                "안사장",
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
+                EmployeePosition.PRESIDENT,
                 EmployeeType.FULL_TIME,
                 EmployeeGrade.SENIOR,
                 "This is a memo for the employee."
             ))
         );
 
+        Employee employee6 = employeeRepository.save(
+            Employee.create(new EmployeeCreateRequest(
+                root.getId(),
+                "test6@email.com",
+                "박이사",
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.DIRECTOR,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.EXPERT,
+                "This is a memo for the employee."
+            ))
+        );
+
+        employeeRepository.save(employee);
+        employeeRepository.save(employee2);
         employeeRepository.save(employee3);
         employeeRepository.save(employee4);
         employeeRepository.save(employee5);

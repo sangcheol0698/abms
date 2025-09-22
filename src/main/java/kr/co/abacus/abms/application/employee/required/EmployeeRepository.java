@@ -9,7 +9,7 @@ import org.springframework.data.repository.Repository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.shared.Email;
 
-public interface EmployeeRepository extends Repository<Employee, UUID> {
+public interface EmployeeRepository extends Repository<Employee, UUID>, CustomEmployeeRepository {
 
     Employee save(Employee employee);
 
