@@ -8,8 +8,24 @@
         <div class="flex flex-1 items-center gap-3">
           <SidebarTrigger class="-ml-1" />
           <Separator orientation="vertical" class="hidden h-6 md:block" />
-          <div class="min-w-0">
-            <p class="text-xs uppercase tracking-wide text-muted-foreground">현재 화면</p>
+          <div class="flex min-w-0 flex-col gap-1">
+            <Breadcrumb v-if="breadcrumbs.length" class="hidden md:block">
+              <BreadcrumbList>
+                <template v-for="(crumb, index) in breadcrumbs" :key="`${crumb.title}-${index}`">
+                  <BreadcrumbItem>
+                    <template v-if="crumb.to && !crumb.disabled">
+                      <BreadcrumbLink as-child>
+                        <RouterLink :to="crumb.to">{{ crumb.title }}</RouterLink>
+                      </BreadcrumbLink>
+                    </template>
+                    <template v-else>
+                      <BreadcrumbPage>{{ crumb.title }}</BreadcrumbPage>
+                    </template>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator v-if="index < breadcrumbs.length - 1" />
+                </template>
+              </BreadcrumbList>
+            </Breadcrumb>
             <slot name="title">
               <h1 class="truncate text-lg font-semibold tracking-tight">{{ activePageTitle }}</h1>
             </slot>
@@ -72,6 +88,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { RouterLink } from 'vue-router';
 import { Bell, Search } from 'lucide-vue-next';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
@@ -79,6 +96,7 @@ import { Button } from '@/components/ui/button';
 import AppSidebar from '@/components/sidebar/AppSidebar.vue';
 import ThemeToggle from '@/core/theme/ThemeToggle.vue';
 import CommandPalette from '@/components/business/CommandPalette.vue';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import NotificationsSheet from '@/components/business/NotificationsSheet.vue';
 import ProfileDialog from '@/components/business/ProfileDialog.vue';
 import { useNotificationsStore } from '@/core/stores/notifications.store';
@@ -87,6 +105,52 @@ import { storeToRefs } from 'pinia';
 const route = useRoute();
 
 const activePageTitle = computed(() => (route.meta?.title as string | undefined) ?? 'ABMS');
+
+interface BreadcrumbEntry {
+  title: string;
+  to?: string;
+  disabled?: boolean;
+}
+
+const breadcrumbs = computed<BreadcrumbEntry[]>(() => {
+  const metaCrumbs = route.meta?.breadcrumbs as Array<
+    { title: string; to?: string | ((payload: any) => string); disabled?: boolean }
+  > | undefined;
+
+  if (Array.isArray(metaCrumbs) && metaCrumbs.length > 0) {
+    return metaCrumbs.map((crumb) => {
+      let to: string | undefined;
+      if (typeof crumb.to === 'function') {
+        try {
+          const resolved = crumb.to(route);
+          if (typeof resolved === 'string') {
+            to = resolved;
+          }
+        } catch (error) {
+          console.warn('Failed to resolve breadcrumb path', error);
+        }
+      } else if (typeof crumb.to === 'string') {
+        to = crumb.to;
+      }
+      return {
+        title: crumb.title,
+        to,
+        disabled: crumb.disabled ?? !to,
+      };
+    });
+  }
+
+  if (typeof route.meta?.title === 'string') {
+    return [
+      {
+        title: route.meta.title as string,
+        disabled: true,
+      },
+    ];
+  }
+
+  return [];
+});
 
 const isProfileDialogOpen = ref(false);
 const isCommandPaletteOpen = ref(false);

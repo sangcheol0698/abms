@@ -7,11 +7,34 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'organization-chart',
+        name: 'dashboard',
+        component: () => import('@/features/dashboard/views/DashboardView.vue'),
+        meta: {
+          title: '대시보드',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              disabled: true,
+            },
+          ],
+        },
+      },
+      {
+        path: 'organization',
+        name: 'organization',
         component: () => import('@/features/organization/views/OrganizationView.vue'),
         meta: {
           title: '조직도',
-          navGroup: 'main',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '조직도',
+              disabled: true,
+            },
+          ],
         },
       },
       {
@@ -20,7 +43,16 @@ const routes = [
         component: () => import('@/features/employee/views/EmployeeListView.vue'),
         meta: {
           title: '구성원',
-          navGroup: 'main',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '구성원',
+              disabled: true,
+            },
+          ],
         },
       },
     ],

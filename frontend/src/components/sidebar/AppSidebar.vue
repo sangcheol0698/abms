@@ -47,7 +47,7 @@ import {
   type SidebarProps,
   SidebarRail
 } from '@/components/ui/sidebar';
-import { GalleryVerticalEnd, LayoutDashboard, Users } from 'lucide-vue-next';
+import { Building2, GalleryVerticalEnd, LayoutDashboard, Users } from 'lucide-vue-next';
 import NavMain from './NavMain.vue';
 import NavUser from './NavUser.vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
@@ -118,9 +118,14 @@ const data = {
   ],
   navMain: [
     {
-      title: '조직도',
+      title: '대시보드',
       url: '/',
       icon: LayoutDashboard,
+    },
+    {
+      title: '조직도',
+      url: '/organization',
+      icon: Building2,
     },
     {
       title: '구성원',
