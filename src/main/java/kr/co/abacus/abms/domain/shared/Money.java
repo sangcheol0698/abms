@@ -18,6 +18,10 @@ public record Money(BigDecimal amount) {
         return new Money(amount);
     }
 
+    public static Money wons(Long amount) {
+        return new Money(BigDecimal.valueOf(amount));
+    }
+
     public static Money zero() {
         return new Money(BigDecimal.ZERO);
     }

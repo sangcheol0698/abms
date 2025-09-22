@@ -36,12 +36,12 @@ public class SalaryHistory extends AbstractEntity {
     @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
     private Period period;
 
-    public static SalaryHistory create(UUID employeeId, Money annualSalary, Period period) {
+    public static SalaryHistory startWith(UUID employeeId, Money annualSalary, LocalDate startDate) {
         SalaryHistory salaryHistory = new SalaryHistory();
 
         salaryHistory.employeeId = Objects.requireNonNull(employeeId);
         salaryHistory.annualSalary = Objects.requireNonNull(annualSalary);
-        salaryHistory.period = Objects.requireNonNull(period);
+        salaryHistory.period = new Period(Objects.requireNonNull(startDate), null);
 
         return salaryHistory;
     }

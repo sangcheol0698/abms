@@ -41,3 +41,5 @@ out/
 
 # Logs
 spy.log
+/frontend-example/
+/AGENTS.md
