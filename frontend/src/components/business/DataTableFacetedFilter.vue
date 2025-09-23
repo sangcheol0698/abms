@@ -1,6 +1,6 @@
 <template>
-  <Popover>
-    <PopoverTrigger as-child>
+  <DropdownMenu>
+    <DropdownMenuTrigger as-child>
       <Button variant="outline" size="sm" class="h-8 border-dashed">
         <Plus class="mr-2 h-4 w-4" />
         {{ title }}
@@ -30,9 +30,9 @@
           </div>
         </template>
       </Button>
-    </PopoverTrigger>
-    <PopoverContent class="w-[200px] p-0" align="start">
-      <Command>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="start" class="w-[240px] p-1">
+      <Command :filter="commandFilter">
         <CommandInput :placeholder="searchPlaceholder" />
         <CommandList>
           <CommandEmpty>결과가 없습니다.</CommandEmpty>
@@ -41,22 +41,18 @@
               v-for="option in options"
               :key="option.value"
               :value="option.value"
+              class="flex items-center gap-2"
               @select="toggleOption(option.value)"
             >
-              <div
-                :class="cn(
-                  'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-                  selectedValues?.has(option.value)
-                    ? 'bg-primary text-primary-foreground'
-                    : 'opacity-50 [&_svg]:invisible'
-                )"
-              >
-                <Check class="h-4 w-4" />
-              </div>
+              <Checkbox
+                :model-value="selectedValues?.has(option.value)"
+                @click.stop
+                @update:model-value="() => toggleOption(option.value)"
+              />
               <component
                 v-if="option.icon"
                 :is="option.icon"
-                class="mr-2 h-4 w-4 text-muted-foreground"
+                class="h-4 w-4 text-muted-foreground"
               />
               <span>{{ option.label }}</span>
               <span
@@ -81,17 +77,18 @@
           </template>
         </CommandList>
       </Command>
-    </PopoverContent>
-  </Popover>
+    </DropdownMenuContent>
+  </DropdownMenu>
 </template>
 
 <script setup lang="ts">
 import type { Column } from '@tanstack/vue-table';
 import { computed } from 'vue';
-import { Check, Plus } from 'lucide-vue-next';
+import { Plus } from 'lucide-vue-next';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Command,
   CommandEmpty,
@@ -101,7 +98,11 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 
 interface Option {
@@ -139,6 +140,24 @@ const selectedValues = computed(() => {
 
   return new Set();
 });
+
+const optionLookup = computed(() => {
+  const map = new Map<string, Option>();
+  props.options.forEach((option) => map.set(option.value, option));
+  return map;
+});
+
+function commandFilter(value: string, search: string) {
+  const option = optionLookup.value.get(value);
+  if (!option) {
+    return false;
+  }
+  const term = search.trim().toLowerCase();
+  if (!term) {
+    return true;
+  }
+  return option.label.toLowerCase().includes(term);
+}
 
 function toggleOption(value: string) {
   const newSelectedValues = new Set(selectedValues.value);
