@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -24,6 +25,7 @@ import kr.co.abacus.abms.application.employee.required.CustomEmployeeRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 @RequiredArgsConstructor
@@ -42,7 +44,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 inTypes(request.types()),
                 inGrades(request.grades()),
                 inDepartments(request.departmentIds()),
-                employee.deleted.isFalse()
+                inStatuses(request.statuses())
             )
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
@@ -56,7 +58,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 inTypes(request.types()),
                 inGrades(request.grades()),
                 inDepartments(request.departmentIds()),
-                employee.deleted.isFalse()
+                inStatuses(request.statuses())
             );
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
@@ -92,6 +94,13 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
             return null;
         }
         return employee.departmentId.in(departmentIds);
+    }
+
+    private @Nullable BooleanExpression inStatuses(List<EmployeeStatus> statuses) {
+        if (isEmpty(statuses)) {
+            return null;
+        }
+        return employee.status.in(statuses);
     }
 
 }
