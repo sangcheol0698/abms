@@ -7,22 +7,13 @@
       </p>
     </header>
 
-    <div v-if="isLoading" class="space-y-4">
-      <Card
-        v-for="index in 3"
-        :key="index"
-        class="gap-0 border-dashed border-border/60 shadow-none"
-      >
-        <CardHeader class="gap-2">
-          <Skeleton class="h-5 w-40" />
-          <Skeleton class="h-4 w-28" />
-        </CardHeader>
-        <CardContent class="space-y-2">
-          <Skeleton class="h-4 w-full" />
-          <Skeleton class="h-4 w-5/6" />
-          <Skeleton class="h-4 w-2/3" />
-        </CardContent>
-      </Card>
+    <div
+      v-if="isLoading"
+      class="flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground"
+      role="status"
+      aria-live="polite"
+    >
+      조직도를 불러오는 중입니다...
     </div>
 
     <Alert v-else-if="errorMessage" variant="destructive">
@@ -41,8 +32,6 @@ import OrganizationRepository from '@/features/organization/repository/Organizat
 import type { OrganizationChartWithEmployeesNode } from '@/features/organization/models/organization';
 import OrganizationTree from '@/features/organization/components/OrganizationTree.vue';
 import HttpError from '@/core/http/HttpError';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const repository = appContainer.resolve(OrganizationRepository);

@@ -1,12 +1,8 @@
 import {
   toGradeCode,
-  toGradeLabel,
   toPositionCode,
-  toPositionLabel,
   toStatusCode,
-  toStatusLabel,
   toTypeCode,
-  toTypeLabel,
 } from '@/features/employee/models/employeeFilters';
 
 export interface EmployeeListItem {

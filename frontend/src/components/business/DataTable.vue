@@ -19,42 +19,12 @@
       </TableHeader>
       <TableBody>
         <template v-if="loading">
-          <TableRow v-for="i in skeletonRowCount" :key="`skeleton-row-${i}`">
-            <TableCell
-              v-for="col in visibleColumns"
-              :key="`skeleton-cell-${i}-${col.id}`"
-              :class="col.id === 'select' ? 'px-2' : ''"
-              :style="{ width: getColumnSizePx(col) + 'px' }"
-            >
-              <template v-if="getColSkeletonVariantByColumn(col) === 'checkbox'">
-                <div class="flex items-center">
-                  <Skeleton class="h-4 w-4 rounded-sm" />
-                </div>
-              </template>
-              <template v-else-if="getColSkeletonVariantByColumn(col) === 'ellipsis'">
-                <div class="flex items-center">
-                  <Skeleton class="h-6 rounded-md" />
-                </div>
-              </template>
-              <template v-else-if="getColSkeletonVariantByColumn(col) === 'enum-badge'">
-                <div class="flex items-center">
-                  <Skeleton class="h-6 rounded-md" :style="{ width: enumBadgeWidthPx(col) + 'px' }" />
-                </div>
-              </template>
-              <template v-else-if="getColSkeletonVariantByColumn(col) === 'text-short'">
-                <div class="flex items-center">
-                  <Skeleton class="h-4 rounded-md" :style="{ width: textShortWidthPx(col) + 'px' }" />
-                </div>
-              </template>
-              <template v-else-if="getColSkeletonVariantByColumn(col) === 'title-subtitle'">
-                <Skeleton class="h-4" :style="{ width: lineWidthPx(col, 0) + 'px' }" />
-                <div class="mt-2">
-                  <Skeleton class="h-3" :style="{ width: lineWidthPx(col, 1) + 'px' }" />
-                </div>
-              </template>
-              <template v-else>
-                <Skeleton class="h-4" :style="{ width: lineWidthPx(col, 0) + 'px' }" />
-              </template>
+          <TableRow>
+            <TableCell :colspan="columns.length" class="h-24">
+              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Loader2 class="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span>데이터를 불러오는 중입니다...</span>
+              </div>
             </TableCell>
           </TableRow>
         </template>
@@ -96,9 +66,8 @@
 <script setup lang="ts">
 import type { ColumnDef, Table as TanstackTable } from '@tanstack/vue-table';
 import { FlexRender } from '@tanstack/vue-table';
-import { computed } from 'vue';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-vue-next';
 
 interface DataTableProps {
   columns: ColumnDef<any>[];
@@ -112,25 +81,6 @@ interface DataTableProps {
 
 const props = defineProps<DataTableProps>();
 
-const visibleColumns = computed(() => props.tableInstance.getVisibleLeafColumns?.() ?? []);
-
-const skeletonRowCount = computed(() => (props.pageSize && props.pageSize > 0 ? props.pageSize : 8));
-
-function getColSkeletonVariantByColumn(col: any):
-  | 'single'
-  | 'title-subtitle'
-  | 'checkbox'
-  | 'ellipsis'
-  | 'enum-badge'
-  | 'text-short' {
-  if (col?.id === 'select') return 'checkbox';
-  if (col?.id === 'actions') return 'ellipsis';
-  const meta = (col?.columnDef as any)?.meta;
-  if (meta?.skeleton === 'enum-badge') return 'enum-badge';
-  if (meta?.skeleton === 'text-short') return 'text-short';
-  return meta?.skeleton === 'title-subtitle' ? 'title-subtitle' : 'single';
-}
-
 function getColumnSizePx(col: any): number {
   try {
     if (col?.id === 'select') return 44;
@@ -139,36 +89,6 @@ function getColumnSizePx(col: any): number {
   } catch {
     return 120;
   }
-}
-
-function lineWidthPx(col: any, lineIdx = 0): number {
-  const base = getColumnSizePx(col);
-  const variant = getColSkeletonVariantByColumn(col);
-  if (variant === 'checkbox') return 16;
-
-  let primary = 0.72;
-  let secondary = 0.45;
-
-  if (base <= 80) {
-    primary = 0.9;
-    secondary = 0.6;
-  } else if (base <= 160) {
-    primary = 0.72;
-    secondary = 0.45;
-  } else if (base <= 260) {
-    primary = 0.65;
-    secondary = 0.4;
-  } else if (base <= 400) {
-    primary = 0.6;
-    secondary = 0.35;
-  } else {
-    primary = 0.55;
-    secondary = 0.3;
-  }
-
-  const ratio = lineIdx === 1 ? secondary : primary;
-  const px = Math.round(base * ratio);
-  return Math.max(32, Math.min(px, base - 12));
 }
 
 function getHeaderSizePx(header: any): number {
@@ -193,11 +113,4 @@ function getCellSizePx(cell: any): number {
   }
 }
 
-function enumBadgeWidthPx(col: any): number {
-  return Math.max(48, Math.min(getColumnSizePx(col) * 0.45, 120));
-}
-
-function textShortWidthPx(col: any): number {
-  return Math.max(48, Math.min(getColumnSizePx(col) * 0.6, 200));
-}
 </script>

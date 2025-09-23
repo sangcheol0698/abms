@@ -6,6 +6,7 @@ import axios, {
 } from 'axios';
 import { singleton } from 'tsyringe';
 import HttpError from '@/core/http/HttpError';
+// Progress handling removed per user request.
 
 export type HttpRequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
