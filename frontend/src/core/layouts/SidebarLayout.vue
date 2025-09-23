@@ -26,9 +26,7 @@
                 </template>
               </BreadcrumbList>
             </Breadcrumb>
-            <slot name="title">
-              <h1 class="truncate text-lg font-semibold tracking-tight">{{ activePageTitle }}</h1>
-            </slot>
+            <slot name="title" />
           </div>
         </div>
 
@@ -103,8 +101,6 @@ import { useNotificationsStore } from '@/core/stores/notifications.store';
 import { storeToRefs } from 'pinia';
 
 const route = useRoute();
-
-const activePageTitle = computed(() => (route.meta?.title as string | undefined) ?? 'ABMS');
 
 interface BreadcrumbEntry {
   title: string;
