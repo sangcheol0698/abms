@@ -44,7 +44,8 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 inTypes(request.types()),
                 inGrades(request.grades()),
                 inDepartments(request.departmentIds()),
-                inStatuses(request.statuses())
+                inStatuses(request.statuses()),
+                employee.deleted.isFalse()
             )
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
@@ -58,7 +59,8 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 inTypes(request.types()),
                 inGrades(request.grades()),
                 inDepartments(request.departmentIds()),
-                inStatuses(request.statuses())
+                inStatuses(request.statuses()),
+                employee.deleted.isFalse()
             );
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
