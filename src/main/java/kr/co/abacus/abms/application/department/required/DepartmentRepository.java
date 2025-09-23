@@ -18,4 +18,6 @@ public interface DepartmentRepository extends Repository<Department, UUID> {
     @Query("SELECT DISTINCT d FROM Department d LEFT JOIN FETCH d.children WHERE d.deleted = false")
     List<Department> findAllByDeletedFalseWithChildren();
 
+    List<Department> findAllByDeletedFalse();
+
 }

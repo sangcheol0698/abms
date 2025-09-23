@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.adapter.webapi.employee;
 
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -51,11 +52,19 @@ public class EmployeeApi {
     @GetMapping("/api/employees")
     public Page<EmployeeResponse> search(@Valid EmployeeSearchRequest request, Pageable pageable) {
         Page<Employee> employees = employeeFinder.search(request, pageable);
+        List<Department> departments = departmentFinder.findAll();
 
         return employees.map(employee -> {
-            Department department = departmentFinder.find(employee.getDepartmentId());
+            Department department = getDepartment(employee, departments);
             return EmployeeResponse.of(employee, department);
         });
+    }
+
+    private Department getDepartment(Employee employee, List<Department> departments) {
+        return departments.stream()
+            .filter(d -> d.getId().equals(employee.getDepartmentId()))
+            .findFirst()
+            .orElseThrow();
     }
 
 }

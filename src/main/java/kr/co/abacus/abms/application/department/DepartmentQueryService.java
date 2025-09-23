@@ -39,6 +39,11 @@ public class DepartmentQueryService implements DepartmentFinder {
     }
 
     @Override
+    public List<Department> findAll() {
+        return departmentRepository.findAllByDeletedFalse();
+    }
+
+    @Override
     public OrganizationChartModel getOrganizationChart() {
         List<Department> allDepartments = departmentRepository.findAllByDeletedFalseWithChildren();
         Map<UUID, Employee> leadersMap = getLeadersMap(allDepartments);

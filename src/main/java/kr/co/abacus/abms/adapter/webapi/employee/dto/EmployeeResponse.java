@@ -33,19 +33,4 @@ public record EmployeeResponse(
         );
     }
 
-    public static EmployeeResponse of(Employee employee) {
-        return new EmployeeResponse(
-            employee.getDepartmentId(),
-            "팀 모름",
-            employee.getId().toString(),
-            employee.getName(),
-            employee.getEmail().address(),
-            employee.getPosition().getDescription(),
-            employee.getStatus().getDescription(),
-            employee.getGrade().getDescription(),
-            employee.getType().getDescription(),
-            employee.getMemo()
-        );
-    }
-
 }
