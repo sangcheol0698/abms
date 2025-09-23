@@ -4,7 +4,12 @@
     <CommandList>
       <CommandEmpty>일치하는 명령이 없습니다.</CommandEmpty>
       <CommandGroup heading="화면 이동">
-        <CommandItem v-for="item in navigationCommands" :key="item.to" :value="item.label" @select="navigate(item.to)">
+        <CommandItem
+          v-for="item in navigationCommands"
+          :key="item.to"
+          :value="item.label"
+          @select="navigate(item.to)"
+        >
           {{ item.label }}
           <CommandShortcut>{{ item.shortcut }}</CommandShortcut>
         </CommandItem>
@@ -52,8 +57,9 @@ const emit = defineEmits<{
 const router = useRouter();
 
 const navigationCommands: NavigationCommand[] = [
-  { label: '조직도', to: '/', shortcut: 'G O' },
-  { label: '구성원', to: '/employees', shortcut: 'G E' },
+  { label: '대시보드', to: '/', shortcut: '' },
+  { label: '조직도', to: '/organization', shortcut: '' },
+  { label: '구성원', to: '/employees', shortcut: '' },
 ];
 
 function handleOpenChange(value: boolean) {
