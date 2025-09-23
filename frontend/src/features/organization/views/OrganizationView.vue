@@ -21,16 +21,34 @@
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <OrganizationTree v-else :nodes="chart" />
+    <div
+      v-else
+      class="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"
+    >
+      <div class="rounded-xl border border-border/60 bg-card p-4 shadow-sm overflow-hidden">
+        <OrganizationGojsDiagram
+          :nodes="chart"
+          v-model:selectedNodeId="selectedDepartmentId"
+        />
+      </div>
+
+      <div
+        class="rounded-xl border border-border/60 bg-card/90 p-4 shadow-sm"
+        :class="{ 'max-h-[640px] overflow-y-auto': layoutBreakpoint === 'desktop' }"
+      >
+        <OrganizationDetailPanel :department="selectedDepartment" />
+      </div>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { appContainer } from '@/core/di/container';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
 import type { OrganizationChartWithEmployeesNode } from '@/features/organization/models/organization';
-import OrganizationTree from '@/features/organization/components/OrganizationTree.vue';
+import OrganizationGojsDiagram from '@/features/organization/components/OrganizationGojsDiagram.vue';
+import OrganizationDetailPanel from '@/features/organization/components/OrganizationDetailPanel.vue';
 import HttpError from '@/core/http/HttpError';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -38,6 +56,15 @@ const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartWithEmployeesNode[]>([]);
 const isLoading = ref(true);
 const errorMessage = ref<string | null>(null);
+const selectedDepartmentId = ref<string | undefined>();
+const layoutBreakpoint = ref<'desktop' | 'mobile'>('desktop');
+
+const selectedDepartment = computed(() => {
+  if (!selectedDepartmentId.value) {
+    return null;
+  }
+  return findDepartment(chart.value, selectedDepartmentId.value) ?? null;
+});
 
 async function loadOrganizationChart() {
   isLoading.value = true;
@@ -58,5 +85,34 @@ async function loadOrganizationChart() {
 
 onMounted(() => {
   void loadOrganizationChart();
+  updateBreakpoint();
+  window.addEventListener('resize', updateBreakpoint);
+});
+
+watch(chart, (nodes) => {
+  if (!nodes.length) {
+    selectedDepartmentId.value = undefined;
+  }
+});
+
+function findDepartment(nodes: OrganizationChartWithEmployeesNode[], targetId: string): OrganizationChartWithEmployeesNode | null {
+  for (const node of nodes) {
+    if (node.departmentId === targetId) {
+      return node;
+    }
+    const child = findDepartment(node.children ?? [], targetId);
+    if (child) {
+      return child;
+    }
+  }
+  return null;
+}
+
+function updateBreakpoint() {
+  layoutBreakpoint.value = window.innerWidth >= 1024 ? 'desktop' : 'mobile';
+}
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateBreakpoint);
 });
 </script>
