@@ -1,14 +1,15 @@
 <template>
   <div
     ref="diagramRef"
-    class="h-[520px] w-full overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
+    class="h-[640px] w-full overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
   />
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import * as go from 'gojs';
 import type { OrganizationChartWithEmployeesNode } from '@/features/organization/models/organization';
+import { useTheme } from '@/core/composables';
 
 defineOptions({ name: 'OrganizationGojsDiagram' });
 
@@ -20,7 +21,52 @@ const props = defineProps<{
 const emit = defineEmits<{ (event: 'update:selectedNodeId', value: string): void }>();
 
 const diagramRef = ref<HTMLDivElement | null>(null);
+const { resolvedTheme } = useTheme();
+const themeColors = computed(() =>
+  resolvedTheme.value === 'dark'
+    ? {
+        background: '#111827',
+        card: '#1f2937',
+        border: '#334155',
+        text: '#f8fafc',
+        subtext: '#cbd5f5',
+        headcount: '#f8fafc',
+        selection: '#38bdf8',
+        shadow: '#0f172a',
+        accent: [
+          '#38bdf8',
+          '#f97316',
+          '#a855f7',
+          '#60a5fa',
+          '#5eead4',
+          '#fb7185',
+          '#bef264',
+          '#facc15',
+        ],
+      }
+    : {
+        background: '#f8fafc',
+        card: '#ffffff',
+        border: '#dbeafe',
+        text: '#0f172a',
+        subtext: '#475569',
+        headcount: '#1e293b',
+        selection: '#2563eb',
+        shadow: '#e2e8f0',
+        accent: [
+          '#2563eb',
+          '#0ea5e9',
+          '#f97316',
+          '#6366f1',
+          '#22c55e',
+          '#f43f5e',
+          '#facc15',
+          '#ec4899',
+        ],
+      },
+);
 let diagram: go.Diagram | null = null;
+let initialZoomApplied = false;
 
 onMounted(() => {
   if (!diagramRef.value) {
@@ -102,6 +148,7 @@ function applyModel() {
 
   const { nodeDataArray, linkDataArray } = flattenNodes(props.nodes);
   diagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
+  diagram.background = themeColors.value.background;
 
   if (props.selectedNodeId) {
     const node = diagram.findNodeForKey(props.selectedNodeId);
@@ -112,6 +159,13 @@ function applyModel() {
   } else if (nodeDataArray.length) {
     const rootKey = nodeDataArray[0].key;
     emit('update:selectedNodeId', rootKey);
+  }
+
+  if (!initialZoomApplied) {
+    diagram.zoomToFit();
+    diagram.scale = Math.max(diagram.scale * 0.7, 0.35);
+    diagram.centerRect(diagram.documentBounds);
+    initialZoomApplied = true;
   }
 }
 
@@ -144,16 +198,8 @@ function flattenNodes(nodes: OrganizationChartWithEmployeesNode[]) {
 
 function createNodeTemplate(): go.Node {
   const $ = go.GraphObject.make;
-  const accent = [
-    '#AC193D',
-    '#2672EC',
-    '#8C0095',
-    '#5133AB',
-    '#008299',
-    '#D24726',
-    '#008A00',
-    '#094AB2',
-  ];
+  const colors = themeColors.value;
+  const accent = colors.accent;
 
   return $(
     go.Node,
@@ -167,7 +213,7 @@ function createNodeTemplate(): go.Node {
         go.Panel.Auto,
         $(go.Shape, 'RoundedRectangle', {
           fill: null,
-          stroke: '#2563eb',
+          stroke: colors.selection,
           strokeWidth: 3,
         }),
         $(go.Placeholder),
@@ -179,8 +225,8 @@ function createNodeTemplate(): go.Node {
       { name: 'BODY' },
       $(go.Shape, 'RoundedRectangle', {
         name: 'SHAPE',
-        fill: '#ffffff',
-        stroke: '#d1d5db',
+        fill: resolvedTheme.value === 'dark' ? '#1f2937' : '#f8fafc',
+        stroke: resolvedTheme.value === 'dark' ? '#334155' : '#c7d2fe',
         strokeWidth: 1.2,
         spot1: new go.Spot(0, 0, 16, 16),
         spot2: new go.Spot(1, 1, -16, -16),
@@ -188,58 +234,69 @@ function createNodeTemplate(): go.Node {
       $(
         go.Panel,
         go.Panel.Table,
-        { margin: new go.Margin(20, 20, 20, 20), defaultAlignment: go.Spot.Left },
+        {
+          margin: new go.Margin(18, 18, 18, 18),
+          defaultAlignment: go.Spot.Left,
+          stretch: go.Stretch.Horizontal,
+        },
+        $(
+          go.TextBlock,
+          {
+            row: 0,
+            font: '600 14px "Inter", "Pretendard", sans-serif',
+            stroke: colors.text,
+            isMultiline: true,
+            wrap: go.Wrap.Fit,
+            width: 220,
+          },
+          new go.Binding('text', 'name'),
+        ),
         $(
           go.Panel,
-          go.Panel.Horizontal,
-          { row: 0, alignment: go.Spot.Left, defaultAlignment: go.Spot.Center },
+          go.Panel.Auto,
+          {
+            row: 1,
+            alignment: go.Spot.Left,
+            margin: new go.Margin(8, 0, 0, 0),
+          },
+          $(go.Shape, 'RoundedRectangle', {
+            parameter1: 8,
+            fill: resolvedTheme.value === 'dark' ? '#0f172a' : '#f0fdf4',
+            stroke: resolvedTheme.value === 'dark' ? '#38bdf833' : '#16a34a33',
+            strokeWidth: 1,
+          }),
           $(
             go.TextBlock,
             {
-              font: '600 14px "Inter", "Pretendard", sans-serif',
-              stroke: '#111827',
-              isMultiline: true,
+              margin: new go.Margin(2, 12, 2, 12),
+              font: '500 11px "Inter", "Pretendard", sans-serif',
+              stroke: resolvedTheme.value === 'dark' ? '#4ade80' : '#15803d',
+              wrap: go.Wrap.Fit,
             },
-            new go.Binding('text', 'name'),
-          ),
-          $(
-            go.Panel,
-            go.Panel.Auto,
-            { margin: new go.Margin(0, 0, 0, 12) },
-            $(go.Shape, 'RoundedRectangle', {
-              parameter1: 8,
-              fill: '#f0fdf4',
-              stroke: '#16a34a33',
-              strokeWidth: 1,
-            }),
-            $(
-              go.TextBlock,
-              {
-                margin: new go.Margin(2, 8, 2, 8),
-                font: '500 11px "Inter", "Pretendard", sans-serif',
-                stroke: '#15803d',
-              },
-              new go.Binding('text', 'dept'),
-            ),
+            new go.Binding('text', 'dept'),
           ),
         ),
         $(
           go.TextBlock,
           {
-            row: 1,
-            margin: new go.Margin(8, 0, 0, 0),
+            row: 2,
+            margin: new go.Margin(10, 0, 0, 0),
             font: '500 11px "Inter", "Pretendard", sans-serif',
-            stroke: '#475569',
+            stroke: colors.subtext,
+            wrap: go.Wrap.Fit,
+            width: 220,
           },
           new go.Binding('text', '', (data) => `리더 ${data.leader}`),
         ),
         $(
           go.TextBlock,
           {
-            row: 2,
+            row: 3,
             margin: new go.Margin(6, 0, 0, 0),
             font: '600 11px "Inter", "Pretendard", sans-serif',
-            stroke: '#1e293b',
+            stroke: colors.headcount,
+            wrap: go.Wrap.Fit,
+            width: 220,
           },
           new go.Binding('text', '', (data) => `구성원 ${data.headcount}명`),
         ),
@@ -259,6 +316,24 @@ function createNodeTemplate(): go.Node {
     ),
   );
 }
+
+watch(themeColors, () => {
+  if (!diagram) {
+    return;
+  }
+  const selectedId = props.selectedNodeId;
+  diagram.startTransaction('theme');
+  diagram.background = themeColors.value.background;
+  diagram.nodeTemplate = createNodeTemplate();
+  diagram.rebuildParts();
+  diagram.commitTransaction('theme');
+  if (selectedId) {
+    const node = diagram.findNodeForKey(selectedId);
+    if (node) {
+      diagram.select(node);
+    }
+  }
+});
 
 function createLinkTemplate(): go.Link {
   const $ = go.GraphObject.make;

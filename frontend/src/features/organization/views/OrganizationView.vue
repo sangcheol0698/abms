@@ -21,20 +21,14 @@
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <div
-      v-else
-      class="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"
-    >
+    <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <div class="rounded-xl border border-border/60 bg-card p-4 shadow-sm overflow-hidden">
-        <OrganizationGojsDiagram
-          :nodes="chart"
-          v-model:selectedNodeId="selectedDepartmentId"
-        />
+        <OrganizationGojsDiagram :nodes="chart" v-model:selectedNodeId="selectedDepartmentId" />
       </div>
 
       <div
         class="rounded-xl border border-border/60 bg-card/90 p-4 shadow-sm"
-        :class="{ 'max-h-[640px] overflow-y-auto': layoutBreakpoint === 'desktop' }"
+        :class="{ 'max-h-[720px] overflow-y-auto': layoutBreakpoint === 'desktop' }"
       >
         <OrganizationDetailPanel :department="selectedDepartment" />
       </div>
@@ -95,7 +89,10 @@ watch(chart, (nodes) => {
   }
 });
 
-function findDepartment(nodes: OrganizationChartWithEmployeesNode[], targetId: string): OrganizationChartWithEmployeesNode | null {
+function findDepartment(
+  nodes: OrganizationChartWithEmployeesNode[],
+  targetId: string,
+): OrganizationChartWithEmployeesNode | null {
   for (const node of nodes) {
     if (node.departmentId === targetId) {
       return node;
