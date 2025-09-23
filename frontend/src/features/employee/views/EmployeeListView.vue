@@ -7,6 +7,11 @@
       </p>
     </header>
 
+    <EmployeeSummaryCards
+      :cards="employeeSummary.cards"
+      
+    />
+
     <div class="space-y-4">
       <DataTableToolbar
         :table="table"
@@ -119,6 +124,8 @@ import {
     EMPLOYEE_STATUS_OPTIONS,
     EMPLOYEE_TYPE_OPTIONS,
 } from '@/features/employee/models/employeeFilters';
+import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummaryCards.vue';
+import { useEmployeeSummary } from '@/features/employee/composables';
 
 interface DepartmentOption {
     label: string;
@@ -152,6 +159,8 @@ const gradeOptions = EMPLOYEE_GRADE_OPTIONS;
 const positionOptions = EMPLOYEE_POSITION_OPTIONS;
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
+
+const employeeSummary = useEmployeeSummary({ employees });
 
 const columns: ColumnDef<EmployeeListItem>[] = [
     {
