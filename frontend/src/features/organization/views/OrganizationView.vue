@@ -21,9 +21,9 @@
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-      <div class="rounded-xl border border-border/60 bg-card p-4 shadow-sm overflow-hidden">
-        <OrganizationGojsDiagram :nodes="chart" v-model:selectedNodeId="selectedDepartmentId" />
+    <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)]">
+      <div class="rounded-xl border border-border/60 bg-card p-3.5 shadow-sm overflow-hidden">
+        <OrganizationTree :nodes="chart" v-model:selectedNodeId="selectedDepartmentId" />
       </div>
 
       <div
@@ -38,6 +38,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { appContainer } from '@/core/di/container';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
 import type {
@@ -45,7 +46,7 @@ import type {
   OrganizationDepartmentDetail,
   OrganizationDepartmentSummary,
 } from '@/features/organization/models/organization';
-import OrganizationGojsDiagram from '@/features/organization/components/OrganizationGojsDiagram.vue';
+import OrganizationTree from '@/features/organization/components/OrganizationTree.vue';
 import OrganizationDetailPanel from '@/features/organization/components/OrganizationDetailPanel.vue';
 import HttpError from '@/core/http/HttpError';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -60,6 +61,10 @@ const departmentDetail = ref<OrganizationDepartmentDetail | null>(null);
 const isDepartmentLoading = ref(false);
 
 let detailRequestToken = 0;
+const route = useRoute();
+const router = useRouter();
+let isUpdatingRoute = false;
+let isApplyingRoute = false;
 
 const selectedDepartment = computed(() => {
   if (!selectedDepartmentId.value) {
@@ -93,6 +98,7 @@ async function loadOrganizationChart() {
 
   try {
     chart.value = await repository.fetchOrganizationChart();
+    ensureSelectedDepartmentExists();
   } catch (error) {
     if (error instanceof HttpError) {
       errorMessage.value = error.message;
@@ -135,6 +141,10 @@ async function loadDepartmentDetail(departmentId: string) {
 }
 
 onMounted(() => {
+  const initialDepartmentId = extractDepartmentId(route.query.departmentId);
+  if (initialDepartmentId) {
+    selectedDepartmentId.value = initialDepartmentId;
+  }
   void loadOrganizationChart();
   updateBreakpoint();
   window.addEventListener('resize', updateBreakpoint);
@@ -160,6 +170,9 @@ watch(chart, (nodes) => {
 watch(
   selectedDepartmentId,
   (next, previous) => {
+    if (!isApplyingRoute) {
+      updateRouteQuery(next);
+    }
     if (!next) {
       departmentDetail.value = null;
       return;
@@ -204,4 +217,72 @@ function updateBreakpoint() {
 onUnmounted(() => {
   window.removeEventListener('resize', updateBreakpoint);
 });
+
+watch(
+  () => route.query.departmentId,
+  (value) => {
+    if (isUpdatingRoute) {
+      return;
+    }
+
+    const nextId = extractDepartmentId(value);
+
+    if (nextId === selectedDepartmentId.value) {
+      return;
+    }
+
+    isApplyingRoute = true;
+    selectedDepartmentId.value = nextId;
+    isApplyingRoute = false;
+  },
+);
+
+function updateRouteQuery(departmentId?: string) {
+  const currentQuery = { ...route.query } as Record<string, unknown>;
+  const existing = extractDepartmentId(route.query.departmentId);
+
+  if (departmentId === existing) {
+    return;
+  }
+
+  if (departmentId) {
+    currentQuery.departmentId = departmentId;
+  } else {
+    delete currentQuery.departmentId;
+  }
+
+  isUpdatingRoute = true;
+  router
+    .replace({ query: currentQuery })
+    .finally(() => {
+      isUpdatingRoute = false;
+    })
+    .catch((error) => {
+      console.warn('부서 선택 정보를 URL에 반영하지 못했습니다.', error);
+    });
+}
+
+function extractDepartmentId(raw: unknown): string | undefined {
+  if (Array.isArray(raw)) {
+    const first = raw.find((value) => typeof value === 'string' && value.trim().length > 0);
+    return first ? first.trim() : undefined;
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+  return undefined;
+}
+
+function ensureSelectedDepartmentExists() {
+  if (!selectedDepartmentId.value) {
+    selectedDepartmentId.value = chart.value[0]?.departmentId;
+    return;
+  }
+
+  const exists = findDepartment(chart.value, selectedDepartmentId.value);
+  if (!exists) {
+    selectedDepartmentId.value = chart.value[0]?.departmentId;
+  }
+}
 </script>
