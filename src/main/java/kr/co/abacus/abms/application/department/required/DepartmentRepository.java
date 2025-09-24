@@ -9,7 +9,7 @@ import org.springframework.data.repository.Repository;
 
 import kr.co.abacus.abms.domain.department.Department;
 
-public interface DepartmentRepository extends Repository<Department, UUID> {
+public interface DepartmentRepository extends Repository<Department, UUID>, CustomDepartmentRepository {
 
     Department save(Department department);
 

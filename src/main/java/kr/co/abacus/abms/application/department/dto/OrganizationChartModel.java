@@ -11,6 +11,7 @@ public record OrganizationChartModel(
     String departmentCode,
     DepartmentType departmentType,
     LeaderModel leader,
+    int employeeCount,
     List<OrganizationChartModel> children
 ) {
 

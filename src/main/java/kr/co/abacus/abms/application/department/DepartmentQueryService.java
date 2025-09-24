@@ -46,18 +46,24 @@ public class DepartmentQueryService implements DepartmentFinder {
     @Override
     public OrganizationChartModel getOrganizationChart() {
         List<Department> allDepartments = departmentRepository.findAllByDeletedFalseWithChildren();
+        Map<UUID, Long> employeeCountMap = departmentRepository.getDepartmentHeadcounts();
+
         Map<UUID, Employee> leadersMap = getLeadersMap(allDepartments);
 
         Department root = findRoot(allDepartments);
 
         return buildRecursiveChart(root, (department, children) -> {
             LeaderModel leaderModel = getLeaderModel(department, leadersMap);
+
+            int employeeCount = employeeCountMap.getOrDefault(department.getId(), 0L).intValue();
+
             return new OrganizationChartModel(
                 department.getId(),
                 department.getName(),
                 department.getCode(),
                 department.getType(),
                 leaderModel,
+                employeeCount,
                 children
             );
         });
@@ -89,13 +95,6 @@ public class DepartmentQueryService implements DepartmentFinder {
         });
     }
 
-    private <T> T buildRecursiveChart(Department department, BiFunction<Department, List<T>, T> nodeFactory) {
-        List<T> childrenModels = department.getChildren().stream()
-            .map(child -> buildRecursiveChart(child, nodeFactory))
-            .toList();
-        return nodeFactory.apply(department, childrenModels);
-    }
-
     private Department findRoot(List<Department> allDepartments) {
         return allDepartments.stream()
             .filter(Department::isRoot)
@@ -124,6 +123,14 @@ public class DepartmentQueryService implements DepartmentFinder {
         UUID leaderId = department.getLeaderEmployeeId();
         Employee leader = (leaderId == null) ? null : leadersMap.get(leaderId);
         return (leader == null) ? null : new LeaderModel(leader.getId(), leader.getName(), leader.getPosition());
+    }
+
+    private <T> T buildRecursiveChart(Department department, BiFunction<Department, List<T>, T> nodeFactory) {
+        List<T> childrenModels = department.getChildren().stream()
+            .map(child -> buildRecursiveChart(child, nodeFactory))
+            .toList();
+
+        return nodeFactory.apply(department, childrenModels);
     }
 
 }

@@ -52,7 +52,7 @@ public class EmployeeApi {
     @GetMapping("/api/employees")
     public Page<EmployeeResponse> search(@Valid EmployeeSearchRequest request, Pageable pageable) {
         Page<Employee> employees = employeeFinder.search(request, pageable);
-        List<Department> departments = departmentFinder.findAll();
+        List<Department> departments = departmentFinder.findAll(); // TODO: 최적화 방안 고려
 
         return employees.map(employee -> {
             Department department = getDepartment(employee, departments);

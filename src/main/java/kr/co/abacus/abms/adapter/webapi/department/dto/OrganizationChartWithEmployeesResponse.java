@@ -3,6 +3,8 @@ package kr.co.abacus.abms.adapter.webapi.department.dto;
 import java.util.List;
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
+
 import kr.co.abacus.abms.application.department.dto.EmployeeModel;
 import kr.co.abacus.abms.application.department.dto.LeaderModel;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
@@ -12,7 +14,7 @@ public record OrganizationChartWithEmployeesResponse(
     String departmentName,
     String departmentCode,
     String departmentType,
-    LeaderResponse departmentLeader,
+    @Nullable LeaderResponse departmentLeader,
     List<OrganizationEmployeeResponse> employees,
     List<OrganizationChartWithEmployeesResponse> children
 ) {
