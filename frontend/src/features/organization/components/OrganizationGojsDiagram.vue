@@ -8,13 +8,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import * as go from 'gojs';
-import type { OrganizationChartWithEmployeesNode } from '@/features/organization/models/organization';
+import type { OrganizationChartNode } from '@/features/organization/models/organization';
 import { useTheme } from '@/core/composables';
 
 defineOptions({ name: 'OrganizationGojsDiagram' });
 
 const props = defineProps<{
-  nodes: OrganizationChartWithEmployeesNode[];
+  nodes: OrganizationChartNode[];
   selectedNodeId?: string;
 }>();
 
@@ -169,16 +169,16 @@ function applyModel() {
   }
 }
 
-function flattenNodes(nodes: OrganizationChartWithEmployeesNode[]) {
+function flattenNodes(nodes: OrganizationChartNode[]) {
   const nodeDataArray: Array<go.ObjectData> = [];
   const linkDataArray: Array<go.ObjectData> = [];
 
-  function walk(node: OrganizationChartWithEmployeesNode, parentKey?: string, depth = 0) {
+  function walk(node: OrganizationChartNode, parentKey?: string, depth = 0) {
     nodeDataArray.push({
       key: node.departmentId,
       name: node.departmentName,
       leader: node.departmentLeader?.employeeName ?? '리더 미지정',
-      headcount: node.employees.length,
+      headcount: node.employeeCount ?? 0,
       depth,
       colorIndex: depth,
       dept: node.departmentCode,
@@ -335,15 +335,6 @@ watch(themeColors, () => {
   }
 });
 
-function createLinkTemplate(): go.Link {
-  const $ = go.GraphObject.make;
-  return $(go.Link, {
-    routing: go.Routing.Orthogonal,
-    corner: 6,
-    selectable: false,
-    layerName: 'Background',
-  });
-}
 </script>
 
 <style scoped></style>

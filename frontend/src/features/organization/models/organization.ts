@@ -16,12 +16,8 @@ export interface OrganizationChartNode {
   departmentCode: string;
   departmentType: string;
   departmentLeader: OrganizationLeader | null;
+  employeeCount: number;
   children: OrganizationChartNode[];
-}
-
-export interface OrganizationChartWithEmployeesNode extends OrganizationChartNode {
-  employees: OrganizationEmployee[];
-  children: OrganizationChartWithEmployeesNode[];
 }
 
 function mapLeader(input: any): OrganizationLeader | null {
@@ -48,23 +44,20 @@ function mapEmployees(input: any[] | undefined): OrganizationEmployee[] {
   }));
 }
 
-function hasEmployees(node: any): node is OrganizationChartWithEmployeesNode {
-  return Array.isArray(node?.employees);
-}
-
 export function mapOrganizationChartNode(input: any): OrganizationChartNode {
+  const employees = mapEmployees(input.employees);
+  const computedEmployeeCount =
+    typeof input?.employeeCount === 'number' ? Number(input.employeeCount) : employees.length;
+
   const base: OrganizationChartNode = {
     departmentId: input.departmentId,
     departmentName: input.departmentName,
     departmentCode: input.departmentCode,
     departmentType: input.departmentType,
     departmentLeader: mapLeader(input.departmentLeader),
+    employeeCount: Number.isFinite(computedEmployeeCount) ? computedEmployeeCount : employees.length,
     children: Array.isArray(input.children) ? input.children.map(mapOrganizationChartNode) : [],
   };
-
-  if (Array.isArray(input.employees)) {
-    (base as OrganizationChartWithEmployeesNode).employees = mapEmployees(input.employees);
-  }
 
   return base;
 }
@@ -81,14 +74,37 @@ export function normalizeOrganizationChartResponse(response: unknown): Organizat
   return [mapOrganizationChartNode(response)];
 }
 
-export function castToOrganizationWithEmployees(
-  nodes: OrganizationChartNode[],
-): OrganizationChartWithEmployeesNode[] {
-  return nodes.map((node) => ({
-    ...node,
-    employees: hasEmployees(node)
-      ? ((node as OrganizationChartWithEmployeesNode).employees ?? [])
-      : [],
-    children: castToOrganizationWithEmployees(node.children ?? []),
-  }));
+export interface OrganizationDepartmentDetail {
+  departmentId: string;
+  departmentName: string;
+  departmentCode: string;
+  departmentType: string;
+  departmentLeader: OrganizationLeader | null;
+  employees: OrganizationEmployee[];
+  employeeCount: number;
+}
+
+export interface OrganizationDepartmentSummary {
+  departmentId: string;
+  departmentName: string;
+  departmentCode: string;
+  departmentType: string;
+  departmentLeader: OrganizationLeader | null;
+  employees: OrganizationEmployee[];
+  employeeCount: number;
+  childDepartmentCount: number;
+}
+
+export function mapOrganizationDepartmentDetail(input: any): OrganizationDepartmentDetail {
+  const employees = mapEmployees(input?.employees);
+
+  return {
+    departmentId: String(input?.departmentId ?? ''),
+    departmentName: String(input?.departmentName ?? ''),
+    departmentCode: String(input?.departmentCode ?? ''),
+    departmentType: String(input?.departmentType ?? ''),
+    departmentLeader: mapLeader(input?.departmentLeader),
+    employees,
+    employeeCount: typeof input?.employeeCount === 'number' ? Number(input.employeeCount) : employees.length,
+  };
 }

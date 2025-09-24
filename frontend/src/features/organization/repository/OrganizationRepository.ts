@@ -2,9 +2,9 @@ import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
 import {
   normalizeOrganizationChartResponse,
-  castToOrganizationWithEmployees,
+  mapOrganizationDepartmentDetail,
   type OrganizationChartNode,
-  type OrganizationChartWithEmployeesNode,
+  type OrganizationDepartmentDetail,
 } from '@/features/organization/models/organization';
 
 @singleton()
@@ -16,11 +16,11 @@ export default class OrganizationRepository {
     return normalizeOrganizationChartResponse(response);
   }
 
-  async fetchOrganizationChartWithEmployees(): Promise<OrganizationChartWithEmployeesNode[]> {
+  async fetchDepartmentDetail(departmentId: string): Promise<OrganizationDepartmentDetail> {
+    // TODO: API 경로 및 응답 스키마 확정 후 수정이 필요합니다.
     const response = await this.httpRepository.get({
-      path: '/api/departments/organization-chart/employees',
+      path: `/api/departments/${departmentId}`,
     });
-    const normalized = normalizeOrganizationChartResponse(response);
-    return castToOrganizationWithEmployees(normalized);
+    return mapOrganizationDepartmentDetail(response);
   }
 }

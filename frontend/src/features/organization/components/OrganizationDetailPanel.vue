@@ -11,10 +11,10 @@
               <Badge variant="outline" class="font-medium">{{ department.departmentCode }}</Badge>
               <Badge variant="secondary" class="capitalize">{{ department.departmentType }}</Badge>
               <Badge variant="ghost" class="text-xs font-semibold">
-                구성원 {{ department.employees.length }}명
+                구성원 {{ department.employeeCount }}명
               </Badge>
-              <Badge v-if="department.children.length" variant="ghost" class="text-xs">
-                하위 부서 {{ department.children.length }}개
+              <Badge v-if="department.childDepartmentCount" variant="ghost" class="text-xs">
+                하위 부서 {{ department.childDepartmentCount }}개
               </Badge>
             </CardDescription>
           </div>
@@ -57,10 +57,16 @@
               구성원
             </p>
             <Badge variant="outline" class="text-xs font-semibold">
-              총 {{ department.employees.length }}명
+              총 {{ department.employeeCount }}명
             </Badge>
           </div>
-          <div v-if="department.employees.length" class="flex max-h-72 flex-col gap-2 overflow-y-auto pr-1">
+          <div
+            v-if="isLoading"
+            class="rounded-lg border border-dashed border-border/60 bg-muted/10 p-3 text-sm text-muted-foreground"
+          >
+            구성원 정보를 불러오는 중입니다...
+          </div>
+          <div v-else-if="department.employees.length" class="flex max-h-72 flex-col gap-2 overflow-y-auto pr-1">
             <div
               v-for="employee in department.employees"
               :key="employee.employeeId"
@@ -110,11 +116,20 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { OrganizationChartWithEmployeesNode } from '@/features/organization/models/organization';
+import type { OrganizationDepartmentSummary } from '@/features/organization/models/organization';
 
 defineOptions({ name: 'OrganizationDetailPanel' });
 
-defineProps<{ department: OrganizationChartWithEmployeesNode | null }>();
+withDefaults(
+  defineProps<{
+    department: OrganizationDepartmentSummary | null;
+    isLoading?: boolean;
+  }>(),
+  {
+    department: null,
+    isLoading: false,
+  },
+);
 
 function getInitials(name?: string) {
   if (!name) {

@@ -30,7 +30,7 @@
         class="rounded-xl border border-border/60 bg-card/90 p-4 shadow-sm"
         :class="{ 'max-h-[720px] overflow-y-auto': layoutBreakpoint === 'desktop' }"
       >
-        <OrganizationDetailPanel :department="selectedDepartment" />
+        <OrganizationDetailPanel :department="selectedDepartment" :isLoading="isDepartmentLoading" />
       </div>
     </div>
   </section>
@@ -40,24 +40,51 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { appContainer } from '@/core/di/container';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
-import type { OrganizationChartWithEmployeesNode } from '@/features/organization/models/organization';
+import type {
+  OrganizationChartNode,
+  OrganizationDepartmentDetail,
+  OrganizationDepartmentSummary,
+} from '@/features/organization/models/organization';
 import OrganizationGojsDiagram from '@/features/organization/components/OrganizationGojsDiagram.vue';
 import OrganizationDetailPanel from '@/features/organization/components/OrganizationDetailPanel.vue';
 import HttpError from '@/core/http/HttpError';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const repository = appContainer.resolve(OrganizationRepository);
-const chart = ref<OrganizationChartWithEmployeesNode[]>([]);
+const chart = ref<OrganizationChartNode[]>([]);
 const isLoading = ref(true);
 const errorMessage = ref<string | null>(null);
 const selectedDepartmentId = ref<string | undefined>();
 const layoutBreakpoint = ref<'desktop' | 'mobile'>('desktop');
+const departmentDetail = ref<OrganizationDepartmentDetail | null>(null);
+const isDepartmentLoading = ref(false);
+
+let detailRequestToken = 0;
 
 const selectedDepartment = computed(() => {
   if (!selectedDepartmentId.value) {
     return null;
   }
-  return findDepartment(chart.value, selectedDepartmentId.value) ?? null;
+  const node = findDepartment(chart.value, selectedDepartmentId.value);
+  if (!node) {
+    return null;
+  }
+
+  const detail = departmentDetail.value;
+
+  const employees = detail?.employees ?? [];
+  const employeeCount = detail?.employeeCount ?? node.employeeCount ?? employees.length;
+
+  return {
+    departmentId: node.departmentId,
+    departmentName: node.departmentName,
+    departmentCode: node.departmentCode,
+    departmentType: node.departmentType,
+    departmentLeader: detail?.departmentLeader ?? node.departmentLeader ?? null,
+    employees,
+    employeeCount,
+    childDepartmentCount: node.children.length,
+  } satisfies OrganizationDepartmentSummary;
 });
 
 async function loadOrganizationChart() {
@@ -65,7 +92,7 @@ async function loadOrganizationChart() {
   errorMessage.value = null;
 
   try {
-    chart.value = await repository.fetchOrganizationChartWithEmployees();
+    chart.value = await repository.fetchOrganizationChart();
   } catch (error) {
     if (error instanceof HttpError) {
       errorMessage.value = error.message;
@@ -74,6 +101,36 @@ async function loadOrganizationChart() {
     }
   } finally {
     isLoading.value = false;
+  }
+}
+
+async function loadDepartmentDetail(departmentId: string) {
+  const token = ++detailRequestToken;
+  isDepartmentLoading.value = true;
+
+  try {
+    const detail = await repository.fetchDepartmentDetail(departmentId);
+
+    if (token !== detailRequestToken) {
+      return;
+    }
+
+    departmentDetail.value = detail;
+  } catch (error) {
+    if (token !== detailRequestToken) {
+      return;
+    }
+
+    departmentDetail.value = null;
+    if (error instanceof HttpError) {
+      console.warn('부서 상세 정보를 불러오지 못했습니다.', error.message);
+    } else {
+      console.warn('부서 상세 정보를 불러오는 중 오류가 발생했습니다.', error);
+    }
+  } finally {
+    if (token === detailRequestToken) {
+      isDepartmentLoading.value = false;
+    }
   }
 }
 
@@ -86,13 +143,48 @@ onMounted(() => {
 watch(chart, (nodes) => {
   if (!nodes.length) {
     selectedDepartmentId.value = undefined;
+    departmentDetail.value = null;
+    return;
   }
+
+  if (selectedDepartmentId.value) {
+    const exists = findDepartment(nodes, selectedDepartmentId.value);
+    if (exists) {
+      return;
+    }
+  }
+
+  selectedDepartmentId.value = nodes[0]?.departmentId;
 });
 
+watch(
+  selectedDepartmentId,
+  (next, previous) => {
+    if (!next) {
+      departmentDetail.value = null;
+      return;
+    }
+
+    if (next === previous && departmentDetail.value) {
+      return;
+    }
+
+    const node = findDepartment(chart.value, next);
+    if (!node) {
+      departmentDetail.value = null;
+      return;
+    }
+
+    departmentDetail.value = null;
+    void loadDepartmentDetail(next);
+  },
+  { immediate: false },
+);
+
 function findDepartment(
-  nodes: OrganizationChartWithEmployeesNode[],
+  nodes: OrganizationChartNode[],
   targetId: string,
-): OrganizationChartWithEmployeesNode | null {
+): OrganizationChartNode | null {
   for (const node of nodes) {
     if (node.departmentId === targetId) {
       return node;
