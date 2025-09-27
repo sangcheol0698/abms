@@ -1,9 +1,6 @@
 <template>
   <div class="h-full">
-    <div
-      v-if="department"
-      class="flex h-full flex-col rounded-xl border border-border/60 bg-card p-4 shadow-sm"
-    >
+    <div v-if="department" class="flex h-full flex-col gap-4 p-4">
       <div class="flex flex-col gap-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-col">
@@ -29,13 +26,12 @@
           <span v-if="department.childDepartmentCount" class="inline-flex items-center gap-1">
             하위 부서 {{ department.childDepartmentCount }}개
           </span>
-          <span class="inline-flex items-center gap-1">
-            ID {{ department.departmentId }}
-          </span>
         </div>
       </div>
 
-      <div class="mt-4 flex flex-1 flex-col overflow-hidden">
+      <Separator />
+
+      <div class="flex flex-1 flex-col overflow-hidden">
         <Tabs defaultValue="info" class="flex h-full flex-col">
           <TabsList class="inline-flex h-9 w-fit gap-2 bg-transparent p-0">
             <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
@@ -45,7 +41,7 @@
 
           <div class="flex-1 overflow-hidden pt-3">
             <TabsContent value="info" class="flex h-full flex-col gap-4">
-              <div class="grid gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
+            <div class="grid gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
                 <div class="grid grid-cols-[120px_1fr] gap-2">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">부서 코드</dt>
                   <dd class="text-foreground">{{ department.departmentCode }}</dd>
@@ -144,7 +140,7 @@
       </div>
     </div>
 
-    <div v-else class="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 p-6 text-center">
+    <div v-else class="flex h-full flex-col items-center justify-center rounded-lg bg-muted/10 p-6 text-center">
       <h3 class="text-base font-semibold text-foreground">조직 노드를 선택해 주세요</h3>
       <p class="mt-2 text-sm text-muted-foreground">
         왼쪽 조직도에서 팀을 선택하면 이 영역에 상세 정보가 표시됩니다.
@@ -157,6 +153,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import type { OrganizationDepartmentSummary } from '@/features/organization/models/organization';
 
 defineOptions({ name: 'OrganizationDetailPanel' });

@@ -156,12 +156,13 @@ function rebuildIndexes(nodes: OrganizationChartNode[]) {
   });
 
   if (!hasInitializedCollapse.value) {
+    hasInitializedCollapse.value = true;
+  } else {
     nextCollapsible.forEach((id) => {
-      if (nextDepth[id] >= 2) {
+      if (nextDepth[id] >= 1) {
         nextState[id] = true;
       }
     });
-    hasInitializedCollapse.value = true;
   }
 
   collapsedMap.value = nextState;
