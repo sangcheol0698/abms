@@ -28,6 +28,23 @@
                   </p>
                 </div>
                 <div class="grid gap-4 md:grid-cols-2">
+                  <FormField name="name" v-slot="{ componentField }">
+                    <FormItem>
+                      <FormLabel>
+                        이름
+                        <span class="ml-0.5 text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          v-bind="componentField"
+                          placeholder="홍길동"
+                          :disabled="isSubmitting"
+                        />
+                      </FormControl>
+                      <FormMessage class="sr-only" />
+                    </FormItem>
+                  </FormField>
+
                   <FormField name="departmentId" v-slot="{ componentField }">
                     <FormItem>
                       <FormLabel>
@@ -71,23 +88,6 @@
                             <span>조직도</span>
                           </Button>
                         </div>
-                      </FormControl>
-                      <FormMessage class="sr-only" />
-                    </FormItem>
-                  </FormField>
-
-                  <FormField name="name" v-slot="{ componentField }">
-                    <FormItem>
-                      <FormLabel>
-                        이름
-                        <span class="ml-0.5 text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          v-bind="componentField"
-                          placeholder="홍길동"
-                          :disabled="isSubmitting"
-                        />
                       </FormControl>
                       <FormMessage class="sr-only" />
                     </FormItem>
@@ -266,7 +266,7 @@
                 <div class="space-y-1">
                   <h3 class="text-lg font-semibold text-foreground">추가 메모</h3>
                   <p class="text-sm text-muted-foreground">
-                    업무 배치나 전달 사항이 있다면 기록해 주세요.
+                    업무 배치나 특이사항 등 추가로 남기고 싶은 내용을 입력하세요.
                   </p>
                 </div>
                 <FormField name="memo" v-slot="{ componentField }">
