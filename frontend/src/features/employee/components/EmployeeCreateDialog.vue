@@ -308,7 +308,7 @@
               </div>
 
               <DialogFooter class="border-t border-border/60 py-4">
-                <div class="ml-auto flex items-center gap-2 px-6">
+                <div class="ml-auto flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
