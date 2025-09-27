@@ -20,38 +20,20 @@
       </Card>
     </div>
 
-    <Card v-if="insights.length" class="shadow-sm">
-      <CardHeader>
-        <CardTitle class="text-base">인사이트</CardTitle>
-        <CardDescription>조직 운영에 도움이 될 만한 간단한 알림입니다.</CardDescription>
-      </CardHeader>
-      <CardContent class="grid gap-3 sm:grid-cols-2">
-        <div
-          v-for="insight in insights"
-          :key="insight.headline"
-          class="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm"
-        >
-          <p class="font-semibold text-foreground">{{ insight.headline }}</p>
-          <p v-if="insight.subline" class="text-xs text-muted-foreground">{{ insight.subline }}</p>
-        </div>
-      </CardContent>
-    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { EmployeeSummaryCard, EmployeeSummaryInsight } from '@/features/employee/composables/useEmployeeSummary';
+import type { EmployeeSummaryCard } from '@/features/employee/composables/useEmployeeSummary';
 
 withDefaults(
   defineProps<{
     cards: EmployeeSummaryCard[];
-    insights: EmployeeSummaryInsight[];
   }>(),
   {
     cards: () => [],
-    insights: () => [],
   },
 );
 </script>

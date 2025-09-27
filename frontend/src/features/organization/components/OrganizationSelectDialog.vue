@@ -8,8 +8,10 @@
 
       <div class="max-h-[55vh] overflow-y-auto rounded-md border px-2 py-2">
         <OrganizationTree
+          :key="treeRenderKey"
           :nodes="nodes"
           :selected-node-id="selectedNodeId"
+          default-expand-all
           @update:selectedNodeId="handleTreeSelect"
         />
       </div>
@@ -68,6 +70,7 @@ const repository = appContainer.resolve(OrganizationRepository);
 const loading = ref(false);
 const nodes = ref<OrganizationChartNode[]>([]);
 const selectedNodeId = ref('');
+const treeRenderKey = ref(0);
 
 const selectedNodeSummary = computed(() => {
   if (!selectedNodeId.value) {
@@ -83,6 +86,7 @@ const selectedNodeSummary = computed(() => {
 onMounted(() => {
   if (props.open) {
     loadChart();
+    treeRenderKey.value += 1;
   }
 });
 
@@ -92,6 +96,7 @@ watch(
     if (isOpen) {
       selectedNodeId.value = props.selectedDepartmentId ?? '';
       loadChart();
+      treeRenderKey.value += 1;
     } else {
       selectedNodeId.value = '';
     }

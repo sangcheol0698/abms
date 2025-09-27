@@ -67,9 +67,12 @@ import type { OrganizationChartNode } from '@/features/organization/models/organ
 interface Props {
   nodes: OrganizationChartNode[];
   selectedNodeId?: string;
+  defaultExpandAll?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  defaultExpandAll: true,
+});
 const emit = defineEmits<{ (e: 'update:selectedNodeId', value: string): void }>();
 
 const collapsedMap = ref<Record<string, boolean>>({});
@@ -157,12 +160,13 @@ function rebuildIndexes(nodes: OrganizationChartNode[]) {
 
   if (!hasInitializedCollapse.value) {
     hasInitializedCollapse.value = true;
-  } else {
-    nextCollapsible.forEach((id) => {
-      if (nextDepth[id] >= 1) {
-        nextState[id] = true;
-      }
-    });
+    if (!props.defaultExpandAll) {
+      nextCollapsible.forEach((id) => {
+        if (nextDepth[id] >= 2) {
+          nextState[id] = true;
+        }
+      });
+    }
   }
 
   collapsedMap.value = nextState;

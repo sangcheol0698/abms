@@ -12,11 +12,6 @@ export interface EmployeeSummaryCard {
   };
 }
 
-export interface EmployeeSummaryInsight {
-  headline: string;
-  subline?: string;
-}
-
 interface UseEmployeeSummaryParams {
   employees: MaybeRef<EmployeeListItem[]>;
   previousEmployees?: MaybeRef<EmployeeListItem[]>;
@@ -100,29 +95,6 @@ export function useEmployeeSummary(params: UseEmployeeSummaryParams) {
       },
     ];
 
-    const insights: EmployeeSummaryInsight[] = [];
-
-    if (onLeaveCount > 0) {
-      insights.push({
-        headline: `휴가 중인 구성원이 ${onLeaveCount}명입니다`,
-        subline: '업무 공백을 대비한 승계 계획을 확인하세요.',
-      });
-    }
-
-    if (resignedCount > 0) {
-      insights.push({
-        headline: `최근 퇴사 처리된 구성원이 ${resignedCount}명 있습니다`,
-        subline: '퇴사 사유와 대체 인력 검토가 필요합니다.',
-      });
-    }
-
-    if (insights.length === 0) {
-      insights.push({
-        headline: '구성원 상태가 안정적입니다',
-        subline: '필요 시 신규 채용 계획을 검토해 보세요.',
-      });
-    }
-
-    return { cards, insights };
+    return { cards };
   });
 }

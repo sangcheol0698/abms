@@ -57,8 +57,7 @@
                           <Button
                             type="button"
                             variant="outline"
-                            size="sm"
-                            class="gap-1 whitespace-nowrap"
+                            class="h-9 gap-2 whitespace-nowrap px-3"
                             :disabled="isSubmitting"
                             @click="
                               handleDepartmentSelectButton(
@@ -68,7 +67,7 @@
                               )
                             "
                           >
-                            <!--                            <Buildings class="h-4 w-4" />-->
+                            <Building2 class="h-4 w-4" />
                             <span>조직도</span>
                           </Button>
                         </div>
@@ -369,7 +368,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-// import { Buildings } from 'lucide-vue-next';
+import { Building2 } from 'lucide-vue-next';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Separator } from '@/components/ui/separator';
 import { appContainer } from '@/core/di/container';
