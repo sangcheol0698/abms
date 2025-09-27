@@ -15,6 +15,7 @@
         searchPlaceholder="이름을 입력하세요"
         searchColumnId="name"
         :getColumnLabel="getColumnLabel"
+        :applySearchOnEnter="true"
       >
         <template #filters>
           <DataTableFacetedFilter
@@ -56,11 +57,12 @@
           <Button
             variant="outline"
             size="sm"
-            class="h-8"
+            class="h-8 w-8 p-0"
             :disabled="isLoading"
             @click="loadEmployees"
+            title="새로고침"
           >
-            새로고침
+            <RefreshCcw class="h-4 w-4" />
           </Button>
         </template>
       </DataTableToolbar>
@@ -137,6 +139,7 @@ import {
 import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummaryCards.vue';
 import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
+import { RefreshCcw } from 'lucide-vue-next';
 
 interface DepartmentOption {
   label: string;

@@ -24,12 +24,26 @@
 
     <div class="flex items-center justify-between gap-3">
       <div class="flex min-w-0 flex-1 items-center space-x-2">
-        <Input
-          :placeholder="searchPlaceholder"
-          :model-value="(table.getColumn(searchColumnId)?.getFilterValue() as string) ?? ''"
-          @update:model-value="table.getColumn(searchColumnId)?.setFilterValue($event)"
-          class="h-8 w-[120px] sm:w-[180px] lg:w-[250px]"
-        />
+        <div class="flex items-center gap-2">
+          <Input
+            :placeholder="searchPlaceholder"
+            :model-value="internalSearchValue"
+            @update:model-value="handleSearchInput"
+            @compositionupdate="handleSearchComposition"
+            @keydown.enter.prevent="props.applySearchOnEnter ? handleSearchEnter() : undefined"
+            class="h-8 w-[120px] sm:w-[180px] lg:w-[250px]"
+          />
+          <Button
+            v-if="props.applySearchOnEnter"
+            variant="outline"
+            size="sm"
+            class="h-8 w-8 p-0"
+            :disabled="internalSearchValue.trim().length === 0"
+            @click="handleSearchEnter"
+          >
+            <Search class="h-4 w-4" />
+          </Button>
+        </div>
 
         <Button variant="outline" size="sm" class="h-8 md:hidden" @click="showFilters = !showFilters">
           <Filter class="h-4 w-4" />
@@ -97,8 +111,8 @@
 
 <script setup lang="ts">
 import type { Table } from '@tanstack/vue-table';
-import { computed, ref } from 'vue';
-import { Filter, Settings, X } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
+import { Filter, Search, Settings, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -116,10 +130,16 @@ interface DataTableToolbarProps {
   searchColumnId?: string;
   getColumnLabel: (columnId: string) => string;
   showSelectedInfo?: boolean;
+  normalizeSearchValue?: (value: string) => string;
+  extractSearchValue?: (value: unknown) => string;
+  applySearchOnEnter?: boolean;
 }
 
 const props = withDefaults(defineProps<DataTableToolbarProps>(), {
   showSelectedInfo: true,
+  normalizeSearchValue: undefined,
+  extractSearchValue: undefined,
+  applySearchOnEnter: false,
 });
 
 const forceUpdate = ref(0);
@@ -138,6 +158,71 @@ const hasActiveFilters = computed(() => props.table.getState().columnFilters.len
 
 const activeFilterCount = computed(() => props.table.getState().columnFilters.length);
 
+const searchColumnId = computed(() => props.searchColumnId ?? 'name');
+
+const searchInputValue = computed(() => {
+  const column = props.table.getColumn(searchColumnId.value);
+  if (!column) {
+    return '';
+  }
+  const currentValue = column.getFilterValue();
+  if (typeof props.extractSearchValue === 'function') {
+    return props.extractSearchValue(currentValue);
+  }
+  return typeof currentValue === 'string' ? currentValue : '';
+});
+
+function defaultNormalizeSearchValue(value: string): string {
+  return value.trim();
+}
+
+const internalSearchValue = ref('');
+
+watch(
+  searchInputValue,
+  (value) => {
+    internalSearchValue.value = value;
+  },
+  { immediate: true },
+);
+
+function setSearchFilter(rawValue: string) {
+  const column = props.table.getColumn(searchColumnId.value);
+  if (!column) {
+    return;
+  }
+  const trimmed = rawValue.trim();
+  if (!trimmed) {
+    column.setFilterValue(undefined);
+    return;
+  }
+  const normalize = props.normalizeSearchValue ?? defaultNormalizeSearchValue;
+  const normalized = normalize(trimmed);
+  column.setFilterValue(normalized.length > 0 ? normalized : undefined);
+}
+
+function handleSearchInput(value: string | number) {
+  const stringValue = String(value);
+  internalSearchValue.value = stringValue;
+  if (!props.applySearchOnEnter) {
+    setSearchFilter(stringValue);
+  }
+}
+
+function handleSearchComposition(value: string) {
+  internalSearchValue.value = value;
+  if (!props.applySearchOnEnter) {
+    setSearchFilter(value);
+  }
+}
+
+function handleSearchEnter() {
+  if (!props.applySearchOnEnter) {
+    return;
+  }
+  setSearchFilter(internalSearchValue.value);
+}
+
 function resetFilters() {
   props.table.resetColumnFilters();
   showFilters.value = false;
@@ -147,4 +232,5 @@ function onToggleColumn(column: any, value?: boolean) {
   column.toggleVisibility(value ?? !column.getIsVisible());
   forceUpdate.value++;
 }
+
 </script>
