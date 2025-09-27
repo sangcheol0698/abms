@@ -69,7 +69,6 @@
         :columns="columns"
         :data="employees"
         :tableInstance="table"
-        :loading="isLoading"
         emptyMessage="구성원 정보를 찾을 수 없습니다"
         emptyDescription="검색어나 필터 조건을 조정해 다시 시도해 보세요"
         :pageSize="pageSize"
@@ -80,7 +79,6 @@
         :pageSize="pageSize"
         :totalPages="totalPages"
         :totalElements="totalElements"
-        :loading="isLoading"
         :selectedRowCount="selectedRowCount"
         @pageChange="handlePageChange"
         @pageSizeChange="handlePageSizeChange"
@@ -331,6 +329,7 @@ const table = useVueTable({
   getFacetedRowModel: getFacetedRowModel(),
   getFacetedUniqueValues: getFacetedUniqueValues(),
 });
+
 
 let requestToken = 0;
 
