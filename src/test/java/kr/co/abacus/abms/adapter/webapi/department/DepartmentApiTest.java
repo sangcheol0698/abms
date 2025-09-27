@@ -3,11 +3,16 @@ package kr.co.abacus.abms.adapter.webapi.department;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
+import java.io.UnsupportedEncodingException;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartWithEmployeesResponse;
@@ -103,6 +108,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         );
 
         assertDepartmentNode(response, company, 1);
+        Assertions.assertNotNull(response.departmentLeader());
         assertThat(response.departmentLeader().employeeName()).isEqualTo("홍길동");
 
         OrganizationChartWithEmployeesResponse divisionNode = response.children().getFirst();
@@ -121,6 +127,24 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         assertThat(team1Response.employees()).hasSize(1)
             .extracting(OrganizationEmployeeResponse::employeeName)
             .containsExactly("김철수");
+    }
+
+    @Test
+    void getDepartment() throws UnsupportedEncodingException, JsonProcessingException {
+        MvcTestResult mvcTestResult = mvcTester.get().uri("/api/departments/{id}", team1.getId())
+            .exchange();
+
+        assertThat(mvcTestResult).apply(print()).hasStatusOk();
+
+        DepartmentResponse response = objectMapper.readValue(
+            mvcTestResult.getMvcResult().getResponse().getContentAsString(),
+            DepartmentResponse.class
+        );
+
+        assertThat(response.departmentId()).isEqualTo(team1.getId());
+        assertThat(response.departmentName()).isEqualTo(team1.getName());
+        assertThat(response.departmentCode()).isEqualTo(team1.getCode());
+        assertThat(response.departmentType()).isEqualTo(team1.getType().getDescription());
     }
 
     private void assertDepartmentNode(OrganizationChartResponse node, Department expected, int expectedChildrenSize) {
