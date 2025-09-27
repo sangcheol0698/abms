@@ -7,10 +7,7 @@
       </p>
     </header>
 
-    <EmployeeSummaryCards
-      :cards="employeeSummary.cards"
-      
-    />
+    <EmployeeSummaryCards :cards="employeeSummary.cards" />
 
     <div class="space-y-4">
       <DataTableToolbar
@@ -53,7 +50,16 @@
         </template>
 
         <template #actions>
-          <Button variant="outline" size="sm" class="h-8" :disabled="isLoading" @click="loadEmployees">
+          <Button variant="default" size="sm" class="h-8" @click="openCreateDialog">
+            구성원 추가
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-8"
+            :disabled="isLoading"
+            @click="loadEmployees"
+          >
             새로고침
           </Button>
         </template>
@@ -81,6 +87,12 @@
       />
     </div>
   </section>
+  <EmployeeCreateDialog
+    :open="isCreateDialogOpen"
+    :departmentOptions="departmentOptions"
+    @update:open="(value) => (isCreateDialogOpen = value)"
+    @created="handleEmployeeCreated"
+  />
 </template>
 
 <script setup lang="ts">
@@ -88,25 +100,25 @@ import { computed, h, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDebounceFn } from '@vueuse/core';
 import {
-    getCoreRowModel,
-    getFacetedRowModel,
-    getFacetedUniqueValues,
-    getFilteredRowModel,
-    type ColumnDef,
-    type ColumnFiltersState,
-    type RowSelectionState,
-    type SortingState,
-    type VisibilityState,
-    useVueTable,
+  getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type RowSelectionState,
+  type SortingState,
+  type VisibilityState,
+  useVueTable,
 } from '@tanstack/vue-table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
-    DataTable,
-    DataTableColumnHeader,
-    DataTableFacetedFilter,
-    DataTablePagination,
-    DataTableToolbar,
+  DataTable,
+  DataTableColumnHeader,
+  DataTableFacetedFilter,
+  DataTablePagination,
+  DataTableToolbar,
 } from '@/components/business';
 import { Button } from '@/components/ui/button';
 import { valueUpdater } from '@/components/ui/table/utils';
@@ -115,21 +127,22 @@ import EmployeeRepository from '@/features/employee/repository/EmployeeRepositor
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
 import type { OrganizationChartNode } from '@/features/organization/models/organization';
 import type {
-    EmployeeListItem,
-    EmployeeSearchParams,
+  EmployeeListItem,
+  EmployeeSearchParams,
 } from '@/features/employee/models/employeeListItem';
 import {
-    EMPLOYEE_GRADE_OPTIONS,
-    EMPLOYEE_POSITION_OPTIONS,
-    EMPLOYEE_STATUS_OPTIONS,
-    EMPLOYEE_TYPE_OPTIONS,
+  EMPLOYEE_GRADE_OPTIONS,
+  EMPLOYEE_POSITION_OPTIONS,
+  EMPLOYEE_STATUS_OPTIONS,
+  EMPLOYEE_TYPE_OPTIONS,
 } from '@/features/employee/models/employeeFilters';
 import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummaryCards.vue';
 import { useEmployeeSummary } from '@/features/employee/composables';
+import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
 
 interface DepartmentOption {
-    label: string;
-    value: string;
+  label: string;
+  value: string;
 }
 
 const employeeRepository = appContainer.resolve(EmployeeRepository);
@@ -157,606 +170,613 @@ const statusOptions = EMPLOYEE_STATUS_OPTIONS;
 const typeOptions = EMPLOYEE_TYPE_OPTIONS;
 const gradeOptions = EMPLOYEE_GRADE_OPTIONS;
 const positionOptions = EMPLOYEE_POSITION_OPTIONS;
+const isCreateDialogOpen = ref(false);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 
 const employeeSummary = useEmployeeSummary({ employees });
 
 const columns: ColumnDef<EmployeeListItem>[] = [
-    {
-        id: 'select',
-        header: ({ table }) =>
-            h(Checkbox, {
-                modelValue:
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && 'indeterminate'),
-                'onUpdate:modelValue': (value: boolean) => table.toggleAllPageRowsSelected(!!value),
-                ariaLabel: '모두 선택',
-            }),
-        cell: ({ row }) =>
-            h(Checkbox, {
-                modelValue: row.getIsSelected(),
-                'onUpdate:modelValue': (value: boolean) => row.toggleSelected(!!value),
-                ariaLabel: '행 선택',
-            }),
-        enableSorting: false,
-        enableHiding: false,
-        size: 48,
+  {
+    id: 'select',
+    header: ({ table }) =>
+      h(Checkbox, {
+        modelValue:
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate'),
+        'onUpdate:modelValue': (value: boolean) => table.toggleAllPageRowsSelected(!!value),
+        ariaLabel: '모두 선택',
+      }),
+    cell: ({ row }) =>
+      h(Checkbox, {
+        modelValue: row.getIsSelected(),
+        'onUpdate:modelValue': (value: boolean) => row.toggleSelected(!!value),
+        ariaLabel: '행 선택',
+      }),
+    enableSorting: false,
+    enableHiding: false,
+    size: 48,
+  },
+  {
+    accessorKey: 'name',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '이름', align: 'left' }),
+    cell: ({ row }) =>
+      h('div', { class: 'flex flex-col gap-0.5' }, [
+        h('span', { class: 'font-medium text-foreground' }, row.original.name),
+        h('span', { class: 'text-xs text-muted-foreground' }, row.original.email),
+      ]),
+    enableSorting: true,
+    size: 260,
+    meta: { skeleton: 'title-subtitle' },
+  },
+  {
+    id: 'departmentName',
+    accessorFn: (row) => row.departmentName,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '부서', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, row.original.departmentName ?? ''),
+    enableSorting: false,
+    size: 160,
+    meta: { skeleton: 'text-short' },
+  },
+  {
+    id: 'departmentId',
+    accessorKey: 'departmentId',
+    header: () => null,
+    cell: () => null,
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.includes(row.original.departmentId);
     },
-    {
-        accessorKey: 'name',
-        header: ({ column }) => h(DataTableColumnHeader, { column, title: '이름', align: 'left' }),
-        cell: ({ row }) =>
-            h('div', { class: 'flex flex-col gap-0.5' }, [
-                h(
-                    'span',
-                    { class: 'font-medium text-foreground' },
-                    row.original.name,
-                ),
-                h(
-                    'span',
-                    { class: 'text-xs text-muted-foreground' },
-                    row.original.email,
-                ),
-            ]),
-        enableSorting: true,
-        size: 260,
-        meta: { skeleton: 'title-subtitle' },
+    enableSorting: false,
+    enableHiding: false,
+    size: 0,
+    meta: { isFilterOnly: true },
+  },
+  {
+    id: 'position',
+    accessorFn: (row) => row.positionLabel,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '직책', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, row.original.positionLabel ?? ''),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.positionCode);
     },
-    {
-        id: 'departmentName',
-        accessorFn: (row) => row.departmentName,
-        header: ({ column }) => h(DataTableColumnHeader, { column, title: '부서', align: 'left' }),
-        cell: ({ row }) =>
-            h('span', { class: 'text-sm text-foreground' }, row.original.departmentName ?? ''),
-        enableSorting: false,
-        size: 160,
-        meta: { skeleton: 'text-short' },
+    enableSorting: false,
+    size: 120,
+    meta: { skeleton: 'text-short' },
+  },
+  {
+    id: 'grade',
+    accessorFn: (row) => row.gradeLabel,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '등급', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, row.original.gradeLabel ?? ''),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.gradeCode);
     },
-    {
-        id: 'departmentId',
-        accessorKey: 'departmentId',
-        header: () => null,
-        cell: () => null,
-        filterFn: (row, _columnId, filterValue) => {
-            const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-            return candidate.includes(row.original.departmentId);
-        },
-        enableSorting: false,
-        enableHiding: false,
-        size: 0,
-        meta: { isFilterOnly: true },
+    enableSorting: false,
+    size: 80,
+    meta: { skeleton: 'text-short' },
+  },
+  {
+    id: 'type',
+    accessorFn: (row) => row.typeLabel,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '유형', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, row.original.typeLabel ?? ''),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.typeCode);
     },
-    {
-        id: 'position',
-        accessorFn: (row) => row.positionLabel,
-        header: ({ column }) => h(DataTableColumnHeader, { column, title: '직책', align: 'left' }),
-        cell: ({ row }) =>
-            h('span', { class: 'text-sm text-foreground' }, row.original.positionLabel ?? ''),
-        filterFn: (row, _columnId, filterValue) => {
-            const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-            return candidate.length === 0 || candidate.includes(row.original.positionCode);
-        },
-        enableSorting: false,
-        size: 120,
-        meta: { skeleton: 'text-short' },
+    enableSorting: false,
+    size: 80,
+    meta: { skeleton: 'text-short' },
+  },
+  {
+    id: 'status',
+    accessorFn: (row) => row.statusLabel,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '상태', align: 'left' }),
+    cell: ({ row }) =>
+      h(Badge, { variant: 'outline', class: 'font-medium' }, () => row.original.statusLabel ?? ''),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.statusCode);
     },
-    {
-        id: 'grade',
-        accessorFn: (row) => row.gradeLabel,
-        header: ({ column }) => h(DataTableColumnHeader, { column, title: '등급', align: 'left' }),
-        cell: ({ row }) =>
-            h('span', { class: 'text-sm text-foreground' }, row.original.gradeLabel ?? ''),
-        filterFn: (row, _columnId, filterValue) => {
-            const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-            return candidate.length === 0 || candidate.includes(row.original.gradeCode);
-        },
-        enableSorting: false,
-        size: 80,
-        meta: { skeleton: 'text-short' },
-    },
-    {
-        id: 'type',
-        accessorFn: (row) => row.typeLabel,
-        header: ({ column }) => h(DataTableColumnHeader, { column, title: '유형', align: 'left' }),
-        cell: ({ row }) =>
-            h('span', { class: 'text-sm text-foreground' }, row.original.typeLabel ?? ''),
-        filterFn: (row, _columnId, filterValue) => {
-            const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-            return candidate.length === 0 || candidate.includes(row.original.typeCode);
-        },
-        enableSorting: false,
-        size: 80,
-        meta: { skeleton: 'text-short' },
-    },
-    {
-        id: 'status',
-        accessorFn: (row) => row.statusLabel,
-        header: ({ column }) => h(DataTableColumnHeader, { column, title: '상태', align: 'left' }),
-        cell: ({ row }) =>
-            h(
-                Badge,
-                { variant: 'outline', class: 'font-medium' },
-                () => row.original.statusLabel ?? '',
-            ),
-        filterFn: (row, _columnId, filterValue) => {
-            const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-            return candidate.length === 0 || candidate.includes(row.original.statusCode);
-        },
-        enableSorting: false,
-        size: 90,
-        meta: { skeleton: 'enum-badge' },
-    },
-    {
-        id: 'memo',
-        accessorKey: 'memo',
-        header: ({ column }) => h(DataTableColumnHeader, { column, title: '메모', align: 'left' }),
-        cell: ({ row }) =>
-            h('span', { class: 'text-sm text-muted-foreground line-clamp-2' }, row.original.memo ?? ''),
-        enableSorting: false,
-        size: 240,
-        meta: { skeleton: 'title-subtitle' },
-    },
+    enableSorting: false,
+    size: 90,
+    meta: { skeleton: 'enum-badge' },
+  },
+  {
+    id: 'memo',
+    accessorKey: 'memo',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '메모', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-muted-foreground line-clamp-2' }, row.original.memo ?? ''),
+    enableSorting: false,
+    size: 240,
+    meta: { skeleton: 'title-subtitle' },
+  },
 ];
 
 const table = useVueTable({
-    data: computed(() => employees.value),
-    columns,
-    manualPagination: true,
-    manualFiltering: true,
-    manualSorting: true,
-    enableRowSelection: true,
-    state: {
-        get sorting() {
-            return sorting.value;
-        },
-        get columnFilters() {
-            return columnFilters.value;
-        },
-        get columnVisibility() {
-            return columnVisibility.value;
-        },
-        get rowSelection() {
-            return rowSelection.value;
-        },
+  data: computed(() => employees.value),
+  columns,
+  manualPagination: true,
+  manualFiltering: true,
+  manualSorting: true,
+  enableRowSelection: true,
+  state: {
+    get sorting() {
+      return sorting.value;
     },
-    onSortingChange: (updater) => valueUpdater(updater, sorting),
-    onColumnFiltersChange: (updater) => valueUpdater(updater, columnFilters),
-    onColumnVisibilityChange: (updater) => valueUpdater(updater, columnVisibility),
-    onRowSelectionChange: (updater) => valueUpdater(updater, rowSelection),
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
+    get columnFilters() {
+      return columnFilters.value;
+    },
+    get columnVisibility() {
+      return columnVisibility.value;
+    },
+    get rowSelection() {
+      return rowSelection.value;
+    },
+  },
+  onSortingChange: (updater) => valueUpdater(updater, sorting),
+  onColumnFiltersChange: (updater) => valueUpdater(updater, columnFilters),
+  onColumnVisibilityChange: (updater) => valueUpdater(updater, columnVisibility),
+  onRowSelectionChange: (updater) => valueUpdater(updater, rowSelection),
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getFacetedRowModel: getFacetedRowModel(),
+  getFacetedUniqueValues: getFacetedUniqueValues(),
 });
 
 let requestToken = 0;
 
 async function loadDepartments() {
-    try {
-        const chart = await organizationRepository.fetchOrganizationChart();
-        const map = new Map<string, string>();
+  try {
+    const chart = await organizationRepository.fetchOrganizationChart();
+    const map = new Map<string, string>();
 
-        const traverse = (nodes: OrganizationChartNode[]) => {
-            nodes.forEach((node) => {
-                if (!map.has(node.departmentId)) {
-                    map.set(node.departmentId, node.departmentName);
-                }
-                if (Array.isArray(node.children) && node.children.length > 0) {
-                    traverse(node.children);
-                }
-            });
-        };
+    const traverse = (nodes: OrganizationChartNode[]) => {
+      nodes.forEach((node) => {
+        if (!map.has(node.departmentId)) {
+          map.set(node.departmentId, node.departmentName);
+        }
+        if (Array.isArray(node.children) && node.children.length > 0) {
+          traverse(node.children);
+        }
+      });
+    };
 
-        traverse(chart);
-        departmentOptions.value = Array.from(map.entries()).map(([value, label]) => ({ value, label }));
-    } catch (error) {
-        console.error('부서 정보를 불러오지 못했습니다.', error);
-        departmentOptions.value = [];
-    }
+    traverse(chart);
+    departmentOptions.value = Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+  } catch (error) {
+    console.error('부서 정보를 불러오지 못했습니다.', error);
+    departmentOptions.value = [];
+  }
 }
 
 function toArray(value: unknown): string[] {
-    if (Array.isArray(value)) {
-        return value.map((item) => String(item));
-    }
-    if (value === undefined || value === null) {
-        return [];
-    }
-    return [String(value)];
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item));
+  }
+  if (value === undefined || value === null) {
+    return [];
+  }
+  return [String(value)];
 }
 
 function buildSearchParams(): EmployeeSearchParams {
-    const params: EmployeeSearchParams = {
-        page: page.value,
-        size: pageSize.value,
-    };
+  const params: EmployeeSearchParams = {
+    page: page.value,
+    size: pageSize.value,
+  };
 
-    const filterMap = new Map<string, unknown>(columnFilters.value.map((filter) => [filter.id, filter.value]));
-    const nameFilter = filterMap.get('name');
+  const filterMap = new Map<string, unknown>(
+    columnFilters.value.map((filter) => [filter.id, filter.value]),
+  );
+  const nameFilter = filterMap.get('name');
 
-    if (typeof nameFilter === 'string' && nameFilter.trim().length > 0) {
-        params.name = nameFilter.trim();
-    }
+  if (typeof nameFilter === 'string' && nameFilter.trim().length > 0) {
+    params.name = nameFilter.trim();
+  }
 
-    const statusFilter = toArray(filterMap.get('status'));
-    if (statusFilter.length > 0) {
-        params.statuses = statusFilter;
-    }
+  const statusFilter = toArray(filterMap.get('status'));
+  if (statusFilter.length > 0) {
+    params.statuses = statusFilter;
+  }
 
-    const typeFilter = toArray(filterMap.get('type'));
-    if (typeFilter.length > 0) {
-        params.types = typeFilter;
-    }
+  const typeFilter = toArray(filterMap.get('type'));
+  if (typeFilter.length > 0) {
+    params.types = typeFilter;
+  }
 
-    const gradeFilter = toArray(filterMap.get('grade'));
-    if (gradeFilter.length > 0) {
-        params.grades = gradeFilter;
-    }
+  const gradeFilter = toArray(filterMap.get('grade'));
+  if (gradeFilter.length > 0) {
+    params.grades = gradeFilter;
+  }
 
-    const positionFilter = toArray(filterMap.get('position'));
-    if (positionFilter.length > 0) {
-        params.positions = positionFilter;
-    }
+  const positionFilter = toArray(filterMap.get('position'));
+  if (positionFilter.length > 0) {
+    params.positions = positionFilter;
+  }
 
-    const departmentFilter = toArray(filterMap.get('departmentId'));
-    if (departmentFilter.length > 0) {
-        params.departmentIds = departmentFilter;
-    }
+  const departmentFilter = toArray(filterMap.get('departmentId'));
+  if (departmentFilter.length > 0) {
+    params.departmentIds = departmentFilter;
+  }
 
-    const sortState = sorting.value[0];
-    if (sortState && sortState.id) {
-        params.sort = `${sortState.id},${sortState.desc ? 'desc' : 'asc'}`;
-    }
+  const sortState = sorting.value[0];
+  if (sortState && sortState.id) {
+    params.sort = `${sortState.id},${sortState.desc ? 'desc' : 'asc'}`;
+  }
 
-    return params;
+  return params;
 }
 
 function toSingleString(value: unknown): string | undefined {
-    if (Array.isArray(value)) {
-        const first = value.find((item) => item != null);
-        return first !== undefined ? String(first) : undefined;
-    }
-    if (typeof value === 'string') {
-        return value;
-    }
-    return undefined;
+  if (Array.isArray(value)) {
+    const first = value.find((item) => item != null);
+    return first !== undefined ? String(first) : undefined;
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return undefined;
 }
 
 function parseQueryArray(value: unknown): string[] {
-    if (Array.isArray(value)) {
-        return value
-            .flatMap((item) => String(item).split(','))
-            .map((item) => item.trim())
-            .filter((item) => item.length > 0);
-    }
-    if (typeof value === 'string') {
-        return value
-            .split(',')
-            .map((item) => item.trim())
-            .filter((item) => item.length > 0);
-    }
-    return [];
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((item) => String(item).split(','))
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+  return [];
 }
 
 function parsePositiveInt(value: unknown, fallback: number): number {
-    const source = Array.isArray(value) ? value[0] : value;
-    const parsed = Number(source);
-    if (Number.isFinite(parsed) && parsed > 0) {
-        return Math.floor(parsed);
-    }
-    return fallback;
+  const source = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(source);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return Math.floor(parsed);
+  }
+  return fallback;
 }
 
 function buildQueryFromState(): Record<string, string> {
-    const params = buildSearchParams();
-    const query: Record<string, string> = {
-        page: String(params.page),
-        size: String(params.size),
-    };
+  const params = buildSearchParams();
+  const query: Record<string, string> = {
+    page: String(params.page),
+    size: String(params.size),
+  };
 
-    if (params.name) {
-        query.name = params.name;
-    }
-    if (params.statuses?.length) {
-        query.statuses = params.statuses.join(',');
-    }
-    if (params.types?.length) {
-        query.types = params.types.join(',');
-    }
-    if (params.grades?.length) {
-        query.grades = params.grades.join(',');
-    }
-    if (params.positions?.length) {
-        query.positions = params.positions.join(',');
-    }
-    if (params.departmentIds?.length) {
-        query.departmentIds = params.departmentIds.join(',');
-    }
-    if (params.sort) {
-        query.sort = params.sort;
-    }
+  if (params.name) {
+    query.name = params.name;
+  }
+  if (params.statuses?.length) {
+    query.statuses = params.statuses.join(',');
+  }
+  if (params.types?.length) {
+    query.types = params.types.join(',');
+  }
+  if (params.grades?.length) {
+    query.grades = params.grades.join(',');
+  }
+  if (params.positions?.length) {
+    query.positions = params.positions.join(',');
+  }
+  if (params.departmentIds?.length) {
+    query.departmentIds = params.departmentIds.join(',');
+  }
+  if (params.sort) {
+    query.sort = params.sort;
+  }
 
-    return query;
+  return query;
 }
 
 function getRouteQueryRecord(): Record<string, string> {
-    const record: Record<string, string> = {};
-    Object.entries(route.query).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-            const joined = value.join(',');
-            if (joined) {
-                record[key] = joined;
-            }
-        } else if (value !== null && value !== undefined) {
-            const stringified = String(value);
-            if (stringified.length > 0) {
-                record[key] = stringified;
-            }
-        }
-    });
-    return record;
+  const record: Record<string, string> = {};
+  Object.entries(route.query).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      const joined = value.join(',');
+      if (joined) {
+        record[key] = joined;
+      }
+    } else if (value !== null && value !== undefined) {
+      const stringified = String(value);
+      if (stringified.length > 0) {
+        record[key] = stringified;
+      }
+    }
+  });
+  return record;
 }
 
 function queriesEqual(a: Record<string, string>, b: Record<string, string>): boolean {
-    const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-    for (const key of keys) {
-        if ((a[key] ?? '') !== (b[key] ?? '')) {
-            return false;
-        }
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const key of keys) {
+    if ((a[key] ?? '') !== (b[key] ?? '')) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
 function updateRouteFromState() {
-    if (isApplyingRoute) {
-        return;
-    }
-    const nextQuery = buildQueryFromState();
-    const currentQuery = getRouteQueryRecord();
+  if (isApplyingRoute) {
+    return;
+  }
+  const nextQuery = buildQueryFromState();
+  const currentQuery = getRouteQueryRecord();
 
-    if (queriesEqual(nextQuery, currentQuery)) {
-        return;
-    }
+  if (queriesEqual(nextQuery, currentQuery)) {
+    return;
+  }
 
-    isUpdatingRoute = true;
-    router.replace({ query: nextQuery }).finally(() => {
-        isUpdatingRoute = false;
-    });
+  isUpdatingRoute = true;
+  router.replace({ query: nextQuery }).finally(() => {
+    isUpdatingRoute = false;
+  });
 }
 
 function applyRouteQuery(rawQuery: Record<string, unknown>) {
-    isApplyingRoute = true;
+  isApplyingRoute = true;
 
-    const nextPage = parsePositiveInt(rawQuery.page, page.value);
-    const nextPageSize = parsePositiveInt(rawQuery.size, pageSize.value);
-    const sortValue = toSingleString(rawQuery.sort);
+  const nextPage = parsePositiveInt(rawQuery.page, page.value);
+  const nextPageSize = parsePositiveInt(rawQuery.size, pageSize.value);
+  const sortValue = toSingleString(rawQuery.sort);
 
-    pageSize.value = nextPageSize;
-    page.value = nextPage;
+  pageSize.value = nextPageSize;
+  page.value = nextPage;
 
-    if (sortValue) {
-        const [columnId, direction = 'asc'] = sortValue.split(',');
-        if (columnId) {
-            sorting.value = [
-                {
-                    id: columnId,
-                    desc: direction.toLowerCase() === 'desc',
-                },
-            ];
-        } else {
-            sorting.value = [];
-        }
+  if (sortValue) {
+    const [columnId, direction = 'asc'] = sortValue.split(',');
+    if (columnId) {
+      sorting.value = [
+        {
+          id: columnId,
+          desc: direction.toLowerCase() === 'desc',
+        },
+      ];
     } else {
-        sorting.value = [];
+      sorting.value = [];
     }
+  } else {
+    sorting.value = [];
+  }
 
-    const filters: ColumnFiltersState = [];
-    const name = toSingleString(rawQuery.name);
-    if (name) {
-        filters.push({ id: 'name', value: name });
-    }
+  const filters: ColumnFiltersState = [];
+  const name = toSingleString(rawQuery.name);
+  if (name) {
+    filters.push({ id: 'name', value: name });
+  }
 
-    const statuses = parseQueryArray(rawQuery.statuses);
-    if (statuses.length) {
-        filters.push({ id: 'status', value: statuses });
-    }
+  const statuses = parseQueryArray(rawQuery.statuses);
+  if (statuses.length) {
+    filters.push({ id: 'status', value: statuses });
+  }
 
-    const types = parseQueryArray(rawQuery.types);
-    if (types.length) {
-        filters.push({ id: 'type', value: types });
-    }
+  const types = parseQueryArray(rawQuery.types);
+  if (types.length) {
+    filters.push({ id: 'type', value: types });
+  }
 
-    const grades = parseQueryArray(rawQuery.grades);
-    if (grades.length) {
-        filters.push({ id: 'grade', value: grades });
-    }
+  const grades = parseQueryArray(rawQuery.grades);
+  if (grades.length) {
+    filters.push({ id: 'grade', value: grades });
+  }
 
-    const positions = parseQueryArray(rawQuery.positions);
-    if (positions.length) {
-        filters.push({ id: 'position', value: positions });
-    }
+  const positions = parseQueryArray(rawQuery.positions);
+  if (positions.length) {
+    filters.push({ id: 'position', value: positions });
+  }
 
-    const departments = parseQueryArray(rawQuery.departmentIds);
-    if (departments.length) {
-        filters.push({ id: 'departmentId', value: departments });
-    }
+  const departments = parseQueryArray(rawQuery.departmentIds);
+  if (departments.length) {
+    filters.push({ id: 'departmentId', value: departments });
+  }
 
-    columnFilters.value = filters;
+  columnFilters.value = filters;
 
-    nextTick(() => {
-        isApplyingRoute = false;
-        updateRouteFromState();
-        loadEmployees();
-    });
+  nextTick(() => {
+    isApplyingRoute = false;
+    updateRouteFromState();
+    loadEmployees();
+  });
 }
 
 async function loadEmployees() {
-    const token = ++requestToken;
-    isLoading.value = true;
+  const token = ++requestToken;
+  isLoading.value = true;
 
-    try {
-        const params = buildSearchParams();
-        const response = await employeeRepository.search(params);
+  try {
+    const params = buildSearchParams();
+    const response = await employeeRepository.search(params);
 
-        if (token !== requestToken) {
-            return;
-        }
-
-        if (response.totalPages > 0 && page.value > response.totalPages) {
-            page.value = response.totalPages;
-            return;
-        }
-
-        employees.value = response.content;
-        totalElements.value = response.totalElements;
-        totalPages.value = Math.max(response.totalPages, 1);
-        rowSelection.value = {};
-    } catch (error) {
-        console.error('구성원 목록을 불러오지 못했습니다.', error);
-        employees.value = [];
-        totalElements.value = 0;
-        totalPages.value = 1;
-    } finally {
-        if (token === requestToken) {
-            isLoading.value = false;
-        }
+    if (token !== requestToken) {
+      return;
     }
+
+    if (response.totalPages > 0 && page.value > response.totalPages) {
+      page.value = response.totalPages;
+      return;
+    }
+
+    employees.value = response.content;
+    totalElements.value = response.totalElements;
+    totalPages.value = Math.max(response.totalPages, 1);
+    rowSelection.value = {};
+  } catch (error) {
+    console.error('구성원 목록을 불러오지 못했습니다.', error);
+    employees.value = [];
+    totalElements.value = 0;
+    totalPages.value = 1;
+  } finally {
+    if (token === requestToken) {
+      isLoading.value = false;
+    }
+  }
 }
 
 const triggerFilterFetch = useDebounceFn(() => {
-    loadEmployees();
+  loadEmployees();
 }, 300);
 
 watch(
-    columnFilters,
-    () => {
-        if (isApplyingRoute) {
-            return;
-        }
-        if (page.value !== 1) {
-            page.value = 1;
-        } else {
-            updateRouteFromState();
-            triggerFilterFetch();
-        }
-    },
-    { deep: true },
+  columnFilters,
+  () => {
+    if (isApplyingRoute) {
+      return;
+    }
+    if (page.value !== 1) {
+      page.value = 1;
+    } else {
+      updateRouteFromState();
+      triggerFilterFetch();
+    }
+  },
+  { deep: true },
 );
 
 watch(
-    sorting,
-    () => {
-        if (isApplyingRoute) {
-            return;
-        }
-        if (page.value !== 1) {
-            page.value = 1;
-        } else {
-            updateRouteFromState();
-            loadEmployees();
-        }
-    },
-    { deep: true },
+  sorting,
+  () => {
+    if (isApplyingRoute) {
+      return;
+    }
+    if (page.value !== 1) {
+      page.value = 1;
+    } else {
+      updateRouteFromState();
+      loadEmployees();
+    }
+  },
+  { deep: true },
 );
 
 watch(page, (next, previous) => {
-    if (isApplyingRoute) {
-        return;
-    }
-    if (next === previous) {
-        return;
-    }
-    updateRouteFromState();
-    loadEmployees();
+  if (isApplyingRoute) {
+    return;
+  }
+  if (next === previous) {
+    return;
+  }
+  updateRouteFromState();
+  loadEmployees();
 });
 
 watch(pageSize, (next, previous) => {
-    if (isApplyingRoute) {
-        return;
-    }
-    if (next === previous) {
-        return;
-    }
-    if (page.value !== 1) {
-        page.value = 1;
-    } else {
-        updateRouteFromState();
-        loadEmployees();
-    }
+  if (isApplyingRoute) {
+    return;
+  }
+  if (next === previous) {
+    return;
+  }
+  if (page.value !== 1) {
+    page.value = 1;
+  } else {
+    updateRouteFromState();
+    loadEmployees();
+  }
 });
 
 watch(
-    () => route.query,
-    (newQuery) => {
-        if (isUpdatingRoute) {
-            return;
+  () => route.query,
+  (newQuery) => {
+    if (isUpdatingRoute) {
+      return;
+    }
+    const currentStateQuery = buildQueryFromState();
+    const incomingQuery = Object.entries(newQuery).reduce<Record<string, string>>(
+      (accumulator, [key, value]) => {
+        if (Array.isArray(value)) {
+          const joined = value.join(',');
+          if (joined) {
+            accumulator[key] = joined;
+          }
+        } else if (value !== null && value !== undefined) {
+          const stringified = String(value);
+          if (stringified.length > 0) {
+            accumulator[key] = stringified;
+          }
         }
-        const currentStateQuery = buildQueryFromState();
-        const incomingQuery = Object.entries(newQuery).reduce<Record<string, string>>((accumulator, [key, value]) => {
-            if (Array.isArray(value)) {
-                const joined = value.join(',');
-                if (joined) {
-                    accumulator[key] = joined;
-                }
-            } else if (value !== null && value !== undefined) {
-                const stringified = String(value);
-                if (stringified.length > 0) {
-                    accumulator[key] = stringified;
-                }
-            }
-            return accumulator;
-        }, {});
+        return accumulator;
+      },
+      {},
+    );
 
-        if (queriesEqual(currentStateQuery, incomingQuery)) {
-            return;
-        }
+    if (queriesEqual(currentStateQuery, incomingQuery)) {
+      return;
+    }
 
-        applyRouteQuery({ ...newQuery });
-    },
-    { deep: true },
+    applyRouteQuery({ ...newQuery });
+  },
+  { deep: true },
 );
 
 function handlePageChange(nextPage: number) {
-    if (nextPage < 1) {
-        return;
-    }
-    if (nextPage === page.value) {
-        return;
-    }
-    page.value = nextPage;
+  if (nextPage < 1) {
+    return;
+  }
+  if (nextPage === page.value) {
+    return;
+  }
+  page.value = nextPage;
 }
 
 function handlePageSizeChange(nextSize: number) {
-    if (nextSize === pageSize.value) {
-        return;
-    }
-    pageSize.value = nextSize;
+  if (nextSize === pageSize.value) {
+    return;
+  }
+  pageSize.value = nextSize;
+}
+
+function openCreateDialog() {
+  isCreateDialogOpen.value = true;
+}
+
+function handleEmployeeCreated() {
+  if (page.value !== 1) {
+    page.value = 1;
+    return;
+  }
+  updateRouteFromState();
+  loadEmployees();
 }
 
 const columnLabelMap: Record<string, string> = {
-    select: '선택',
-    name: '이름',
-    departmentName: '부서',
-    departmentId: '부서',
-    position: '직책',
-    grade: '등급',
-    type: '유형',
-    status: '상태',
-    memo: '메모',
+  select: '선택',
+  name: '이름',
+  departmentName: '부서',
+  departmentId: '부서',
+  position: '직책',
+  grade: '등급',
+  type: '유형',
+  status: '상태',
+  memo: '메모',
 };
 
 function getColumnLabel(columnId: string): string {
-    return columnLabelMap[columnId] ?? columnId;
+  return columnLabelMap[columnId] ?? columnId;
 }
 
 onMounted(() => {
-    loadDepartments();
-    if (Object.keys(route.query).length > 0) {
-        applyRouteQuery({ ...route.query });
-    } else {
-        updateRouteFromState();
-        loadEmployees();
-    }
+  loadDepartments();
+  if (Object.keys(route.query).length > 0) {
+    applyRouteQuery({ ...route.query });
+  } else {
+    updateRouteFromState();
+    loadEmployees();
+  }
 });
 </script>

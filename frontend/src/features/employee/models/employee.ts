@@ -30,6 +30,8 @@ export interface EmployeeCreatePayload {
   departmentId: string;
   name: string;
   email: string;
+  joinDate: string;
+  birthDate: string;
   position: string;
   grade: string;
   type: string;

@@ -155,4 +155,9 @@
     [role="button"] {
         cursor: pointer;
     }
+    select,
+    [role="combobox"],
+    [data-slot="select-trigger"] {
+        cursor: pointer;
+    }
 }

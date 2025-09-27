@@ -21,23 +21,35 @@
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)]">
-      <div class="rounded-xl border border-border/60 bg-card p-3.5 shadow-sm overflow-hidden">
-        <OrganizationTree :nodes="chart" v-model:selectedNodeId="selectedDepartmentId" />
-      </div>
+    <div v-else class="flex-1 min-h-0">
+      <div class="grid h-full min-h-0 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div
+          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3.5 shadow-sm lg:h-[640px] lg:min-h-[640px] lg:max-h-[640px]"
+        >
+          <OrganizationTree
+            class="h-full"
+            :nodes="chart"
+            v-model:selectedNodeId="selectedDepartmentId"
+          />
+        </div>
 
-      <div
-        class="rounded-xl border border-border/60 bg-card/90 p-4 shadow-sm"
-        :class="{ 'max-h-[720px] overflow-y-auto': layoutBreakpoint === 'desktop' }"
-      >
-        <OrganizationDetailPanel :department="selectedDepartment" :isLoading="isDepartmentLoading" />
+        <div
+          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm lg:h-[640px] lg:min-h-[640px] lg:max-h-[640px]"
+        >
+          <div class="flex-1 min-h-0 overflow-y-auto p-4">
+            <OrganizationDetailPanel
+              :department="selectedDepartment"
+              :isLoading="isDepartmentLoading"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { appContainer } from '@/core/di/container';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
@@ -56,7 +68,6 @@ const chart = ref<OrganizationChartNode[]>([]);
 const isLoading = ref(true);
 const errorMessage = ref<string | null>(null);
 const selectedDepartmentId = ref<string | undefined>();
-const layoutBreakpoint = ref<'desktop' | 'mobile'>('desktop');
 const departmentDetail = ref<OrganizationDepartmentDetail | null>(null);
 const isDepartmentLoading = ref(false);
 
@@ -146,8 +157,6 @@ onMounted(() => {
     selectedDepartmentId.value = initialDepartmentId;
   }
   void loadOrganizationChart();
-  updateBreakpoint();
-  window.addEventListener('resize', updateBreakpoint);
 });
 
 watch(chart, (nodes) => {
@@ -209,14 +218,6 @@ function findDepartment(
   }
   return null;
 }
-
-function updateBreakpoint() {
-  layoutBreakpoint.value = window.innerWidth >= 1024 ? 'desktop' : 'mobile';
-}
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateBreakpoint);
-});
 
 watch(
   () => route.query.departmentId,

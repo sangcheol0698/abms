@@ -249,11 +249,19 @@ function scrollIntoView(departmentId?: string) {
     if (!target) {
       return;
     }
+
     const containerRect = container.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
+    const TOP_MARGIN = 8;
+    const BOTTOM_MARGIN = 8;
 
-    if (targetRect.top < containerRect.top || targetRect.bottom > containerRect.bottom) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const isAbove = targetRect.top < containerRect.top + TOP_MARGIN;
+    const isBelow =
+      targetRect.bottom > containerRect.bottom - BOTTOM_MARGIN &&
+      targetRect.top > containerRect.top + TOP_MARGIN;
+
+    if (isAbove || isBelow) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   });
 }
