@@ -10,135 +10,131 @@ let stopWatch: WatchStopHandle | null = null;
 let mediaQueryHandler: ((event: MediaQueryListEvent) => void) | null = null;
 
 function isBrowser(): boolean {
-    return typeof window !== 'undefined' && typeof document !== 'undefined';
+  return typeof window !== 'undefined' && typeof document !== 'undefined';
 }
 
 function readStoredPreference(): ThemePreference {
-    if (!isBrowser()) {
-        return 'system';
-    }
-
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark' || stored === 'system') {
-        return stored;
-    }
-
+  if (!isBrowser()) {
     return 'system';
+  }
+
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (stored === 'light' || stored === 'dark' || stored === 'system') {
+    return stored;
+  }
+
+  return 'system';
 }
 
 function persistPreference(value: ThemePreference) {
-    if (!isBrowser()) {
-        return;
-    }
+  if (!isBrowser()) {
+    return;
+  }
 
-    if (value === 'system') {
-        window.localStorage.removeItem(STORAGE_KEY);
-        return;
-    }
+  if (value === 'system') {
+    window.localStorage.removeItem(STORAGE_KEY);
+    return;
+  }
 
-    window.localStorage.setItem(STORAGE_KEY, value);
+  window.localStorage.setItem(STORAGE_KEY, value);
 }
 
 function resolveTheme(value: ThemePreference): 'light' | 'dark' {
-    if (!isBrowser()) {
-        return 'light';
-    }
+  if (!isBrowser()) {
+    return 'light';
+  }
 
-    if (value !== 'system') {
-        return value;
-    }
+  if (value !== 'system') {
+    return value;
+  }
 
-    mediaQuery ??= window.matchMedia('(prefers-color-scheme: dark)');
-    return mediaQuery.matches ? 'dark' : 'light';
+  mediaQuery ??= window.matchMedia('(prefers-color-scheme: dark)');
+  return mediaQuery.matches ? 'dark' : 'light';
 }
 
 function applyTheme(value: ThemePreference) {
-    if (!isBrowser()) {
-        return;
-    }
+  if (!isBrowser()) {
+    return;
+  }
 
-    const effectiveTheme = resolveTheme(value);
-    const root = document.documentElement;
+  const effectiveTheme = resolveTheme(value);
+  const root = document.documentElement;
 
-    root.classList.toggle('dark', effectiveTheme === 'dark');
-    root.dataset.theme = value;
+  root.classList.toggle('dark', effectiveTheme === 'dark');
+  root.dataset.theme = value;
 }
 
 function watchTheme() {
-    if (stopWatch) {
-        return;
-    }
+  if (stopWatch) {
+    return;
+  }
 
-    stopWatch = watch(theme, (next) => {
-        persistPreference(next);
-        applyTheme(next);
-    });
+  stopWatch = watch(theme, (next) => {
+    persistPreference(next);
+    applyTheme(next);
+  });
 }
 
 function watchSystemPreference() {
-    if (!isBrowser()) {
-        return;
+  if (!isBrowser()) {
+    return;
+  }
+
+  mediaQuery ??= window.matchMedia('(prefers-color-scheme: dark)');
+
+  if (!mediaQuery) {
+    return;
+  }
+
+  if (mediaQueryHandler) {
+    return;
+  }
+
+  mediaQueryHandler = (event: MediaQueryListEvent) => {
+    if (theme.value === 'system') {
+      applyTheme(event.matches ? 'dark' : 'light');
     }
+  };
 
-    mediaQuery ??= window.matchMedia('(prefers-color-scheme: dark)');
-
-    if (!mediaQuery) {
-        return;
-    }
-
-    if (mediaQueryHandler) {
-        return;
-    }
-
-    mediaQueryHandler = (event: MediaQueryListEvent) => {
-        if (theme.value === 'system') {
-            applyTheme(event.matches ? 'dark' : 'light');
-        }
-    };
-
-    if (typeof mediaQuery.addEventListener === 'function') {
-        mediaQuery.addEventListener('change', mediaQueryHandler);
-        return;
-    }
-
-    if (typeof mediaQuery.addListener === 'function') {
-        mediaQuery.addListener(mediaQueryHandler);
-    }
+  if (typeof mediaQuery.addEventListener === 'function') {
+    mediaQuery.addEventListener('change', mediaQueryHandler);
+    return;
+  }
 }
 
 export function initializeTheme() {
-    if (!isBrowser() || initialized) {
-        applyTheme(theme.value);
-        return;
-    }
-
-    initialized = true;
-    theme.value = readStoredPreference();
+  if (!isBrowser() || initialized) {
     applyTheme(theme.value);
-    watchTheme();
-    watchSystemPreference();
+    return;
+  }
+
+  initialized = true;
+  theme.value = readStoredPreference();
+  applyTheme(theme.value);
+  watchTheme();
+  watchSystemPreference();
 }
 
 export function useTheme() {
-    initializeTheme();
+  initializeTheme();
 
-    const resolvedTheme = computed(() => resolveTheme(theme.value));
-    const isDark = computed(() => resolvedTheme.value === 'dark');
+  const resolvedTheme = computed(() => resolveTheme(theme.value));
+  const isDark = computed(() => resolvedTheme.value === 'dark');
 
-    function setTheme(next: ThemePreference) {
-        theme.value = next;
-    }
+  function setTheme(next: ThemePreference) {
+    theme.value = next;
+  }
 
-    function toggleTheme() {
-        setTheme(resolvedTheme.value === 'dark' ? 'light' : 'dark');
-    }
+  function toggleTheme() {
+    setTheme(resolvedTheme.value === 'dark' ? 'light' : 'dark');
+  }
 
-    return {
-        theme,
-        resolvedTheme,
-        isDark,
-        setTheme,
-        toggleTheme,
-        initializeTheme,
-    };
+  return {
+    theme,
+    resolvedTheme,
+    isDark,
+    setTheme,
+    toggleTheme,
+    initializeTheme,
+  };
 }

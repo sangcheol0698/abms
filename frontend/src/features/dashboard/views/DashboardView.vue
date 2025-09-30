@@ -2,15 +2,15 @@
   <section class="flex h-full flex-col gap-6">
     <header class="flex flex-col gap-1">
       <h1 class="text-2xl font-semibold tracking-tight">대시보드</h1>
-      <p class="text-sm text-muted-foreground">
-        서비스 주요 지표와 최근 활동을 한눈에 확인하세요.
-      </p>
+      <p class="text-sm text-muted-foreground">서비스 주요 지표와 최근 활동을 한눈에 확인하세요.</p>
     </header>
 
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <Card v-for="metric in metrics" :key="metric.title" class="shadow-none">
         <CardHeader class="space-y-1">
-          <CardTitle class="text-sm font-medium text-muted-foreground">{{ metric.title }}</CardTitle>
+          <CardTitle class="text-sm font-medium text-muted-foreground">{{
+            metric.title
+          }}</CardTitle>
           <div class="flex items-baseline gap-2">
             <span class="text-2xl font-semibold text-foreground">{{ metric.value }}</span>
             <Badge :variant="metric.trend >= 0 ? 'secondary' : 'destructive'" class="text-xs">
@@ -40,9 +40,13 @@
               <p class="font-medium text-foreground">{{ notification.title }}</p>
               <p class="text-xs text-muted-foreground">{{ notification.description }}</p>
             </div>
-            <Badge variant="outline" class="text-[11px] uppercase tracking-tight">{{ notification.time }}</Badge>
+            <Badge variant="outline" class="text-[11px] uppercase tracking-tight">{{
+              notification.time
+            }}</Badge>
           </div>
-          <p v-if="!notifications.length" class="text-sm text-muted-foreground">최근 알림이 없습니다.</p>
+          <p v-if="!notifications.length" class="text-sm text-muted-foreground">
+            최근 알림이 없습니다.
+          </p>
         </CardContent>
       </Card>
 

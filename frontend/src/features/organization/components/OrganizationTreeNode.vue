@@ -26,10 +26,7 @@
         >
           <span class="text-[13px] font-semibold text-foreground">
             <template v-for="(segment, index) in nameSegments" :key="index">
-              <mark
-                v-if="segment.matched"
-                class="rounded bg-primary/20 px-0.5 text-primary"
-              >
+              <mark v-if="segment.matched" class="rounded bg-primary/20 px-0.5 text-primary">
                 {{ segment.text }}
               </mark>
               <span v-else>{{ segment.text }}</span>

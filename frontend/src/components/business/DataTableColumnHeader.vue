@@ -59,7 +59,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const nonSortableClass = computed(() => {
   if (props.align === 'right') return 'w-full flex items-center justify-end space-x-2 text-right';
-  if (props.align === 'center') return 'w-full flex items-center justify-center space-x-2 text-center';
+  if (props.align === 'center')
+    return 'w-full flex items-center justify-center space-x-2 text-center';
   return 'flex items-center space-x-2';
 });
 

@@ -13,11 +13,11 @@ export const appContainer = container;
  * 실제 구현은 HTTP 클라이언트, Repository, Store 등에 맞춰 단계적으로 확장합니다.
  */
 export function configureContainer() {
-    if (!appContainer.isRegistered(AxiosHttpClient)) {
-        appContainer.registerSingleton(AxiosHttpClient, AxiosHttpClient);
-    }
+  if (!appContainer.isRegistered(AxiosHttpClient)) {
+    appContainer.registerSingleton(AxiosHttpClient, AxiosHttpClient);
+  }
 
-    if (!appContainer.isRegistered(HttpRepository)) {
-        appContainer.registerSingleton(HttpRepository, HttpRepository);
-    }
+  if (!appContainer.isRegistered(HttpRepository)) {
+    appContainer.registerSingleton(HttpRepository, HttpRepository);
+  }
 }

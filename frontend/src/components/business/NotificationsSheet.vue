@@ -19,7 +19,13 @@
           >
             모두 읽음 처리
           </Button>
-          <Button size="icon" variant="ghost" class="h-8 w-8" :disabled="items.length === 0" @click="clearAll">
+          <Button
+            size="icon"
+            variant="ghost"
+            class="h-8 w-8"
+            :disabled="items.length === 0"
+            @click="clearAll"
+          >
             <Trash2 class="h-4 w-4" />
           </Button>
         </div>
@@ -52,7 +58,7 @@
           표시할 알림이 없습니다.
         </p>
 
-        <ul v-else class="space-y-2 overflow-y-auto pr-1" style="max-height: calc(100vh - 210px);">
+        <ul v-else class="space-y-2 overflow-y-auto pr-1" style="max-height: calc(100vh - 210px)">
           <li v-for="notification in filtered" :key="notification.id">
             <button
               class="flex w-full gap-3 rounded-md px-3 py-2 text-left transition hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -61,10 +67,15 @@
               <span :class="indicatorClass(notification.type)" />
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
-                  <p class="truncate text-sm font-medium text-foreground">{{ notification.title }}</p>
+                  <p class="truncate text-sm font-medium text-foreground">
+                    {{ notification.title }}
+                  </p>
                   <span v-if="!notification.read" class="h-2 w-2 rounded-full bg-primary" />
                 </div>
-                <p v-if="notification.description" class="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                <p
+                  v-if="notification.description"
+                  class="mt-1 line-clamp-2 text-xs text-muted-foreground"
+                >
                   {{ notification.description }}
                 </p>
                 <p class="mt-2 text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -176,5 +187,4 @@ async function openNotification(notification: NotificationItem) {
     }
   }
 }
-
 </script>

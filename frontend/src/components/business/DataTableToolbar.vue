@@ -45,9 +45,17 @@
           </Button>
         </div>
 
-        <Button variant="outline" size="sm" class="h-8 md:hidden" @click="showFilters = !showFilters">
+        <Button
+          variant="outline"
+          size="sm"
+          class="h-8 md:hidden"
+          @click="showFilters = !showFilters"
+        >
           <Filter class="h-4 w-4" />
-          <span v-if="hasActiveFilters" class="ml-1 rounded-full bg-primary px-1 text-xs text-primary-foreground">
+          <span
+            v-if="hasActiveFilters"
+            class="ml-1 rounded-full bg-primary px-1 text-xs text-primary-foreground"
+          >
             {{ activeFilterCount }}
           </span>
         </Button>
@@ -66,10 +74,18 @@
       </div>
 
       <div class="flex shrink-0 items-center space-x-2">
-        <div v-if="showSelectedInfo && selectedRowCount > 0" class="flex items-center space-x-2 text-sm text-muted-foreground">
+        <div
+          v-if="showSelectedInfo && selectedRowCount > 0"
+          class="flex items-center space-x-2 text-sm text-muted-foreground"
+        >
           <span class="hidden sm:inline">{{ selectedRowCount }}개 선택됨</span>
           <span class="sm:hidden">{{ selectedRowCount }}개</span>
-          <Button variant="ghost" size="sm" class="h-8 px-2" @click="table.toggleAllPageRowsSelected(false)">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-8 px-2"
+            @click="table.toggleAllPageRowsSelected(false)"
+          >
             <span class="hidden sm:inline">선택 해제</span>
             <span class="sm:hidden">해제</span>
           </Button>
@@ -146,7 +162,6 @@ const forceUpdate = ref(0);
 const showFilters = ref(false);
 
 const hideableColumns = computed(() => {
-  forceUpdate.value;
   return props.table.getAllColumns().filter((column) => column.getCanHide());
 });
 
@@ -232,5 +247,4 @@ function onToggleColumn(column: any, value?: boolean) {
   column.toggleVisibility(value ?? !column.getIsVisible());
   forceUpdate.value++;
 }
-
 </script>

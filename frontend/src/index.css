@@ -151,10 +151,12 @@
     body {
         @apply bg-background text-foreground;
     }
+
     button,
     [role="button"] {
         cursor: pointer;
     }
+
     select,
     [role="combobox"],
     [data-slot="select-trigger"] {

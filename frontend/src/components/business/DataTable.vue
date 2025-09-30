@@ -42,7 +42,10 @@
               </TableCell>
             </TableRow>
 
-            <TableRow v-if="row.getIsExpanded() && $slots['expanded-row']" :key="`${row.id}-expanded`">
+            <TableRow
+              v-if="row.getIsExpanded() && $slots['expanded-row']"
+              :key="`${row.id}-expanded`"
+            >
               <TableCell :colspan="row.getVisibleCells().length">
                 <slot name="expanded-row" :row="row" />
               </TableCell>
@@ -66,7 +69,14 @@
 <script setup lang="ts">
 import type { ColumnDef, Table as TanstackTable } from '@tanstack/vue-table';
 import { FlexRender } from '@tanstack/vue-table';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Loader2 } from 'lucide-vue-next';
 
 interface DataTableProps {
@@ -112,5 +122,4 @@ function getCellSizePx(cell: any): number {
     return 120;
   }
 }
-
 </script>

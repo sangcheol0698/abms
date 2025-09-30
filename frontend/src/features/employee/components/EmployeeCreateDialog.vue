@@ -372,7 +372,7 @@ import { Building2 } from 'lucide-vue-next';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Separator } from '@/components/ui/separator';
 import { appContainer } from '@/core/di/container';
-import EmployeeRepository from '@/features/employee/repository/EmployeeRepository';
+import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import HttpError from '@/core/http/HttpError';
 import {
   EMPLOYEE_GRADE_OPTIONS,

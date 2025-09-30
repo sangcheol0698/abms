@@ -41,17 +41,23 @@
 
           <div class="flex-1 overflow-hidden pt-3">
             <TabsContent value="info" class="flex h-full flex-col gap-4">
-            <div class="grid gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
+              <div class="grid gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
                 <div class="grid grid-cols-[120px_1fr] gap-2">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">부서 코드</dt>
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    부서 코드
+                  </dt>
                   <dd class="text-foreground">{{ department.departmentCode }}</dd>
                 </div>
                 <div class="grid grid-cols-[120px_1fr] gap-2">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">부서 유형</dt>
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    부서 유형
+                  </dt>
                   <dd class="text-foreground">{{ department.departmentType }}</dd>
                 </div>
                 <div class="grid grid-cols-[120px_1fr] gap-2">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">리더</dt>
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    리더
+                  </dt>
                   <dd>
                     <div v-if="department.departmentLeader" class="flex items-center gap-3">
                       <Avatar class="size-10 border border-border/60">
@@ -74,11 +80,15 @@
                   </dd>
                 </div>
                 <div class="grid grid-cols-[120px_1fr] gap-2">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">구성원 수</dt>
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    구성원 수
+                  </dt>
                   <dd class="text-foreground">{{ department.employeeCount }}명</dd>
                 </div>
                 <div class="grid grid-cols-[120px_1fr] gap-2">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">메모</dt>
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    메모
+                  </dt>
                   <dd class="text-sm text-muted-foreground">
                     팀별 KPI, 진행 중인 프로젝트 등 메모가 필요하다면 이 영역을 확장하세요.
                   </dd>
@@ -127,11 +137,13 @@
             </TabsContent>
 
             <TabsContent value="revenue" class="flex h-full flex-col">
-              <div class="flex flex-1 flex-col gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
+              <div
+                class="flex flex-1 flex-col gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm"
+              >
                 <p class="text-sm font-semibold text-foreground">매출 지표</p>
                 <p class="text-xs text-muted-foreground">
-                  매출 데이터 연동을 준비 중입니다. 연결된 ERP 또는 회계 시스템 API가 마련되면 이 탭에서 월별 매출 및
-                  목표 대비 실적을 시각화할 예정입니다.
+                  매출 데이터 연동을 준비 중입니다. 연결된 ERP 또는 회계 시스템 API가 마련되면 이
+                  탭에서 월별 매출 및 목표 대비 실적을 시각화할 예정입니다.
                 </p>
               </div>
             </TabsContent>
@@ -140,7 +152,10 @@
       </div>
     </div>
 
-    <div v-else class="flex h-full flex-col items-center justify-center rounded-lg bg-muted/10 p-6 text-center">
+    <div
+      v-else
+      class="flex h-full flex-col items-center justify-center rounded-lg bg-muted/10 p-6 text-center"
+    >
       <h3 class="text-base font-semibold text-foreground">조직 노드를 선택해 주세요</h3>
       <p class="mt-2 text-sm text-muted-foreground">
         왼쪽 조직도에서 팀을 선택하면 이 영역에 상세 정보가 표시됩니다.

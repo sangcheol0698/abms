@@ -3,7 +3,9 @@
     <DialogContent>
       <DialogHeader>
         <DialogTitle>내 계정</DialogTitle>
-        <DialogDescription>간단한 계정 정보를 확인하고 빠르게 로그아웃할 수 있습니다.</DialogDescription>
+        <DialogDescription
+          >간단한 계정 정보를 확인하고 빠르게 로그아웃할 수 있습니다.</DialogDescription
+        >
       </DialogHeader>
 
       <div class="space-y-4">
@@ -18,8 +20,12 @@
           </div>
         </div>
 
-        <div class="rounded-md border border-dashed border-border/60 bg-muted/40 p-4 text-xs text-muted-foreground">
-          <p>추가 계정 설정 화면은 구현 예정입니다. 상세 정보는 사용자 메뉴에서 확인할 수 있습니다.</p>
+        <div
+          class="rounded-md border border-dashed border-border/60 bg-muted/40 p-4 text-xs text-muted-foreground"
+        >
+          <p>
+            추가 계정 설정 화면은 구현 예정입니다. 상세 정보는 사용자 메뉴에서 확인할 수 있습니다.
+          </p>
         </div>
       </div>
 

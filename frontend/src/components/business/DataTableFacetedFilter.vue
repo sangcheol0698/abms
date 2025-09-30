@@ -85,7 +85,6 @@
 import type { Column } from '@tanstack/vue-table';
 import { computed } from 'vue';
 import { Plus } from 'lucide-vue-next';
-import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -126,7 +125,7 @@ const props = withDefaults(defineProps<DataTableFacetedFilterProps>(), {
   clearFilterLabel: '필터 지우기',
 });
 
-const facets = computed(() => props.column?.getFacetedUniqueValues());
+computed(() => props.column?.getFacetedUniqueValues());
 const selectedValues = computed(() => {
   const filterValue = props.column?.getFilterValue();
 

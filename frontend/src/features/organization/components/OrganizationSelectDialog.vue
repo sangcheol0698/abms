@@ -150,7 +150,10 @@ function confirmSelection() {
   emit('update:open', false);
 }
 
-function findNode(target: OrganizationChartNode[], departmentId: string): OrganizationChartNode | null {
+function findNode(
+  target: OrganizationChartNode[],
+  departmentId: string,
+): OrganizationChartNode | null {
   for (const node of target) {
     if (node.departmentId === departmentId) {
       return node;

@@ -123,7 +123,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { valueUpdater } from '@/components/ui/table/utils';
 import { appContainer } from '@/core/di/container';
-import EmployeeRepository from '@/features/employee/repository/EmployeeRepository';
+import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
 import type { OrganizationChartNode } from '@/features/organization/models/organization';
 import type {
@@ -332,7 +332,6 @@ const table = useVueTable({
   getFacetedRowModel: getFacetedRowModel(),
   getFacetedUniqueValues: getFacetedUniqueValues(),
 });
-
 
 let requestToken = 0;
 

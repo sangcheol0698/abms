@@ -65,11 +65,13 @@ export const useNotificationsStore = defineStore('notifications', {
     markAllAsRead() {
       this.items = this.items.map((item) => ({ ...item, read: true }));
     },
-    add(notification: Omit<NotificationItem, 'id' | 'createdAt' | 'read'> & {
-      id?: string;
-      createdAt?: string;
-      read?: boolean;
-    }) {
+    add(
+      notification: Omit<NotificationItem, 'id' | 'createdAt' | 'read'> & {
+        id?: string;
+        createdAt?: string;
+        read?: boolean;
+      },
+    ) {
       const id = notification.id ?? `n-${Math.random().toString(36).slice(2, 9)}`;
       const createdAt = notification.createdAt ?? new Date().toISOString();
       const read = notification.read ?? false;

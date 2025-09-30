@@ -94,7 +94,14 @@ import { Button } from '@/components/ui/button';
 import AppSidebar from '@/components/sidebar/AppSidebar.vue';
 import ThemeToggle from '@/core/theme/ThemeToggle.vue';
 import CommandPalette from '@/components/business/CommandPalette.vue';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import NotificationsSheet from '@/components/business/NotificationsSheet.vue';
 import ProfileDialog from '@/components/business/ProfileDialog.vue';
 import { useNotificationsStore } from '@/core/stores/notifications.store';
@@ -109,9 +116,9 @@ interface BreadcrumbEntry {
 }
 
 const breadcrumbs = computed<BreadcrumbEntry[]>(() => {
-  const metaCrumbs = route.meta?.breadcrumbs as Array<
-    { title: string; to?: string | ((payload: any) => string); disabled?: boolean }
-  > | undefined;
+  const metaCrumbs = route.meta?.breadcrumbs as
+    | Array<{ title: string; to?: string | ((payload: any) => string); disabled?: boolean }>
+    | undefined;
 
   if (Array.isArray(metaCrumbs) && metaCrumbs.length > 0) {
     return metaCrumbs.map((crumb) => {

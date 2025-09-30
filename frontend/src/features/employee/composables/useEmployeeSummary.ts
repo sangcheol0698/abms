@@ -17,12 +17,18 @@ interface UseEmployeeSummaryParams {
   previousEmployees?: MaybeRef<EmployeeListItem[]>;
 }
 
-function countBy<T extends string | number | symbol>(items: EmployeeListItem[], accessor: (item: EmployeeListItem) => T) {
-  return items.reduce<Record<T, number>>((acc, item) => {
-    const key = accessor(item);
-    acc[key] = (acc[key] ?? 0) + 1;
-    return acc;
-  }, {} as Record<T, number>);
+function countBy<T extends string | number | symbol>(
+  items: EmployeeListItem[],
+  accessor: (item: EmployeeListItem) => T,
+) {
+  return items.reduce<Record<T, number>>(
+    (acc, item) => {
+      const key = accessor(item);
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<T, number>,
+  );
 }
 
 export function useEmployeeSummary(params: UseEmployeeSummaryParams) {
@@ -37,8 +43,11 @@ export function useEmployeeSummary(params: UseEmployeeSummaryParams) {
 
     const activeCount = statusCounts.working ?? statusCounts.active ?? statusCounts.ACTIVE ?? 0;
     const onLeaveCount =
-      statusCounts.leave ?? statusCounts.onleave ?? statusCounts.ON_LEAVE ?? statusCounts.PLANNED_LEAVE ?? 0;
-    const resignedCount = statusCounts.resigned ?? statusCounts.exit ?? statusCounts.RESIGNED ?? 0;
+      statusCounts.leave ??
+      statusCounts.onleave ??
+      statusCounts.ON_LEAVE ??
+      statusCounts.PLANNED_LEAVE ??
+      0;
 
     const regularCount = typeCounts.regular ?? typeCounts.fulltime ?? typeCounts.FULL_TIME ?? 0;
     const contractCount = typeCounts.contract ?? typeCounts.parttime ?? typeCounts.CONTRACT ?? 0;
@@ -61,8 +70,8 @@ export function useEmployeeSummary(params: UseEmployeeSummaryParams) {
             totalDelta > 0
               ? `+${totalDelta}명 지난 기간 대비 증가`
               : totalDelta < 0
-              ? `${totalDelta}명 감소`
-              : '변화 없음',
+                ? `${totalDelta}명 감소`
+                : '변화 없음',
           direction: totalDelta > 0 ? 'up' : totalDelta < 0 ? 'down' : 'flat',
         },
       },
@@ -70,8 +79,7 @@ export function useEmployeeSummary(params: UseEmployeeSummaryParams) {
         id: 'active',
         title: '근무 중',
         value: `${activeCount.toLocaleString()}명`,
-        description:
-          total === 0 ? '데이터 없음' : `전체의 ${activeRatio}%`,
+        description: total === 0 ? '데이터 없음' : `전체의 ${activeRatio}%`,
       },
       {
         id: 'leave',
@@ -81,16 +89,13 @@ export function useEmployeeSummary(params: UseEmployeeSummaryParams) {
           onLeaveCount === 0
             ? '휴가 중 구성원이 없습니다'
             : total === 0
-            ? '데이터 없음'
-            : `전체의 ${leaveRatio}%`,
+              ? '데이터 없음'
+              : `전체의 ${leaveRatio}%`,
       },
       {
         id: 'type',
         title: '정규/계약 비율',
-        value:
-          total === 0
-            ? '데이터 없음'
-            : `${regularRatio}% 정규 / ${contractRatio}% 계약`,
+        value: total === 0 ? '데이터 없음' : `${regularRatio}% 정규 / ${contractRatio}% 계약`,
         description: '근무 유형 분포',
       },
     ];

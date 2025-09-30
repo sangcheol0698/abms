@@ -11,7 +11,8 @@
     "lint:fix": "npm run lint -- --fix",
     "typecheck": "vue-tsc --noEmit",
     "format": "prettier \"src/**/*.{ts,tsx,vue,js,json,css,scss,md}\" --check",
-    "format:write": "prettier \"src/**/*.{ts,tsx,vue,js,json,css,scss,md}\" --write"
+    "format:write": "prettier \"src/**/*.{ts,tsx,vue,js,json,css,scss,md}\" --write",
+    "test": "vitest"
   },
   "dependencies": {
     "@internationalized/date": "^3.9.0",
@@ -58,6 +59,7 @@
     "prettier": "^3.6.2",
     "typescript": "~5.8.3",
     "vite": "^7.1.6",
+    "vitest": "^3.2.4",
     "vue-tsc": "^3.0.7"
   }
 }

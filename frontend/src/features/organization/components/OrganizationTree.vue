@@ -28,9 +28,7 @@
           전체 접기
         </Button>
       </div>
-      <span>
-        총 부서 {{ totalDepartments }}개
-      </span>
+      <span> 총 부서 {{ totalDepartments }}개 </span>
     </div>
 
     <div ref="scrollRef" class="flex-1 overflow-y-auto pr-0.5">
@@ -85,13 +83,15 @@ const searchTerm = ref('');
 
 const totalDepartments = computed(() => Object.keys(parentMap.value).length);
 
-const collapsibleCount = computed(() =>
-  collapsibleIds.value.filter((id) => (depthMap.value[id] ?? 0) >= 1).length,
+const collapsibleCount = computed(
+  () => collapsibleIds.value.filter((id) => (depthMap.value[id] ?? 0) >= 1).length,
 );
 
-const collapsedCount = computed(() =>
-  Object.keys(collapsedMap.value).filter((id) => (depthMap.value[id] ?? 0) >= 1 && collapsedMap.value[id])
-    .length,
+const collapsedCount = computed(
+  () =>
+    Object.keys(collapsedMap.value).filter(
+      (id) => (depthMap.value[id] ?? 0) >= 1 && collapsedMap.value[id],
+    ).length,
 );
 
 const isFullyExpanded = computed(() => Object.keys(collapsedMap.value).length === 0);

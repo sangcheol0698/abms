@@ -55,7 +55,9 @@ export function mapOrganizationChartNode(input: any): OrganizationChartNode {
     departmentCode: input.departmentCode,
     departmentType: input.departmentType,
     departmentLeader: mapLeader(input.departmentLeader),
-    employeeCount: Number.isFinite(computedEmployeeCount) ? computedEmployeeCount : employees.length,
+    employeeCount: Number.isFinite(computedEmployeeCount)
+      ? computedEmployeeCount
+      : employees.length,
     children: Array.isArray(input.children) ? input.children.map(mapOrganizationChartNode) : [],
   };
 
@@ -105,6 +107,7 @@ export function mapOrganizationDepartmentDetail(input: any): OrganizationDepartm
     departmentType: String(input?.departmentType ?? ''),
     departmentLeader: mapLeader(input?.departmentLeader),
     employees,
-    employeeCount: typeof input?.employeeCount === 'number' ? Number(input.employeeCount) : employees.length,
+    employeeCount:
+      typeof input?.employeeCount === 'number' ? Number(input.employeeCount) : employees.length,
   };
 }
