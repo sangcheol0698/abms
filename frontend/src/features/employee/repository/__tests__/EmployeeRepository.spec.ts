@@ -1,0 +1,109 @@
+import 'reflect-metadata';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import PageResponse from '@/core/common/PageResponse';
+import type HttpRepository from '@/core/http/HttpRepository';
+import { EmployeeRepository } from '../EmployeeRepository';
+import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
+
+describe('EmployeeRepository.search', () => {
+  let httpGet: ReturnType<typeof vi.fn>;
+  let repository: EmployeeRepository;
+
+  beforeEach(() => {
+    httpGet = vi.fn();
+    const httpRepositoryStub = {
+      get: httpGet,
+    } as unknown as HttpRepository;
+
+    repository = new EmployeeRepository(httpRepositoryStub);
+  });
+
+  it('요청 파라미터를 API 계약에 맞게 변환한다', async () => {
+    httpGet.mockResolvedValueOnce({
+      content: [],
+      number: 0,
+      size: 15,
+      totalPages: 0,
+      totalElements: 0,
+    });
+
+    const params: EmployeeSearchParams = {
+      page: 2,
+      size: 15,
+      name: '홍길동',
+      statuses: ['ACTIVE', 'ON_LEAVE'],
+      types: ['FULL_TIME', 'PART_TIME'],
+      grades: ['JUNIOR'],
+      positions: ['ASSOCIATE', 'MANAGER'],
+      departmentIds: ['D01', 'D02'],
+      sort: 'name,asc',
+    };
+
+    await repository.search(params);
+
+    expect(httpGet).toHaveBeenCalledTimes(1);
+    expect(httpGet).toHaveBeenCalledWith({
+      path: '/api/employees',
+      params: {
+        page: 1,
+        size: 15,
+        name: '홍길동',
+        statuses: 'ACTIVE,ON_LEAVE',
+        types: 'FULL_TIME,PART_TIME',
+        grades: 'JUNIOR',
+        positions: 'ASSOCIATE,MANAGER',
+        departmentIds: 'D01,D02',
+        sort: 'name,asc',
+      },
+    });
+  });
+
+  it('응답을 PageResponse<EmployeeListItem>으로 변환한다', async () => {
+    const apiResponse = {
+      content: [
+        {
+          employeeId: 'E-01',
+          departmentId: 'DEV',
+          departmentName: '개발팀',
+          name: '홍길동',
+          email: 'hong@example.com',
+          position: '사원',
+          status: '재직',
+          grade: '초급',
+          type: '정직원',
+          memo: '메모',
+        },
+      ],
+      number: 0,
+      size: 10,
+      totalPages: 2,
+      totalElements: 12,
+    };
+
+    httpGet.mockResolvedValueOnce(apiResponse);
+
+    const result = await repository.search({ page: 1, size: 10 });
+
+    expect(result).toBeInstanceOf(PageResponse);
+    expect(result.page).toBe(1);
+    expect(result.size).toBe(10);
+    expect(result.totalPages).toBe(2);
+    expect(result.totalElements).toBe(12);
+    expect(result.content).toHaveLength(1);
+
+    const item = result.content[0];
+    expect(item).toBeDefined();
+    if (!item) {
+      throw new Error('변환된 구성원 항목이 존재해야 합니다.');
+    }
+
+    expect(item.employeeId).toBe('E-01');
+    expect(item.departmentId).toBe('DEV');
+    expect(item.departmentName).toBe('개발팀');
+    expect(item.name).toBe('홍길동');
+    expect(item.statusCode).toBe('ACTIVE');
+    expect(item.typeCode).toBe('FULL_TIME');
+    expect(item.gradeCode).toBe('JUNIOR');
+    expect(item.positionCode).toBe('ASSOCIATE');
+  });
+});
