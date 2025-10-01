@@ -245,6 +245,11 @@ function scrollIntoView(departmentId?: string) {
     return;
   }
 
+  const depth = depthMap.value[departmentId];
+  if (depth === 0) {
+    return;
+  }
+
   nextTick(() => {
     const container = scrollRef.value;
     if (!container) {

@@ -61,7 +61,8 @@
         <ul v-else class="space-y-2 overflow-y-auto pr-1" style="max-height: calc(100vh - 210px)">
           <li v-for="notification in filtered" :key="notification.id">
             <button
-              class="flex w-full gap-3 rounded-md px-3 py-2 text-left transition hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              variant="ghost"
+              class="flex w-full justify-start gap-3 rounded-md px-3 py-2 text-left hover:bg-accent/70"
               @click="openNotification(notification)"
             >
               <span :class="indicatorClass(notification.type)" />

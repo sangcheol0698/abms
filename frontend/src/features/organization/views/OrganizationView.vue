@@ -24,7 +24,7 @@
     <div v-else class="flex-1 min-h-0">
       <div class="grid h-full min-h-0 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <div
-          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3.5 shadow-sm lg:h-[640px] lg:min-h-[640px] lg:max-h-[640px]"
+          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3.5 shadow-sm lg:h-[750px] lg:min-h-[750px] lg:max-h-[750px]"
         >
           <OrganizationTree
             class="h-full"
@@ -34,7 +34,7 @@
         </div>
 
         <div
-          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm lg:h-[640px] lg:min-h-[640px] lg:max-h-[640px]"
+          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm lg:h-[750px] lg:min-h-[750px] lg:max-h-[750px]"
         >
           <div class="flex-1 min-h-0 overflow-y-auto p-4">
             <OrganizationDetailPanel

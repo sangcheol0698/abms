@@ -33,7 +33,7 @@
 
       <div class="flex flex-1 flex-col overflow-hidden">
         <Tabs defaultValue="info" class="flex h-full flex-col">
-          <TabsList class="inline-flex h-9 w-fit gap-2 bg-transparent p-0">
+          <TabsList>
             <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
             <TabsTrigger value="members" class="text-sm">구성원</TabsTrigger>
             <TabsTrigger value="revenue" class="text-sm">매출</TabsTrigger>
