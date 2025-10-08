@@ -18,18 +18,7 @@
         </TableRow>
       </TableHeader>
       <TableBody>
-        <template v-if="loading">
-          <TableRow>
-            <TableCell :colspan="columns.length" class="h-24">
-              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 class="h-4 w-4 animate-spin" aria-hidden="true" />
-                <span>데이터를 불러오는 중입니다...</span>
-              </div>
-            </TableCell>
-          </TableRow>
-        </template>
-
-        <template v-else-if="tableInstance.getRowModel().rows?.length">
+        <template v-if="tableInstance.getRowModel().rows?.length">
           <template v-for="row in tableInstance.getRowModel().rows" :key="row.id">
             <TableRow :data-state="row.getIsSelected() && 'selected'" class="hover:bg-muted/50">
               <TableCell
@@ -77,7 +66,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2 } from 'lucide-vue-next';
 
 interface DataTableProps {
   columns: ColumnDef<any>[];
