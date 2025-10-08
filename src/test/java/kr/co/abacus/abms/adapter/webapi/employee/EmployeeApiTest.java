@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,9 +17,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeGradeResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeStatusResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeTypeResponse;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
@@ -27,7 +33,10 @@ import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 class EmployeeApiTest extends ApiIntegrationTestBase {
@@ -134,6 +143,107 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(response.employeeId()).isEqualTo(savedEmployee.getId().toString());
         assertThat(response.name()).isEqualTo(savedEmployee.getName());
         assertThat(response.email()).isEqualTo(savedEmployee.getEmail().address());
+    }
+
+    @Test
+    void getEmployeeGrades() throws Exception {
+        MvcTestResult result = mvcTester.get().uri("/api/employees/grades").exchange();
+
+        assertThat(result).apply(print()).hasStatusOk();
+
+        List<EmployeeGradeResponse> responses = objectMapper.readValue(
+            result.getResponse().getContentAsString(),
+            new TypeReference<>() {}
+        );
+
+        assertThat(responses).hasSize(EmployeeGrade.values().length);
+
+        for (EmployeeGrade grade : EmployeeGrade.values()) {
+            EmployeeGradeResponse found = responses.stream()
+                .filter(r -> r.name().equals(grade.name()))
+                .findFirst()
+                .orElseThrow();
+
+            assertThat(found.name()).isEqualTo(grade.name());
+            assertThat(found.description()).isEqualTo(grade.getDescription());
+            assertThat(found.level()).isEqualTo(grade.getLevel());
+        }
+    }
+
+    @Test
+    void getEmployeePositions() throws Exception {
+        MvcTestResult result = mvcTester.get().uri("/api/employees/positions").exchange();
+
+        assertThat(result).apply(print()).hasStatusOk();
+
+        List<EmployeePositionResponse> responses = objectMapper.readValue(
+            result.getResponse().getContentAsString(),
+            new TypeReference<>() {
+            }
+        );
+
+        assertThat(responses).hasSize(EmployeePosition.values().length);
+
+        for (EmployeePosition position : EmployeePosition.values()) {
+            EmployeePositionResponse found = responses.stream()
+                .filter(r -> r.name().equals(position.name()))
+                .findFirst()
+                .orElseThrow();
+
+            assertThat(found.name()).isEqualTo(position.name());
+            assertThat(found.description()).isEqualTo(position.getDescription());
+            assertThat(found.rank()).isEqualTo(position.getRank());
+        }
+    }
+
+    @Test
+    void getEmployeeTypes() throws Exception {
+        MvcTestResult result = mvcTester.get().uri("/api/employees/types").exchange();
+
+        assertThat(result).apply(print()).hasStatusOk();
+
+        List<EmployeeTypeResponse> responses = objectMapper.readValue(
+            result.getResponse().getContentAsString(),
+            new TypeReference<>() {
+            }
+        );
+
+        assertThat(responses).hasSize(EmployeeType.values().length);
+
+        for (EmployeeType type : EmployeeType.values()) {
+            EmployeeTypeResponse found = responses.stream()
+                .filter(r -> r.name().equals(type.name()))
+                .findFirst()
+                .orElseThrow();
+
+            assertThat(found.name()).isEqualTo(type.name());
+            assertThat(found.description()).isEqualTo(type.getDescription());
+        }
+    }
+
+    @Test
+    void getEmployeeStatuses() throws Exception {
+        MvcTestResult result = mvcTester.get().uri("/api/employees/statuses").exchange();
+
+        assertThat(result).apply(print()).hasStatusOk();
+
+        List<EmployeeStatusResponse> responses = objectMapper.readValue(
+            result.getResponse().getContentAsString(),
+            new TypeReference<>() {
+            }
+        );
+
+        assertThat(responses).hasSize(EmployeeStatus.values().length);
+
+        for (EmployeeStatus status : EmployeeStatus.values()) {
+            EmployeeStatusResponse found = responses.stream()
+                .filter(r -> r.name().equals(status.name()))
+                .findFirst()
+                .orElseThrow();
+
+            assertThat(found.name()).isEqualTo(status.name());
+            assertThat(found.description()).isEqualTo(status.getDescription());
+        }
     }
 
 }

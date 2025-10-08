@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.adapter.webapi.employee;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,7 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeGradeResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeStatusResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeTypeResponse;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
@@ -24,6 +29,10 @@ import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeStatus;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 @RequiredArgsConstructor
 @RestController
@@ -58,6 +67,34 @@ public class EmployeeApi {
             Department department = getDepartment(employee, departments);
             return EmployeeResponse.of(employee, department);
         });
+    }
+
+    @GetMapping("/api/employees/grades")
+    public List<EmployeeGradeResponse> getEmployeeGrades() {
+        return Arrays.stream(EmployeeGrade.values())
+            .map(EmployeeGradeResponse::of)
+            .toList();
+    }
+
+    @GetMapping("/api/employees/positions")
+    public List<EmployeePositionResponse> getEmployeePositions() {
+        return Arrays.stream(EmployeePosition.values())
+            .map(EmployeePositionResponse::of)
+            .toList();
+    }
+
+    @GetMapping("/api/employees/types")
+    public List<EmployeeTypeResponse> getEmployeeTypes() {
+        return Arrays.stream(EmployeeType.values())
+            .map(EmployeeTypeResponse::of)
+            .toList();
+    }
+
+    @GetMapping("/api/employees/statuses")
+    public List<EmployeeStatusResponse> getEmployeeStatuses() {
+        return Arrays.stream(EmployeeStatus.values())
+            .map(EmployeeStatusResponse::of)
+            .toList();
     }
 
     private Department getDepartment(Employee employee, List<Department> departments) {
