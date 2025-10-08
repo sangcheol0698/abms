@@ -54,49 +54,113 @@ function toLabelByCode(items: readonly { code: string; label: string }[]): Recor
   }, {});
 }
 
-export const EMPLOYEE_STATUS_OPTIONS = toOptions(STATUS_ITEMS);
-export const EMPLOYEE_TYPE_OPTIONS = toOptions(TYPE_ITEMS);
-export const EMPLOYEE_GRADE_OPTIONS = toOptions(GRADE_ITEMS);
-export const EMPLOYEE_POSITION_OPTIONS = toOptions(POSITION_ITEMS);
+let employeeStatusOptions = toOptions(STATUS_ITEMS);
+let employeeTypeOptions = toOptions(TYPE_ITEMS);
+let employeeGradeOptions = toOptions(GRADE_ITEMS);
+let employeePositionOptions = toOptions(POSITION_ITEMS);
 
-const STATUS_CODE_BY_LABEL = toCodeByLabel(STATUS_ITEMS);
-const TYPE_CODE_BY_LABEL = toCodeByLabel(TYPE_ITEMS);
-const GRADE_CODE_BY_LABEL = toCodeByLabel(GRADE_ITEMS);
-const POSITION_CODE_BY_LABEL = toCodeByLabel(POSITION_ITEMS);
+let statusCodeByLabel = toCodeByLabel(STATUS_ITEMS);
+let typeCodeByLabel = toCodeByLabel(TYPE_ITEMS);
+let gradeCodeByLabel = toCodeByLabel(GRADE_ITEMS);
+let positionCodeByLabel = toCodeByLabel(POSITION_ITEMS);
 
-const STATUS_LABEL_BY_CODE = toLabelByCode(STATUS_ITEMS);
-const TYPE_LABEL_BY_CODE = toLabelByCode(TYPE_ITEMS);
-const GRADE_LABEL_BY_CODE = toLabelByCode(GRADE_ITEMS);
-const POSITION_LABEL_BY_CODE = toLabelByCode(POSITION_ITEMS);
+let statusLabelByCode = toLabelByCode(STATUS_ITEMS);
+let typeLabelByCode = toLabelByCode(TYPE_ITEMS);
+let gradeLabelByCode = toLabelByCode(GRADE_ITEMS);
+let positionLabelByCode = toLabelByCode(POSITION_ITEMS);
+
+export function getEmployeeStatusOptions(): EmployeeFilterOption[] {
+  return employeeStatusOptions;
+}
+
+export function getEmployeeTypeOptions(): EmployeeFilterOption[] {
+  return employeeTypeOptions;
+}
+
+export function getEmployeeGradeOptions(): EmployeeFilterOption[] {
+  return employeeGradeOptions;
+}
+
+export function getEmployeePositionOptions(): EmployeeFilterOption[] {
+  return employeePositionOptions;
+}
+
+export function setEmployeeStatusOptions(options: EmployeeFilterOption[]) {
+  employeeStatusOptions = options;
+  statusCodeByLabel = options.reduce<Record<string, string>>((acc, option) => {
+    acc[option.label] = option.value;
+    return acc;
+  }, {});
+  statusLabelByCode = options.reduce<Record<string, string>>((acc, option) => {
+    acc[option.value] = option.label;
+    return acc;
+  }, {});
+}
+
+export function setEmployeeTypeOptions(options: EmployeeFilterOption[]) {
+  employeeTypeOptions = options;
+  typeCodeByLabel = options.reduce<Record<string, string>>((acc, option) => {
+    acc[option.label] = option.value;
+    return acc;
+  }, {});
+  typeLabelByCode = options.reduce<Record<string, string>>((acc, option) => {
+    acc[option.value] = option.label;
+    return acc;
+  }, {});
+}
+
+export function setEmployeeGradeOptions(options: EmployeeFilterOption[]) {
+  employeeGradeOptions = options;
+  gradeCodeByLabel = options.reduce<Record<string, string>>((acc, option) => {
+    acc[option.label] = option.value;
+    return acc;
+  }, {});
+  gradeLabelByCode = options.reduce<Record<string, string>>((acc, option) => {
+    acc[option.value] = option.label;
+    return acc;
+  }, {});
+}
+
+export function setEmployeePositionOptions(options: EmployeeFilterOption[]) {
+  employeePositionOptions = options;
+  positionCodeByLabel = options.reduce<Record<string, string>>((acc, option) => {
+    acc[option.label] = option.value;
+    return acc;
+  }, {});
+  positionLabelByCode = options.reduce<Record<string, string>>((acc, option) => {
+    acc[option.value] = option.label;
+    return acc;
+  }, {});
+}
 
 export function toStatusCode(description: string): string {
-  return STATUS_CODE_BY_LABEL[description] ?? description;
+  return statusCodeByLabel[description] ?? description;
 }
 
 export function toTypeCode(description: string): string {
-  return TYPE_CODE_BY_LABEL[description] ?? description;
+  return typeCodeByLabel[description] ?? description;
 }
 
 export function toGradeCode(description: string): string {
-  return GRADE_CODE_BY_LABEL[description] ?? description;
+  return gradeCodeByLabel[description] ?? description;
 }
 
 export function toPositionCode(description: string): string {
-  return POSITION_CODE_BY_LABEL[description] ?? description;
+  return positionCodeByLabel[description] ?? description;
 }
 
 export function toStatusLabel(code: string): string {
-  return STATUS_LABEL_BY_CODE[code] ?? code;
+  return statusLabelByCode[code] ?? code;
 }
 
 export function toTypeLabel(code: string): string {
-  return TYPE_LABEL_BY_CODE[code] ?? code;
+  return typeLabelByCode[code] ?? code;
 }
 
 export function toGradeLabel(code: string): string {
-  return GRADE_LABEL_BY_CODE[code] ?? code;
+  return gradeLabelByCode[code] ?? code;
 }
 
 export function toPositionLabel(code: string): string {
-  return POSITION_LABEL_BY_CODE[code] ?? code;
+  return positionLabelByCode[code] ?? code;
 }

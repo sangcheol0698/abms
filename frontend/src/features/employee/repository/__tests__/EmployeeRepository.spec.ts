@@ -4,6 +4,7 @@ import PageResponse from '@/core/common/PageResponse';
 import type HttpRepository from '@/core/http/HttpRepository';
 import { EmployeeRepository } from '../EmployeeRepository';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
+import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 
 describe('EmployeeRepository.search', () => {
   let httpGet: ReturnType<typeof vi.fn>;
@@ -105,5 +106,114 @@ describe('EmployeeRepository.search', () => {
     expect(item.typeCode).toBe('FULL_TIME');
     expect(item.gradeCode).toBe('JUNIOR');
     expect(item.positionCode).toBe('ASSOCIATE');
+  });
+
+  it('구성원 정보를 업데이트한다', async () => {
+    httpGet.mockResolvedValueOnce(null);
+    const httpPut = vi.fn().mockResolvedValue({
+      employeeId: 'E-01',
+      departmentId: 'DEV',
+      departmentName: '개발팀',
+      name: '홍길동',
+      email: 'hong@example.com',
+      position: '사원',
+      status: '재직',
+      grade: '초급',
+      type: '정직원',
+      memo: '메모',
+    });
+
+    const repository = new EmployeeRepository({
+      get: httpGet,
+      put: httpPut,
+    } as unknown as HttpRepository);
+
+    const result = await repository.update('E-01', {
+      departmentId: 'DEV',
+      name: '홍길동',
+      email: 'hong@example.com',
+      joinDate: '2024-01-01',
+      birthDate: '1990-05-10',
+      position: '사원',
+      grade: '초급',
+      type: '정직원',
+      memo: '메모',
+    });
+
+    expect(httpPut).toHaveBeenCalledWith({
+      path: '/api/employees/E-01',
+      data: {
+        departmentId: 'DEV',
+        name: '홍길동',
+        email: 'hong@example.com',
+        joinDate: '2024-01-01',
+        birthDate: '1990-05-10',
+        position: '사원',
+        grade: '초급',
+        type: '정직원',
+        memo: '메모',
+      },
+    });
+    expect(result.employeeId).toBe('E-01');
+    expect(result.name).toBe('홍길동');
+  });
+});
+
+describe('EmployeeRepository.fetch filter options', () => {
+  let httpGet: ReturnType<typeof vi.fn>;
+  let repository: EmployeeRepository;
+
+  beforeEach(() => {
+    httpGet = vi.fn();
+    const httpRepositoryStub = {
+      get: httpGet,
+    } as unknown as HttpRepository;
+    repository = new EmployeeRepository(httpRepositoryStub);
+  });
+
+  it('상태 옵션을 API 응답으로 변환한다', async () => {
+    httpGet.mockResolvedValueOnce([
+      { name: 'ACTIVE', description: '재직' },
+      { name: 'RESIGNED', description: '퇴사' },
+    ]);
+
+    const result = await repository.fetchStatuses();
+
+    expect(result).toEqual<EmployeeFilterOption[]>([
+      { value: 'ACTIVE', label: '재직' },
+      { value: 'RESIGNED', label: '퇴사' },
+    ]);
+  });
+
+  it('등급 옵션을 level 순으로 정렬한다', async () => {
+    httpGet.mockResolvedValueOnce([
+      { name: 'SENIOR', description: '고급', level: 3 },
+      { name: 'JUNIOR', description: '초급', level: 1 },
+      { name: 'MID', description: '중급', level: 2 },
+    ]);
+
+    const result = await repository.fetchGrades();
+
+    expect(result).toEqual<EmployeeFilterOption[]>([
+      { value: 'JUNIOR', label: '초급' },
+      { value: 'MID', label: '중급' },
+      { value: 'SENIOR', label: '고급' },
+    ]);
+  });
+
+  it('직책 옵션을 rank 순으로 정렬한다', async () => {
+    httpGet.mockResolvedValueOnce([
+      { name: 'DIRECTOR', description: '이사', rank: 4 },
+      { name: 'STAFF', description: '선임', rank: 2 },
+      { name: 'ASSOCIATE', description: '사원', rank: 1 },
+    ]);
+
+    const result = await repository.fetchPositions();
+
+    expect(result).toEqual<EmployeeFilterOption[]>([
+      { value: 'ASSOCIATE', label: '사원' },
+      { value: 'STAFF', label: '선임' },
+      { value: 'DIRECTOR', label: '이사' },
+    ]);
   });
 });

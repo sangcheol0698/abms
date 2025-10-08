@@ -55,6 +55,28 @@ const routes = [
           ],
         },
       },
+      {
+        path: 'employees/:employeeId',
+        name: 'employee-detail',
+        component: () => import('@/features/employee/views/EmployeeDetailView.vue'),
+        meta: {
+          title: '구성원 상세',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '구성원',
+              to: '/employees',
+            },
+            {
+              title: '상세',
+              disabled: true,
+            },
+          ],
+        },
+      },
     ],
   },
 ];

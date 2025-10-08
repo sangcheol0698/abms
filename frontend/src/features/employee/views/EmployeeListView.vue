@@ -88,10 +88,16 @@
     </div>
   </section>
   <EmployeeCreateDialog
-    :open="isCreateDialogOpen"
+    :open="isEmployeeDialogOpen"
     :departmentOptions="departmentOptions"
-    @update:open="(value) => (isCreateDialogOpen = value)"
+    :grade-options="gradeOptions"
+    :position-options="positionOptions"
+    :type-options="typeOptions"
+    :mode="dialogMode"
+    :employee="editingEmployee ?? undefined"
+    @update:open="handleEmployeeDialogOpenChange"
     @created="handleEmployeeCreated"
+    @updated="handleEmployeeUpdated"
   />
 </template>
 
@@ -130,11 +136,16 @@ import type {
   EmployeeListItem,
   EmployeeSearchParams,
 } from '@/features/employee/models/employeeListItem';
+import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 import {
-  EMPLOYEE_GRADE_OPTIONS,
-  EMPLOYEE_POSITION_OPTIONS,
-  EMPLOYEE_STATUS_OPTIONS,
-  EMPLOYEE_TYPE_OPTIONS,
+  getEmployeeGradeOptions,
+  getEmployeePositionOptions,
+  getEmployeeStatusOptions,
+  getEmployeeTypeOptions,
+  setEmployeeGradeOptions,
+  setEmployeePositionOptions,
+  setEmployeeStatusOptions,
+  setEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
 import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummaryCards.vue';
 import { useEmployeeSummary } from '@/features/employee/composables';
@@ -142,6 +153,8 @@ import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateD
 import { RefreshCcw } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import EmployeeRowActions from '@/features/employee/components/EmployeeRowActions.vue';
+import type { EmployeeSummary } from '@/features/employee/models/employee';
+import HttpError from '@/core/http/HttpError';
 
 interface DepartmentOption {
   label: string;
@@ -169,11 +182,14 @@ const columnVisibility = ref<VisibilityState>({});
 const rowSelection = ref<RowSelectionState>({});
 
 const departmentOptions = ref<DepartmentOption[]>([]);
-const statusOptions = EMPLOYEE_STATUS_OPTIONS;
-const typeOptions = EMPLOYEE_TYPE_OPTIONS;
-const gradeOptions = EMPLOYEE_GRADE_OPTIONS;
-const positionOptions = EMPLOYEE_POSITION_OPTIONS;
-const isCreateDialogOpen = ref(false);
+const statusOptions = ref<EmployeeFilterOption[]>(getEmployeeStatusOptions());
+const typeOptions = ref<EmployeeFilterOption[]>(getEmployeeTypeOptions());
+const gradeOptions = ref<EmployeeFilterOption[]>(getEmployeeGradeOptions());
+const positionOptions = ref<EmployeeFilterOption[]>(getEmployeePositionOptions());
+const isEmployeeDialogOpen = ref(false);
+const dialogMode = ref<'create' | 'edit'>('create');
+const editingEmployee = ref<EmployeeSummary | null>(null);
+const isLoadingEmployee = ref(false);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 
@@ -210,7 +226,7 @@ const columns: ColumnDef<EmployeeListItem>[] = [
           {
             type: 'button',
             class:
-              'text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+              'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
             onClick: (event: MouseEvent) => {
               event.stopPropagation();
               handleViewEmployee(row.original);
@@ -234,7 +250,7 @@ const columns: ColumnDef<EmployeeListItem>[] = [
         {
           type: 'button',
           class:
-            'text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+            'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
           onClick: (event: MouseEvent) => {
             event.stopPropagation();
             navigateToDepartment(row.original.departmentId);
@@ -386,6 +402,49 @@ async function loadDepartments() {
   } catch (error) {
     console.error('부서 정보를 불러오지 못했습니다.', error);
     departmentOptions.value = [];
+  }
+}
+
+async function loadEmployeeOptions() {
+  try {
+    const [statuses, types, grades, positions] = await Promise.all([
+      employeeRepository.fetchStatuses(),
+      employeeRepository.fetchTypes(),
+      employeeRepository.fetchGrades(),
+      employeeRepository.fetchPositions(),
+    ]);
+
+    if (statuses.length) {
+      statusOptions.value = statuses;
+      setEmployeeStatusOptions(statuses);
+    }
+
+    if (types.length) {
+      typeOptions.value = types;
+      setEmployeeTypeOptions(types);
+    }
+
+    if (grades.length) {
+      gradeOptions.value = grades;
+      setEmployeeGradeOptions(grades);
+    }
+
+    if (positions.length) {
+      positionOptions.value = positions;
+      setEmployeePositionOptions(positions);
+    }
+
+    if (employees.value.length) {
+      loadEmployees();
+    }
+  } catch (error) {
+    const message =
+      error instanceof HttpError
+        ? error.message
+        : '필터 정보를 불러오지 못했습니다.';
+    toast.error('필터 정보를 불러오지 못했습니다.', {
+      description: message,
+    });
   }
 }
 
@@ -773,7 +832,9 @@ function handlePageSizeChange(nextSize: number) {
 }
 
 function openCreateDialog() {
-  isCreateDialogOpen.value = true;
+  dialogMode.value = 'create';
+  editingEmployee.value = null;
+  isEmployeeDialogOpen.value = true;
 }
 
 function handleEmployeeCreated() {
@@ -785,10 +846,32 @@ function handleEmployeeCreated() {
   loadEmployees();
 }
 
-function handleEditEmployee(row: EmployeeListItem) {
-  toast('편집 준비 중입니다.', {
-    description: `${row.name}님의 정보를 편집할 수 있도록 화면을 준비 중입니다.`,
-  });
+function handleEmployeeUpdated() {
+  loadEmployees();
+}
+
+async function handleEditEmployee(row: EmployeeListItem) {
+  dialogMode.value = 'edit';
+  editingEmployee.value = null;
+  isLoadingEmployee.value = true;
+  const loadingToast = toast.loading('구성원 정보를 불러오는 중입니다.');
+  try {
+    const detail = await employeeRepository.findById(row.employeeId);
+    editingEmployee.value = detail;
+    isEmployeeDialogOpen.value = true;
+    toast.dismiss(loadingToast);
+  } catch (error) {
+    toast.dismiss(loadingToast);
+    const message =
+      error instanceof HttpError
+        ? error.message
+        : '구성원 정보를 불러오지 못했습니다.';
+    toast.error('구성원 정보를 불러오지 못했습니다.', {
+      description: message,
+    });
+  } finally {
+    isLoadingEmployee.value = false;
+  }
 }
 
 async function handleCopyEmail(row: EmployeeListItem) {
@@ -811,11 +894,8 @@ function handleDeleteEmployee(row: EmployeeListItem) {
 }
 
 function handleViewEmployee(row: EmployeeListItem) {
-  toast('상세 화면 준비 중입니다.', {
-    description: `${row.name}님의 상세 정보를 곧 확인할 수 있도록 준비하고 있어요.`,
-  });
   router
-    .push({ name: 'employees', query: { employeeId: row.employeeId } })
+    .push({ name: 'employee-detail', params: { employeeId: row.employeeId } })
     .catch(() => {
       /* 라우팅 오류는 무시 */
     });
@@ -830,6 +910,14 @@ function navigateToDepartment(departmentId?: string) {
     .catch(() => {
       /* 라우팅 오류는 무시 */
     });
+}
+
+function handleEmployeeDialogOpenChange(value: boolean) {
+  isEmployeeDialogOpen.value = value;
+  if (!value && !isLoadingEmployee.value) {
+    dialogMode.value = 'create';
+    editingEmployee.value = null;
+  }
 }
 
 const columnLabelMap: Record<string, string> = {
@@ -850,6 +938,7 @@ function getColumnLabel(columnId: string): string {
 
 onMounted(() => {
   loadDepartments();
+  void loadEmployeeOptions();
   if (Object.keys(route.query).length > 0) {
     applyRouteQuery({ ...route.query });
   } else {

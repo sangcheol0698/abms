@@ -3,20 +3,20 @@
     <DialogContent class="w-full sm:max-w-2xl max-h-[85vh] overflow-y-auto p-0">
       <div class="flex flex-col">
         <DialogHeader class="border-b border-border/60 px-6 py-4">
-          <DialogTitle>구성원 추가</DialogTitle>
-          <DialogDescription> 필수 정보를 입력해 신규 구성원을 등록하세요. </DialogDescription>
+          <DialogTitle>{{ dialogTitle }}</DialogTitle>
+          <DialogDescription>{{ dialogDescription }}</DialogDescription>
         </DialogHeader>
 
         <Form
           :key="formKey"
-          :initial-values="initialValues"
+          :initial-values="formInitialValues"
           :validation-schema="formSchema"
           v-slot="{ handleSubmit, isSubmitting, errors }"
         >
           <form class="flex flex-col" @submit.prevent="handleSubmit(onSubmit)">
             <div class="space-y-8 px-6 py-4">
               <Alert v-if="errorMessage" variant="destructive" class="mb-4">
-                <AlertTitle>등록에 실패했습니다</AlertTitle>
+                <AlertTitle>{{ isEditMode ? '수정에 실패했습니다' : '등록에 실패했습니다' }}</AlertTitle>
                 <AlertDescription>{{ errorMessage }}</AlertDescription>
               </Alert>
 
@@ -318,7 +318,7 @@
                     취소
                   </Button>
                   <Button type="submit" :disabled="isSubmitting" class="gap-2">
-                    <span>등록</span>
+                    <span>{{ isEditMode ? '저장' : '등록' }}</span>
                   </Button>
                 </div>
               </DialogFooter>
@@ -350,6 +350,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 import {
   Form,
   FormControl,
@@ -374,10 +375,11 @@ import { Separator } from '@/components/ui/separator';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import HttpError from '@/core/http/HttpError';
+import type { EmployeeSummary } from '@/features/employee/models/employee';
 import {
-  EMPLOYEE_GRADE_OPTIONS,
-  EMPLOYEE_POSITION_OPTIONS,
-  EMPLOYEE_TYPE_OPTIONS,
+  getEmployeeGradeOptions,
+  getEmployeePositionOptions,
+  getEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
 import { toast } from 'vue-sonner';
 import OrganizationSelectDialog from '@/features/organization/components/OrganizationSelectDialog.vue';
@@ -387,14 +389,29 @@ interface DepartmentOption {
   value: string;
 }
 
-const props = defineProps<{
-  open: boolean;
-  departmentOptions: DepartmentOption[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    open: boolean;
+    departmentOptions: DepartmentOption[];
+    mode?: 'create' | 'edit';
+    employee?: EmployeeSummary | null;
+    gradeOptions?: EmployeeFilterOption[];
+    positionOptions?: EmployeeFilterOption[];
+    typeOptions?: EmployeeFilterOption[];
+  }>(),
+  {
+    mode: 'create',
+    employee: null,
+    gradeOptions: undefined,
+    positionOptions: undefined,
+    typeOptions: undefined,
+  },
+);
 
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void;
   (event: 'created'): void;
+  (event: 'updated'): void;
 }>();
 
 const repository = appContainer.resolve(EmployeeRepository);
@@ -437,23 +454,50 @@ const initialValues = {
 };
 
 const formKey = ref(0);
+const formInitialValues = ref({ ...initialValues });
 const errorMessage = ref<string | null>(null);
 const departmentOptions = computed(() => props.departmentOptions ?? []);
 const isDepartmentSelectOpen = ref(false);
 const selectedDepartmentIdForDialog = ref('');
 const applyDepartmentSelection = ref<((value: string) => void) | null>(null);
 
-const gradeOptions = EMPLOYEE_GRADE_OPTIONS;
-const positionOptions = EMPLOYEE_POSITION_OPTIONS;
-const typeOptions = EMPLOYEE_TYPE_OPTIONS;
+const gradeOptions = computed(
+  () => props.gradeOptions ?? getEmployeeGradeOptions(),
+);
+const positionOptions = computed(
+  () => props.positionOptions ?? getEmployeePositionOptions(),
+);
+const typeOptions = computed(
+  () => props.typeOptions ?? getEmployeeTypeOptions(),
+);
+
+const isEditMode = computed(() => props.mode === 'edit');
+const dialogTitle = computed(() => (isEditMode.value ? '구성원 편집' : '구성원 추가'));
+const dialogDescription = computed(() =>
+  isEditMode.value
+    ? '필요한 정보를 수정한 뒤 저장하세요.'
+    : '필수 정보를 입력해 신규 구성원을 등록하세요.',
+);
 
 watch(
   () => props.open,
-  (next, prev) => {
-    if (prev && !next) {
+  (open, prev) => {
+    if (open) {
+      initializeFormValues();
+    } else if (prev && !open) {
       resetForm();
     }
   },
+);
+
+watch(
+  () => props.employee,
+  (employee) => {
+    if (props.open && isEditMode.value && employee) {
+      setFormInitialValues(mapEmployeeToFormValues(employee));
+    }
+  },
+  { deep: true },
 );
 
 watch(isDepartmentSelectOpen, (next) => {
@@ -465,7 +509,7 @@ watch(isDepartmentSelectOpen, (next) => {
 
 function resetForm() {
   errorMessage.value = null;
-  formKey.value += 1;
+  setFormInitialValues(initialValues);
   isDepartmentSelectOpen.value = false;
   selectedDepartmentIdForDialog.value = '';
   applyDepartmentSelection.value = null;
@@ -507,28 +551,38 @@ function handleDepartmentSelected({ departmentId }: { departmentId: string }) {
 async function onSubmit(values: typeof initialValues) {
   errorMessage.value = null;
 
+  const payload = {
+    departmentId: values.departmentId,
+    name: values.name.trim(),
+    email: values.email.trim(),
+    joinDate: formatDate(values.joinDate),
+    birthDate: formatDate(values.birthDate),
+    position: values.position,
+    grade: values.grade,
+    type: values.type,
+    memo: values.memo?.trim() ?? '',
+  } as const;
+
   try {
-    await repository.create({
-      departmentId: values.departmentId,
-      name: values.name.trim(),
-      email: values.email.trim(),
-      joinDate: formatDate(values.joinDate),
-      birthDate: formatDate(values.birthDate),
-      position: values.position,
-      grade: values.grade,
-      type: values.type,
-      memo: values.memo?.trim() ?? '',
-    });
-    toast.success('구성원을 성공적으로 추가했습니다.');
-    emit('created');
+    if (isEditMode.value && props.employee?.employeeId) {
+      await repository.update(props.employee.employeeId, payload);
+      toast.success('구성원 정보를 업데이트했습니다.');
+      emit('updated');
+    } else {
+      await repository.create(payload);
+      toast.success('구성원을 성공적으로 추가했습니다.');
+      emit('created');
+    }
     emit('update:open', false);
   } catch (error) {
     const message =
       error instanceof HttpError
         ? error.message
-        : '구성원 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+        : isEditMode.value
+          ? '구성원 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+          : '구성원 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
     errorMessage.value = message;
-    toast.error('구성원 등록에 실패했습니다.', {
+    toast.error(isEditMode.value ? '구성원 수정에 실패했습니다.' : '구성원 등록에 실패했습니다.', {
       description: message,
     });
   }
@@ -542,5 +596,41 @@ function formatDate(value: Date | null): string {
   const month = String(value.getMonth() + 1).padStart(2, '0');
   const day = String(value.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function initializeFormValues() {
+  errorMessage.value = null;
+  if (isEditMode.value && props.employee) {
+    setFormInitialValues(mapEmployeeToFormValues(props.employee));
+  } else {
+    setFormInitialValues(initialValues);
+  }
+}
+
+function setFormInitialValues(values: typeof initialValues) {
+  formInitialValues.value = { ...values };
+  formKey.value += 1;
+}
+
+function parseDate(value?: string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function mapEmployeeToFormValues(employee: EmployeeSummary): typeof initialValues {
+  return {
+    departmentId: employee.departmentId ?? '',
+    name: employee.name ?? '',
+    email: employee.email ?? '',
+    joinDate: parseDate(employee.joinDate ?? null),
+    birthDate: parseDate(employee.birthDate ?? null),
+    position: employee.positionCode ?? '',
+    grade: employee.gradeCode ?? '',
+    type: employee.typeCode ?? '',
+    memo: employee.memo ?? '',
+  };
 }
 </script>
