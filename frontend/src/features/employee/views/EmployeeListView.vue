@@ -68,9 +68,11 @@
       </DataTableToolbar>
 
       <DataTable
+        :key="tableRenderKey"
         :columns="columns"
         :data="employees"
         :tableInstance="table"
+        :loading="isLoading"
         emptyMessage="구성원 정보를 찾을 수 없습니다"
         emptyDescription="검색어나 필터 조건을 조정해 다시 시도해 보세요"
         :pageSize="pageSize"
@@ -178,6 +180,7 @@ let isApplyingRoute = false;
 let isUpdatingRoute = false;
 
 const employees = ref<EmployeeListItem[]>([]);
+const tableRenderKey = ref(0);
 const isLoading = ref(false);
 const page = ref(1);
 const pageSize = ref(10);
@@ -738,6 +741,7 @@ async function loadEmployees() {
     totalElements.value = response.totalElements;
     totalPages.value = Math.max(response.totalPages, 1);
     rowSelection.value = {};
+    tableRenderKey.value += 1;
   } catch (error) {
     console.error('구성원 목록을 불러오지 못했습니다.', error);
     employees.value = [];

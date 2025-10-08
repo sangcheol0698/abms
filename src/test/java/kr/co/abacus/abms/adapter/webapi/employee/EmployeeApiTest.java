@@ -51,6 +51,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     private DepartmentRepository departmentRepository;
 
     private UUID companyId;
+    private UUID divisionId;
+    private UUID teamId;
 
     @BeforeEach
     void setUpDepartments() {
@@ -68,6 +70,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         departmentRepository.save(team);
         flushAndClear();
         companyId = company.getId();
+        divisionId = division.getId();
+        teamId = team.getId();
     }
 
     @Test
@@ -244,6 +248,64 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             assertThat(found.name()).isEqualTo(status.name());
             assertThat(found.description()).isEqualTo(status.getDescription());
         }
+    }
+
+    @Test
+    void update() throws Exception {
+        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "update-target@email.com"));
+        flushAndClear();
+
+        var request = createEmployeeUpdateRequestWithDepartment(divisionId, "김수정", "updated@email.com");
+        String responseJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.put()
+            .uri("/api/employees/{id}", employee.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(responseJson)
+            .exchange();
+        flushAndClear();
+
+        assertThat(result)
+            .apply(print())
+            .hasStatusOk()
+            .bodyJson()
+            .hasPathSatisfying("$.departmentId", equalsTo(divisionId.toString()))
+            .hasPathSatisfying("$.name", equalsTo(request.name()))
+            .hasPathSatisfying("$.email", equalsTo(request.email()))
+            .hasPathSatisfying("$.joinDate", equalsTo(request.joinDate().toString()))
+            .hasPathSatisfying("$.birthDate", equalsTo(request.birthDate().toString()))
+            .hasPathSatisfying("$.memo", equalsTo(request.memo()));
+
+        Employee updatedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(updatedEmployee.getDepartmentId()).isEqualTo(request.departmentId());
+        assertThat(updatedEmployee.getName()).isEqualTo(request.name());
+        assertThat(updatedEmployee.getEmail().address()).isEqualTo(request.email());
+        assertThat(updatedEmployee.getJoinDate()).isEqualTo(request.joinDate());
+        assertThat(updatedEmployee.getBirthDate()).isEqualTo(request.birthDate());
+        assertThat(updatedEmployee.getPosition()).isEqualTo(request.position());
+        assertThat(updatedEmployee.getType()).isEqualTo(request.type());
+        assertThat(updatedEmployee.getGrade()).isEqualTo(request.grade());
+        assertThat(updatedEmployee.getMemo()).isEqualTo(request.memo());
+    }
+
+    @Test
+    void update_duplicateEmail() throws Exception {
+        Employee employee1 = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "dup1@email.com"));
+        Employee employee2 = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "dup2@email.com"));
+        flushAndClear();
+
+        var request = createEmployeeUpdateRequestWithDepartment(divisionId, employee1.getName(), employee2.getEmail().address());
+        String responseJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.put()
+            .uri("/api/employees/{id}", employee1.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(responseJson)
+            .exchange();
+
+        assertThat(result)
+            .apply(print())
+            .hasStatus(HttpStatus.CONFLICT.value());
     }
 
 }

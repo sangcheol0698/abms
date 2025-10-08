@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
+import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
@@ -47,6 +49,14 @@ public class EmployeeApi {
         Employee employee = employeeManager.create(request);
 
         return EmployeeCreateResponse.of(employee);
+    }
+
+    @PutMapping("/api/employees/{id}")
+    public EmployeeResponse update(@PathVariable UUID id, @RequestBody @Valid EmployeeUpdateRequest request) {
+        Employee employee = employeeManager.updateInfo(id, request);
+        Department department = departmentFinder.find(employee.getDepartmentId());
+
+        return EmployeeResponse.of(employee, department);
     }
 
     @GetMapping("/api/employees/{id}")
