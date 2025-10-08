@@ -1,30 +1,34 @@
 <template>
   <EmployeeFormDialog
-    mode="create"
+    mode="edit"
     :open="open"
+    :employee="employee"
     :department-options="departmentOptions"
     :grade-options="gradeOptions"
     :position-options="positionOptions"
     :type-options="typeOptions"
     @update:open="(value) => emit('update:open', value)"
-    @created="() => emit('created')"
+    @updated="() => emit('updated')"
   />
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import EmployeeFormDialog from './EmployeeFormDialog.vue';
+import type { EmployeeSummary } from '@/features/employee/models/employee';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 
 const props = withDefaults(
   defineProps<{
     open: boolean;
+    employee?: EmployeeSummary | null;
     departmentOptions: { label: string; value: string }[];
     gradeOptions?: EmployeeFilterOption[];
     positionOptions?: EmployeeFilterOption[];
     typeOptions?: EmployeeFilterOption[];
   }>(),
   {
+    employee: null,
     gradeOptions: undefined,
     positionOptions: undefined,
     typeOptions: undefined,
@@ -33,11 +37,12 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void;
-  (event: 'created'): void;
+  (event: 'updated'): void;
 }>();
 
 const departmentOptions = computed(() => props.departmentOptions);
 const gradeOptions = computed(() => props.gradeOptions);
 const positionOptions = computed(() => props.positionOptions);
 const typeOptions = computed(() => props.typeOptions);
+const employee = computed(() => props.employee ?? null);
 </script>

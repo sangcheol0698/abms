@@ -11,7 +11,7 @@
       <div class="space-y-4">
         <div class="flex items-center gap-3">
           <Avatar class="h-12 w-12">
-            <AvatarImage :src="user.avatar" :alt="user.name" />
+            <AvatarImage :src="user.avatar ?? ''" :alt="user.name" />
             <AvatarFallback>{{ userInitials }}</AvatarFallback>
           </Avatar>
           <div>

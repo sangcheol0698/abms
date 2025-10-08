@@ -130,8 +130,9 @@ const displayFormatter = new DateFormatter('ko-KR', {
 
 const dateFormatter = useDateFormatter('ko-KR');
 
-const internalValue = ref<DateValue | undefined>();
-const placeholderDate = ref<DateValue>(today(getLocalTimeZone()));
+const defaultPlaceholder = today(getLocalTimeZone()) as unknown as DateValue;
+const internalValue = ref<any>();
+const placeholderDate = ref<any>(defaultPlaceholder);
 
 const formattedValue = computed(() => {
   if (!internalValue.value) {
@@ -140,20 +141,24 @@ const formattedValue = computed(() => {
   return displayFormatter.format(internalValue.value.toDate(getLocalTimeZone()));
 });
 
-const monthString = computed(() => placeholderDate.value.month.toString());
-const yearString = computed(() => placeholderDate.value.year.toString());
+const monthString = computed(
+  () => (placeholderDate.value ?? defaultPlaceholder).month.toString(),
+);
+const yearString = computed(() => (placeholderDate.value ?? defaultPlaceholder).year.toString());
 
 watch(
   () => props.modelValue,
   (next) => {
     if (!next) {
       internalValue.value = undefined;
+      placeholderDate.value = defaultPlaceholder;
       return;
     }
 
     const source = typeof next === 'string' ? new Date(next) : next;
     if (Number.isNaN(source?.getTime())) {
       internalValue.value = undefined;
+      placeholderDate.value = defaultPlaceholder;
       return;
     }
 
@@ -166,26 +171,38 @@ watch(
   { immediate: true },
 );
 
-function updateMonth(newMonth?: string) {
-  if (!newMonth) {
+function updateMonth(newMonth: unknown) {
+  if (newMonth === null || newMonth === undefined) {
     return;
   }
-  const monthNumber = Number(newMonth);
-  if (Number.isNaN(monthNumber) || monthNumber === placeholderDate.value.month) {
+  const monthNumber =
+    typeof newMonth === 'number'
+      ? newMonth
+      : typeof newMonth === 'bigint'
+        ? Number(newMonth)
+        : Number(newMonth);
+  const base = placeholderDate.value ?? defaultPlaceholder;
+  if (Number.isNaN(monthNumber) || monthNumber === base.month) {
     return;
   }
-  placeholderDate.value = placeholderDate.value.set({ month: monthNumber });
+  placeholderDate.value = base.set({ month: monthNumber });
 }
 
-function updateYear(newYear?: string) {
-  if (!newYear) {
+function updateYear(newYear: unknown) {
+  if (newYear === null || newYear === undefined) {
     return;
   }
-  const yearNumber = Number(newYear);
-  if (Number.isNaN(yearNumber) || yearNumber === placeholderDate.value.year) {
+  const yearNumber =
+    typeof newYear === 'number'
+      ? newYear
+      : typeof newYear === 'bigint'
+        ? Number(newYear)
+        : Number(newYear);
+  const base = placeholderDate.value ?? defaultPlaceholder;
+  if (Number.isNaN(yearNumber) || yearNumber === base.year) {
     return;
   }
-  placeholderDate.value = placeholderDate.value.set({ year: yearNumber });
+  placeholderDate.value = base.set({ year: yearNumber });
 }
 
 function handleSelect(nextValue: DateValue | undefined) {
@@ -193,6 +210,7 @@ function handleSelect(nextValue: DateValue | undefined) {
 
   if (!nextValue) {
     emit('update:modelValue', null);
+    placeholderDate.value = defaultPlaceholder;
     return;
   }
 

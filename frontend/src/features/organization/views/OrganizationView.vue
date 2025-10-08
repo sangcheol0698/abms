@@ -51,6 +51,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import type { LocationQueryRaw } from 'vue-router';
 import { appContainer } from '@/core/di/container';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
 import type {
@@ -239,22 +240,37 @@ watch(
 );
 
 function updateRouteQuery(departmentId?: string) {
-  const currentQuery = { ...route.query } as Record<string, unknown>;
   const existing = extractDepartmentId(route.query.departmentId);
 
   if (departmentId === existing) {
     return;
   }
 
+  const nextQuery: LocationQueryRaw = {};
+
+  Object.entries(route.query).forEach(([key, value]) => {
+    if (key === 'departmentId') {
+      return;
+    }
+    if (Array.isArray(value)) {
+      const filtered = value.filter((item): item is string => typeof item === 'string');
+      if (filtered.length > 0) {
+        nextQuery[key] = filtered;
+      }
+      return;
+    }
+    if (typeof value === 'string' && value.length > 0) {
+      nextQuery[key] = value;
+    }
+  });
+
   if (departmentId) {
-    currentQuery.departmentId = departmentId;
-  } else {
-    delete currentQuery.departmentId;
+    nextQuery.departmentId = departmentId;
   }
 
   isUpdatingRoute = true;
   router
-    .replace({ query: currentQuery })
+    .replace({ query: nextQuery })
     .finally(() => {
       isUpdatingRoute = false;
     })

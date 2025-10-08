@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.adapter.webapi.employee.dto;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import kr.co.abacus.abms.domain.department.Department;
@@ -11,6 +12,8 @@ public record EmployeeResponse(
     String employeeId,
     String name,
     String email,
+    LocalDate joinDate,
+    LocalDate birthDate,
     String position,
     String status,
     String grade,
@@ -25,6 +28,8 @@ public record EmployeeResponse(
             employee.getId().toString(),
             employee.getName(),
             employee.getEmail().address(),
+            employee.getJoinDate(),
+            employee.getBirthDate(),
             employee.getPosition().getDescription(),
             employee.getStatus().getDescription(),
             employee.getGrade().getDescription(),

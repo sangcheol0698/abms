@@ -62,15 +62,15 @@
                     <div v-if="department.departmentLeader" class="flex items-center gap-3">
                       <Avatar class="size-10 border border-border/60">
                         <AvatarFallback class="text-xs font-semibold">
-                          {{ getInitials(department.departmentLeader.employeeName) }}
+                          {{ getInitials(department.departmentLeader?.employeeName) }}
                         </AvatarFallback>
                       </Avatar>
                       <div class="flex flex-col text-sm">
                         <span class="font-semibold text-foreground">
-                          {{ department.departmentLeader.employeeName }}
+                          {{ department.departmentLeader?.employeeName }}
                         </span>
                         <span class="text-xs text-muted-foreground">
-                          {{ department.departmentLeader.position }}
+                          {{ department.departmentLeader?.position }}
                         </span>
                       </div>
                     </div>
@@ -104,11 +104,11 @@
                 구성원 정보를 불러오는 중입니다...
               </div>
               <div
-                v-else-if="department.employees.length"
+                v-else-if="department.employees?.length"
                 class="flex-1 space-y-2 overflow-y-auto rounded-lg border border-border/60 bg-background/60 p-3"
               >
                 <div
-                  v-for="employee in department.employees"
+                  v-for="employee in department.employees ?? []"
                   :key="employee.employeeId"
                   class="flex items-center justify-between rounded-md border border-border/50 bg-card/80 px-3 py-2 text-sm"
                 >
@@ -190,7 +190,8 @@ function getInitials(name?: string) {
   }
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
+    const [first = ''] = parts;
+    return first.slice(0, 2).toUpperCase();
   }
   return parts
     .map((part) => part.charAt(0))

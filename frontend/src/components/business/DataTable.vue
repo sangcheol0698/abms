@@ -89,17 +89,7 @@ interface DataTableProps {
   pageSize?: number;
 }
 
-const props = defineProps<DataTableProps>();
-
-function getColumnSizePx(col: any): number {
-  try {
-    if (col?.id === 'select') return 44;
-    const size = typeof col?.getSize === 'function' ? col.getSize() : (col?.columnDef?.size ?? 120);
-    return Math.max(48, Math.min(400, Number(size) || 120));
-  } catch {
-    return 120;
-  }
-}
+defineProps<DataTableProps>();
 
 function getHeaderSizePx(header: any): number {
   try {

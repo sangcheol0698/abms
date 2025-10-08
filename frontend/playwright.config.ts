@@ -2,7 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 // 기본 포트는 Vite 개발 서버(5173)를 사용합니다.
 const DEV_SERVER_PORT = Number(process.env.PLAYWRIGHT_PORT ?? 5173);
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? `http://localhost:${DEV_SERVER_PORT}`;
+const DEV_SERVER_HOST = process.env.PLAYWRIGHT_HOST ?? '127.0.0.1';
+const BASE_URL =
+  process.env.PLAYWRIGHT_TEST_BASE_URL ?? `http://${DEV_SERVER_HOST}:${DEV_SERVER_PORT}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -21,7 +23,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run dev -- --port ${DEV_SERVER_PORT}`, // 필요할 때 Vite 개발 서버를 자동으로 띄웁니다.
+    command: `npm run dev -- --host ${DEV_SERVER_HOST} --port ${DEV_SERVER_PORT}`, // 필요할 때 Vite 개발 서버를 자동으로 띄웁니다.
     url: BASE_URL,
     reuseExistingServer: true, // 이미 실행 중이면 재사용해서 속도를 높입니다.
   },

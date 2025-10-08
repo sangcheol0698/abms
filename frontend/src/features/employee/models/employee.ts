@@ -1,4 +1,9 @@
-import { toGradeCode, toPositionCode, toStatusCode, toTypeCode } from '@/features/employee/models/employeeFilters';
+import {
+  toGradeCode,
+  toPositionCode,
+  toStatusCode,
+  toTypeCode,
+} from '@/features/employee/models/employeeFilters';
 
 export interface EmployeeSummary {
   departmentId: string;
@@ -15,8 +20,8 @@ export interface EmployeeSummary {
   type: string;
   typeCode: string;
   memo: string;
-  joinDate?: string;
-  birthDate?: string;
+  joinDate: string;
+  birthDate: string;
 }
 
 export function mapEmployeeSummary(input: any): EmployeeSummary {
@@ -24,6 +29,8 @@ export function mapEmployeeSummary(input: any): EmployeeSummary {
   const statusLabel = String(input?.status ?? '');
   const gradeLabel = String(input?.grade ?? '');
   const typeLabel = String(input?.type ?? '');
+  const joinDate = input?.joinDate ?? '';
+  const birthDate = input?.birthDate ?? '';
 
   return {
     departmentId: String(input?.departmentId ?? ''),
@@ -40,8 +47,8 @@ export function mapEmployeeSummary(input: any): EmployeeSummary {
     type: typeLabel,
     typeCode: toTypeCode(typeLabel),
     memo: String(input?.memo ?? ''),
-    joinDate: input?.joinDate ? String(input.joinDate) : undefined,
-    birthDate: input?.birthDate ? String(input.birthDate) : undefined,
+    joinDate: joinDate,
+    birthDate: birthDate,
   };
 }
 

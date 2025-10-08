@@ -73,6 +73,8 @@ describe('EmployeeRepository.search', () => {
           grade: '초급',
           type: '정직원',
           memo: '메모',
+          joinDate: '2024-01-10',
+          birthDate: '1990-05-15',
         },
       ],
       number: 0,
@@ -106,6 +108,8 @@ describe('EmployeeRepository.search', () => {
     expect(item.typeCode).toBe('FULL_TIME');
     expect(item.gradeCode).toBe('JUNIOR');
     expect(item.positionCode).toBe('ASSOCIATE');
+    expect(item.joinDate).toBe('2024-01-10');
+    expect(item.birthDate).toBe('1990-05-15');
   });
 
   it('구성원 정보를 업데이트한다', async () => {

@@ -88,15 +88,22 @@
     </div>
   </section>
   <EmployeeCreateDialog
-    :open="isEmployeeDialogOpen"
-    :departmentOptions="departmentOptions"
+    :open="isEmployeeCreateDialogOpen"
+    :department-options="departmentOptions"
     :grade-options="gradeOptions"
     :position-options="positionOptions"
     :type-options="typeOptions"
-    :mode="dialogMode"
-    :employee="editingEmployee ?? undefined"
-    @update:open="handleEmployeeDialogOpenChange"
+    @update:open="handleEmployeeCreateDialogOpenChange"
     @created="handleEmployeeCreated"
+  />
+  <EmployeeUpdateDialog
+    :open="isEmployeeUpdateDialogOpen"
+    :department-options="departmentOptions"
+    :grade-options="gradeOptions"
+    :position-options="positionOptions"
+    :type-options="typeOptions"
+    :employee="editingEmployee ?? undefined"
+    @update:open="handleEmployeeUpdateDialogOpenChange"
     @updated="handleEmployeeUpdated"
   />
 </template>
@@ -150,6 +157,7 @@ import {
 import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummaryCards.vue';
 import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
+import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
 import { RefreshCcw } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import EmployeeRowActions from '@/features/employee/components/EmployeeRowActions.vue';
@@ -186,8 +194,8 @@ const statusOptions = ref<EmployeeFilterOption[]>(getEmployeeStatusOptions());
 const typeOptions = ref<EmployeeFilterOption[]>(getEmployeeTypeOptions());
 const gradeOptions = ref<EmployeeFilterOption[]>(getEmployeeGradeOptions());
 const positionOptions = ref<EmployeeFilterOption[]>(getEmployeePositionOptions());
-const isEmployeeDialogOpen = ref(false);
-const dialogMode = ref<'create' | 'edit'>('create');
+const isEmployeeCreateDialogOpen = ref(false);
+const isEmployeeUpdateDialogOpen = ref(false);
 const editingEmployee = ref<EmployeeSummary | null>(null);
 const isLoadingEmployee = ref(false);
 
@@ -203,13 +211,15 @@ const columns: ColumnDef<EmployeeListItem>[] = [
         modelValue:
           table.getIsAllPageRowsSelected() ||
           (table.getIsSomePageRowsSelected() && 'indeterminate'),
-        'onUpdate:modelValue': (value: boolean) => table.toggleAllPageRowsSelected(!!value),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+          table.toggleAllPageRowsSelected(value === 'indeterminate' ? true : Boolean(value)),
         ariaLabel: '모두 선택',
       }),
     cell: ({ row }) =>
       h(Checkbox, {
         modelValue: row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean) => row.toggleSelected(!!value),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+          row.toggleSelected(value === 'indeterminate' ? true : Boolean(value)),
         ariaLabel: '행 선택',
       }),
     enableSorting: false,
@@ -331,6 +341,28 @@ const columns: ColumnDef<EmployeeListItem>[] = [
     enableSorting: false,
     size: 90,
     meta: { skeleton: 'enum-badge' },
+  },
+  {
+    id: 'birthDate',
+    accessorFn: (row) => row.birthDate ?? '',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '생년월일', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.birthDate)),
+    enableSorting: false,
+    enableHiding: true,
+    size: 120,
+    meta: { skeleton: 'text-short' },
+  },
+  {
+    id: 'joinDate',
+    accessorFn: (row) => row.joinDate ?? '',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '입사일', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.joinDate)),
+    enableSorting: false,
+    enableHiding: true,
+    size: 120,
+    meta: { skeleton: 'text-short' },
   },
   {
     id: 'actions',
@@ -832,12 +864,12 @@ function handlePageSizeChange(nextSize: number) {
 }
 
 function openCreateDialog() {
-  dialogMode.value = 'create';
   editingEmployee.value = null;
-  isEmployeeDialogOpen.value = true;
+  isEmployeeCreateDialogOpen.value = true;
 }
 
 function handleEmployeeCreated() {
+  isEmployeeCreateDialogOpen.value = false;
   if (page.value !== 1) {
     page.value = 1;
     return;
@@ -847,18 +879,18 @@ function handleEmployeeCreated() {
 }
 
 function handleEmployeeUpdated() {
+  isEmployeeUpdateDialogOpen.value = false;
   loadEmployees();
 }
 
 async function handleEditEmployee(row: EmployeeListItem) {
-  dialogMode.value = 'edit';
   editingEmployee.value = null;
   isLoadingEmployee.value = true;
   const loadingToast = toast.loading('구성원 정보를 불러오는 중입니다.');
   try {
     const detail = await employeeRepository.findById(row.employeeId);
     editingEmployee.value = detail;
-    isEmployeeDialogOpen.value = true;
+    isEmployeeUpdateDialogOpen.value = true;
     toast.dismiss(loadingToast);
   } catch (error) {
     toast.dismiss(loadingToast);
@@ -912,12 +944,26 @@ function navigateToDepartment(departmentId?: string) {
     });
 }
 
-function handleEmployeeDialogOpenChange(value: boolean) {
-  isEmployeeDialogOpen.value = value;
+function handleEmployeeCreateDialogOpenChange(value: boolean) {
+  isEmployeeCreateDialogOpen.value = value;
+}
+
+function handleEmployeeUpdateDialogOpenChange(value: boolean) {
+  isEmployeeUpdateDialogOpen.value = value;
   if (!value && !isLoadingEmployee.value) {
-    dialogMode.value = 'create';
     editingEmployee.value = null;
   }
+}
+
+function formatDisplayDate(value?: string | null) {
+  if (!value) {
+    return '-';
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleDateString('ko-KR');
 }
 
 const columnLabelMap: Record<string, string> = {
@@ -929,6 +975,8 @@ const columnLabelMap: Record<string, string> = {
   grade: '등급',
   type: '유형',
   status: '상태',
+  joinDate: '입사일',
+  birthDate: '생년월일',
   actions: '동작',
 };
 

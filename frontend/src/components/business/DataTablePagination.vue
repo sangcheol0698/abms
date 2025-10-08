@@ -135,7 +135,19 @@ function onPageChange(page: number) {
   emit('pageChange', page);
 }
 
-function onPageSizeChange(pageSize: string) {
-  emit('pageSizeChange', Number(pageSize));
+function onPageSizeChange(pageSize: unknown) {
+  if (pageSize === null || pageSize === undefined) {
+    return;
+  }
+  const parsed =
+    typeof pageSize === 'number'
+      ? pageSize
+      : typeof pageSize === 'bigint'
+        ? Number(pageSize)
+        : Number(pageSize);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return;
+  }
+  emit('pageSizeChange', parsed);
 }
 </script>

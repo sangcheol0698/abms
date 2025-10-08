@@ -162,7 +162,7 @@ function rebuildIndexes(nodes: OrganizationChartNode[]) {
     hasInitializedCollapse.value = true;
     if (!props.defaultExpandAll) {
       nextCollapsible.forEach((id) => {
-        if (nextDepth[id] >= 2) {
+        if ((nextDepth[id] ?? 0) >= 2) {
           nextState[id] = true;
         }
       });

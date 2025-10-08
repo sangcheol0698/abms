@@ -41,7 +41,7 @@ interface NavigationCommand {
   shortcut: string;
 }
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     open?: boolean;
   }>(),

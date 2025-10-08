@@ -112,7 +112,11 @@
               <Checkbox
                 :model-value="column.getIsVisible()"
                 @click.stop
-                @update:model-value="(value) => onToggleColumn(column, value)"
+                @update:model-value="(value) =>
+                  onToggleColumn(
+                    column,
+                    value === 'indeterminate' ? undefined : Boolean(value),
+                  )"
               />
               <span class="text-sm">
                 {{ getColumnLabel(column.id) }}
