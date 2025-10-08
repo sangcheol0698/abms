@@ -108,6 +108,26 @@
     @update:open="handleEmployeeUpdateDialogOpenChange"
     @updated="handleEmployeeUpdated"
   />
+  <AlertDialog :open="deletion.isDialogOpen.value">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>구성원을 삭제할까요?</AlertDialogTitle>
+        <AlertDialogDescription>{{ deletion.description.value }}</AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel :disabled="deletion.isProcessing.value" @click="deletion.cancel">
+          취소
+        </AlertDialogCancel>
+        <AlertDialogAction
+          :disabled="deletion.isProcessing.value"
+          @pointerdown.prevent
+          @click="deletion.confirm"
+        >
+          삭제
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
@@ -136,6 +156,16 @@ import {
   DataTableToolbar,
 } from '@/components/business';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { valueUpdater } from '@/components/ui/table/utils';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
@@ -165,6 +195,7 @@ import { toast } from 'vue-sonner';
 import EmployeeRowActions from '@/features/employee/components/EmployeeRowActions.vue';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import HttpError from '@/core/http/HttpError';
+import { useEmployeeDeletion } from '@/features/employee/composables/useEmployeeDeletion';
 
 interface DepartmentOption {
   label: string;
@@ -201,6 +232,9 @@ const isEmployeeCreateDialogOpen = ref(false);
 const isEmployeeUpdateDialogOpen = ref(false);
 const editingEmployee = ref<EmployeeSummary | null>(null);
 const isLoadingEmployee = ref(false);
+const deletion = useEmployeeDeletion(async () => {
+  await loadEmployees();
+});
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 
@@ -473,10 +507,7 @@ async function loadEmployeeOptions() {
       loadEmployees();
     }
   } catch (error) {
-    const message =
-      error instanceof HttpError
-        ? error.message
-        : '필터 정보를 불러오지 못했습니다.';
+    const message = error instanceof HttpError ? error.message : '필터 정보를 불러오지 못했습니다.';
     toast.error('필터 정보를 불러오지 못했습니다.', {
       description: message,
     });
@@ -899,9 +930,7 @@ async function handleEditEmployee(row: EmployeeListItem) {
   } catch (error) {
     toast.dismiss(loadingToast);
     const message =
-      error instanceof HttpError
-        ? error.message
-        : '구성원 정보를 불러오지 못했습니다.';
+      error instanceof HttpError ? error.message : '구성원 정보를 불러오지 못했습니다.';
     toast.error('구성원 정보를 불러오지 못했습니다.', {
       description: message,
     });
@@ -924,28 +953,22 @@ async function handleCopyEmail(row: EmployeeListItem) {
 }
 
 function handleDeleteEmployee(row: EmployeeListItem) {
-  toast('삭제 기능 준비 중입니다.', {
-    description: `${row.name}님을 삭제하기 전 확인 절차를 준비하고 있습니다.`,
-  });
+  deletion.open(row.employeeId, row.name);
 }
 
 function handleViewEmployee(row: EmployeeListItem) {
-  router
-    .push({ name: 'employee-detail', params: { employeeId: row.employeeId } })
-    .catch(() => {
-      /* 라우팅 오류는 무시 */
-    });
+  router.push({ name: 'employee-detail', params: { employeeId: row.employeeId } }).catch(() => {
+    /* 라우팅 오류는 무시 */
+  });
 }
 
 function navigateToDepartment(departmentId?: string) {
   if (!departmentId) {
     return;
   }
-  router
-    .push({ name: 'organization', query: { departmentId } })
-    .catch(() => {
-      /* 라우팅 오류는 무시 */
-    });
+  router.push({ name: 'organization', query: { departmentId } }).catch(() => {
+    /* 라우팅 오류는 무시 */
+  });
 }
 
 function handleEmployeeCreateDialogOpenChange(value: boolean) {

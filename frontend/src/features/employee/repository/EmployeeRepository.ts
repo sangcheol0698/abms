@@ -61,6 +61,12 @@ export class EmployeeRepository {
     return mapEmployeeSummary(response);
   }
 
+  async delete(employeeId: string): Promise<void> {
+    await this.httpRepository.delete({
+      path: `/api/employees/${employeeId}`,
+    });
+  }
+
   async search(params: EmployeeSearchParams): Promise<PageResponse<EmployeeListItem>> {
     const query: Record<string, unknown> = {
       page: Math.max(params.page - 1, 0),
