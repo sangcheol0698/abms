@@ -21,4 +21,12 @@ class SalaryHistoryTest {
         assertThat(salaryHistory.getPeriod().endDate()).isNull();
     }
 
+    @Test
+    void close() {
+        SalaryHistory salaryHistory = SalaryHistory.startWith(UUID.randomUUID(), Money.wons(100_00L), LocalDate.of(2025, 1, 1));
+        salaryHistory.close(LocalDate.of(2025, 12, 31));
+
+        assertThat(salaryHistory.getPeriod().endDate()).isEqualTo(LocalDate.of(2025, 12, 31));
+    }
+
 }
