@@ -8,11 +8,14 @@ import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -40,6 +43,8 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 @RestController
 public class EmployeeApi {
 
+    private static final String SYSTEM_DELETER = "SYSTEM";
+
     private final EmployeeManager employeeManager;
     private final EmployeeFinder employeeFinder;
     private final DepartmentFinder departmentFinder;
@@ -49,6 +54,12 @@ public class EmployeeApi {
         Employee employee = employeeManager.create(request);
 
         return EmployeeCreateResponse.of(employee);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/api/employees/{id}")
+    public void delete(@PathVariable UUID id) {
+        employeeManager.delete(id, SYSTEM_DELETER);
     }
 
     @PutMapping("/api/employees/{id}")

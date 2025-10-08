@@ -308,4 +308,39 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .hasStatus(HttpStatus.CONFLICT.value());
     }
 
+    @Test
+    void delete() {
+        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "delete-target@email.com"));
+        flushAndClear();
+
+        MvcTestResult result = mvcTester.delete()
+            .uri("/api/employees/{id}", employee.getId())
+            .exchange();
+        flushAndClear();
+
+        assertThat(result)
+            .apply(print())
+            .hasStatus(HttpStatus.NO_CONTENT.value());
+
+        Employee deletedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(deletedEmployee.isDeleted()).isTrue();
+        assertThat(deletedEmployee.getDeletedBy()).isEqualTo("SYSTEM");
+        assertThat(deletedEmployee.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void delete_alreadyDeleted() {
+        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "already-deleted@email.com"));
+        employeeManager.delete(employee.getId(), "adminUser");
+        flushAndClear();
+
+        MvcTestResult result = mvcTester.delete()
+            .uri("/api/employees/{id}", employee.getId())
+            .exchange();
+
+        assertThat(result)
+            .apply(print())
+            .hasStatus(HttpStatus.NOT_FOUND.value());
+    }
+
 }
