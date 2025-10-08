@@ -140,6 +140,8 @@ import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummary
 import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
 import { RefreshCcw } from 'lucide-vue-next';
+import { toast } from 'vue-sonner';
+import EmployeeRowActions from '@/features/employee/components/EmployeeRowActions.vue';
 
 interface DepartmentOption {
   label: string;
@@ -203,7 +205,19 @@ const columns: ColumnDef<EmployeeListItem>[] = [
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '이름', align: 'left' }),
     cell: ({ row }) =>
       h('div', { class: 'flex flex-col gap-0.5' }, [
-        h('span', { class: 'font-medium text-foreground' }, row.original.name),
+        h(
+          'button',
+          {
+            type: 'button',
+            class:
+              'text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+            onClick: (event: MouseEvent) => {
+              event.stopPropagation();
+              handleViewEmployee(row.original);
+            },
+          },
+          row.original.name,
+        ),
         h('span', { class: 'text-xs text-muted-foreground' }, row.original.email),
       ]),
     enableSorting: true,
@@ -215,7 +229,19 @@ const columns: ColumnDef<EmployeeListItem>[] = [
     accessorFn: (row) => row.departmentName,
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '부서', align: 'left' }),
     cell: ({ row }) =>
-      h('span', { class: 'text-sm text-foreground' }, row.original.departmentName ?? ''),
+      h(
+        'button',
+        {
+          type: 'button',
+          class:
+            'text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+          onClick: (event: MouseEvent) => {
+            event.stopPropagation();
+            navigateToDepartment(row.original.departmentId);
+          },
+        },
+        row.original.departmentName ?? '',
+      ),
     enableSorting: false,
     size: 160,
     meta: { skeleton: 'text-short' },
@@ -291,14 +317,18 @@ const columns: ColumnDef<EmployeeListItem>[] = [
     meta: { skeleton: 'enum-badge' },
   },
   {
-    id: 'memo',
-    accessorKey: 'memo',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '메모', align: 'left' }),
+    id: 'actions',
+    header: () => null,
     cell: ({ row }) =>
-      h('span', { class: 'text-sm text-muted-foreground line-clamp-2' }, row.original.memo ?? ''),
+      h(EmployeeRowActions, {
+        row: row.original,
+        onEdit: () => handleEditEmployee(row.original),
+        onCopyEmail: () => handleCopyEmail(row.original),
+        onDelete: () => handleDeleteEmployee(row.original),
+      }),
     enableSorting: false,
-    size: 240,
-    meta: { skeleton: 'title-subtitle' },
+    enableHiding: false,
+    size: 56,
   },
 ];
 
@@ -755,6 +785,53 @@ function handleEmployeeCreated() {
   loadEmployees();
 }
 
+function handleEditEmployee(row: EmployeeListItem) {
+  toast('편집 준비 중입니다.', {
+    description: `${row.name}님의 정보를 편집할 수 있도록 화면을 준비 중입니다.`,
+  });
+}
+
+async function handleCopyEmail(row: EmployeeListItem) {
+  try {
+    await navigator.clipboard.writeText(row.email);
+    toast.success('이메일을 복사했어요.', {
+      description: row.email,
+    });
+  } catch (error) {
+    toast.error('이메일을 복사하지 못했습니다.', {
+      description: '브라우저 클립보드 권한을 확인해 주세요.',
+    });
+  }
+}
+
+function handleDeleteEmployee(row: EmployeeListItem) {
+  toast('삭제 기능 준비 중입니다.', {
+    description: `${row.name}님을 삭제하기 전 확인 절차를 준비하고 있습니다.`,
+  });
+}
+
+function handleViewEmployee(row: EmployeeListItem) {
+  toast('상세 화면 준비 중입니다.', {
+    description: `${row.name}님의 상세 정보를 곧 확인할 수 있도록 준비하고 있어요.`,
+  });
+  router
+    .push({ name: 'employees', query: { employeeId: row.employeeId } })
+    .catch(() => {
+      /* 라우팅 오류는 무시 */
+    });
+}
+
+function navigateToDepartment(departmentId?: string) {
+  if (!departmentId) {
+    return;
+  }
+  router
+    .push({ name: 'organization', query: { departmentId } })
+    .catch(() => {
+      /* 라우팅 오류는 무시 */
+    });
+}
+
 const columnLabelMap: Record<string, string> = {
   select: '선택',
   name: '이름',
@@ -764,7 +841,7 @@ const columnLabelMap: Record<string, string> = {
   grade: '등급',
   type: '유형',
   status: '상태',
-  memo: '메모',
+  actions: '동작',
 };
 
 function getColumnLabel(columnId: string): string {
