@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -60,6 +61,12 @@ public class EmployeeApi {
     @DeleteMapping("/api/employees/{id}")
     public void delete(@PathVariable UUID id) {
         employeeManager.delete(id, SYSTEM_DELETER);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/api/employees/{id}/restore")
+    public void restore(@PathVariable UUID id) {
+        employeeManager.restore(id);
     }
 
     @PutMapping("/api/employees/{id}")

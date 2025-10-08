@@ -26,4 +26,6 @@ public interface EmployeeManager {
 
     Employee delete(UUID id, String deleteBy);
 
+    Employee restore(UUID id);
+
 }

@@ -251,4 +251,19 @@ class EmployeeManagerTest extends IntegrationTestBase {
         assertThat(deletedEmployee.getDeletedAt()).isNotNull();
     }
 
+    @Test
+    void restore() {
+        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "restore@email.com", "홍길동"));
+        employeeManager.delete(employee.getId(), "adminUser");
+        flushAndClear();
+
+        employeeManager.restore(employee.getId());
+        flushAndClear();
+
+        Employee restoredEmployee = employeeFinder.find(employee.getId());
+        assertThat(restoredEmployee.isDeleted()).isFalse();
+        assertThat(restoredEmployee.getDeletedAt()).isNull();
+        assertThat(restoredEmployee.getDeletedBy()).isNull();
+    }
+
 }

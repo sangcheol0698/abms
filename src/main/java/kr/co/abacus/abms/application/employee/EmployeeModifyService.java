@@ -1,23 +1,23 @@
 package kr.co.abacus.abms.application.employee;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+import lombok.RequiredArgsConstructor;
+
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 import kr.co.abacus.abms.domain.shared.Email;
-
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
-
-import java.time.LocalDate;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Validated
@@ -88,6 +88,16 @@ public class EmployeeModifyService implements EmployeeManager {
         Employee employee = employeeFinder.find(id);
 
         employee.softDelete(deleteBy);
+
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee restore(UUID id) {
+        Employee employee = employeeRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("삭제된 직원을 찾을 수 없습니다: " + id));
+
+        employee.restore();
 
         return employeeRepository.save(employee);
     }

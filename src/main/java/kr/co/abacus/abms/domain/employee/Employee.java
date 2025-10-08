@@ -139,4 +139,22 @@ public class Employee extends AbstractEntity {
         this.email = new Email("deleted." + System.currentTimeMillis() + "." + email.address());
     }
 
+    @Override
+    public void restore() {
+        state(isDeleted(), "삭제되지 않은 직원은 복구할 수 없습니다.");
+
+        super.restore();
+
+        final String masked = this.email.address();
+        final String prefix = "deleted.";
+
+        if (masked.startsWith(prefix)) {
+            int secondDotIndex = masked.indexOf('.', prefix.length());
+            if (secondDotIndex > 0 && secondDotIndex + 1 < masked.length()) {
+                String originalEmail = masked.substring(secondDotIndex + 1);
+                this.email = new Email(originalEmail);
+            }
+        }
+    }
+
 }

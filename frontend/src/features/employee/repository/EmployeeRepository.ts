@@ -67,6 +67,12 @@ export class EmployeeRepository {
     });
   }
 
+  async restore(employeeId: string): Promise<void> {
+    await this.httpRepository.patch({
+      path: `/api/employees/${employeeId}/restore`,
+    });
+  }
+
   async search(params: EmployeeSearchParams): Promise<PageResponse<EmployeeListItem>> {
     const query: Record<string, unknown> = {
       page: Math.max(params.page - 1, 0),

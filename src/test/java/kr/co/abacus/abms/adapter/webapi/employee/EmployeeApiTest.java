@@ -343,4 +343,26 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .hasStatus(HttpStatus.NOT_FOUND.value());
     }
 
+    @Test
+    void restore() {
+        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "restore@email.com"));
+        employeeManager.delete(employee.getId(), "adminUser");
+        flushAndClear();
+
+        MvcTestResult result = mvcTester.patch()
+            .uri("/api/employees/{id}/restore", employee.getId())
+            .exchange();
+        flushAndClear();
+
+        assertThat(result)
+            .apply(print())
+            .hasStatus(HttpStatus.NO_CONTENT.value());
+
+        Employee restoredEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(restoredEmployee.isDeleted()).isFalse();
+        assertThat(restoredEmployee.getDeletedAt()).isNull();
+        assertThat(restoredEmployee.getDeletedBy()).isNull();
+        assertThat(restoredEmployee.getEmail().address()).isEqualTo("restore@email.com");
+    }
+
 }
