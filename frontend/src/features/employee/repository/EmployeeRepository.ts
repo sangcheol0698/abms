@@ -15,6 +15,12 @@ import {
   getEmployeeAvatarOptions,
   isEmployeeAvatarCode,
 } from '@/features/employee/constants/avatars';
+import {
+  createExcelFormData,
+  downloadBlob,
+  extractFilenameFromResponse,
+  generateExcelFilename,
+} from '@/core/utils/excel';
 
 interface EmployeeStatusResponse {
   name: string;
@@ -48,6 +54,43 @@ function toFilterOption(response: { name: string; description?: string }): Emplo
     value: response.name,
     label: response.description ?? response.name,
   };
+}
+
+function buildRequestParams(params: EmployeeSearchParams): Record<string, unknown> {
+  const query: Record<string, unknown> = {
+    page: Math.max(params.page - 1, 0),
+    size: params.size,
+  };
+
+  if (params.name) {
+    query.name = params.name;
+  }
+
+  if (params.statuses?.length) {
+    query.statuses = params.statuses.join(',');
+  }
+
+  if (params.types?.length) {
+    query.types = params.types.join(',');
+  }
+
+  if (params.grades?.length) {
+    query.grades = params.grades.join(',');
+  }
+
+  if (params.positions?.length) {
+    query.positions = params.positions.join(',');
+  }
+
+  if (params.departmentIds?.length) {
+    query.departmentIds = params.departmentIds.join(',');
+  }
+
+  if (params.sort) {
+    query.sort = params.sort;
+  }
+
+  return query;
 }
 
 @singleton()
@@ -85,40 +128,10 @@ export class EmployeeRepository {
   }
 
   async search(params: EmployeeSearchParams): Promise<PageResponse<EmployeeListItem>> {
-    const query: Record<string, unknown> = {
-      page: Math.max(params.page - 1, 0),
-      size: params.size,
-    };
-
-    if (params.name) {
-      query.name = params.name;
-    }
-
-    if (params.statuses?.length) {
-      query.statuses = params.statuses.join(',');
-    }
-
-    if (params.types?.length) {
-      query.types = params.types.join(',');
-    }
-
-    if (params.grades?.length) {
-      query.grades = params.grades.join(',');
-    }
-
-    if (params.positions?.length) {
-      query.positions = params.positions.join(',');
-    }
-
-    if (params.departmentIds?.length) {
-      query.departmentIds = params.departmentIds.join(',');
-    }
-
-    if (params.sort) {
-      query.sort = params.sort;
-    }
-
-    const response = await this.httpRepository.get({ path: '/api/employees', params: query });
+    const response = await this.httpRepository.get({
+      path: '/api/employees',
+      params: buildRequestParams(params),
+    });
     return PageResponse.fromPage(response, mapEmployeeListItem);
   }
 
@@ -204,5 +217,46 @@ export class EmployeeRepository {
     }
 
     return Array.from(deduped.values());
+  }
+
+  async downloadExcel(params: EmployeeSearchParams): Promise<void> {
+    const response = await this.httpRepository.download({
+      path: '/api/employees/excel/download',
+      params: buildRequestParams(params),
+    });
+
+    if (!response.ok) {
+      throw new Error(`엑셀 다운로드에 실패했습니다. (${response.status})`);
+    }
+
+    const filename = extractFilenameFromResponse(response, generateExcelFilename('employees'));
+    const blob = await response.blob();
+    downloadBlob(blob, filename);
+  }
+
+  async downloadSampleExcel(): Promise<void> {
+    const response = await this.httpRepository.download({
+      path: '/api/employees/excel/sample',
+    });
+
+    if (!response.ok) {
+      throw new Error(`샘플 파일 다운로드에 실패했습니다. (${response.status})`);
+    }
+
+    const filename = extractFilenameFromResponse(
+      response,
+      generateExcelFilename('employees_sample'),
+    );
+    const blob = await response.blob();
+    downloadBlob(blob, filename);
+  }
+
+  async uploadExcel(file: File, onProgress?: (progress: number) => void): Promise<void> {
+    const formData = createExcelFormData(file);
+    await this.httpRepository.upload({
+      path: '/api/employees/excel/upload',
+      data: formData,
+      onProgress,
+    });
   }
 }

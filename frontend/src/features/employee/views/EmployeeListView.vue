@@ -51,6 +51,33 @@
         </template>
 
         <template #actions>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="sm" class="h-8 gap-1">
+                <FileSpreadsheet class="h-4 w-4" />
+                <span class="hidden sm:inline">엑셀</span>
+                <ChevronDown class="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-48">
+              <DropdownMenuItem :disabled="isDownloadingExcel" @click="handleExcelDownload">
+                <Download class="mr-2 h-4 w-4" />
+                <span>{{ isDownloadingExcel ? '다운로드 중...' : '현재 조건 다운로드' }}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                :disabled="isDownloadingSample"
+                @click="handleExcelSampleDownload"
+              >
+                <Download class="mr-2 h-4 w-4" />
+                <span>{{ isDownloadingSample ? '샘플 다운로드 중...' : '샘플 다운로드' }}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem @click="openExcelUploadDialog">
+                <Upload class="mr-2 h-4 w-4" />
+                <span>엑셀 업로드</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="default" size="sm" class="h-8" @click="openCreateDialog">
             구성원 추가
           </Button>
@@ -89,6 +116,15 @@
       />
     </div>
   </section>
+  <ExcelUploadDialog
+    :open="isExcelUploadDialogOpen"
+    :on-download-sample="downloadSampleExcel"
+    :on-upload="uploadExcelFile"
+    @update:open="isExcelUploadDialogOpen = $event"
+    @success="handleExcelUploadSuccess"
+    @error="handleExcelDialogError"
+    @sample="handleExcelSampleSuccess"
+  />
   <EmployeeCreateDialog
     :open="isEmployeeCreateDialogOpen"
     :department-options="departmentOptions"
@@ -155,6 +191,7 @@ import {
   DataTableFacetedFilter,
   DataTablePagination,
   DataTableToolbar,
+  ExcelUploadDialog,
 } from '@/components/business';
 import { Button } from '@/components/ui/button';
 import {
@@ -167,6 +204,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { valueUpdater } from '@/components/ui/table/utils';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
@@ -191,12 +235,13 @@ import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummary
 import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
-import { RefreshCcw } from 'lucide-vue-next';
+import { ChevronDown, Download, FileSpreadsheet, RefreshCcw, Upload } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import EmployeeRowActions from '@/features/employee/components/EmployeeRowActions.vue';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import HttpError from '@/core/http/HttpError';
 import { useEmployeeDeletion } from '@/features/employee/composables/useEmployeeDeletion';
+import { getExcelErrorMessage } from '@/core/utils/excel';
 
 interface DepartmentOption {
   label: string;
@@ -233,6 +278,9 @@ const isEmployeeCreateDialogOpen = ref(false);
 const isEmployeeUpdateDialogOpen = ref(false);
 const editingEmployee = ref<EmployeeSummary | null>(null);
 const isLoadingEmployee = ref(false);
+const isExcelUploadDialogOpen = ref(false);
+const isDownloadingExcel = ref(false);
+const isDownloadingSample = ref(false);
 const deletion = useEmployeeDeletion(async () => {
   await loadEmployees();
 });
@@ -534,6 +582,63 @@ async function loadEmployeeOptions() {
       description: message,
     });
   }
+}
+
+function openExcelUploadDialog() {
+  isExcelUploadDialogOpen.value = true;
+}
+
+async function handleExcelDownload() {
+  if (isDownloadingExcel.value) {
+    return;
+  }
+  isDownloadingExcel.value = true;
+  try {
+    await employeeRepository.downloadExcel(buildSearchParams());
+    toast.success('엑셀 파일을 다운로드했습니다.');
+  } catch (error) {
+    const message = getExcelErrorMessage(error);
+    toast.error('엑셀 다운로드에 실패했습니다.', { description: message });
+  } finally {
+    isDownloadingExcel.value = false;
+  }
+}
+
+async function downloadSampleExcel(): Promise<void> {
+  await employeeRepository.downloadSampleExcel();
+}
+
+async function handleExcelSampleDownload() {
+  if (isDownloadingSample.value) {
+    return;
+  }
+  isDownloadingSample.value = true;
+  try {
+    await downloadSampleExcel();
+    toast.success('샘플 파일을 다운로드했습니다.');
+  } catch (error) {
+    const message = getExcelErrorMessage(error);
+    toast.error('샘플 다운로드에 실패했습니다.', { description: message });
+  } finally {
+    isDownloadingSample.value = false;
+  }
+}
+
+async function uploadExcelFile(file: File, onProgress: (progress: number) => void) {
+  await employeeRepository.uploadExcel(file, onProgress);
+  await loadEmployees();
+}
+
+function handleExcelUploadSuccess() {
+  toast.success('엑셀 업로드를 완료했습니다.');
+}
+
+function handleExcelDialogError(message: string) {
+  toast.error('엑셀 작업에 실패했습니다.', { description: message });
+}
+
+function handleExcelSampleSuccess() {
+  toast.success('샘플 파일을 다운로드했습니다.');
 }
 
 function toArray(value: unknown): string[] {
