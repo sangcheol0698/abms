@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
+import kr.co.abacus.abms.application.employee.EmployeeExcelService.EmployeeExcelException;
 
 @RestControllerAdvice
 public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
@@ -29,6 +30,11 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler({EmployeeNotFoundException.class, DepartmentNotFoundException.class})
     public ProblemDetail handleNotFoundException(Exception exception) {
         return getProblemDetail(HttpStatus.NOT_FOUND, exception);
+    }
+
+    @ExceptionHandler(EmployeeExcelException.class)
+    public ProblemDetail handleExcelException(EmployeeExcelException exception) {
+        return getProblemDetail(HttpStatus.BAD_REQUEST, exception);
     }
 
     private ProblemDetail getProblemDetail(HttpStatus httpStatus, Exception exception) {

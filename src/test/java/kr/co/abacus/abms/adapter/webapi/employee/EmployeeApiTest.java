@@ -329,7 +329,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Sheet sheet = workbook.createSheet("Employees");
         Row header = sheet.createRow(0);
         String[] headers = {
-            "부서 ID",
+            "부서 코드",
             "이메일",
             "이름",
             "입사일",
@@ -343,8 +343,12 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             header.createCell(i).setCellValue(headers[i]);
         }
 
+        String teamCode = departmentRepository.findByIdAndDeletedFalse(teamId)
+            .map(Department::getCode)
+            .orElseThrow();
+
         Row row = sheet.createRow(1);
-        row.createCell(0).setCellValue(teamId.toString());
+        row.createCell(0).setCellValue(teamCode);
         row.createCell(1).setCellValue("excel-upload@abms.co");
         row.createCell(2).setCellValue("업로드");
         row.createCell(3).setCellValue("2025-01-02");
