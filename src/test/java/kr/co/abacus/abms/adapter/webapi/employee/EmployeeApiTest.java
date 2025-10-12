@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeAvatarResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeGradeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
@@ -32,6 +33,7 @@ import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
@@ -96,6 +98,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(employee.getName()).isEqualTo(request.name());
         assertThat(employee.getEmail().address()).isEqualTo(request.email());
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+        assertThat(employee.getAvatar()).isEqualTo(request.avatar());
     }
 
     @Test
@@ -138,7 +141,9 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .hasPathSatisfying("$.departmentName", equalsTo("테스트회사"))
             .hasPathSatisfying("$.employeeId", equalsTo(savedEmployee.getId().toString()))
             .hasPathSatisfying("$.name", equalsTo(savedEmployee.getName()))
-            .hasPathSatisfying("$.email", equalsTo(savedEmployee.getEmail().address()));
+            .hasPathSatisfying("$.email", equalsTo(savedEmployee.getEmail().address()))
+            .hasPathSatisfying("$.avatarCode", equalsTo(savedEmployee.getAvatar().name()))
+            .hasPathSatisfying("$.avatarLabel", equalsTo(savedEmployee.getAvatar().getDisplayName()));
 
         EmployeeResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), EmployeeResponse.class);
 
@@ -147,6 +152,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(response.employeeId()).isEqualTo(savedEmployee.getId().toString());
         assertThat(response.name()).isEqualTo(savedEmployee.getName());
         assertThat(response.email()).isEqualTo(savedEmployee.getEmail().address());
+        assertThat(response.avatarCode()).isEqualTo(savedEmployee.getAvatar().name());
+        assertThat(response.avatarLabel()).isEqualTo(savedEmployee.getAvatar().getDisplayName());
     }
 
     @Test
@@ -251,6 +258,30 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    void getEmployeeAvatars() throws Exception {
+        MvcTestResult result = mvcTester.get().uri("/api/employees/avatars").exchange();
+
+        assertThat(result).apply(print()).hasStatusOk();
+
+        List<EmployeeAvatarResponse> responses = objectMapper.readValue(
+            result.getResponse().getContentAsString(),
+            new TypeReference<>() {}
+        );
+
+        assertThat(responses).hasSize(EmployeeAvatar.values().length);
+
+        for (EmployeeAvatar avatar : EmployeeAvatar.values()) {
+            EmployeeAvatarResponse found = responses.stream()
+                .filter(r -> r.code().equals(avatar.name()))
+                .findFirst()
+                .orElseThrow();
+
+            assertThat(found.code()).isEqualTo(avatar.name());
+            assertThat(found.displayName()).isEqualTo(avatar.getDisplayName());
+        }
+    }
+
+    @Test
     void update() throws Exception {
         Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "update-target@email.com"));
         flushAndClear();
@@ -274,6 +305,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .hasPathSatisfying("$.email", equalsTo(request.email()))
             .hasPathSatisfying("$.joinDate", equalsTo(request.joinDate().toString()))
             .hasPathSatisfying("$.birthDate", equalsTo(request.birthDate().toString()))
+            .hasPathSatisfying("$.avatarCode", equalsTo(request.avatar().name()))
+            .hasPathSatisfying("$.avatarLabel", equalsTo(request.avatar().getDisplayName()))
             .hasPathSatisfying("$.memo", equalsTo(request.memo()));
 
         Employee updatedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
@@ -285,6 +318,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(updatedEmployee.getPosition()).isEqualTo(request.position());
         assertThat(updatedEmployee.getType()).isEqualTo(request.type());
         assertThat(updatedEmployee.getGrade()).isEqualTo(request.grade());
+        assertThat(updatedEmployee.getAvatar()).isEqualTo(request.avatar());
         assertThat(updatedEmployee.getMemo()).isEqualTo(request.memo());
     }
 

@@ -7,6 +7,10 @@ spring:
   docker:
     compose:
       lifecycle-management: start_only
+  threads:
+    virtual:
+      enabled: true
+
 logging:
   level:
     p6spy: debug

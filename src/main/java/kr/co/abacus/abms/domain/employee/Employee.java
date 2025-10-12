@@ -62,6 +62,10 @@ public class Employee extends AbstractEntity {
     @Column(name = "grade", nullable = false)
     private EmployeeGrade grade;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "avatar", nullable = false, length = 40)
+    private EmployeeAvatar avatar;
+
     @Nullable
     @Column(name = "resignation_date")
     private LocalDate resignationDate;
@@ -81,6 +85,7 @@ public class Employee extends AbstractEntity {
         employee.position = requireNonNull(request.position());
         employee.type = requireNonNull(request.type());
         employee.grade = requireNonNull(request.grade());
+        employee.avatar = requireNonNull(request.avatar());
         employee.memo = request.memo();
 
         employee.status = EmployeeStatus.ACTIVE;
@@ -120,6 +125,7 @@ public class Employee extends AbstractEntity {
         this.position = requireNonNull(request.position());
         this.type = requireNonNull(request.type());
         this.grade = requireNonNull(request.grade());
+        this.avatar = requireNonNull(request.avatar());
         this.memo = request.memo();
     }
 

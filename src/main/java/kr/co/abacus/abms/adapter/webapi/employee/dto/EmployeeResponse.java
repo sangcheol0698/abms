@@ -18,6 +18,8 @@ public record EmployeeResponse(
     String status,
     String grade,
     String type,
+    String avatarCode,
+    String avatarLabel,
     String memo
 ) {
 
@@ -34,6 +36,8 @@ public record EmployeeResponse(
             employee.getStatus().getDescription(),
             employee.getGrade().getDescription(),
             employee.getType().getDescription(),
+            employee.getAvatar().name(),
+            employee.getAvatar().getDisplayName(),
             employee.getMemo()
         );
     }

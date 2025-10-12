@@ -16,6 +16,7 @@ import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
@@ -88,16 +89,16 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
         // given: 3 employees in each team
         employeeRepository.save(Employee.create(new EmployeeCreateRequest(
             companyId, "hr2@abms.co", "최민준", LocalDate.of(2023, 1, 9), LocalDate.of(1997, 8, 22),
-            EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR, "인턴/보조"
+            EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR, EmployeeAvatar.FOREST_MINT, "인턴/보조"
         )));
 
         employeeRepository.save(Employee.create(new EmployeeCreateRequest(
             companyId, "hr.mgr@abms.co", "유인사", LocalDate.of(2019, 2, 18), LocalDate.of(1985, 2, 21),
-            EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, "인사팀장"
+            EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, EmployeeAvatar.FOREST_MINT, "인사팀장"
         )));
         employeeRepository.save(Employee.create(new EmployeeCreateRequest(
             companyId, "hr1@abms.co", "박서연", LocalDate.of(2021, 4, 5), LocalDate.of(1994, 11, 13),
-            EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL, "채용/평가"
+            EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL, EmployeeAvatar.FOREST_MINT, "채용/평가"
         )));
 
         OrganizationChartModel organizationChart = departmentFinder.getOrganizationChart();
@@ -106,4 +107,5 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
         // then: 3 employees in each team
         assertThat(employeeCount).isEqualTo(3);
     }
+
 }

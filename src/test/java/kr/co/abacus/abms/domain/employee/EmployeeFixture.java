@@ -33,6 +33,7 @@ public class EmployeeFixture {
             EmployeePosition.MANAGER,
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
+            EmployeeAvatar.SKY_GLOW,
             "This is a memo for the employee."
         );
     }
@@ -79,6 +80,7 @@ public class EmployeeFixture {
             EmployeePosition.DIRECTOR,
             EmployeeType.PART_TIME,
             EmployeeGrade.JUNIOR,
+            EmployeeAvatar.CORAL_SPARK,
             "Updated memo for the employee."
         );
     }
@@ -97,6 +99,7 @@ public class EmployeeFixture {
             EmployeePosition.DIRECTOR,
             EmployeeType.PART_TIME,
             EmployeeGrade.JUNIOR,
+            EmployeeAvatar.CORAL_SPARK,
             "Updated memo for the employee."
         );
     }

@@ -26,6 +26,7 @@ class EmployeeTest {
         assertThat(employee.getPosition()).isEqualTo(EmployeePosition.MANAGER);
         assertThat(employee.getType()).isEqualTo(EmployeeType.FULL_TIME);
         assertThat(employee.getGrade()).isEqualTo(EmployeeGrade.SENIOR);
+        assertThat(employee.getAvatar()).isEqualTo(EmployeeAvatar.SKY_GLOW);
         assertThat(employee.getMemo()).isEqualTo("This is a memo for the employee.");
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
     }
@@ -83,6 +84,7 @@ class EmployeeTest {
         assertThat(employee.getPosition()).isEqualTo(EmployeePosition.DIRECTOR);
         assertThat(employee.getType()).isEqualTo(EmployeeType.PART_TIME);
         assertThat(employee.getGrade()).isEqualTo(EmployeeGrade.JUNIOR);
+        assertThat(employee.getAvatar()).isEqualTo(EmployeeAvatar.CORAL_SPARK);
         assertThat(employee.getMemo()).isEqualTo("Updated memo for the employee.");
     }
 

@@ -17,6 +17,7 @@ public record EmployeeCreateRequest(
     @NotNull EmployeePosition position,
     @NotNull EmployeeType type,
     @NotNull EmployeeGrade grade,
+    @NotNull EmployeeAvatar avatar,
     String memo
 ) {
 

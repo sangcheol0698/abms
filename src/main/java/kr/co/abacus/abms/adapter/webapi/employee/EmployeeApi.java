@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeAvatarResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeGradeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
@@ -33,6 +34,7 @@ import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
@@ -122,6 +124,13 @@ public class EmployeeApi {
     public List<EmployeeStatusResponse> getEmployeeStatuses() {
         return Arrays.stream(EmployeeStatus.values())
             .map(EmployeeStatusResponse::of)
+            .toList();
+    }
+
+    @GetMapping("/api/employees/avatars")
+    public List<EmployeeAvatarResponse> getEmployeeAvatars() {
+        return Arrays.stream(EmployeeAvatar.values())
+            .map(EmployeeAvatarResponse::of)
             .toList();
     }
 

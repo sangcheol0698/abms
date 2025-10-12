@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
@@ -127,6 +128,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
             employeePosition,
             employeeType,
             employeeGrade,
+            EmployeeAvatar.FOREST_MINT,
             "This is a memo for the employee."
         ));
     }
