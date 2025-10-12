@@ -1,5 +1,9 @@
 package kr.co.abacus.abms.adapter.webapi.employee;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -9,15 +13,21 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,10 +38,13 @@ import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeStatusResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeTypeResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
+import kr.co.abacus.abms.application.employee.EmployeeExcelService;
+import kr.co.abacus.abms.application.employee.EmployeeExcelService.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
@@ -51,6 +64,7 @@ public class EmployeeApi {
     private final EmployeeManager employeeManager;
     private final EmployeeFinder employeeFinder;
     private final DepartmentFinder departmentFinder;
+    private final EmployeeExcelService employeeExcelService;
 
     @PostMapping("/api/employees")
     public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request) {
@@ -132,6 +146,51 @@ public class EmployeeApi {
         return Arrays.stream(EmployeeAvatar.values())
             .map(EmployeeAvatarResponse::of)
             .toList();
+    }
+
+    @GetMapping("/api/employees/excel/download")
+    public ResponseEntity<Resource> downloadExcel(@Valid EmployeeSearchRequest request) {
+        byte[] content = employeeExcelService.download(request);
+        String filename = buildFilename("employees");
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+            .body(new ByteArrayResource(content));
+    }
+
+    @GetMapping("/api/employees/excel/sample")
+    public ResponseEntity<Resource> downloadExcelSample() {
+        byte[] content = employeeExcelService.downloadSample();
+        String filename = buildFilename("employees_sample");
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+            .body(new ByteArrayResource(content));
+    }
+
+    @PostMapping(value = "/api/employees/excel/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public EmployeeExcelUploadResponse uploadExcel(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("업로드할 파일을 선택하세요.");
+        }
+        try (InputStream inputStream = file.getInputStream()) {
+            EmployeeExcelUploadResult result = employeeExcelService.upload(inputStream);
+            return toResponse(result);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
+        }
+    }
+
+    private String buildFilename(String prefix) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        return prefix + "_" + timestamp + ".xlsx";
+    }
+
+    private EmployeeExcelUploadResponse toResponse(EmployeeExcelUploadResult result) {
+        List<EmployeeExcelUploadResponse.Failure> failures = result.failures().stream()
+            .map(failure -> new EmployeeExcelUploadResponse.Failure(failure.rowNumber(), failure.message()))
+            .toList();
+        return new EmployeeExcelUploadResponse(result.successCount(), failures);
     }
 
     private Department getDepartment(Employee employee, List<Department> departments) {

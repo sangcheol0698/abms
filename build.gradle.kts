@@ -49,6 +49,9 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0")
 
+    implementation("org.apache.poi:poi:5.4.1")
+    implementation("org.apache.poi:poi-ooxml:5.4.1")
+
     compileOnly("org.jspecify:jspecify:1.0.0")
     errorprone("com.google.errorprone:error_prone_core:2.41.0")
     errorprone("com.uber.nullaway:nullaway:0.12.3")

@@ -35,17 +35,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
     @Override
     public Page<Employee> search(EmployeeSearchRequest request, Pageable pageable) {
-        List<Employee> content = queryFactory.select(employee)
-            .from(employee)
-            .where(
-                containsName(request.name()),
-                inPositions(request.positions()),
-                inTypes(request.types()),
-                inGrades(request.grades()),
-                inDepartments(request.departmentIds()),
-                inStatuses(request.statuses()),
-                employee.deleted.isFalse()
-            )
+        List<Employee> content = createBaseQuery(request)
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();
@@ -63,6 +53,27 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
             );
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public List<Employee> search(EmployeeSearchRequest request) {
+        return createBaseQuery(request)
+            .fetch();
+    }
+
+    private JPAQuery<Employee> createBaseQuery(EmployeeSearchRequest request) {
+        return queryFactory.select(employee)
+            .from(employee)
+            .where(
+                containsName(request.name()),
+                inPositions(request.positions()),
+                inTypes(request.types()),
+                inGrades(request.grades()),
+                inDepartments(request.departmentIds()),
+                inStatuses(request.statuses()),
+                employee.deleted.isFalse()
+            )
+            .orderBy(employee.createdAt.desc());
     }
 
     private @Nullable BooleanExpression containsName(@Nullable String name) {

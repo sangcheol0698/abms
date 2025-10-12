@@ -5,15 +5,21 @@ import static kr.co.abacus.abms.support.AssertThatUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,6 +27,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeAvatarResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeGradeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
@@ -279,6 +286,108 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             assertThat(found.code()).isEqualTo(avatar.name());
             assertThat(found.displayName()).isEqualTo(avatar.getDisplayName());
         }
+    }
+
+    @Test
+    void downloadExcel() throws Exception {
+        employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "excel-download@abms.co"));
+        flushAndClear();
+
+        MvcTestResult result = mvcTester.get()
+            .uri("/api/employees/excel/download")
+            .exchange();
+
+        assertThat(result)
+            .apply(print())
+            .hasStatusOk();
+        assertThat(result.getResponse().getContentType())
+            .isEqualTo("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        assertThat(result.getResponse().getContentAsByteArray()).isNotEmpty();
+        assertThat(result.getResponse().getHeader("Content-Disposition"))
+            .contains("attachment; filename=");
+    }
+
+    @Test
+    void downloadExcelSample() throws Exception {
+        MvcTestResult result = mvcTester.get()
+            .uri("/api/employees/excel/sample")
+            .exchange();
+
+        assertThat(result)
+            .apply(print())
+            .hasStatusOk();
+        assertThat(result.getResponse().getContentType())
+            .isEqualTo("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        assertThat(result.getResponse().getContentAsByteArray()).isNotEmpty();
+        assertThat(result.getResponse().getHeader("Content-Disposition"))
+            .contains("attachment; filename=");
+    }
+
+    @Test
+    void uploadExcel() throws Exception {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Employees");
+        Row header = sheet.createRow(0);
+        String[] headers = {
+            "부서 ID",
+            "이메일",
+            "이름",
+            "입사일",
+            "생년월일",
+            "직책",
+            "근무 유형",
+            "등급",
+            "메모"
+        };
+        for (int i = 0; i < headers.length; i++) {
+            header.createCell(i).setCellValue(headers[i]);
+        }
+
+        Row row = sheet.createRow(1);
+        row.createCell(0).setCellValue(teamId.toString());
+        row.createCell(1).setCellValue("excel-upload@abms.co");
+        row.createCell(2).setCellValue("업로드");
+        row.createCell(3).setCellValue("2025-01-02");
+        row.createCell(4).setCellValue("1995-06-10");
+        row.createCell(5).setCellValue(EmployeePosition.ASSOCIATE.getDescription());
+        row.createCell(6).setCellValue(EmployeeType.FULL_TIME.getDescription());
+        row.createCell(7).setCellValue(EmployeeGrade.JUNIOR.getDescription());
+        row.createCell(8).setCellValue("업로드 메모");
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        workbook.write(bos);
+        workbook.close();
+
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "employees.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            bos.toByteArray()
+        );
+
+        MvcTestResult result = mvcTester.post()
+            .uri("/api/employees/excel/upload")
+            .multipart()
+            .file(file)
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .exchange();
+        flushAndClear();
+
+        assertThat(result)
+            .apply(print())
+            .hasStatusOk();
+
+        EmployeeExcelUploadResponse response = objectMapper.readValue(
+            result.getResponse().getContentAsString(),
+            EmployeeExcelUploadResponse.class
+        );
+
+        assertThat(response.successCount()).isEqualTo(1);
+        assertThat(response.failures()).isEmpty();
+
+        List<Employee> employees = employeeRepository.findAllByDepartmentIdInAndDeletedFalse(List.of(teamId));
+        assertThat(employees)
+            .anyMatch(candidate -> candidate.getEmail().address().equals("excel-upload@abms.co"));
     }
 
     @Test

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.data.repository.Repository;
 
+import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.shared.Email;
 
@@ -24,5 +25,7 @@ public interface EmployeeRepository extends Repository<Employee, UUID>, CustomEm
     List<Employee> findAllByIdInAndDeletedFalse(List<UUID> leaderIds);
 
     List<Employee> findAllByDepartmentIdInAndDeletedFalse(List<UUID> departmentIds);
+
+    List<Employee> search(EmployeeSearchRequest request);
 
 }
