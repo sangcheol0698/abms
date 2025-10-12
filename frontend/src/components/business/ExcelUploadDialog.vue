@@ -94,7 +94,7 @@
         <div v-if="errorMessage" class="rounded-md border border-destructive/20 bg-destructive/10 p-3">
           <div class="flex items-start gap-2 text-sm text-destructive">
             <AlertCircle class="mt-0.5 h-4 w-4" />
-            <p>{{ errorMessage }}</p>
+            <p class="whitespace-pre-line">{{ errorMessage }}</p>
           </div>
         </div>
       </div>
@@ -131,6 +131,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Download, FileSpreadsheet, Loader2, Upload, X } from 'lucide-vue-next';
 import { formatFileSize, validateExcelFile } from '@/core/utils/excel';
+import HttpError from '@/core/http/HttpError';
 
 interface Props {
   open: boolean;
@@ -239,8 +240,7 @@ async function downloadSample() {
     await props.onDownloadSample();
     emit('sample');
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : '샘플 파일 다운로드 중 오류가 발생했습니다.';
+    const message = extractMessage(error, '샘플 파일 다운로드 중 오류가 발생했습니다.');
     errorMessage.value = message;
     emit('error', message);
   } finally {
@@ -264,12 +264,23 @@ async function uploadFile() {
     emit('success');
     open.value = false;
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : '엑셀 업로드 중 오류가 발생했습니다.';
+    const message = extractMessage(error, '엑셀 업로드 중 오류가 발생했습니다.');
     errorMessage.value = message;
     emit('error', message);
   } finally {
     isUploading.value = false;
   }
+}
+
+function extractMessage(error: unknown, fallbackMessage: string): string {
+  if (error instanceof HttpError) {
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallbackMessage;
 }
 </script>
