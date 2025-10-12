@@ -15,11 +15,16 @@ describe('mapEmployeeSummary', () => {
       status: '재직',
       grade: '초급',
       type: '정직원',
+      avatarCode: 'SKY_GLOW',
+      avatarLabel: 'Sky Glow',
       memo: '메모',
     });
 
     expect(result.joinDate).toBe('2024-01-10');
     expect(result.birthDate).toBe('1990-05-15');
+    expect(result.avatarCode).toBe('SKY_GLOW');
+    expect(result.avatarLabel).toBe('Sky Glow');
+    expect(result.avatarImageUrl).toMatch(/(data:image\/svg\+xml|\.svg$)/);
   });
 
   it('formats structured date objects into ISO strings', () => {
@@ -35,6 +40,8 @@ describe('mapEmployeeSummary', () => {
       status: '재직',
       grade: '초급',
       type: '정직원',
+      avatarCode: 'SKY_GLOW',
+      avatarLabel: 'Sky Glow',
       memo: '메모',
     });
 
@@ -55,6 +62,8 @@ describe('mapEmployeeSummary', () => {
       status: '재직',
       grade: '초급',
       type: '정직원',
+      avatarCode: 'SKY_GLOW',
+      avatarLabel: 'Sky Glow',
       memo: '메모',
     });
 
@@ -75,6 +84,8 @@ describe('mapEmployeeSummary', () => {
       status: '재직',
       grade: '초급',
       type: '정직원',
+      avatarCode: 'SKY_GLOW',
+      avatarLabel: 'Sky Glow',
       memo: '메모',
     });
 

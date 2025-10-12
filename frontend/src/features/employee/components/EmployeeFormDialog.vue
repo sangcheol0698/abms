@@ -22,7 +22,55 @@
                 <AlertDescription>{{ errorMessage }}</AlertDescription>
               </Alert>
 
-              <section class="space-y-4">
+              <FormField name="avatar" v-slot="{ field, handleChange }">
+                <FormItem>
+                  <FormLabel class="text-sm font-semibold text-muted-foreground">
+                    아바타
+                    <span class="ml-0.5 text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <div
+                      class="flex flex-col gap-4 rounded-2xl border border-border/70 bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div class="flex items-center gap-4">
+                        <Avatar class="h-20 w-20 border border-border/60 bg-background">
+                          <AvatarImage
+                            :src="getAvatarOptionForDisplay(field.value)?.imageUrl ?? ''"
+                            :alt="getAvatarOptionForDisplay(field.value)?.label ?? '선택된 아바타'"
+                          />
+                          <AvatarFallback class="text-base font-semibold">
+                            {{ getAvatarFallbackLabel(field.value) }}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div class="space-y-1">
+                          <p class="text-base font-semibold text-foreground">
+                            {{ getAvatarOptionForDisplay(field.value)?.label ?? '아바타 미선택' }}
+                          </p>
+                          <p class="text-sm text-muted-foreground">
+                            이 아바타는 구성원 목록과 상세 화면에 표시됩니다.
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        class="self-start sm:self-auto"
+                        :disabled="isSubmitting || isLoadingAvatars"
+                        @click="
+                          openAvatarSelect(field.value, (value) => {
+                            handleChange(value);
+                          })
+                        "
+                      >
+                        아바타 선택
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage class="sr-only" />
+                </FormItem>
+              </FormField>
+
+              <section class="mt-4 space-y-4">
                 <div class="space-y-1">
                   <h3 class="text-lg font-semibold text-foreground">기본 정보</h3>
                   <p class="text-sm text-muted-foreground">
@@ -356,6 +404,13 @@
       </div>
     </DialogContent>
   </Dialog>
+  <EmployeeAvatarSelectDialog
+    :open="isAvatarSelectOpen"
+    :options="avatarOptions"
+    :selected-avatar-code="selectedAvatarCodeForDialog"
+    @update:open="handleAvatarDialogOpenChange"
+    @select="handleAvatarSelected"
+  />
   <OrganizationSelectDialog
     :open="isDepartmentSelectOpen"
     :selected-department-id="selectedDepartmentIdForDialog"
@@ -365,7 +420,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { z } from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
 import {
@@ -378,6 +433,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 import {
   Form,
@@ -411,6 +467,12 @@ import {
 } from '@/features/employee/models/employeeFilters';
 import { toast } from 'vue-sonner';
 import OrganizationSelectDialog from '@/features/organization/components/OrganizationSelectDialog.vue';
+import EmployeeAvatarSelectDialog from '@/features/employee/components/EmployeeAvatarSelectDialog.vue';
+import type { EmployeeAvatarOption } from '@/features/employee/constants/avatars';
+import {
+  defaultEmployeeAvatar,
+  getEmployeeAvatarOptions,
+} from '@/features/employee/constants/avatars';
 
 interface DepartmentOption {
   label: string;
@@ -465,6 +527,9 @@ const schema = z.object({
   position: z.string({ required_error: '직책을 선택하세요.' }).min(1, '직책을 선택하세요.'),
   grade: z.string({ required_error: '등급을 선택하세요.' }).min(1, '등급을 선택하세요.'),
   type: z.string({ required_error: '근무 유형을 선택하세요.' }).min(1, '근무 유형을 선택하세요.'),
+  avatar: z
+    .string({ required_error: '아바타를 선택하세요.' })
+    .min(1, '아바타를 선택하세요.'),
   memo: z.string().max(500, '메모는 500자 이내로 입력하세요.').optional(),
 });
 
@@ -478,6 +543,7 @@ const initialValues = {
   position: '',
   grade: '',
   type: '',
+  avatar: defaultEmployeeAvatar,
   memo: '',
 };
 
@@ -492,6 +558,12 @@ const applyDepartmentSelection = ref<((value: string) => void) | null>(null);
 const gradeOptions = computed(() => props.gradeOptions ?? getEmployeeGradeOptions());
 const positionOptions = computed(() => props.positionOptions ?? getEmployeePositionOptions());
 const typeOptions = computed(() => props.typeOptions ?? getEmployeeTypeOptions());
+const avatarOptions = ref<EmployeeAvatarOption[]>(getEmployeeAvatarOptions());
+const isLoadingAvatars = ref(false);
+const isAvatarSelectOpen = ref(false);
+const avatarSelectionResolver = ref<((value: string) => void) | null>(null);
+const selectedAvatarCodeForDialog = ref(defaultEmployeeAvatar);
+let hasLoadedAvatarOptions = false;
 
 const isEditMode = computed(() => props.mode === 'edit');
 const dialogTitle = computed(() => (isEditMode.value ? '구성원 편집' : '구성원 추가'));
@@ -507,6 +579,8 @@ watch(
     if (!open) {
       return;
     }
+
+    ensureAvatarOptionsLoaded();
 
     if (isEditMode.value && !employee) {
       return;
@@ -533,12 +607,89 @@ watch(isDepartmentSelectOpen, (next) => {
   }
 });
 
+watch(isAvatarSelectOpen, (next) => {
+  if (!next) {
+    avatarSelectionResolver.value = null;
+  }
+});
+
+onMounted(() => {
+  ensureAvatarOptionsLoaded();
+});
+
+async function ensureAvatarOptionsLoaded() {
+  if (hasLoadedAvatarOptions) {
+    return;
+  }
+  isLoadingAvatars.value = true;
+  try {
+    const options = await repository.fetchAvatars();
+    if (Array.isArray(options) && options.length > 0) {
+      avatarOptions.value = options;
+    }
+    selectedAvatarCodeForDialog.value = resolveAvatarCode(selectedAvatarCodeForDialog.value);
+  } catch {
+    // ignore and fallback to bundled avatars
+  } finally {
+    hasLoadedAvatarOptions = true;
+    isLoadingAvatars.value = false;
+  }
+}
+
+function resolveAvatarCode(candidate?: string | null): string {
+  if (typeof candidate === 'string' && candidate.length > 0) {
+    const exists = avatarOptions.value.some((option) => option.code === candidate);
+    if (exists) {
+      return candidate;
+    }
+  }
+  return avatarOptions.value.length > 0 ? avatarOptions.value[0].code : defaultEmployeeAvatar;
+}
+
+function getAvatarOptionForDisplay(value: unknown): EmployeeAvatarOption | null {
+  const normalized = resolveAvatarCode(typeof value === 'string' ? value : null);
+  return avatarOptions.value.find((option) => option.code === normalized) ?? null;
+}
+
+function getAvatarFallbackLabel(value: unknown): string {
+  const option = getAvatarOptionForDisplay(value);
+  if (!option) {
+    return 'AV';
+  }
+  return option.label.slice(0, 2).toUpperCase();
+}
+
+function openAvatarSelect(currentValue: unknown, setter: (value: string) => void) {
+  const normalized = resolveAvatarCode(typeof currentValue === 'string' ? currentValue : null);
+  selectedAvatarCodeForDialog.value = normalized;
+  avatarSelectionResolver.value = setter;
+  isAvatarSelectOpen.value = true;
+}
+
+function handleAvatarSelected(code: string) {
+  const normalized = resolveAvatarCode(code);
+  avatarSelectionResolver.value?.(normalized);
+  avatarSelectionResolver.value = null;
+  selectedAvatarCodeForDialog.value = normalized;
+  isAvatarSelectOpen.value = false;
+}
+
+function handleAvatarDialogOpenChange(open: boolean) {
+  isAvatarSelectOpen.value = open;
+  if (!open) {
+    avatarSelectionResolver.value = null;
+  }
+}
+
 function resetForm() {
   errorMessage.value = null;
   setFormInitialValues(initialValues);
   isDepartmentSelectOpen.value = false;
   selectedDepartmentIdForDialog.value = '';
   applyDepartmentSelection.value = null;
+  isAvatarSelectOpen.value = false;
+  avatarSelectionResolver.value = null;
+  selectedAvatarCodeForDialog.value = defaultEmployeeAvatar;
 }
 
 function handleOpenChange(value: boolean) {
@@ -588,6 +739,7 @@ async function onSubmit(rawValues: Record<string, unknown>) {
     position: values.position,
     grade: values.grade,
     type: values.type,
+    avatar: resolveAvatarCode(values.avatar),
     memo: values.memo?.trim() ?? '',
   } as const;
 
@@ -636,7 +788,11 @@ function initializeFormValues() {
 }
 
 function setFormInitialValues(values: typeof initialValues) {
-  formInitialValues.value = { ...values };
+  formInitialValues.value = {
+    ...values,
+    avatar: resolveAvatarCode(values.avatar),
+  };
+  selectedAvatarCodeForDialog.value = resolveAvatarCode(values.avatar);
   formKey.value += 1;
 }
 
@@ -650,6 +806,7 @@ function mapEmployeeToFormValues(employee: EmployeeSummary): typeof initialValue
     position: employee.positionCode ?? '',
     grade: employee.gradeCode ?? '',
     type: employee.typeCode ?? '',
+    avatar: resolveAvatarCode(employee.avatarCode),
     memo: employee.memo ?? '',
   };
 }

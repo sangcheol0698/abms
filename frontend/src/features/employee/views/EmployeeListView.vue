@@ -148,6 +148,7 @@ import {
 } from '@tanstack/vue-table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DataTable,
   DataTableColumnHeader,
@@ -266,23 +267,44 @@ const columns: ColumnDef<EmployeeListItem>[] = [
   {
     accessorKey: 'name',
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '이름', align: 'left' }),
-    cell: ({ row }) =>
-      h('div', { class: 'flex flex-col gap-0.5' }, [
+    cell: ({ row }) => {
+      const name = row.original.name ?? '';
+      const email = row.original.email ?? '';
+      const initials = name.trim().slice(0, 2).toUpperCase() || '??';
+      return h('div', { class: 'flex items-center gap-3' }, [
         h(
-          'button',
-          {
-            type: 'button',
-            class:
-              'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-            onClick: (event: MouseEvent) => {
-              event.stopPropagation();
-              handleViewEmployee(row.original);
-            },
-          },
-          row.original.name,
+          Avatar,
+          { class: 'h-10 w-10 rounded-xl border border-border/60 bg-background' },
+          () => [
+            h(AvatarImage, {
+              src: row.original.avatarImageUrl,
+              alt: name,
+            }),
+            h(
+              AvatarFallback,
+              { class: 'rounded-xl text-sm font-semibold' },
+              () => initials,
+            ),
+          ],
         ),
-        h('span', { class: 'text-xs text-muted-foreground' }, row.original.email),
-      ]),
+        h('div', { class: 'flex flex-col gap-0.5' }, [
+          h(
+            'button',
+            {
+              type: 'button',
+              class:
+                'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+              onClick: (event: MouseEvent) => {
+                event.stopPropagation();
+                handleViewEmployee(row.original);
+              },
+            },
+            name,
+          ),
+          h('span', { class: 'text-xs text-muted-foreground' }, email),
+        ]),
+      ]);
+    },
     enableSorting: true,
     size: 260,
     meta: { skeleton: 'title-subtitle' },

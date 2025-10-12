@@ -72,6 +72,8 @@ describe('EmployeeRepository.search', () => {
           status: '재직',
           grade: '초급',
           type: '정직원',
+          avatarCode: 'SKY_GLOW',
+          avatarLabel: 'Sky Glow',
           memo: '메모',
           joinDate: '2024-01-10',
           birthDate: '1990-05-15',
@@ -110,6 +112,9 @@ describe('EmployeeRepository.search', () => {
     expect(item.positionCode).toBe('ASSOCIATE');
     expect(item.joinDate).toBe('2024-01-10');
     expect(item.birthDate).toBe('1990-05-15');
+    expect(item.avatarCode).toBe('SKY_GLOW');
+    expect(item.avatarLabel).toBe('Sky Glow');
+    expect(item.avatarImageUrl).toMatch(/(data:image\/svg\+xml|\.svg$)/);
   });
 
   it('구성원 정보를 업데이트한다', async () => {
@@ -124,6 +129,8 @@ describe('EmployeeRepository.search', () => {
       status: '재직',
       grade: '초급',
       type: '정직원',
+      avatarCode: 'SKY_GLOW',
+      avatarLabel: 'Sky Glow',
       memo: '메모',
     });
 
@@ -141,6 +148,7 @@ describe('EmployeeRepository.search', () => {
       position: '사원',
       grade: '초급',
       type: '정직원',
+      avatar: 'SKY_GLOW',
       memo: '메모',
     });
 
@@ -155,11 +163,13 @@ describe('EmployeeRepository.search', () => {
         position: '사원',
         grade: '초급',
         type: '정직원',
+        avatar: 'SKY_GLOW',
         memo: '메모',
       },
     });
     expect(result.employeeId).toBe('E-01');
     expect(result.name).toBe('홍길동');
+    expect(result.avatarCode).toBe('SKY_GLOW');
   });
 });
 
@@ -219,5 +229,26 @@ describe('EmployeeRepository.fetch filter options', () => {
       { value: 'STAFF', label: '선임' },
       { value: 'DIRECTOR', label: '이사' },
     ]);
+  });
+
+  it('아바타 옵션을 API 응답과 정적 프리셋으로 병합한다', async () => {
+    httpGet.mockResolvedValueOnce([
+      { code: 'AQUA_SPLASH', displayName: 'Aqua Splash Custom' },
+      { code: 'SKY_GLOW', displayName: 'Sky Glow Custom' },
+      { code: 'UNKNOWN', displayName: '미정' },
+    ]);
+
+    const result = await repository.fetchAvatars();
+
+    expect(httpGet).toHaveBeenCalledWith({ path: '/api/employees/avatars' });
+    const aqua = result.find((option) => option.code === 'AQUA_SPLASH');
+    const skyGlow = result.find((option) => option.code === 'SKY_GLOW');
+    const unknown = result.find((option) => option.code === 'UNKNOWN');
+
+    expect(aqua).toBeDefined();
+    expect(aqua?.label).toBe('Aqua Splash Custom');
+    expect(skyGlow?.label).toBe('Sky Glow Custom');
+    expect(unknown).toBeUndefined();
+    expect(result.length).toBeGreaterThanOrEqual(12);
   });
 });

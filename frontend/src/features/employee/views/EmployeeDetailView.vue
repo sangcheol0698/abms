@@ -33,8 +33,18 @@
 
     <Card v-else class="border-border/70 shadow-sm">
       <CardHeader>
-        <CardTitle class="text-xl font-semibold text-foreground">{{ employee?.name }}</CardTitle>
-        <CardDescription>{{ employee?.email }}</CardDescription>
+        <div class="flex items-center gap-4">
+          <Avatar class="h-16 w-16 rounded-2xl border border-border/60 bg-background">
+            <AvatarImage :src="employee?.avatarImageUrl" :alt="employee?.name ?? 'Employee avatar'" />
+            <AvatarFallback class="rounded-2xl text-base font-semibold">
+              {{ employeeInitials }}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle class="text-xl font-semibold text-foreground">{{ employee?.name }}</CardTitle>
+            <CardDescription>{{ employee?.email }}</CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent class="grid gap-6 md:grid-cols-2">
         <div class="space-y-2">
@@ -88,12 +98,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
@@ -106,6 +117,10 @@ const repository = appContainer.resolve(EmployeeRepository);
 const employee = ref<EmployeeSummary | null>(null);
 const isLoading = ref(true);
 const errorMessage = ref<string | null>(null);
+const employeeInitials = computed(() => {
+  const name = employee.value?.name ?? '';
+  return name.trim().slice(0, 2).toUpperCase() || '??';
+});
 
 watch(
   () => route.params.employeeId,

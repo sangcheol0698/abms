@@ -9,6 +9,12 @@ import {
   type EmployeeSearchParams,
   mapEmployeeListItem,
 } from '@/features/employee/models/employeeListItem';
+import type { EmployeeAvatarOption } from '@/features/employee/constants/avatars';
+import {
+  getEmployeeAvatarOption,
+  getEmployeeAvatarOptions,
+  isEmployeeAvatarCode,
+} from '@/features/employee/constants/avatars';
 
 interface EmployeeStatusResponse {
   name: string;
@@ -30,6 +36,11 @@ interface EmployeePositionResponse {
   name: string;
   description?: string;
   rank?: number;
+}
+
+interface EmployeeAvatarResponse {
+  code: string;
+  displayName?: string;
 }
 
 function toFilterOption(response: { name: string; description?: string }): EmployeeFilterOption {
@@ -159,5 +170,39 @@ export class EmployeeRepository {
         label: item.description ?? item.name,
         value: item.name,
       }));
+  }
+
+  async fetchAvatars(): Promise<EmployeeAvatarOption[]> {
+    const response = await this.httpRepository.get<EmployeeAvatarResponse[]>({
+      path: '/api/employees/avatars',
+    });
+
+    if (!Array.isArray(response)) {
+      return getEmployeeAvatarOptions();
+    }
+
+    const merged = response
+      .map((item) => {
+        if (!isEmployeeAvatarCode(item.code)) {
+          return null;
+        }
+        const option = getEmployeeAvatarOption(item.code);
+        const label = item.displayName && item.displayName.trim().length > 0 ? item.displayName : option.label;
+        return { ...option, label };
+      })
+      .filter((option): option is EmployeeAvatarOption => option !== null);
+
+    const deduped = new Map<string, EmployeeAvatarOption>();
+    for (const option of merged) {
+      deduped.set(option.code, option);
+    }
+
+    for (const fallback of getEmployeeAvatarOptions()) {
+      if (!deduped.has(fallback.code)) {
+        deduped.set(fallback.code, fallback);
+      }
+    }
+
+    return Array.from(deduped.values());
   }
 }

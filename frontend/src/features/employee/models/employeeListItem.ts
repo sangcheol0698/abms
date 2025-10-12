@@ -1,3 +1,4 @@
+import { getEmployeeAvatarOption } from '@/features/employee/constants/avatars';
 import {
   toGradeCode,
   toPositionCode,
@@ -60,6 +61,9 @@ export interface EmployeeListItem {
   gradeLabel: string;
   typeCode: string;
   typeLabel: string;
+  avatarCode: string;
+  avatarLabel: string;
+  avatarImageUrl: string;
   memo: string;
   joinDate?: string;
   birthDate?: string;
@@ -72,6 +76,10 @@ export function mapEmployeeListItem(input: any): EmployeeListItem {
   const positionLabel = String(input?.position ?? '');
   const joinDate = toIsoDateString(input?.joinDate);
   const birthDate = toIsoDateString(input?.birthDate);
+  const rawAvatarCode = typeof input?.avatarCode === 'string' ? input.avatarCode : null;
+  const avatarLabelFromApi = typeof input?.avatarLabel === 'string' ? input.avatarLabel : '';
+  const avatarOption = getEmployeeAvatarOption(rawAvatarCode);
+  const avatarLabel = avatarLabelFromApi.length > 0 ? avatarLabelFromApi : avatarOption.label;
 
   return {
     employeeId: String(input?.employeeId ?? ''),
@@ -87,6 +95,9 @@ export function mapEmployeeListItem(input: any): EmployeeListItem {
     gradeLabel,
     typeCode: toTypeCode(typeLabel),
     typeLabel,
+    avatarCode: avatarOption.code,
+    avatarLabel,
+    avatarImageUrl: avatarOption.imageUrl,
     memo: String(input?.memo ?? ''),
     joinDate,
     birthDate,
