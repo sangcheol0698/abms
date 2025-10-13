@@ -1073,6 +1073,7 @@ async function handleCopyEmail(row: EmployeeListItem) {
       description: row.email,
     });
   } catch (error) {
+    console.warn('클립보드에 이메일을 복사하지 못했습니다.', error);
     toast.error('이메일을 복사하지 못했습니다.', {
       description: '브라우저 클립보드 권한을 확인해 주세요.',
     });

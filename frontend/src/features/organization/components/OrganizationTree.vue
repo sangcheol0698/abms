@@ -1,42 +1,65 @@
 <template>
-  <div class="flex h-full flex-col gap-2.5">
-    <Input
-      v-model="searchTerm"
-      type="search"
-      placeholder="부서명을 검색하세요"
-      class="h-8 text-sm"
-    />
-
-    <div class="flex flex-wrap items-center justify-between gap-1.5 text-xs text-muted-foreground">
-      <div class="flex items-center gap-1.5">
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 px-3 text-xs"
-          :disabled="isFullyExpanded || isSearching"
-          @click="expandAll"
+  <div class="flex h-full flex-col">
+    <div class="sticky top-0 z-10 flex flex-col gap-2.5 border-b border-border/60 bg-card/95 p-3.5">
+      <div class="relative">
+        <Input
+          v-model="searchTerm"
+          type="search"
+          placeholder="부서명, 코드, 리더를 검색하세요"
+          class="h-9 pe-9 text-sm"
+        />
+        <button
+          v-if="isSearching"
+          type="button"
+          class="absolute inset-y-0 right-2 flex items-center text-muted-foreground transition hover:text-foreground"
+          @click="clearSearch"
+          aria-label="검색어 지우기"
         >
-          전체 펼치기
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 px-3 text-xs"
-          :disabled="isFullyCollapsed || isSearching"
-          @click="collapseAll"
-        >
-          전체 접기
-        </Button>
+          <X class="h-4 w-4" />
+        </button>
       </div>
-      <span> 총 부서 {{ totalDepartments }}개 </span>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <div class="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-7 px-3 text-xs"
+            :disabled="isFullyExpanded || isSearching"
+            @click="expandAll"
+          >
+            전체 펼치기
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-7 px-3 text-xs"
+            :disabled="isFullyCollapsed || isSearching"
+            @click="collapseAll"
+          >
+            전체 접기
+          </Button>
+          <Button
+            v-if="isSearching"
+            variant="ghost"
+            size="sm"
+            class="h-7 px-2 text-xs"
+            @click="clearSearch"
+          >
+            검색 초기화
+          </Button>
+        </div>
+        <span v-if="isSearching">검색 결과 {{ visibleDepartmentCount }}개</span>
+        <span v-else>총 부서 {{ totalDepartments }}개</span>
+      </div>
     </div>
 
-    <div ref="scrollRef" class="flex-1 overflow-y-auto pr-0.5">
+    <div ref="scrollRef" class="flex-1 overflow-y-auto bg-card p-3.5 pt-0">
       <p
         v-if="!filteredNodes.length"
         class="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground"
       >
-        표시할 조직 정보가 없습니다.
+        {{ emptyStateMessage }}
       </p>
       <ul v-else class="space-y-1.5" role="tree">
         <OrganizationTreeNode
@@ -61,6 +84,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import OrganizationTreeNode from '@/features/organization/components/OrganizationTreeNode.vue';
 import type { OrganizationChartNode } from '@/features/organization/models/organization';
+import { X } from 'lucide-vue-next';
 
 interface Props {
   nodes: OrganizationChartNode[];
@@ -108,6 +132,10 @@ const filteredNodes = computed<OrganizationChartNode[]>(() => {
   }
   return filterNodes(props.nodes, normalizedSearchTerm.value, props.selectedNodeId);
 });
+const visibleDepartmentCount = computed(() => countDepartments(filteredNodes.value));
+const emptyStateMessage = computed(() =>
+  isSearching.value ? '검색어와 일치하는 조직이 없습니다.' : '표시할 조직 정보가 없습니다.',
+);
 
 watch(
   () => props.nodes,
@@ -240,6 +268,10 @@ function collapseAll() {
   collapsedMap.value = nextState;
 }
 
+function clearSearch() {
+  searchTerm.value = '';
+}
+
 function scrollIntoView(departmentId?: string) {
   if (!departmentId) {
     return;
@@ -314,5 +346,16 @@ function matchesNode(node: OrganizationChartNode, term: string): boolean {
     return true;
   }
   return false;
+}
+
+function countDepartments(nodes: OrganizationChartNode[]): number {
+  let count = 0;
+  nodes.forEach((node) => {
+    count += 1;
+    if (node.children?.length) {
+      count += countDepartments(node.children);
+    }
+  });
+  return count;
 }
 </script>

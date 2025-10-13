@@ -29,11 +29,51 @@
         </div>
       </div>
 
+      <div class="grid gap-2 sm:grid-cols-3">
+        <article
+          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm"
+        >
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <UserRound class="h-4 w-4" />
+          </div>
+          <div class="flex flex-col text-sm">
+            <span class="text-xs font-medium text-muted-foreground">부서 리더</span>
+            <span class="font-semibold text-foreground">
+              {{ department.departmentLeader?.employeeName ?? '미지정' }}
+            </span>
+          </div>
+        </article>
+        <article
+          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm"
+        >
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Users class="h-4 w-4" />
+          </div>
+          <div class="flex flex-col text-sm">
+            <span class="text-xs font-medium text-muted-foreground">구성원 수</span>
+            <span class="font-semibold text-foreground">{{ department.employeeCount }}명</span>
+          </div>
+        </article>
+        <article
+          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm"
+        >
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <GitBranch class="h-4 w-4" />
+          </div>
+          <div class="flex flex-col text-sm">
+            <span class="text-xs font-medium text-muted-foreground">하위 부서</span>
+            <span class="font-semibold text-foreground">
+              {{ department.childDepartmentCount ?? 0 }}개
+            </span>
+          </div>
+        </article>
+      </div>
+
       <Separator />
 
       <div class="flex flex-1 flex-col overflow-hidden">
         <Tabs defaultValue="info" class="flex h-full flex-col">
-          <TabsList>
+          <TabsList class="rounded-lg bg-muted/30 p-1">
             <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
             <TabsTrigger value="members" class="text-sm">구성원</TabsTrigger>
             <TabsTrigger value="revenue" class="text-sm">매출</TabsTrigger>
@@ -97,42 +137,57 @@
             </TabsContent>
 
             <TabsContent value="members" class="flex h-full flex-col">
-              <div
-                v-if="isLoading"
-                class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground"
-              >
-                구성원 정보를 불러오는 중입니다...
-              </div>
-              <div
-                v-else-if="department.employees?.length"
-                class="flex-1 space-y-2 overflow-y-auto rounded-lg border border-border/60 bg-background/60 p-3"
-              >
-                <div
-                  v-for="employee in department.employees ?? []"
-                  :key="employee.employeeId"
-                  class="flex items-center justify-between rounded-md border border-border/50 bg-card/80 px-3 py-2 text-sm"
-                >
-                  <div class="flex items-center gap-3">
-                    <Avatar class="size-9 border border-border/50 bg-muted/40">
-                      <AvatarFallback class="text-xs font-semibold">
-                        {{ getInitials(employee.employeeName) }}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div class="flex flex-col">
-                      <span class="font-semibold text-foreground">{{ employee.employeeName }}</span>
-                      <span class="text-xs text-muted-foreground">{{ employee.position }}</span>
+              <div v-if="isLoading" class="space-y-3 rounded-lg border border-border/60 bg-muted/10 p-4">
+                <Skeleton class="h-4 w-1/3" />
+                <div class="space-y-2">
+                  <div v-for="index in 3" :key="index" class="flex items-center gap-3">
+                    <Skeleton class="size-9 rounded-full" />
+                    <div class="flex-1 space-y-2">
+                      <Skeleton class="h-3 w-1/2" />
+                      <Skeleton class="h-3 w-1/3" />
                     </div>
+                    <Skeleton class="h-5 w-16" />
                   </div>
-                  <Badge variant="secondary" class="text-[11px] font-medium">
-                    {{ employee.employeeId }}
-                  </Badge>
+                </div>
+              </div>
+              <div v-else-if="department.employees?.length" class="flex h-full flex-col gap-3">
+                <div class="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>구성원 {{ department.employees.length }}명</span>
+                  <span class="hidden md:inline-flex">
+                    최근 배치는 인사 시스템과 자동 동기화됩니다.
+                  </span>
+                </div>
+                <div
+                  class="flex-1 space-y-2 overflow-y-auto rounded-lg border border-border/60 bg-background/60 p-3"
+                >
+                  <div
+                    v-for="employee in department.employees ?? []"
+                    :key="employee.employeeId"
+                    class="flex items-center justify-between rounded-md border border-border/50 bg-card/80 px-3 py-2 text-sm"
+                  >
+                    <div class="flex items-center gap-3">
+                      <Avatar class="size-9 border border-border/50 bg-muted/40">
+                        <AvatarFallback class="text-xs font-semibold">
+                          {{ getInitials(employee.employeeName) }}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div class="flex flex-col">
+                        <span class="font-semibold text-foreground">{{ employee.employeeName }}</span>
+                        <span class="text-xs text-muted-foreground">{{ employee.position }}</span>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" class="text-[11px] font-medium">
+                      {{ employee.employeeId }}
+                    </Badge>
+                  </div>
                 </div>
               </div>
               <div
                 v-else
-                class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground"
+                class="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground"
               >
                 아직 등록된 구성원이 없습니다.
+                <span class="mt-1 text-xs">인사 정보 연동 후 자동으로 채워집니다.</span>
               </div>
             </TabsContent>
 
@@ -169,6 +224,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { GitBranch, UserRound, Users } from 'lucide-vue-next';
 import type { OrganizationDepartmentSummary } from '@/features/organization/models/organization';
 
 defineOptions({ name: 'OrganizationDetailPanel' });

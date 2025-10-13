@@ -117,6 +117,7 @@ async function loadChart() {
   try {
     nodes.value = await repository.fetchOrganizationChart();
   } catch (error) {
+    console.warn('조직도 불러오기 중 오류가 발생했습니다.', error);
     toast.error('조직도를 불러오지 못했습니다.', {
       description: '네트워크 상태를 확인한 뒤 다시 시도해 주세요.',
     });

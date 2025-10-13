@@ -1,10 +1,59 @@
 <template>
   <section class="flex h-full flex-col gap-4">
-    <header class="flex flex-col gap-1">
-      <h1 class="text-2xl font-semibold tracking-tight">조직도</h1>
-      <p class="text-sm text-muted-foreground">
-        부서 구조와 리더, 구성원 정보를 확인할 수 있습니다.
-      </p>
+    <header
+      class="flex flex-col gap-4 rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between"
+    >
+      <div class="flex flex-col gap-2">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">조직도</h1>
+          <p class="text-sm text-muted-foreground">
+            부서 구조와 리더, 구성원 정보를 한눈에 탐색하고 비교하세요.
+          </p>
+        </div>
+        <div
+          v-if="selectedDepartmentSummary"
+          class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground"
+        >
+          <span class="inline-flex items-center gap-1 font-medium text-foreground">
+            현재 선택
+          </span>
+          <span class="truncate font-medium text-primary">
+            {{ selectedDepartmentSummary.departmentName }}
+          </span>
+          <span class="hidden items-center gap-1 whitespace-nowrap md:inline-flex">
+            • 구성원 {{ selectedDepartmentSummary.employeeCount }}명
+          </span>
+          <span
+            v-if="selectedDepartmentSummary.childDepartmentCount"
+            class="hidden items-center gap-1 whitespace-nowrap md:inline-flex"
+          >
+            • 하위 부서 {{ selectedDepartmentSummary.childDepartmentCount }}개
+          </span>
+        </div>
+      </div>
+
+      <dl class="grid flex-none grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+        <div class="rounded-lg border border-border/50 bg-background/90 p-3 shadow-sm">
+          <dt class="text-xs font-medium text-muted-foreground">전체 부서</dt>
+          <dd class="text-lg font-semibold text-foreground">
+            {{ organizationSummary.totalDepartments }}
+          </dd>
+        </div>
+        <div class="rounded-lg border border-border/50 bg-background/90 p-3 shadow-sm">
+          <dt class="text-xs font-medium text-muted-foreground">총 구성원</dt>
+          <dd class="text-lg font-semibold text-foreground">
+            {{ organizationSummary.totalEmployees }}
+          </dd>
+        </div>
+        <div
+          class="rounded-lg border border-border/50 bg-background/90 p-3 shadow-sm"
+        >
+          <dt class="text-xs font-medium text-muted-foreground">선택된 조직</dt>
+          <dd class="text-lg font-semibold text-foreground">
+            {{ selectedDepartmentSummary?.departmentCode ?? '—' }}
+          </dd>
+        </div>
+      </dl>
     </header>
 
     <div
@@ -22,9 +71,9 @@
     </Alert>
 
     <div v-else class="flex-1 min-h-0">
-      <div class="grid h-full min-h-0 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+      <div class="grid h-full min-h-0 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
         <div
-          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-3.5 shadow-sm lg:h-[750px] lg:min-h-[750px] lg:max-h-[750px]"
+          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm lg:h-[750px] lg:min-h-[750px] lg:max-h-[750px]"
         >
           <OrganizationTree
             class="h-full"
@@ -36,6 +85,32 @@
         <div
           class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm lg:h-[750px] lg:min-h-[750px] lg:max-h-[750px]"
         >
+          <div
+            v-if="selectedBreadcrumb.length"
+            class="border-b border-border/60 bg-background/60 px-4 py-2 text-xs"
+          >
+            <Breadcrumb class="flex flex-wrap gap-1 text-muted-foreground">
+              <BreadcrumbList>
+                <template v-for="(segment, index) in selectedBreadcrumb" :key="segment.id">
+                  <BreadcrumbItem>
+                    <template v-if="index < selectedBreadcrumb.length - 1">
+                      <BreadcrumbLink as-child>
+                        <button
+                          type="button"
+                          class="transition hover:text-foreground"
+                          @click="handleBreadcrumbSelect(segment.id)"
+                        >
+                          {{ segment.name }}
+                        </button>
+                      </BreadcrumbLink>
+                    </template>
+                    <BreadcrumbPage v-else>{{ segment.name }}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator v-if="index < selectedBreadcrumb.length - 1" />
+                </template>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
           <div class="flex-1 min-h-0 overflow-y-auto p-4">
             <OrganizationDetailPanel
               :department="selectedDepartment"
@@ -63,6 +138,14 @@ import OrganizationTree from '@/features/organization/components/OrganizationTre
 import OrganizationDetailPanel from '@/features/organization/components/OrganizationDetailPanel.vue';
 import HttpError from '@/core/http/HttpError';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartNode[]>([]);
@@ -71,6 +154,15 @@ const errorMessage = ref<string | null>(null);
 const selectedDepartmentId = ref<string | undefined>();
 const departmentDetail = ref<OrganizationDepartmentDetail | null>(null);
 const isDepartmentLoading = ref(false);
+
+const organizationSummary = computed(() => calculateOrganizationSummary(chart.value));
+const selectedDepartmentSummary = computed(() => selectedDepartment.value);
+const selectedBreadcrumb = computed(() =>
+  buildDepartmentPath(chart.value, selectedDepartmentId.value).map((node) => ({
+    id: node.departmentId,
+    name: node.departmentName,
+  })),
+);
 
 let detailRequestToken = 0;
 const route = useRoute();
@@ -301,5 +393,62 @@ function ensureSelectedDepartmentExists() {
   if (!exists) {
     selectedDepartmentId.value = chart.value[0]?.departmentId;
   }
+}
+
+function handleBreadcrumbSelect(departmentId: string) {
+  if (!departmentId || departmentId === selectedDepartmentId.value) {
+    return;
+  }
+  selectedDepartmentId.value = departmentId;
+}
+
+function buildDepartmentPath(
+  nodes: OrganizationChartNode[],
+  targetId?: string,
+  currentPath: OrganizationChartNode[] = [],
+): OrganizationChartNode[] {
+  if (!targetId) {
+    return [];
+  }
+
+  for (const node of nodes) {
+    const nextPath = [...currentPath, node];
+    if (node.departmentId === targetId) {
+      return nextPath;
+    }
+
+    if (node.children?.length) {
+      const childResult = buildDepartmentPath(node.children, targetId, nextPath);
+      if (childResult.length) {
+        return childResult;
+      }
+    }
+  }
+
+  return [];
+}
+
+function calculateOrganizationSummary(nodes: OrganizationChartNode[]) {
+  let totalDepartments = 0;
+  let totalEmployees = 0;
+
+  const traverse = (items: OrganizationChartNode[]) => {
+    for (const item of items) {
+      totalDepartments += 1;
+      if (typeof item.employeeCount === 'number') {
+        totalEmployees += item.employeeCount;
+      }
+      if (item.children?.length) {
+        traverse(item.children);
+      }
+    }
+  };
+
+  traverse(nodes);
+
+  return {
+    totalDepartments,
+    totalEmployees,
+  };
 }
 </script>

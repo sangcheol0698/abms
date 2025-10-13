@@ -1,15 +1,16 @@
 <template>
   <li :data-node-id="node.departmentId" class="space-y-1">
     <div
-      class="flex items-start gap-1.5 rounded-md p-1.5 transition hover:bg-accent/50"
+      class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition hover:bg-accent/40"
       :class="{
         'bg-primary/10 border border-primary/40 shadow-sm': isSelected,
+        'border border-transparent': !isSelected,
       }"
     >
       <button
         v-if="showToggle"
         type="button"
-        class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition hover:text-foreground"
+        class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border/60 bg-background text-muted-foreground transition hover:text-foreground"
         :aria-expanded="!isCollapsed"
         :aria-label="isCollapsed ? '하위 조직 펼치기' : '하위 조직 접기'"
         @click.stop="toggleNode(node.departmentId)"
@@ -17,38 +18,31 @@
         <ChevronRight v-if="isCollapsed" class="h-3 w-3" />
         <ChevronDown v-else class="h-3 w-3" />
       </button>
-      <span v-else class="mt-0.5 inline-flex h-5 w-5" aria-hidden="true" />
-      <div class="flex flex-1 flex-col gap-1">
-        <button
-          type="button"
-          class="flex flex-col items-start gap-0.5 text-left"
-          @click="selectNode(node.departmentId)"
-        >
-          <span class="text-[13px] font-semibold text-foreground">
-            <template v-for="(segment, index) in nameSegments" :key="index">
-              <mark v-if="segment.matched" class="rounded bg-primary/20 px-0.5 text-primary">
-                {{ segment.text }}
-              </mark>
-              <span v-else>{{ segment.text }}</span>
-            </template>
-          </span>
-          <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Badge variant="outline" class="px-1.5 py-0 text-[11px] font-medium">
-              {{ node.departmentCode }}
-            </Badge>
-            <span class="inline-flex items-center gap-1">
-              <Users class="h-3 w-3" />
-              {{ node.employeeCount }}명
-            </span>
-            <span v-if="node.departmentLeader" class="inline-flex items-center gap-1">
-              <UserRound class="h-3 w-3" />
-              {{ node.departmentLeader.employeeName }}
-            </span>
-          </div>
-        </button>
-        <p v-if="node.children.length && isCollapsed" class="text-[11px] text-muted-foreground/80">
-          하위 조직 {{ node.children.length }}개가 숨겨져 있습니다
-        </p>
+      <span v-else class="inline-flex h-5 w-5 shrink-0" aria-hidden="true" />
+
+      <button
+        type="button"
+        class="flex flex-1 items-center gap-2 truncate text-left"
+        @click="selectNode(node.departmentId)"
+      >
+        <component
+          :is="departmentIcon"
+          class="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground"
+          aria-hidden="true"
+        />
+        <span class="truncate text-[13px] font-medium text-foreground">
+          <template v-for="(segment, index) in nameSegments" :key="index">
+            <mark v-if="segment.matched" class="rounded bg-primary/20 px-0.5 text-primary">
+              {{ segment.text }}
+            </mark>
+            <span v-else>{{ segment.text }}</span>
+          </template>
+        </span>
+      </button>
+
+      <div class="ms-2 flex shrink-0 items-center gap-1 text-[11px] font-medium text-muted-foreground">
+        <component :is="headcountIcon" class="h-3 w-3" aria-hidden="true" />
+        <span class="whitespace-nowrap">{{ displayHeadcount }}</span>
       </div>
     </div>
 
@@ -76,8 +70,19 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { ChevronDown, ChevronRight, UserRound, Users } from 'lucide-vue-next';
-import { Badge } from '@/components/ui/badge';
+import type { Component } from 'vue';
+import {
+  Building2,
+  BriefcaseBusiness,
+  ChevronDown,
+  ChevronRight,
+  FlaskConical,
+  Folder,
+  FolderOpen,
+  Layers,
+  UserRound,
+  UsersRound,
+} from 'lucide-vue-next';
 import type { OrganizationChartNode } from '@/features/organization/models/organization';
 
 interface Props {
@@ -94,12 +99,40 @@ defineOptions({ name: 'OrganizationTreeNode' });
 
 const props = defineProps<Props>();
 
+const ICON_MATCHERS: Array<{ pattern: RegExp; icon: Component }> = [
+  { pattern: /(hq|head|본부)/, icon: Building2 },
+  { pattern: /(division|사업부|group|본사)/, icon: Layers },
+  { pattern: /(department|dept|부서|실)/, icon: BriefcaseBusiness },
+  { pattern: /(team|스쿼드|squad|chapter|셀|팀)/, icon: UsersRound },
+  { pattern: /(unit|center|센터|lab|연구)/, icon: FlaskConical },
+];
+
 const hasChildren = computed(() => props.node.children.length > 0);
 const isCollapsed = computed(() =>
   props.forceExpand ? false : Boolean(props.collapsedMap[props.node.departmentId]),
 );
 const isSelected = computed(() => props.node.departmentId === props.selectedId);
 const showToggle = computed(() => hasChildren.value && !props.forceExpand);
+const departmentIcon = computed<Component>(() => {
+  const rawType = (props.node.departmentType ?? '').trim().toLowerCase();
+
+  if (rawType.length > 0) {
+    const matched = ICON_MATCHERS.find(({ pattern }) => pattern.test(rawType));
+    if (matched) {
+      return matched.icon;
+    }
+  }
+
+  return hasChildren.value && !isCollapsed.value ? FolderOpen : Folder;
+});
+const displayHeadcount = computed(() => {
+  const count = props.node.employeeCount;
+  if (typeof count === 'number' && count >= 0) {
+    return `${count}명`;
+  }
+  return '—';
+});
+const headcountIcon = computed<Component>(() => (displayHeadcount.value === '—' ? UserRound : UsersRound));
 const normalizedSearch = computed(() => props.searchTerm?.toLowerCase() ?? '');
 const hasSearch = computed(() => normalizedSearch.value.length > 0);
 
