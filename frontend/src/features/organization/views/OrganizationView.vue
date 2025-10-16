@@ -1,8 +1,6 @@
 <template>
   <section class="flex h-full flex-col gap-4">
-    <header
-      class="flex flex-col gap-4 rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between"
-    >
+    <header class="">
       <div class="flex flex-col gap-2">
         <div>
           <h1 class="text-2xl font-semibold tracking-tight">조직도</h1>
@@ -31,29 +29,6 @@
           </span>
         </div>
       </div>
-
-      <dl class="grid flex-none grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-        <div class="rounded-lg border border-border/50 bg-background/90 p-3 shadow-sm">
-          <dt class="text-xs font-medium text-muted-foreground">전체 부서</dt>
-          <dd class="text-lg font-semibold text-foreground">
-            {{ organizationSummary.totalDepartments }}
-          </dd>
-        </div>
-        <div class="rounded-lg border border-border/50 bg-background/90 p-3 shadow-sm">
-          <dt class="text-xs font-medium text-muted-foreground">총 구성원</dt>
-          <dd class="text-lg font-semibold text-foreground">
-            {{ organizationSummary.totalEmployees }}
-          </dd>
-        </div>
-        <div
-          class="rounded-lg border border-border/50 bg-background/90 p-3 shadow-sm"
-        >
-          <dt class="text-xs font-medium text-muted-foreground">선택된 조직</dt>
-          <dd class="text-lg font-semibold text-foreground">
-            {{ selectedDepartmentSummary?.departmentCode ?? '—' }}
-          </dd>
-        </div>
-      </dl>
     </header>
 
     <div
