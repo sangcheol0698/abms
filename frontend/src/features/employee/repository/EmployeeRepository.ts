@@ -127,6 +127,25 @@ export class EmployeeRepository {
     });
   }
 
+  async takeLeave(employeeId: string): Promise<void> {
+    await this.httpRepository.patch({
+      path: `/api/employees/${employeeId}/take-leave`,
+    });
+  }
+
+  async activate(employeeId: string): Promise<void> {
+    await this.httpRepository.patch({
+      path: `/api/employees/${employeeId}/activate`,
+    });
+  }
+
+  async resign(employeeId: string, resignationDate: string): Promise<void> {
+    await this.httpRepository.patch({
+      path: `/api/employees/${employeeId}/resign`,
+      params: { resignationDate },
+    });
+  }
+
   async search(params: EmployeeSearchParams): Promise<PageResponse<EmployeeListItem>> {
     const response = await this.httpRepository.get({
       path: '/api/employees',

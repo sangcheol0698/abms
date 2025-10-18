@@ -10,7 +10,7 @@
       <button
         v-if="showToggle"
         type="button"
-        class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border/60 bg-background text-muted-foreground transition hover:text-foreground"
+        class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:text-foreground"
         :aria-expanded="!isCollapsed"
         :aria-label="isCollapsed ? '하위 조직 펼치기' : '하위 조직 접기'"
         @click.stop="toggleNode(node.departmentId)"
@@ -40,7 +40,9 @@
         </span>
       </button>
 
-      <div class="ms-2 flex shrink-0 items-center gap-1 text-[11px] font-medium text-muted-foreground">
+      <div
+        class="ms-2 flex shrink-0 items-center gap-1 text-[11px] font-medium text-muted-foreground"
+      >
         <component :is="headcountIcon" class="h-3 w-3" aria-hidden="true" />
         <span class="whitespace-nowrap">{{ displayHeadcount }}</span>
       </div>
@@ -132,7 +134,9 @@ const displayHeadcount = computed(() => {
   }
   return '—';
 });
-const headcountIcon = computed<Component>(() => (displayHeadcount.value === '—' ? UserRound : UsersRound));
+const headcountIcon = computed<Component>(() =>
+  displayHeadcount.value === '—' ? UserRound : UsersRound,
+);
 const normalizedSearch = computed(() => props.searchTerm?.toLowerCase() ?? '');
 const hasSearch = computed(() => normalizedSearch.value.length > 0);
 

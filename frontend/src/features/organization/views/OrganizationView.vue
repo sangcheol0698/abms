@@ -1,34 +1,10 @@
 <template>
-  <section class="flex h-full flex-col gap-4">
-    <header class="">
-      <div class="flex flex-col gap-2">
-        <div>
-          <h1 class="text-2xl font-semibold tracking-tight">조직도</h1>
-          <p class="text-sm text-muted-foreground">
-            부서 구조와 리더, 구성원 정보를 한눈에 탐색하고 비교하세요.
-          </p>
-        </div>
-        <div
-          v-if="selectedDepartmentSummary"
-          class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground"
-        >
-          <span class="inline-flex items-center gap-1 font-medium text-foreground">
-            현재 선택
-          </span>
-          <span class="truncate font-medium text-primary">
-            {{ selectedDepartmentSummary.departmentName }}
-          </span>
-          <span class="hidden items-center gap-1 whitespace-nowrap md:inline-flex">
-            • 구성원 {{ selectedDepartmentSummary.employeeCount }}명
-          </span>
-          <span
-            v-if="selectedDepartmentSummary.childDepartmentCount"
-            class="hidden items-center gap-1 whitespace-nowrap md:inline-flex"
-          >
-            • 하위 부서 {{ selectedDepartmentSummary.childDepartmentCount }}개
-          </span>
-        </div>
-      </div>
+  <section class="flex h-full flex-col gap-6">
+    <header class="flex flex-col gap-1">
+      <h1 class="text-2xl font-semibold tracking-tight">조직도</h1>
+      <p class="text-sm text-muted-foreground">
+        부서 구조와 리더, 구성원 정보를 한눈에 탐색하고 비교하세요.
+      </p>
     </header>
 
     <div

@@ -19,12 +19,14 @@
         </button>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+      <div
+        class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground"
+      >
         <div class="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="sm"
-            class="h-7 px-3 text-xs"
+            class="h-5 px-3 text-xs"
             :disabled="isFullyExpanded || isSearching"
             @click="expandAll"
           >
@@ -33,7 +35,7 @@
           <Button
             variant="outline"
             size="sm"
-            class="h-7 px-3 text-xs"
+            class="h-5 px-3 text-xs"
             :disabled="isFullyCollapsed || isSearching"
             @click="collapseAll"
           >
