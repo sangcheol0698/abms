@@ -2,6 +2,7 @@ package kr.co.abacus.abms.adapter.webapi.employee;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -10,13 +11,13 @@ import java.util.UUID;
 
 import jakarta.validation.Valid;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,27 +34,27 @@ import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeAvatarResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeGradeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeStatusResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeTypeResponse;
-import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
+import kr.co.abacus.abms.application.employee.EmployeeExcelService;
+import kr.co.abacus.abms.application.employee.EmployeeExcelService.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
-import kr.co.abacus.abms.application.employee.EmployeeExcelService;
-import kr.co.abacus.abms.application.employee.EmployeeExcelService.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
-import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 
 @RequiredArgsConstructor
 @RestController
@@ -179,6 +180,21 @@ public class EmployeeApi {
         } catch (IOException ex) {
             throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
         }
+    }
+
+    @PatchMapping("/api/employees/{id}/resign")
+    public void resign(@PathVariable UUID id, @RequestParam LocalDate resignationDate) {
+        employeeManager.resign(id, resignationDate);
+    }
+
+    @PatchMapping("/api/employees/{id}/take-leave")
+    public void takeLeave(@PathVariable UUID id) {
+        employeeManager.takeLeave(id);
+    }
+
+    @PatchMapping("/api/employees/{id}/activate")
+    public void activate(@PathVariable UUID id) {
+        employeeManager.activate(id);
     }
 
     private String buildFilename(String prefix) {
