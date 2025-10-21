@@ -106,8 +106,6 @@ const selectedDepartmentId = ref<string | undefined>();
 const departmentDetail = ref<OrganizationDepartmentDetail | null>(null);
 const isDepartmentLoading = ref(false);
 
-const organizationSummary = computed(() => calculateOrganizationSummary(chart.value));
-const selectedDepartmentSummary = computed(() => selectedDepartment.value);
 const selectedBreadcrumb = computed(() =>
   buildDepartmentPath(chart.value, selectedDepartmentId.value).map((node) => ({
     id: node.departmentId,
@@ -379,27 +377,4 @@ function buildDepartmentPath(
   return [];
 }
 
-function calculateOrganizationSummary(nodes: OrganizationChartNode[]) {
-  let totalDepartments = 0;
-  let totalEmployees = 0;
-
-  const traverse = (items: OrganizationChartNode[]) => {
-    for (const item of items) {
-      totalDepartments += 1;
-      if (typeof item.employeeCount === 'number') {
-        totalEmployees += item.employeeCount;
-      }
-      if (item.children?.length) {
-        traverse(item.children);
-      }
-    }
-  };
-
-  traverse(nodes);
-
-  return {
-    totalDepartments,
-    totalEmployees,
-  };
-}
 </script>
