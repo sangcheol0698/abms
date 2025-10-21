@@ -38,13 +38,12 @@
             @click="openCommandPalette"
           >
             <Search class="mr-2 h-4 w-4" />
-            <span class="hidden lg:inline">검색...</span>
-            <span class="lg:hidden">검색</span>
-            <kbd
-              class="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex"
-            >
-              <span class="text-xs">⌘</span>K
-            </kbd>
+            <span>검색...</span>
+            <KbdGroup class="absolute right-2 items-center sm:flex">
+              <Kbd>⌘</Kbd>
+              +
+              <Kbd>K</Kbd>
+            </KbdGroup>
           </Button>
           <Button
             variant="outline"
@@ -84,8 +83,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { RouterLink } from 'vue-router';
 import { Bell, Search } from 'lucide-vue-next';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
@@ -105,6 +105,7 @@ import NotificationsSheet from '@/components/business/NotificationsSheet.vue';
 import ProfileDialog from '@/components/business/ProfileDialog.vue';
 import { useNotificationsStore } from '@/core/stores/notifications.store';
 import { storeToRefs } from 'pinia';
+import { Kbd, KbdGroup } from '@/components/ui/kbd';
 
 const route = useRoute();
 
