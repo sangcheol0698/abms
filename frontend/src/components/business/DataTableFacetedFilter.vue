@@ -41,23 +41,27 @@
               v-for="option in options"
               :key="option.value"
               :value="option.value"
-              class="flex items-center gap-2"
+              :class="[
+                'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+                selectedValues.has(option.value)
+                  ? 'bg-muted text-foreground'
+                  : 'hover:bg-muted',
+              ]"
               @select="toggleOption(option.value)"
             >
               <Checkbox
-                :model-value="selectedValues?.has(option.value)"
-                @click.stop
-                @update:model-value="() => toggleOption(option.value)"
+                class="pointer-events-none"
+                :model-value="selectedValues.has(option.value)"
               />
               <component
                 v-if="option.icon"
                 :is="option.icon"
                 class="h-4 w-4 text-muted-foreground"
               />
-              <span>{{ option.label }}</span>
+              <span class="truncate">{{ option.label }}</span>
               <span
                 v-if="option.count !== undefined"
-                class="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs"
+                class="ml-auto flex h-4 w-4 items-center justify-center font-mono text-[11px] text-muted-foreground"
               >
                 {{ option.count }}
               </span>
