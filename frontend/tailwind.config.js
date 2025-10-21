@@ -10,7 +10,7 @@ const config = {
         padding: '1.5rem',
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        sans: ['Pretendard', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'monospace'],
       },
       boxShadow: {

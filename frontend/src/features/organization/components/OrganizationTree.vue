@@ -56,7 +56,7 @@
       </div>
     </div>
 
-    <div ref="scrollRef" class="flex-1 overflow-y-auto bg-card p-3.5 pt-0">
+    <div ref="scrollRef" class="flex-1 overflow-y-auto bg-card p-3.5 pt-2">
       <p
         v-if="!filteredNodes.length"
         class="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground"

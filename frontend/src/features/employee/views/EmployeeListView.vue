@@ -1,12 +1,5 @@
 <template>
   <section class="flex h-full flex-col gap-6">
-    <header class="flex flex-col gap-1">
-      <h1 class="text-2xl font-semibold tracking-tight">구성원 목록</h1>
-      <p class="text-sm text-muted-foreground">
-        이름 검색과 상태·직급·유형·부서 필터를 활용해 구성원을 빠르게 찾아보세요.
-      </p>
-    </header>
-
     <EmployeeSummaryCards :cards="employeeSummary.cards" />
 
     <div class="space-y-4">
@@ -64,10 +57,7 @@
                 <Download class="mr-2 h-4 w-4" />
                 <span>{{ isDownloadingExcel ? '다운로드 중...' : '현재 조건 다운로드' }}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                :disabled="isDownloadingSample"
-                @click="handleExcelSampleDownload"
-              >
+              <DropdownMenuItem :disabled="isDownloadingSample" @click="handleExcelSampleDownload">
                 <Download class="mr-2 h-4 w-4" />
                 <span>{{ isDownloadingSample ? '샘플 다운로드 중...' : '샘플 다운로드' }}</span>
               </DropdownMenuItem>
@@ -306,21 +296,13 @@ const columns: ColumnDef<EmployeeListItem>[] = [
       const email = row.original.email ?? '';
       const initials = name.trim().slice(0, 2).toUpperCase() || '??';
       return h('div', { class: 'flex items-center gap-3' }, [
-        h(
-          Avatar,
-          { class: 'h-10 w-10 rounded-xl border border-border/60 bg-background' },
-          () => [
-            h(AvatarImage, {
-              src: row.original.avatarImageUrl,
-              alt: name,
-            }),
-            h(
-              AvatarFallback,
-              { class: 'rounded-xl text-sm font-semibold' },
-              () => initials,
-            ),
-          ],
-        ),
+        h(Avatar, { class: 'h-10 w-10 rounded-xl border border-border/60 bg-background' }, () => [
+          h(AvatarImage, {
+            src: row.original.avatarImageUrl,
+            alt: name,
+          }),
+          h(AvatarFallback, { class: 'rounded-xl text-sm font-semibold' }, () => initials),
+        ]),
         h('div', { class: 'flex flex-col gap-0.5' }, [
           h(
             'button',

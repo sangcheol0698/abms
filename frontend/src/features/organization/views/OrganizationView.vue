@@ -1,12 +1,5 @@
 <template>
-  <section class="flex h-full flex-col gap-6">
-    <header class="flex flex-col gap-1">
-      <h1 class="text-2xl font-semibold tracking-tight">조직도</h1>
-      <p class="text-sm text-muted-foreground">
-        부서 구조와 리더, 구성원 정보를 한눈에 탐색하고 비교하세요.
-      </p>
-    </header>
-
+  <section class="flex h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden">
     <div
       v-if="isLoading"
       class="flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground"
@@ -21,55 +14,109 @@
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <div v-else class="flex-1 min-h-0">
-      <div class="grid h-full min-h-0 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <div
-          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm lg:h-[750px] lg:min-h-[750px] lg:max-h-[750px]"
-        >
-          <OrganizationTree
-            class="h-full"
-            :nodes="chart"
-            v-model:selectedNodeId="selectedDepartmentId"
-          />
-        </div>
+    <div v-else class="flex-1 min-h-0 overflow-hidden">
+      <template v-if="isLargeScreen">
+        <ResizablePanelGroup direction="horizontal" class="flex h-full min-h-0 overflow-hidden">
+          <ResizablePanel :default-size="20" :min-size="14" :max-size="32" :collapsed-size="14">
+            <div class="flex h-full flex-col overflow-hidden rounded-xl bg-card shadow-sm">
+              <OrganizationTree
+                class="h-full"
+                :nodes="chart"
+                v-model:selectedNodeId="selectedDepartmentId"
+              />
+            </div>
+          </ResizablePanel>
 
-        <div
-          class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm lg:h-[750px] lg:min-h-[750px] lg:max-h-[750px]"
-        >
-          <div
-            v-if="selectedBreadcrumb.length"
-            class="border-b border-border/60 bg-background/60 px-4 py-2 text-xs"
-          >
-            <Breadcrumb class="flex flex-wrap gap-1 text-muted-foreground">
-              <BreadcrumbList>
-                <template v-for="(segment, index) in selectedBreadcrumb" :key="segment.id">
-                  <BreadcrumbItem>
-                    <template v-if="index < selectedBreadcrumb.length - 1">
-                      <BreadcrumbLink as-child>
-                        <button
-                          type="button"
-                          class="transition hover:text-foreground"
-                          @click="handleBreadcrumbSelect(segment.id)"
-                        >
-                          {{ segment.name }}
-                        </button>
-                      </BreadcrumbLink>
+          <ResizableHandle with-handle class="bg-border/70" />
+
+          <ResizablePanel :default-size="76" :min-size="52">
+            <div class="flex h-full flex-col overflow-hidden rounded-xl bg-card/90 shadow-sm">
+              <div
+                v-if="selectedBreadcrumb.length"
+                class="border-b border-border/60 bg-background/60 px-4 py-2 text-xs"
+              >
+                <Breadcrumb class="flex flex-wrap gap-1 text-muted-foreground">
+                  <BreadcrumbList>
+                    <template v-for="(segment, index) in selectedBreadcrumb" :key="segment.id">
+                      <BreadcrumbItem>
+                        <template v-if="index < selectedBreadcrumb.length - 1">
+                          <BreadcrumbLink as-child>
+                            <button
+                              type="button"
+                              class="transition hover:text-foreground"
+                              @click="handleBreadcrumbSelect(segment.id)"
+                            >
+                              {{ segment.name }}
+                            </button>
+                          </BreadcrumbLink>
+                        </template>
+                        <BreadcrumbPage v-else>{{ segment.name }}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator v-if="index < selectedBreadcrumb.length - 1" />
                     </template>
-                    <BreadcrumbPage v-else>{{ segment.name }}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator v-if="index < selectedBreadcrumb.length - 1" />
-                </template>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-          <div class="flex-1 min-h-0 overflow-y-auto p-4">
-            <OrganizationDetailPanel
-              :department="selectedDepartment"
-              :isLoading="isDepartmentLoading"
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
+              <div class="flex-1 min-h-0 overflow-y-auto p-4">
+                <OrganizationDetailPanel
+                  :department="selectedDepartment"
+                  :isLoading="isDepartmentLoading"
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </template>
+
+      <template v-else>
+        <div class="flex h-full flex-col gap-4">
+          <div
+            class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
+          >
+            <OrganizationTree
+              class="max-h-[360px] overflow-y-auto"
+              :nodes="chart"
+              v-model:selectedNodeId="selectedDepartmentId"
             />
           </div>
+          <div
+            class="flex flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm"
+          >
+            <div
+              v-if="selectedBreadcrumb.length"
+              class="border-b border-border/60 bg-background/60 px-4 py-2 text-xs"
+            >
+              <Breadcrumb class="flex flex-wrap gap-1 text-muted-foreground">
+                <BreadcrumbList>
+                  <template v-for="(segment, index) in selectedBreadcrumb" :key="segment.id">
+                    <BreadcrumbItem>
+                      <template v-if="index < selectedBreadcrumb.length - 1">
+                        <BreadcrumbLink as-child>
+                          <button
+                            type="button"
+                            class="transition hover:text-foreground"
+                            @click="handleBreadcrumbSelect(segment.id)"
+                          >
+                            {{ segment.name }}
+                          </button>
+                        </BreadcrumbLink>
+                      </template>
+                      <BreadcrumbPage v-else>{{ segment.name }}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator v-if="index < selectedBreadcrumb.length - 1" />
+                  </template>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+              <OrganizationDetailPanel
+                :department="selectedDepartment"
+                :isLoading="isDepartmentLoading"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </template>
     </div>
   </section>
 </template>
@@ -97,6 +144,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { useBreakpoints } from '@vueuse/core';
 
 const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartNode[]>([]);
@@ -118,6 +167,8 @@ const route = useRoute();
 const router = useRouter();
 let isUpdatingRoute = false;
 let isApplyingRoute = false;
+const breakpoints = useBreakpoints({ lg: 1024 });
+const isLargeScreen = breakpoints.greater('lg');
 
 const selectedDepartment = computed(() => {
   if (!selectedDepartmentId.value) {
@@ -376,5 +427,4 @@ function buildDepartmentPath(
 
   return [];
 }
-
 </script>

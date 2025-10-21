@@ -5,6 +5,16 @@ import { SplitterPanel, useForwardPropsEmits } from "reka-ui"
 const props = defineProps<SplitterPanelProps>()
 const emits = defineEmits<SplitterPanelEmits>()
 
+defineSlots<{
+  default?: (props: {
+    isCollapsed: boolean
+    isExpanded: boolean
+    collapse: () => void
+    expand: () => void
+    resize: (size: number) => void
+  }) => any
+}>()
+
 const forwarded = useForwardPropsEmits(props, emits)
 </script>
 
@@ -12,7 +22,8 @@ const forwarded = useForwardPropsEmits(props, emits)
   <SplitterPanel
     data-slot="resizable-panel"
     v-bind="forwarded"
+    v-slot="slotProps"
   >
-    <slot />
+    <slot v-bind="slotProps" />
   </SplitterPanel>
 </template>

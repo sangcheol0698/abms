@@ -25,6 +25,7 @@ const routes = [
         component: () => import('@/features/organization/views/OrganizationView.vue'),
         meta: {
           title: '조직도',
+          padding: 'flush',
           breadcrumbs: [
             {
               title: '대시보드',
@@ -72,6 +73,25 @@ const routes = [
             },
             {
               title: '상세',
+              disabled: true,
+            },
+          ],
+        },
+      },
+      {
+        path: 'assistant',
+        name: 'assistant',
+        component: () => import('@/features/chat/views/ChatView.vue'),
+        meta: {
+          title: 'AI Copilot',
+          padding: 'flush',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: 'AI Copilot',
               disabled: true,
             },
           ],

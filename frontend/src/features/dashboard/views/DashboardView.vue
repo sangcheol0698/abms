@@ -1,10 +1,5 @@
 <template>
   <section class="flex h-full flex-col gap-6">
-    <header class="flex flex-col gap-1">
-      <h1 class="text-2xl font-semibold tracking-tight">대시보드</h1>
-      <p class="text-sm text-muted-foreground">서비스 주요 지표와 최근 활동을 한눈에 확인하세요.</p>
-    </header>
-
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <Card v-for="metric in metrics" :key="metric.title" class="shadow-none">
         <CardHeader class="space-y-1">

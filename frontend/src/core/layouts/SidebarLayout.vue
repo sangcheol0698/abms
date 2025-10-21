@@ -64,7 +64,7 @@
         </div>
       </header>
 
-      <main class="flex min-h-0 flex-1 flex-col overflow-hidden p-6">
+      <main :class="['flex min-h-0 flex-1 flex-col overflow-hidden', paddingClass]">
         <slot />
       </main>
     </SidebarInset>
@@ -150,6 +150,20 @@ const breadcrumbs = computed<BreadcrumbEntry[]>(() => {
   }
 
   return [];
+});
+
+const paddingClass = computed(() => {
+  const mode = route.meta?.padding as string | undefined;
+  if (mode === 'compact') {
+    return 'p-4 sm:p-6';
+  }
+  if (mode === 'comfortable') {
+    return 'p-6 lg:p-8';
+  }
+  if (mode === 'flush') {
+    return 'p-0';
+  }
+  return 'p-6';
 });
 
 const isProfileDialogOpen = ref(false);
