@@ -49,10 +49,17 @@
               ]"
               @select="toggleOption(option.value)"
             >
-              <Checkbox
-                class="pointer-events-none"
+              <span
+                class="mr-1 flex h-5 w-5 items-center justify-center"
+              >
+                <Checkbox
+                class="size-5 rounded-[6px] border-border data-[state=checked]:bg-primary"
                 :model-value="selectedValues.has(option.value)"
-              />
+                @update:model-value="() => toggleOption(option.value)"
+              >
+                  <Check class="h-3 w-3 text-white dark:text-primary-foreground" />
+                </Checkbox>
+              </span>
               <component
                 v-if="option.icon"
                 :is="option.icon"
@@ -88,7 +95,7 @@
 <script setup lang="ts">
 import type { Column } from '@tanstack/vue-table';
 import { computed } from 'vue';
-import { Plus } from 'lucide-vue-next';
+import { Plus, Check } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
