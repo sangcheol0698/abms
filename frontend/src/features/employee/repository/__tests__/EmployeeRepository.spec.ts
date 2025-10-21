@@ -5,12 +5,51 @@ import type HttpRepository from '@/core/http/HttpRepository';
 import { EmployeeRepository } from '../EmployeeRepository';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
+import {
+  resetEmployeeFilterOptions,
+  setEmployeeGradeOptions,
+  setEmployeePositionOptions,
+  setEmployeeStatusOptions,
+  setEmployeeTypeOptions,
+} from '@/features/employee/models/employeeFilters';
+
+const DEFAULT_STATUS_OPTIONS: EmployeeFilterOption[] = [
+  { value: 'ACTIVE', label: '재직' },
+  { value: 'ON_LEAVE', label: '휴직' },
+  { value: 'RESIGNED', label: '퇴사' },
+];
+
+const DEFAULT_TYPE_OPTIONS: EmployeeFilterOption[] = [
+  { value: 'FULL_TIME', label: '정직원' },
+  { value: 'PART_TIME', label: '반프리' },
+  { value: 'OUTSOURCING', label: '외주' },
+];
+
+const DEFAULT_GRADE_OPTIONS: EmployeeFilterOption[] = [
+  { value: 'JUNIOR', label: '초급' },
+  { value: 'MID_LEVEL', label: '중급' },
+  { value: 'SENIOR', label: '고급' },
+];
+
+const DEFAULT_POSITION_OPTIONS: EmployeeFilterOption[] = [
+  { value: 'ASSOCIATE', label: '사원' },
+  { value: 'LEADER', label: '책임' },
+  { value: 'MANAGER', label: '팀장' },
+];
+
+function primeFilterOptions() {
+  setEmployeeStatusOptions(DEFAULT_STATUS_OPTIONS);
+  setEmployeeTypeOptions(DEFAULT_TYPE_OPTIONS);
+  setEmployeeGradeOptions(DEFAULT_GRADE_OPTIONS);
+  setEmployeePositionOptions(DEFAULT_POSITION_OPTIONS);
+}
 
 describe('EmployeeRepository.search', () => {
   let httpGet: ReturnType<typeof vi.fn>;
   let repository: EmployeeRepository;
 
   beforeEach(() => {
+    resetEmployeeFilterOptions();
     httpGet = vi.fn();
     const httpRepositoryStub = {
       get: httpGet,
@@ -20,6 +59,7 @@ describe('EmployeeRepository.search', () => {
   });
 
   it('요청 파라미터를 API 계약에 맞게 변환한다', async () => {
+    primeFilterOptions();
     httpGet.mockResolvedValueOnce({
       content: [],
       number: 0,
@@ -42,7 +82,6 @@ describe('EmployeeRepository.search', () => {
 
     await repository.search(params);
 
-    expect(httpGet).toHaveBeenCalledTimes(1);
     expect(httpGet).toHaveBeenCalledWith({
       path: '/api/employees',
       params: {
@@ -60,6 +99,7 @@ describe('EmployeeRepository.search', () => {
   });
 
   it('응답을 PageResponse<EmployeeListItem>으로 변환한다', async () => {
+    primeFilterOptions();
     const apiResponse = {
       content: [
         {
@@ -118,6 +158,7 @@ describe('EmployeeRepository.search', () => {
   });
 
   it('구성원 정보를 업데이트한다', async () => {
+    primeFilterOptions();
     httpGet.mockResolvedValueOnce(null);
     const httpPut = vi.fn().mockResolvedValue({
       employeeId: 'E-01',
@@ -178,6 +219,7 @@ describe('EmployeeRepository.fetch filter options', () => {
   let repository: EmployeeRepository;
 
   beforeEach(() => {
+    resetEmployeeFilterOptions();
     httpGet = vi.fn();
     const httpRepositoryStub = {
       get: httpGet,

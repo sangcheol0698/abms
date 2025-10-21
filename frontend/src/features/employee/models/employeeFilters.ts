@@ -3,71 +3,20 @@ export interface EmployeeFilterOption {
   value: string;
 }
 
-const STATUS_ITEMS = [
-  { code: 'ACTIVE', label: '재직' },
-  { code: 'ON_LEAVE', label: '휴직' },
-  { code: 'RESIGNED', label: '퇴사' },
-] as const;
+let employeeStatusOptions: EmployeeFilterOption[] = [];
+let employeeTypeOptions: EmployeeFilterOption[] = [];
+let employeeGradeOptions: EmployeeFilterOption[] = [];
+let employeePositionOptions: EmployeeFilterOption[] = [];
 
-const TYPE_ITEMS = [
-  { code: 'FULL_TIME', label: '정직원' },
-  { code: 'FREELANCER', label: '프리랜서' },
-  { code: 'OUTSOURCING', label: '외주' },
-  { code: 'PART_TIME', label: '반프리' },
-] as const;
+let statusCodeByLabel: Record<string, string> = {};
+let typeCodeByLabel: Record<string, string> = {};
+let gradeCodeByLabel: Record<string, string> = {};
+let positionCodeByLabel: Record<string, string> = {};
 
-const GRADE_ITEMS = [
-  { code: 'JUNIOR', label: '초급' },
-  { code: 'MID_LEVEL', label: '중급' },
-  { code: 'SENIOR', label: '고급' },
-  { code: 'EXPERT', label: '특급' },
-] as const;
-
-const POSITION_ITEMS = [
-  { code: 'ASSOCIATE', label: '사원' },
-  { code: 'STAFF', label: '선임' },
-  { code: 'LEADER', label: '책임' },
-  { code: 'MANAGER', label: '팀장' },
-  { code: 'SENIOR_MANAGER', label: '수석' },
-  { code: 'DIRECTOR', label: '이사' },
-  { code: 'TECHNICAL_DIRECTOR', label: '기술이사' },
-  { code: 'MANAGING_DIRECTOR', label: '상무' },
-  { code: 'VICE_PRESIDENT', label: '부사장' },
-  { code: 'PRESIDENT', label: '사장' },
-] as const;
-
-function toOptions(items: readonly { code: string; label: string }[]): EmployeeFilterOption[] {
-  return items.map((item) => ({ label: item.label, value: item.code }));
-}
-
-function toCodeByLabel(items: readonly { code: string; label: string }[]): Record<string, string> {
-  return items.reduce<Record<string, string>>((accumulator, current) => {
-    accumulator[current.label] = current.code;
-    return accumulator;
-  }, {});
-}
-
-function toLabelByCode(items: readonly { code: string; label: string }[]): Record<string, string> {
-  return items.reduce<Record<string, string>>((accumulator, current) => {
-    accumulator[current.code] = current.label;
-    return accumulator;
-  }, {});
-}
-
-let employeeStatusOptions = toOptions(STATUS_ITEMS);
-let employeeTypeOptions = toOptions(TYPE_ITEMS);
-let employeeGradeOptions = toOptions(GRADE_ITEMS);
-let employeePositionOptions = toOptions(POSITION_ITEMS);
-
-let statusCodeByLabel = toCodeByLabel(STATUS_ITEMS);
-let typeCodeByLabel = toCodeByLabel(TYPE_ITEMS);
-let gradeCodeByLabel = toCodeByLabel(GRADE_ITEMS);
-let positionCodeByLabel = toCodeByLabel(POSITION_ITEMS);
-
-let statusLabelByCode = toLabelByCode(STATUS_ITEMS);
-let typeLabelByCode = toLabelByCode(TYPE_ITEMS);
-let gradeLabelByCode = toLabelByCode(GRADE_ITEMS);
-let positionLabelByCode = toLabelByCode(POSITION_ITEMS);
+let statusLabelByCode: Record<string, string> = {};
+let typeLabelByCode: Record<string, string> = {};
+let gradeLabelByCode: Record<string, string> = {};
+let positionLabelByCode: Record<string, string> = {};
 
 export function getEmployeeStatusOptions(): EmployeeFilterOption[] {
   return employeeStatusOptions;
@@ -163,4 +112,21 @@ export function toGradeLabel(code: string): string {
 
 export function toPositionLabel(code: string): string {
   return positionLabelByCode[code] ?? code;
+}
+
+export function resetEmployeeFilterOptions() {
+  employeeStatusOptions = [];
+  employeeTypeOptions = [];
+  employeeGradeOptions = [];
+  employeePositionOptions = [];
+
+  statusCodeByLabel = {};
+  typeCodeByLabel = {};
+  gradeCodeByLabel = {};
+  positionCodeByLabel = {};
+
+  statusLabelByCode = {};
+  typeLabelByCode = {};
+  gradeLabelByCode = {};
+  positionLabelByCode = {};
 }

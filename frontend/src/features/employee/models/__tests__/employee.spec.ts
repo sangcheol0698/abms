@@ -1,5 +1,33 @@
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
 import { mapEmployeeSummary } from '@/features/employee/models/employee';
+import {
+  resetEmployeeFilterOptions,
+  setEmployeeGradeOptions,
+  setEmployeePositionOptions,
+  setEmployeeStatusOptions,
+  setEmployeeTypeOptions,
+} from '@/features/employee/models/employeeFilters';
+
+beforeEach(() => {
+  resetEmployeeFilterOptions();
+  setEmployeeStatusOptions([
+    { value: 'ACTIVE', label: '재직' },
+    { value: 'ON_LEAVE', label: '휴직' },
+    { value: 'RESIGNED', label: '퇴사' },
+  ]);
+  setEmployeeTypeOptions([
+    { value: 'FULL_TIME', label: '정직원' },
+    { value: 'PART_TIME', label: '반프리' },
+  ]);
+  setEmployeeGradeOptions([
+    { value: 'JUNIOR', label: '초급' },
+    { value: 'MID_LEVEL', label: '중급' },
+  ]);
+  setEmployeePositionOptions([
+    { value: 'ASSOCIATE', label: '사원' },
+    { value: 'MANAGER', label: '팀장' },
+  ]);
+});
 
 describe('mapEmployeeSummary', () => {
   it('converts string based dates into ISO strings', () => {

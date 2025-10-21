@@ -24,8 +24,7 @@ export default class HttpError extends Error {
 
     if (axiosError?.response) {
       const { status, data } = axiosError.response;
-      this.message =
-        data?.message || data?.detail || axiosError.message || '요청 처리 중 오류가 발생했습니다.';
+      this.message = data?.message || data?.detail || axiosError.message || '요청 처리 중 오류가 발생했습니다.';
       this.code = (data?.code as string) || String(status ?? '500');
       this.status = status ?? undefined;
       this.payload = data;

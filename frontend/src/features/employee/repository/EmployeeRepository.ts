@@ -2,6 +2,16 @@ import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
 import type { EmployeeCreatePayload, EmployeeSummary } from '@/features/employee/models/employee';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
+import {
+  getEmployeeGradeOptions,
+  getEmployeePositionOptions,
+  getEmployeeStatusOptions,
+  getEmployeeTypeOptions,
+  setEmployeeGradeOptions,
+  setEmployeePositionOptions,
+  setEmployeeStatusOptions,
+  setEmployeeTypeOptions,
+} from '@/features/employee/models/employeeFilters';
 import { mapEmployeeSummary } from '@/features/employee/models/employee';
 import PageResponse from '@/core/common/PageResponse';
 import {
@@ -95,19 +105,114 @@ function buildRequestParams(params: EmployeeSearchParams): Record<string, unknow
 
 @singleton()
 export class EmployeeRepository {
+  private filterOptionsPromise: Promise<void> | null = null;
+  private statusOptionsLoaded = false;
+  private typeOptionsLoaded = false;
+  private gradeOptionsLoaded = false;
+  private positionOptionsLoaded = false;
+
   constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 
+  private hasFilterOptionsLoaded(): boolean {
+    return (
+      (this.statusOptionsLoaded || getEmployeeStatusOptions().length > 0) &&
+      (this.typeOptionsLoaded || getEmployeeTypeOptions().length > 0) &&
+      (this.gradeOptionsLoaded || getEmployeeGradeOptions().length > 0) &&
+      (this.positionOptionsLoaded || getEmployeePositionOptions().length > 0)
+    );
+  }
+
+  private async ensureFilterOptionsLoaded(): Promise<void> {
+    if (this.hasFilterOptionsLoaded()) {
+      return;
+    }
+
+    if (!this.filterOptionsPromise) {
+      this.filterOptionsPromise = (async () => {
+        const [statuses, types, grades, positions] = await Promise.all([
+          this.requestStatusOptions(),
+          this.requestTypeOptions(),
+          this.requestGradeOptions(),
+          this.requestPositionOptions(),
+        ]);
+
+        setEmployeeStatusOptions(statuses);
+        setEmployeeTypeOptions(types);
+        setEmployeeGradeOptions(grades);
+        setEmployeePositionOptions(positions);
+
+        this.statusOptionsLoaded = true;
+        this.typeOptionsLoaded = true;
+        this.gradeOptionsLoaded = true;
+        this.positionOptionsLoaded = true;
+      })().finally(() => {
+        this.filterOptionsPromise = null;
+      });
+    }
+
+    await this.filterOptionsPromise;
+  }
+
+  private async requestStatusOptions(): Promise<EmployeeFilterOption[]> {
+    const response = await this.httpRepository.get<EmployeeStatusResponse[]>({
+      path: '/api/employees/statuses',
+    });
+    return Array.isArray(response) ? response.map((item) => toFilterOption(item)) : [];
+  }
+
+  private async requestTypeOptions(): Promise<EmployeeFilterOption[]> {
+    const response = await this.httpRepository.get<EmployeeTypeResponse[]>({
+      path: '/api/employees/types',
+    });
+    return Array.isArray(response) ? response.map((item) => toFilterOption(item)) : [];
+  }
+
+  private async requestGradeOptions(): Promise<EmployeeFilterOption[]> {
+    const response = await this.httpRepository.get<EmployeeGradeResponse[]>({
+      path: '/api/employees/grades',
+    });
+    if (!Array.isArray(response)) {
+      return [];
+    }
+    return response
+      .slice()
+      .sort((a, b) => (a.level ?? Number.MAX_SAFE_INTEGER) - (b.level ?? Number.MAX_SAFE_INTEGER))
+      .map((item) => ({
+        label: item.description ?? item.name,
+        value: item.name,
+      }));
+  }
+
+  private async requestPositionOptions(): Promise<EmployeeFilterOption[]> {
+    const response = await this.httpRepository.get<EmployeePositionResponse[]>({
+      path: '/api/employees/positions',
+    });
+    if (!Array.isArray(response)) {
+      return [];
+    }
+    return response
+      .slice()
+      .sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER))
+      .map((item) => ({
+        label: item.description ?? item.name,
+        value: item.name,
+      }));
+  }
+
   async findById(employeeId: string): Promise<EmployeeSummary> {
+    await this.ensureFilterOptionsLoaded();
     const response = await this.httpRepository.get({ path: `/api/employees/${employeeId}` });
     return mapEmployeeSummary(response);
   }
 
   async create(payload: EmployeeCreatePayload): Promise<EmployeeSummary> {
+    await this.ensureFilterOptionsLoaded();
     const response = await this.httpRepository.post({ path: '/api/employees', data: payload });
     return mapEmployeeSummary(response);
   }
 
   async update(employeeId: string, payload: EmployeeCreatePayload): Promise<EmployeeSummary> {
+    await this.ensureFilterOptionsLoaded();
     const response = await this.httpRepository.put({
       path: `/api/employees/${employeeId}`,
       data: payload,
@@ -147,6 +252,7 @@ export class EmployeeRepository {
   }
 
   async search(params: EmployeeSearchParams): Promise<PageResponse<EmployeeListItem>> {
+    await this.ensureFilterOptionsLoaded();
     const response = await this.httpRepository.get({
       path: '/api/employees',
       params: buildRequestParams(params),
@@ -155,53 +261,31 @@ export class EmployeeRepository {
   }
 
   async fetchStatuses(): Promise<EmployeeFilterOption[]> {
-    const response = await this.httpRepository.get<EmployeeStatusResponse[]>({
-      path: '/api/employees/statuses',
-    });
-    return Array.isArray(response)
-      ? response.map((item) => toFilterOption(item))
-      : [];
+    const statuses = await this.requestStatusOptions();
+    setEmployeeStatusOptions(statuses);
+    this.statusOptionsLoaded = true;
+    return statuses;
   }
 
   async fetchTypes(): Promise<EmployeeFilterOption[]> {
-    const response = await this.httpRepository.get<EmployeeTypeResponse[]>({
-      path: '/api/employees/types',
-    });
-    return Array.isArray(response)
-      ? response.map((item) => toFilterOption(item))
-      : [];
+    const types = await this.requestTypeOptions();
+    setEmployeeTypeOptions(types);
+    this.typeOptionsLoaded = true;
+    return types;
   }
 
   async fetchGrades(): Promise<EmployeeFilterOption[]> {
-    const response = await this.httpRepository.get<EmployeeGradeResponse[]>({
-      path: '/api/employees/grades',
-    });
-    if (!Array.isArray(response)) {
-      return [];
-    }
-    return response
-      .slice()
-      .sort((a, b) => (a.level ?? Number.MAX_SAFE_INTEGER) - (b.level ?? Number.MAX_SAFE_INTEGER))
-      .map((item) => ({
-        label: item.description ?? item.name,
-        value: item.name,
-      }));
+    const grades = await this.requestGradeOptions();
+    setEmployeeGradeOptions(grades);
+    this.gradeOptionsLoaded = true;
+    return grades;
   }
 
   async fetchPositions(): Promise<EmployeeFilterOption[]> {
-    const response = await this.httpRepository.get<EmployeePositionResponse[]>({
-      path: '/api/employees/positions',
-    });
-    if (!Array.isArray(response)) {
-      return [];
-    }
-    return response
-      .slice()
-      .sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER))
-      .map((item) => ({
-        label: item.description ?? item.name,
-        value: item.name,
-      }));
+    const positions = await this.requestPositionOptions();
+    setEmployeePositionOptions(positions);
+    this.positionOptionsLoaded = true;
+    return positions;
   }
 
   async fetchAvatars(): Promise<EmployeeAvatarOption[]> {

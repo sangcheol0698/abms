@@ -53,7 +53,7 @@
         <template #actions>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="outline" size="sm" class="h-8 gap-1">
+              <Button variant="outline" size="sm" class="h-8 px-2 sm:px-3 gap-1">
                 <FileSpreadsheet class="h-4 w-4" />
                 <span class="hidden sm:inline">엑셀</span>
                 <ChevronDown class="h-3 w-3" />
@@ -78,18 +78,8 @@
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="default" size="sm" class="h-8" @click="openCreateDialog">
+          <Button variant="default" size="sm" class="h-8 px-3 sm:px-4" @click="openCreateDialog">
             구성원 추가
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            class="h-8 w-8 p-0"
-            :disabled="isLoading"
-            @click="loadEmployees"
-            title="새로고침"
-          >
-            <RefreshCcw class="h-4 w-4" />
           </Button>
         </template>
       </DataTableToolbar>
@@ -226,16 +216,12 @@ import {
   getEmployeePositionOptions,
   getEmployeeStatusOptions,
   getEmployeeTypeOptions,
-  setEmployeeGradeOptions,
-  setEmployeePositionOptions,
-  setEmployeeStatusOptions,
-  setEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
 import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummaryCards.vue';
 import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
-import { ChevronDown, Download, FileSpreadsheet, RefreshCcw, Upload } from 'lucide-vue-next';
+import { ChevronDown, Download, FileSpreadsheet, Upload } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import EmployeeRowActions from '@/features/employee/components/EmployeeRowActions.vue';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
@@ -546,34 +532,27 @@ async function loadDepartments() {
 
 async function loadEmployeeOptions() {
   try {
-    const [statuses, types, grades, positions] = await Promise.all([
-      employeeRepository.fetchStatuses(),
-      employeeRepository.fetchTypes(),
-      employeeRepository.fetchGrades(),
-      employeeRepository.fetchPositions(),
-    ]);
+    const shouldFetchOptions =
+      !getEmployeeStatusOptions().length ||
+      !getEmployeeTypeOptions().length ||
+      !getEmployeeGradeOptions().length ||
+      !getEmployeePositionOptions().length;
 
-    if (statuses.length) {
-      statusOptions.value = statuses;
-      setEmployeeStatusOptions(statuses);
+    if (shouldFetchOptions) {
+      await Promise.all([
+        employeeRepository.fetchStatuses(),
+        employeeRepository.fetchTypes(),
+        employeeRepository.fetchGrades(),
+        employeeRepository.fetchPositions(),
+      ]);
     }
 
-    if (types.length) {
-      typeOptions.value = types;
-      setEmployeeTypeOptions(types);
-    }
+    statusOptions.value = getEmployeeStatusOptions();
+    typeOptions.value = getEmployeeTypeOptions();
+    gradeOptions.value = getEmployeeGradeOptions();
+    positionOptions.value = getEmployeePositionOptions();
 
-    if (grades.length) {
-      gradeOptions.value = grades;
-      setEmployeeGradeOptions(grades);
-    }
-
-    if (positions.length) {
-      positionOptions.value = positions;
-      setEmployeePositionOptions(positions);
-    }
-
-    if (employees.value.length) {
+    if (employees.value.length && shouldFetchOptions) {
       loadEmployees();
     }
   } catch (error) {
@@ -1139,14 +1118,14 @@ function getColumnLabel(columnId: string): string {
   return columnLabelMap[columnId] ?? columnId;
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadDepartments();
-  void loadEmployeeOptions();
+  await loadEmployeeOptions();
   if (Object.keys(route.query).length > 0) {
     applyRouteQuery({ ...route.query });
   } else {
     updateRouteFromState();
-    loadEmployees();
+    await loadEmployees();
   }
 });
 </script>

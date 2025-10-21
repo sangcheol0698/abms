@@ -2,11 +2,7 @@
   <div class="space-y-3">
     <div
       v-if="$slots.filters"
-      :class="[
-        'flex items-center space-x-2 flex-wrap gap-y-2',
-        'md:flex',
-        showFilters ? 'flex' : 'hidden',
-      ]"
+      class="flex flex-wrap items-center gap-2"
     >
       <slot name="filters" />
 
@@ -30,35 +26,19 @@
             :model-value="internalSearchValue"
             @update:model-value="handleSearchInput"
             @compositionupdate="handleSearchComposition"
-            @keydown.enter.prevent="props.applySearchOnEnter ? handleSearchEnter() : undefined"
+            @keydown.enter.prevent="handleSearchEnter"
             class="h-8 w-[120px] sm:w-[180px] lg:w-[250px]"
           />
           <Button
-            v-if="props.applySearchOnEnter"
             variant="outline"
             size="sm"
             class="h-8 w-8 p-0"
-            :disabled="internalSearchValue.trim().length === 0"
+            :disabled="isSearchDisabled"
             @click="handleSearchEnter"
           >
             <Search class="h-4 w-4" />
           </Button>
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-8 md:hidden"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="h-4 w-4" />
-          <span
-            v-if="hasActiveFilters"
-            class="ml-1 rounded-full bg-primary px-1 text-xs text-primary-foreground"
-          >
-            {{ activeFilterCount }}
-          </span>
-        </Button>
 
         <Button
           v-if="isFiltered"
@@ -132,7 +112,7 @@
 <script setup lang="ts">
 import type { Table } from '@tanstack/vue-table';
 import { computed, ref, watch } from 'vue';
-import { Filter, Search, Settings, X } from 'lucide-vue-next';
+import { Search, Settings, X } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -163,8 +143,6 @@ const props = withDefaults(defineProps<DataTableToolbarProps>(), {
 });
 
 const forceUpdate = ref(0);
-const showFilters = ref(false);
-
 const hideableColumns = computed(() => {
   return props.table.getAllColumns().filter((column) => column.getCanHide());
 });
@@ -172,10 +150,6 @@ const hideableColumns = computed(() => {
 const isFiltered = computed(() => props.table.getState().columnFilters.length > 0);
 
 const selectedRowCount = computed(() => Object.keys(props.table.getState().rowSelection).length);
-
-const hasActiveFilters = computed(() => props.table.getState().columnFilters.length > 0);
-
-const activeFilterCount = computed(() => props.table.getState().columnFilters.length);
 
 const searchColumnId = computed(() => props.searchColumnId ?? 'name');
 
@@ -196,11 +170,14 @@ function defaultNormalizeSearchValue(value: string): string {
 }
 
 const internalSearchValue = ref('');
+const isSearchDisabled = computed(() => {
+  return typeof internalSearchValue.value !== 'string' || internalSearchValue.value.trim().length === 0;
+});
 
 watch(
   searchInputValue,
   (value) => {
-    internalSearchValue.value = value;
+    internalSearchValue.value = typeof value === 'string' ? value : '';
   },
   { immediate: true },
 );
@@ -229,9 +206,10 @@ function handleSearchInput(value: string | number) {
 }
 
 function handleSearchComposition(value: string) {
-  internalSearchValue.value = value;
+  const normalizedValue = typeof value === 'string' ? value : String(value);
+  internalSearchValue.value = normalizedValue;
   if (!props.applySearchOnEnter) {
-    setSearchFilter(value);
+    setSearchFilter(normalizedValue);
   }
 }
 
@@ -244,7 +222,6 @@ function handleSearchEnter() {
 
 function resetFilters() {
   props.table.resetColumnFilters();
-  showFilters.value = false;
 }
 
 function onToggleColumn(column: any, value?: boolean) {

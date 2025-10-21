@@ -84,9 +84,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { RouterLink } from 'vue-router';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
 import { Bell, Search } from 'lucide-vue-next';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
@@ -125,10 +124,7 @@ const breadcrumbs = computed<BreadcrumbEntry[]>(() => {
       let to: string | undefined;
       if (typeof crumb.to === 'function') {
         try {
-          const resolved = crumb.to(route);
-          if (typeof resolved === 'string') {
-            to = resolved;
-          }
+          to = crumb.to(route);
         } catch (error) {
           console.warn('Failed to resolve breadcrumb path', error);
         }
@@ -198,7 +194,7 @@ function parseUser(value: unknown) {
 
 function loadUserFromStorage() {
   try {
-    const raw = typeof window !== 'undefined' ? window.localStorage.getItem('user') : null;
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     if (!raw) {
       return;
     }
