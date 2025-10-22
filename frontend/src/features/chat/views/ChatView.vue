@@ -1,14 +1,20 @@
 <template>
-  <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+  <section
+    class="flex min-h-0 flex-1 flex-col overflow-hidden"
+    :class="{ 'h-[calc(100dvh-4rem)]': !isLargeScreen }"
+  >
     <template v-if="isLargeScreen">
-      <ResizablePanelGroup direction="horizontal" class="flex h-full flex-1 overflow-hidden">
+      <ResizablePanelGroup direction="horizontal" class="flex flex-1 min-h-0 overflow-hidden">
         <template v-if="!isSidebarCollapsed">
           <ResizablePanel :default-size="18" :min-size="10" :max-size="26">
-            <aside class="flex h-full flex-col border-r border-border/60 bg-background">
+            <aside
+              class="flex min-h-0 flex-col border-r border-border/60 bg-background"
+              :class="isLargeScreen ? 'h-[calc(100dvh-4rem)]' : 'h-full'"
+            >
               <div class="flex items-center justify-between px-3 py-3">
-                <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                  >채팅</span
-                >
+                <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  채팅
+                </span>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -20,102 +26,106 @@
                 </Button>
               </div>
 
-              <div class="px-4 pb-3">
-                <Button class="w-full gap-2 text-sm" @click="createNewChat">
-                  <Plus class="h-4 w-4" /> 새 채팅
-                </Button>
-              </div>
-
-              <div class="px-4">
-                <div class="relative">
-                  <Search
-                    class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                  <Input v-model="searchQuery" placeholder="채팅 검색" class="pl-9 text-xs" />
-                </div>
-              </div>
-
-              <nav class="mt-5 flex-1 space-y-5 overflow-y-auto px-4 pb-5 text-sm">
-                <div>
-                  <div
-                    class="flex items-center justify-between px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
-                  >
-                    <span>즐겨찾기</span>
-                    <Sparkles class="h-3.5 w-3.5" />
-                  </div>
-                  <ul class="space-y-1">
-                    <li v-for="item in filteredFavorites" :key="item.id">
-                      <button
-                        type="button"
-                        class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors"
-                        :class="
-                          currentSessionId === item.id
-                            ? 'bg-primary/10 text-primary'
-                            : 'hover:bg-muted/60 text-foreground'
-                        "
-                        @click="selectSession(item.id)"
-                      >
-                        <span class="truncate">{{ item.title }}</span>
-                        <Star class="h-3.5 w-3.5" />
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-
-                <div>
-                  <div
-                    class="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
-                  >
-                    최근 항목
-                  </div>
-                  <ul class="space-y-1 text-xs">
-                    <li v-for="item in filteredRecent" :key="item.id">
-                      <button
-                        type="button"
-                        class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors"
-                        :class="
-                          currentSessionId === item.id
-                            ? 'bg-muted text-foreground'
-                            : 'hover:bg-muted/50 text-foreground'
-                        "
-                        @click="selectSession(item.id)"
-                      >
-                        <div class="min-w-0">
-                          <p class="truncate font-medium">{{ item.title }}</p>
-                          <p class="truncate text-[11px] text-muted-foreground">
-                            {{ item.description }}
-                          </p>
-                        </div>
-                        <span class="text-[10px] text-muted-foreground">{{ item.updated }}</span>
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </nav>
-
-              <div class="border-t border-border/60 p-3 text-[11px] text-muted-foreground">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="font-medium text-foreground">박상철</p>
-                    <p>무료 플랜</p>
-                  </div>
-                  <Button variant="ghost" size="icon" class="h-7 w-7">
-                    <MoreHorizontal class="h-4 w-4" />
+                <div class="px-4 pb-3">
+                  <Button class="w-full gap-2 text-sm" @click="createNewChat">
+                    <Plus class="h-4 w-4" /> 새 채팅
                   </Button>
                 </div>
-              </div>
-            </aside>
+
+                <div class="px-4">
+                  <div class="relative">
+                    <Search
+                      class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    />
+                    <Input v-model="searchQuery" placeholder="채팅 검색" class="pl-9 text-xs" />
+                  </div>
+                </div>
+
+                <nav class="mt-5 flex-1 space-y-5 overflow-y-auto px-4 pb-5 text-sm">
+                  <div>
+                    <div
+                      class="flex items-center justify-between px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                      <span>즐겨찾기</span>
+                      <Sparkles class="h-3.5 w-3.5" />
+                    </div>
+                    <ul class="space-y-1">
+                      <li v-for="item in filteredFavorites" :key="item.id">
+                        <button
+                          type="button"
+                          class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors"
+                          :class="
+                            currentSessionId === item.id
+                              ? 'bg-primary/10 text-primary'
+                              : 'hover:bg-muted/60 text-foreground'
+                          "
+                          @click="selectSession(item.id)"
+                        >
+                          <span class="truncate">{{ item.title }}</span>
+                          <Star class="h-3.5 w-3.5" />
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <div
+                      class="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                      최근 항목
+                    </div>
+                    <ul class="space-y-1 text-xs">
+                      <li v-for="item in filteredRecent" :key="item.id">
+                        <button
+                          type="button"
+                          class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors"
+                          :class="
+                            currentSessionId === item.id
+                              ? 'bg-muted text-foreground'
+                              : 'hover:bg-muted/50 text-foreground'
+                          "
+                          @click="selectSession(item.id)"
+                        >
+                          <div class="min-w-0">
+                            <p class="truncate font-medium">{{ item.title }}</p>
+                            <p class="truncate text-[11px] text-muted-foreground">
+                              {{ item.description }}
+                            </p>
+                          </div>
+                          <span class="text-[10px] text-muted-foreground">{{ item.updated }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </nav>
+
+                <div class="border-t border-border/60 p-3 text-[11px] text-muted-foreground">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="font-medium text-foreground">박상철</p>
+                      <p>무료 플랜</p>
+                    </div>
+                    <Button variant="ghost" size="icon" class="h-7 w-7">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </aside>
           </ResizablePanel>
 
           <ResizableHandle with-handle class="bg-border/70" />
         </template>
 
         <ResizablePanel :default-size="isSidebarCollapsed ? 100 : 82" :min-size="60">
-          <div class="flex h-full min-h-0 flex-col bg-background">
-            <header
-              class="flex items-center justify-between border-b border-border/60 px-8 py-5 text-sm"
-            >
-              <div class="flex items-center gap-3">
+          <div
+            class="flex min-h-0 w-full"
+            :class="isLargeScreen ? 'h-[calc(100dvh-4rem)]' : 'h-full'"
+          >
+            <div class="flex h-full min-h-0 flex-1 flex-col bg-background">
+              <header
+                class="flex items-center justify-between border-b border-border/60 px-8 py-5 text-sm"
+              >
+                <div class="flex items-center gap-3">
                 <Button
                   v-if="isSidebarCollapsed"
                   variant="ghost"
@@ -126,34 +136,35 @@
                 >
                   <ChevronRight class="h-4 w-4" />
                 </Button>
-                <h2 class="text-base font-semibold text-foreground">{{ currentSessionTitle }}</h2>
-                <Badge variant="outline" class="gap-1 text-[11px]">
-                  <History class="h-3 w-3" /> {{ sessionUpdatedAt }}
-                </Badge>
+                  <h2 class="text-base font-semibold text-foreground">{{ currentSessionTitle }}</h2>
+                  <Badge variant="outline" class="gap-1 text-[11px]">
+                    <History class="h-3 w-3" /> {{ sessionUpdatedAt }}
+                  </Badge>
+                </div>
+                <div class="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Button variant="ghost" size="sm" class="gap-1">
+                    <Star class="h-3.5 w-3.5" /> 즐겨찾기
+                  </Button>
+                  <Button variant="ghost" size="sm" class="gap-1">
+                    <Share class="h-3.5 w-3.5" /> 공유
+                  </Button>
+                  <Button variant="ghost" size="icon" class="h-8 w-8">
+                    <MoreHorizontal class="h-4 w-4" />
+                  </Button>
+                </div>
+              </header>
+              <div class="flex h-full min-h-0 flex-col px-8 py-6">
+                <ChatWidget
+                  class="flex flex-1 min-h-0"
+                  v-model="draft"
+                  :messages="messages"
+                  :is-responding="isResponding"
+                  :suggestions="[]"
+                  :info-text="infoText"
+                  @submit="handleSubmit"
+                  @suggestion="handleSuggestion"
+                />
               </div>
-              <div class="flex items-center gap-1 text-xs text-muted-foreground">
-                <Button variant="ghost" size="sm" class="gap-1">
-                  <Star class="h-3.5 w-3.5" /> 즐겨찾기
-                </Button>
-                <Button variant="ghost" size="sm" class="gap-1">
-                  <Share class="h-3.5 w-3.5" /> 공유
-                </Button>
-                <Button variant="ghost" size="icon" class="h-8 w-8">
-                  <MoreHorizontal class="h-4 w-4" />
-                </Button>
-              </div>
-            </header>
-            <div class="flex-1 min-h-0 overflow-hidden px-8 py-6">
-              <ChatWidget
-                v-model="draft"
-                :messages="messages"
-                :is-responding="isResponding"
-                :suggestions="[]"
-                :info-text="infoText"
-                class="flex h-full flex-1"
-                @submit="handleSubmit"
-                @suggestion="handleSuggestion"
-              />
             </div>
           </div>
         </ResizablePanel>
@@ -161,7 +172,7 @@
     </template>
 
     <template v-else>
-      <div class="flex h-full flex-col bg-background">
+      <div class="flex h-[calc(100dvh-4rem)] min-h-0 flex-1 flex-col bg-background">
         <header class="flex items-center justify-between border-b border-border/60 px-4 py-4">
           <div class="flex items-center gap-2">
             <Button
@@ -190,14 +201,14 @@
           </div>
         </header>
 
-        <div class="relative flex-1 min-h-0">
+        <div class="relative flex flex-1 min-h-0 flex-col">
           <ChatWidget
             v-model="draft"
             :messages="messages"
             :is-responding="isResponding"
             :suggestions="[]"
             :info-text="infoText"
-            class="flex h-full flex-1"
+            class="flex flex-1 min-h-0"
             @submit="handleSubmit"
             @suggestion="handleSuggestion"
           />
