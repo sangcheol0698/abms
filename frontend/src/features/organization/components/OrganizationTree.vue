@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full flex-col">
+  <div class="flex h-full min-h-0 flex-col">
     <div class="sticky top-0 z-10 flex flex-col gap-2.5 border-b border-border/60 bg-card/95 p-3.5">
       <div class="relative">
         <Input
@@ -56,7 +56,7 @@
       </div>
     </div>
 
-    <div ref="scrollRef" class="flex-1 overflow-y-auto bg-card p-3.5 pt-2">
+    <div ref="scrollRef" class="flex-1 min-h-0 overflow-y-auto bg-card p-3.5 pt-2">
       <p
         v-if="!filteredNodes.length"
         class="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground"

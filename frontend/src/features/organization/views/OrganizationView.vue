@@ -1,5 +1,8 @@
 <template>
-  <section class="flex h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+  <section
+    class="flex h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden"
+    :style="containerStyle"
+  >
     <div
       v-if="isLoading"
       class="flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground"
@@ -18,19 +21,15 @@
       <template v-if="isLargeScreen">
         <ResizablePanelGroup direction="horizontal" class="flex h-full min-h-0 overflow-hidden">
           <ResizablePanel :default-size="20" :min-size="14" :max-size="32" :collapsed-size="14">
-            <div class="flex h-full flex-col overflow-hidden rounded-xl bg-card shadow-sm">
-              <OrganizationTree
-                class="h-full"
-                :nodes="chart"
-                v-model:selectedNodeId="selectedDepartmentId"
-              />
+            <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-card shadow-sm">
+              <OrganizationTree :nodes="chart" v-model:selectedNodeId="selectedDepartmentId" />
             </div>
           </ResizablePanel>
 
           <ResizableHandle with-handle class="bg-border/70" />
 
           <ResizablePanel :default-size="76" :min-size="52">
-            <div class="flex h-full flex-col overflow-hidden rounded-xl bg-card/90 shadow-sm">
+            <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-card/90 shadow-sm">
               <div
                 v-if="selectedBreadcrumb.length"
                 class="border-b border-border/60 bg-background/60 px-4 py-2 text-xs"
@@ -69,19 +68,13 @@
       </template>
 
       <template v-else>
-        <div class="flex h-full flex-col gap-4">
+        <div class="flex h-full min-h-0 flex-col gap-4">
           <div
-            class="flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
+            class="flex max-h-[360px] flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
           >
-            <OrganizationTree
-              class="max-h-[360px] overflow-y-auto"
-              :nodes="chart"
-              v-model:selectedNodeId="selectedDepartmentId"
-            />
+            <OrganizationTree :nodes="chart" v-model:selectedNodeId="selectedDepartmentId" />
           </div>
-          <div
-            class="flex flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm"
-          >
+          <div class="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm">
             <div
               v-if="selectedBreadcrumb.length"
               class="border-b border-border/60 bg-background/60 px-4 py-2 text-xs"
@@ -145,7 +138,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { useBreakpoints } from '@vueuse/core';
+import { useBreakpoints, useWindowSize } from '@vueuse/core';
 
 const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartNode[]>([]);
@@ -169,6 +162,7 @@ let isUpdatingRoute = false;
 let isApplyingRoute = false;
 const breakpoints = useBreakpoints({ lg: 1024 });
 const isLargeScreen = breakpoints.greater('lg');
+const { height: windowHeight } = useWindowSize();
 
 const selectedDepartment = computed(() => {
   if (!selectedDepartmentId.value) {
@@ -194,6 +188,21 @@ const selectedDepartment = computed(() => {
     employeeCount,
     childDepartmentCount: node.children.length,
   } satisfies OrganizationDepartmentSummary;
+});
+
+const containerStyle = computed(() => {
+  const SAFE_MIN_HEIGHT = 320;
+  const HEADER_OFFSET = 64;
+  const viewportHeight = windowHeight.value || 0;
+  if (viewportHeight === 0) {
+    return undefined;
+  }
+  const available = Math.max(viewportHeight - HEADER_OFFSET, SAFE_MIN_HEIGHT);
+  return {
+    minHeight: `${available}px`,
+    height: `${available}px`,
+    maxHeight: `${available}px`,
+  };
 });
 
 async function loadOrganizationChart() {
