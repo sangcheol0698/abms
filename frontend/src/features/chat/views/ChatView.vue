@@ -1,7 +1,7 @@
 <template>
   <section
     class="flex min-h-0 flex-1 flex-col overflow-hidden"
-    :class="{ 'h-[calc(100dvh-4rem)]': !isLargeScreen }"
+    :style="containerStyle"
   >
     <template v-if="isLargeScreen">
       <ResizablePanelGroup direction="horizontal" class="flex flex-1 min-h-0 overflow-hidden">
@@ -317,7 +317,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
-import { useBreakpoints } from '@vueuse/core';
+import { useBreakpoints, useWindowSize } from '@vueuse/core';
 import {
   ChevronRight,
   ChevronsLeftRight,
@@ -347,6 +347,7 @@ import type { ChatRepository } from '@/features/chat/repository/ChatRepository';
 const repository: ChatRepository = useChatRepository();
 const breakpoints = useBreakpoints({ lg: 1024 });
 const isLargeScreen = breakpoints.greater('lg');
+const { height: windowHeight } = useWindowSize();
 const isMobileSidebarOpen = ref(false);
 const isSidebarCollapsed = ref(false);
 
@@ -399,6 +400,18 @@ const isResponding = ref(false);
 const infoText = computed(() =>
   isResponding.value ? '응답을 생성 중입니다...' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
 );
+
+const containerStyle = computed(() => {
+  if (isLargeScreen.value) {
+    return undefined;
+  }
+  const headerHeight = 64;
+  const available = Math.max(windowHeight.value - headerHeight, 320);
+  return {
+    height: `${available}px`,
+    maxHeight: `${available}px`,
+  };
+});
 
 watch(isLargeScreen, (value) => {
   if (value) {
