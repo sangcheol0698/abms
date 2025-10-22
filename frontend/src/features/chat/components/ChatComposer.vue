@@ -19,7 +19,7 @@
         v-model="draft"
         :rows="3"
         :disabled="disabled"
-        placeholder="Ask, Search or Chat..."
+        placeholder="메시지를 입력하세요..."
         class="min-h-[84px] px-4 text-sm leading-relaxed"
         @keydown="handleKeydown"
         @compositionstart="isComposing = true"

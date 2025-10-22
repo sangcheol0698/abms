@@ -1,6 +1,8 @@
 <template>
   <div class="flex h-full min-h-0 flex-col">
-    <div class="sticky top-0 z-10 flex flex-col gap-2.5 border-b border-border/60 bg-card/95 p-3.5">
+    <div
+      class="sticky top-0 z-10 flex flex-col gap-1.5 border-b border-border/60 bg-card/95 px-3.5 pt-3 pb-2.5"
+    >
       <div class="relative">
         <Input
           v-model="searchTerm"

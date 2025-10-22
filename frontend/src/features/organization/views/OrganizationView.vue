@@ -1,8 +1,5 @@
 <template>
-  <section
-    class="flex h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden"
-    :style="containerStyle"
-  >
+  <section class="flex h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden">
     <div
       v-if="isLoading"
       class="flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground"
@@ -17,75 +14,69 @@
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <div v-else class="flex-1 min-h-0 overflow-hidden">
-      <template v-if="isLargeScreen">
-        <ResizablePanelGroup direction="horizontal" class="flex h-full min-h-0 overflow-hidden">
-          <ResizablePanel :default-size="20" :min-size="14" :max-size="32" :collapsed-size="14">
-            <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-card shadow-sm">
-              <OrganizationTree :nodes="chart" v-model:selectedNodeId="selectedDepartmentId" />
-            </div>
-          </ResizablePanel>
-
-          <ResizableHandle with-handle class="bg-border/70" />
-
-          <ResizablePanel :default-size="76" :min-size="52">
-            <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-card/90 shadow-sm">
-              <div
-                v-if="selectedBreadcrumb.length"
-                class="border-b border-border/60 bg-background/60 px-4 py-2 text-xs"
-              >
-                <Breadcrumb class="flex flex-wrap gap-1 text-muted-foreground">
-                  <BreadcrumbList>
-                    <template v-for="(segment, index) in selectedBreadcrumb" :key="segment.id">
-                      <BreadcrumbItem>
-                        <template v-if="index < selectedBreadcrumb.length - 1">
-                          <BreadcrumbLink as-child>
-                            <button
-                              type="button"
-                              class="transition hover:text-foreground"
-                              @click="handleBreadcrumbSelect(segment.id)"
-                            >
-                              {{ segment.name }}
-                            </button>
-                          </BreadcrumbLink>
-                        </template>
-                        <BreadcrumbPage v-else>{{ segment.name }}</BreadcrumbPage>
-                      </BreadcrumbItem>
-                      <BreadcrumbSeparator v-if="index < selectedBreadcrumb.length - 1" />
-                    </template>
-                  </BreadcrumbList>
-                </Breadcrumb>
-              </div>
-              <div class="flex-1 min-h-0 overflow-y-auto p-4">
-                <OrganizationDetailPanel
-                  :department="selectedDepartment"
-                  :isLoading="isDepartmentLoading"
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+    <FeatureSplitLayout
+      v-else
+      :sidebar-default-size="20"
+      :sidebar-min-size="14"
+      :sidebar-max-size="32"
+      :content-min-size="52"
+    >
+      <template #sidebar="{ pane }">
+        <div class="flex h-full min-h-0 flex-col shadow-sm">
+          <div class="flex items-center justify-between px-4 py-3 text-sm">
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              >조직도</span
+            >
+            <Button
+              variant="ghost"
+              size="icon"
+              class="h-8 w-8 text-muted-foreground transition hover:text-foreground"
+              aria-label="사이드바 닫기"
+              @click="pane.closeSidebar()"
+            >
+              <ChevronsLeftRight class="h-4 w-4" />
+            </Button>
+          </div>
+          <OrganizationTree
+            class="flex-1"
+            :nodes="chart"
+            v-model:selectedNodeId="selectedDepartmentId"
+            @update:selectedNodeId="handleTreeSelection($event, pane)"
+          />
+        </div>
       </template>
 
-      <template v-else>
-        <div class="flex h-full min-h-0 flex-col gap-4">
-          <div
-            class="flex max-h-[360px] flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
-          >
-            <OrganizationTree :nodes="chart" v-model:selectedNodeId="selectedDepartmentId" />
-          </div>
-          <div class="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm">
-            <div
-              v-if="selectedBreadcrumb.length"
-              class="border-b border-border/60 bg-background/60 px-4 py-2 text-xs"
-            >
-              <Breadcrumb class="flex flex-wrap gap-1 text-muted-foreground">
+      <template #default="{ pane }">
+        <div class="flex h-full min-h-0 flex-col">
+          <header class="flex flex-col px-4 py-4">
+            <div class="flex items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground"
+                aria-label="조직도 사이드바 토글"
+                @click="pane.toggleSidebar()"
+              >
+                <PanelLeft
+                  class="h-4 w-4 transition"
+                  :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''"
+                />
+              </Button>
+              <Breadcrumb class="flex flex-wrap text-sm text-muted-foreground">
                 <BreadcrumbList>
-                  <template v-for="(segment, index) in selectedBreadcrumb" :key="segment.id">
+                  <template v-for="(segment, index) in headerBreadcrumbs" :key="segment.id">
                     <BreadcrumbItem>
-                      <template v-if="index < selectedBreadcrumb.length - 1">
+                      <template v-if="segment.clickable">
                         <BreadcrumbLink as-child>
+                          <router-link
+                            v-if="segment.to"
+                            :to="segment.to"
+                            class="transition hover:text-foreground"
+                          >
+                            {{ segment.name }}
+                          </router-link>
                           <button
+                            v-else
                             type="button"
                             class="transition hover:text-foreground"
                             @click="handleBreadcrumbSelect(segment.id)"
@@ -96,12 +87,15 @@
                       </template>
                       <BreadcrumbPage v-else>{{ segment.name }}</BreadcrumbPage>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator v-if="index < selectedBreadcrumb.length - 1" />
+                    <BreadcrumbSeparator v-if="index < headerBreadcrumbs.length - 1" />
                   </template>
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
-            <div class="flex-1 overflow-y-auto p-4">
+          </header>
+
+          <div class="flex h-full min-h-0 flex-col overflow-hidden">
+            <div class="flex-1 min-h-0 overflow-y-auto pl-4">
               <OrganizationDetailPanel
                 :department="selectedDepartment"
                 :isLoading="isDepartmentLoading"
@@ -110,7 +104,7 @@
           </div>
         </div>
       </template>
-    </div>
+    </FeatureSplitLayout>
   </section>
 </template>
 
@@ -118,6 +112,8 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { LocationQueryRaw } from 'vue-router';
+import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
+import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
 import { appContainer } from '@/core/di/container';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
 import type {
@@ -137,8 +133,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { useBreakpoints, useWindowSize } from '@vueuse/core';
+import { Button } from '@/components/ui/button';
+import { ChevronsLeftRight, PanelLeft, RefreshCcw } from 'lucide-vue-next';
 
 const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartNode[]>([]);
@@ -155,14 +151,52 @@ const selectedBreadcrumb = computed(() =>
   })),
 );
 
+interface HeaderBreadcrumb {
+  id: string;
+  name: string;
+  clickable: boolean;
+  to?: string;
+}
+
+const headerBreadcrumbs = computed<HeaderBreadcrumb[]>(() => {
+  const segments = selectedBreadcrumb.value;
+  const crumbs: HeaderBreadcrumb[] = [
+    {
+      id: 'organization-root',
+      name: '조직도',
+      clickable: segments.length > 0,
+      to: segments.length > 0 ? '/organization' : undefined,
+    },
+  ];
+
+  segments.forEach((segment, index) => {
+    crumbs.push({
+      id: segment.id,
+      name: segment.name,
+      clickable: index < segments.length - 1,
+    });
+  });
+
+  if (crumbs.length === 1) {
+    crumbs[0].clickable = false;
+  }
+
+  return crumbs;
+});
+
+const currentDepartmentTitle = computed(() => {
+  if (!selectedDepartmentId.value) {
+    return '전체 조직';
+  }
+  const target = findDepartment(chart.value, selectedDepartmentId.value);
+  return target?.departmentName ?? '전체 조직';
+});
+
 let detailRequestToken = 0;
 const route = useRoute();
 const router = useRouter();
 let isUpdatingRoute = false;
 let isApplyingRoute = false;
-const breakpoints = useBreakpoints({ lg: 1024 });
-const isLargeScreen = breakpoints.greater('lg');
-const { height: windowHeight } = useWindowSize();
 
 const selectedDepartment = computed(() => {
   if (!selectedDepartmentId.value) {
@@ -188,21 +222,6 @@ const selectedDepartment = computed(() => {
     employeeCount,
     childDepartmentCount: node.children.length,
   } satisfies OrganizationDepartmentSummary;
-});
-
-const containerStyle = computed(() => {
-  const SAFE_MIN_HEIGHT = 320;
-  const HEADER_OFFSET = 64;
-  const viewportHeight = windowHeight.value || 0;
-  if (viewportHeight === 0) {
-    return undefined;
-  }
-  const available = Math.max(viewportHeight - HEADER_OFFSET, SAFE_MIN_HEIGHT);
-  return {
-    minHeight: `${available}px`,
-    height: `${available}px`,
-    maxHeight: `${available}px`,
-  };
 });
 
 async function loadOrganizationChart() {
@@ -250,6 +269,15 @@ async function loadDepartmentDetail(departmentId: string) {
     if (token === detailRequestToken) {
       isDepartmentLoading.value = false;
     }
+  }
+}
+
+function refreshDepartment() {
+  if (selectedDepartmentId.value) {
+    departmentDetail.value = null;
+    void loadDepartmentDetail(selectedDepartmentId.value);
+  } else {
+    void loadOrganizationChart();
   }
 }
 
@@ -305,22 +333,6 @@ watch(
   { immediate: false },
 );
 
-function findDepartment(
-  nodes: OrganizationChartNode[],
-  targetId: string,
-): OrganizationChartNode | null {
-  for (const node of nodes) {
-    if (node.departmentId === targetId) {
-      return node;
-    }
-    const child = findDepartment(node.children ?? [], targetId);
-    if (child) {
-      return child;
-    }
-  }
-  return null;
-}
-
 watch(
   () => route.query.departmentId,
   (value) => {
@@ -339,6 +351,16 @@ watch(
     isApplyingRoute = false;
   },
 );
+
+function handleTreeSelection(departmentId: string, pane?: FeatureSplitPaneContext) {
+  if (!departmentId) {
+    return;
+  }
+  selectedDepartmentId.value = departmentId;
+  if (pane && !pane.isLargeScreen.value) {
+    pane.closeSidebar();
+  }
+}
 
 function updateRouteQuery(departmentId?: string) {
   const existing = extractDepartmentId(route.query.departmentId);
@@ -409,6 +431,22 @@ function handleBreadcrumbSelect(departmentId: string) {
     return;
   }
   selectedDepartmentId.value = departmentId;
+}
+
+function findDepartment(
+  nodes: OrganizationChartNode[],
+  targetId: string,
+): OrganizationChartNode | null {
+  for (const node of nodes) {
+    if (node.departmentId === targetId) {
+      return node;
+    }
+    const child = findDepartment(node.children ?? [], targetId);
+    if (child) {
+      return child;
+    }
+  }
+  return null;
 }
 
 function buildDepartmentPath(
