@@ -7,6 +7,13 @@ export interface ChatMessage {
   createdAt: Date;
 }
 
+export interface ChatMessagePayload {
+  id: string;
+  role: ChatRole;
+  content: string;
+  createdAt?: string | Date | null;
+}
+
 export interface ChatRequest {
   sessionId?: string;
   content: string;
@@ -14,7 +21,7 @@ export interface ChatRequest {
 
 export interface ChatResponse {
   sessionId: string;
-  messages: ChatMessage[];
+  messages: ChatMessagePayload[];
 }
 
 export function createChatMessage(role: ChatRole, content: string): ChatMessage {
@@ -23,5 +30,21 @@ export function createChatMessage(role: ChatRole, content: string): ChatMessage 
     role,
     content,
     createdAt: new Date(),
+  };
+}
+
+export function normalizeChatMessage(payload: ChatMessagePayload): ChatMessage {
+  const createdAt =
+    payload.createdAt instanceof Date || payload.createdAt === undefined || payload.createdAt === null
+      ? payload.createdAt
+      : new Date(payload.createdAt);
+
+  return {
+    id: payload.id,
+    role: payload.role,
+    content: payload.content,
+    createdAt: createdAt instanceof Date && !Number.isNaN(createdAt.getTime())
+      ? createdAt
+      : new Date(),
   };
 }

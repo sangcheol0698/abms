@@ -316,12 +316,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useBreakpoints } from '@vueuse/core';
 import {
   ChevronRight,
   ChevronsLeftRight,
-  Clock,
   History,
   MoreHorizontal,
   Search,
@@ -337,11 +336,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import ChatWidget from '@/features/chat/components/ChatWidget.vue';
-import { createChatMessage, type ChatMessage } from '@/features/chat/entity/ChatMessage';
+import {
+  createChatMessage,
+  normalizeChatMessage,
+  type ChatMessage,
+} from '@/features/chat/entity/ChatMessage';
+import { useChatRepository } from '@/features/chat/repository/useChatRepository';
 import type { ChatRepository } from '@/features/chat/repository/ChatRepository';
-import { MockChatRepository } from '@/features/chat/repository/ChatRepository.mock';
 
-const repository: ChatRepository = new MockChatRepository();
+const repository: ChatRepository = useChatRepository();
 const breakpoints = useBreakpoints({ lg: 1024 });
 const isLargeScreen = breakpoints.greater('lg');
 const isMobileSidebarOpen = ref(false);
@@ -467,12 +470,8 @@ async function handleSubmit(content: string) {
       content,
     });
     sessionId.value = response.sessionId;
-    response.messages.forEach((message) => {
-      messages.value.push({
-        ...message,
-        createdAt: new Date(message.createdAt ?? new Date()),
-      });
-    });
+    const normalizedMessages = response.messages.map(normalizeChatMessage);
+    messages.value.push(...normalizedMessages);
   } catch (error) {
     const fallback =
       error instanceof Error
@@ -484,10 +483,4 @@ async function handleSubmit(content: string) {
   }
 }
 
-watch(
-  () => messages.value.length,
-  async () => {
-    await nextTick();
-  },
-);
 </script>

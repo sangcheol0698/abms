@@ -1,6 +1,9 @@
-import { createChatMessage } from '@/features/chat/entity/ChatMessage';
 import type { ChatRepository } from '@/features/chat/repository/ChatRepository';
-import type { ChatRequest, ChatResponse } from '@/features/chat/entity/ChatMessage';
+import type {
+  ChatMessagePayload,
+  ChatRequest,
+  ChatResponse,
+} from '@/features/chat/entity/ChatMessage';
 
 export class MockChatRepository implements ChatRepository {
   async sendMessage(request: ChatRequest): Promise<ChatResponse> {
@@ -8,7 +11,18 @@ export class MockChatRepository implements ChatRepository {
 
     return {
       sessionId: request.sessionId ?? crypto.randomUUID(),
-      messages: [createChatMessage('assistant', responseText)],
+      messages: [
+        createMockAssistantMessage(responseText),
+      ],
     };
   }
+}
+
+function createMockAssistantMessage(content: string): ChatMessagePayload {
+  return {
+    id: crypto.randomUUID(),
+    role: 'assistant',
+    content,
+    createdAt: new Date().toISOString(),
+  };
 }
