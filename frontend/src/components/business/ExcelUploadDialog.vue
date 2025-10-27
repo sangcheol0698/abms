@@ -9,11 +9,11 @@
       </DialogHeader>
 
       <div class="space-y-4 py-2">
-        <div class="rounded-xl border border-dashed border-border/60 bg-muted/30 p-4">
-          <div class="text-center space-y-3">
-            <FileSpreadsheet class="mx-auto h-8 w-8 text-muted-foreground" />
+        <div class="rounded-xl border border-dashed border-border/60 bg-muted/30 p-2">
+          <div class="text-center space-y-2">
+            <FileSpreadsheet class="mx-auto h-6 w-6 text-muted-foreground" />
             <div class="space-y-1">
-              <p class="text-sm font-semibold text-foreground">샘플 파일</p>
+              <p class="text-xs font-semibold text-foreground">샘플 파일</p>
               <p class="text-xs text-muted-foreground">
                 업로드 형식이 필요하다면 샘플 파일을 먼저 내려받으세요.
               </p>
@@ -32,15 +32,15 @@
         </div>
 
         <div
-          class="rounded-xl border border-dashed p-6 transition-colors"
+          class="rounded-xl border border-dashed p-10 sm:p-12 transition-colors min-h-56"
           :class="isDragging ? 'border-primary bg-primary/10' : 'border-border/60 bg-background'"
           @dragover.prevent="handleDragOver"
           @dragleave.prevent="handleDragLeave"
           @drop.prevent="handleDrop"
         >
-          <div class="flex flex-col items-center gap-3 text-center">
-            <Upload class="h-8 w-8 text-muted-foreground" />
-            <div class="space-y-2">
+          <div class="flex flex-col items-center gap-4 text-center">
+            <Upload class="h-12 w-12 text-muted-foreground" />
+            <div class="space-y-3">
               <input
                 ref="inputRef"
                 type="file"
@@ -48,11 +48,11 @@
                 class="hidden"
                 @change="handleFileChange"
               />
-              <Button variant="outline" :disabled="isUploading" @click="openFilePicker">
-                <Upload class="mr-2 h-4 w-4" />
+              <Button variant="outline" size="lg" class="w-full sm:w-auto" :disabled="isUploading" @click="openFilePicker">
+                <Upload class="mr-2 h-5 w-5" />
                 파일 선택
               </Button>
-              <p class="text-xs text-muted-foreground">
+              <p class="text-sm text-muted-foreground">
                 또는 이 영역에 파일을 끌어다 놓으세요 (.xlsx, .xls / 최대 10MB)
               </p>
             </div>
