@@ -1,7 +1,7 @@
 <template>
   <li :data-node-id="node.departmentId" class="space-y-1">
     <div
-      class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition hover:bg-accent/40"
+      class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition"
       :class="{
         'bg-primary/10 border border-primary/40 shadow-sm': isSelected,
         'border border-transparent': !isSelected,

@@ -160,14 +160,7 @@ interface HeaderBreadcrumb {
 
 const headerBreadcrumbs = computed<HeaderBreadcrumb[]>(() => {
   const segments = selectedBreadcrumb.value;
-  const crumbs: HeaderBreadcrumb[] = [
-    {
-      id: 'organization-root',
-      name: '조직도',
-      clickable: segments.length > 0,
-      to: segments.length > 0 ? '/organization' : undefined,
-    },
-  ];
+  const crumbs: HeaderBreadcrumb[] = [];
 
   segments.forEach((segment, index) => {
     crumbs.push({
