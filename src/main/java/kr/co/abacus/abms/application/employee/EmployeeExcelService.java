@@ -333,16 +333,12 @@ public class EmployeeExcelService {
         if (candidate.name().equalsIgnoreCase(value.replace(' ', '_'))) {
             return true;
         }
-        if (candidate instanceof EmployeePosition position) {
-            return position.getDescription().equals(value);
-        }
-        if (candidate instanceof EmployeeType type) {
-            return type.getDescription().equals(value);
-        }
-        if (candidate instanceof EmployeeGrade grade) {
-            return grade.getDescription().equals(value);
-        }
-        return false;
+        return switch (candidate) {
+            case EmployeePosition position -> position.getDescription().equals(value);
+            case EmployeeType type -> type.getDescription().equals(value);
+            case EmployeeGrade grade -> grade.getDescription().equals(value);
+            default -> false;
+        };
     }
 
     private EmployeeAvatar randomAvatar() {
