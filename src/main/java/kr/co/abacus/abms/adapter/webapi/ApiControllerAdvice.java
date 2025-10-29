@@ -11,8 +11,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
+import kr.co.abacus.abms.domain.employee.EmployeeExcelException;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
-import kr.co.abacus.abms.application.employee.EmployeeExcelService.EmployeeExcelException;
 
 @RestControllerAdvice
 public class ApiControllerAdvice extends ResponseEntityExceptionHandler {

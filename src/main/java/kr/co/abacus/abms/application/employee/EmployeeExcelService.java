@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
@@ -38,6 +39,7 @@ import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
+import kr.co.abacus.abms.domain.employee.EmployeeExcelException;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
@@ -136,12 +138,12 @@ public class EmployeeExcelService {
 
             Map<String, UUID> departmentCodeMap = loadDepartmentCodeMap();
 
-            List<EmployeeExcelUploadResult.Failure> failures = new ArrayList<>();
+            List<EmployeeExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
             int successCount = 0;
 
             for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
-                if (row == null || isRowEmpty(row, UPLOAD_HEADERS)) {
+                if (row == null || isRowEmpty(row)) {
                     continue;
                 }
 
@@ -150,28 +152,28 @@ public class EmployeeExcelService {
                     employeeManager.create(createRequest);
                     successCount++;
                 } catch (Exception ex) {
-                    failures.add(new EmployeeExcelUploadResult.Failure(rowIndex + 1, resolveMessage(ex)));
+                    excelFailures.add(new EmployeeExcelUploadResult.ExcelFailure(rowIndex + 1, resolveMessage(ex)));
                 }
             }
 
-            if (!failures.isEmpty()) {
-                String detailLines = failures.stream()
-                    .map(failure -> {
-                        String prefix = failure.rowNumber() > 0 ? failure.rowNumber() + "행: " : "";
-                        return prefix + failure.message();
+            if (!excelFailures.isEmpty()) {
+                String detailLines = excelFailures.stream()
+                    .map(excelFailure -> {
+                        String prefix = excelFailure.rowNumber() > 0 ? excelFailure.rowNumber() + "행: " : "";
+                        return prefix + excelFailure.message();
                     })
                     .collect(Collectors.joining("\n"));
 
                 String message = String.format(
                     "엑셀 업로드 실패: 총 %d건의 오류가 있습니다.%n%s",
-                    failures.size(),
+                    excelFailures.size(),
                     detailLines
                 );
 
                 throw new EmployeeExcelException(message);
             }
 
-            return new EmployeeExcelUploadResult(successCount, failures);
+            return new EmployeeExcelUploadResult(successCount, excelFailures);
         } catch (IOException ex) {
             throw new EmployeeExcelException("엑셀 파일을 읽는 도중 오류가 발생했습니다.", ex);
         }
@@ -193,14 +195,15 @@ public class EmployeeExcelService {
 
     private void writeEmployeeRow(Row row, Employee employee, Map<UUID, String> departmentNames) {
         int col = 0;
-        String departmentName = Optional.ofNullable(employee.getDepartmentId())
+        String departmentName = Optional.of(employee.getDepartmentId())
             .map(id -> departmentNames.getOrDefault(id, id.toString()))
             .orElse("");
+
         row.createCell(col++).setCellValue(departmentName);
         row.createCell(col++).setCellValue(employee.getEmail().address());
         row.createCell(col++).setCellValue(employee.getName());
-        row.createCell(col++).setCellValue(Optional.ofNullable(employee.getJoinDate()).map(LocalDate::toString).orElse(""));
-        row.createCell(col++).setCellValue(Optional.ofNullable(employee.getBirthDate()).map(LocalDate::toString).orElse(""));
+        row.createCell(col++).setCellValue(Optional.of(employee.getJoinDate()).map(LocalDate::toString).orElse(""));
+        row.createCell(col++).setCellValue(Optional.of(employee.getBirthDate()).map(LocalDate::toString).orElse(""));
         row.createCell(col++).setCellValue(employee.getPosition().getDescription());
         row.createCell(col++).setCellValue(employee.getType().getDescription());
         row.createCell(col++).setCellValue(employee.getGrade().getDescription());
@@ -248,8 +251,8 @@ public class EmployeeExcelService {
         );
     }
 
-    private boolean isRowEmpty(Row row, List<String> headers) {
-        for (int i = 0; i < headers.size(); i++) {
+    private boolean isRowEmpty(Row row) {
+        for (int i = 0; i < EmployeeExcelService.UPLOAD_HEADERS.size(); i++) {
             Cell cell = row.getCell(i);
             if (cell != null && cell.getCellType() != CellType.BLANK && !getCellValue(row, i).isEmpty()) {
                 return false;
@@ -354,25 +357,6 @@ public class EmployeeExcelService {
             return ex.getClass().getSimpleName();
         }
         return message;
-    }
-
-    public record EmployeeExcelUploadResult(int successCount, List<Failure> failures) {
-
-        public record Failure(int rowNumber, String message) {
-
-        }
-
-    }
-
-    public static class EmployeeExcelException extends RuntimeException {
-
-        public EmployeeExcelException(String message) {
-            super(message);
-        }
-
-        public EmployeeExcelException(String message, Throwable cause) {
-            super(message, cause);
-        }
     }
 
 }

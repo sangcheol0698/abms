@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +43,7 @@ import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeStatusResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeTypeResponse;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.employee.EmployeeExcelService;
-import kr.co.abacus.abms.application.employee.EmployeeExcelService.EmployeeExcelUploadResult;
+import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
@@ -198,12 +199,12 @@ public class EmployeeApi {
     }
 
     private String buildFilename(String prefix) {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String timestamp = LocalDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         return prefix + "_" + timestamp + ".xlsx";
     }
 
     private EmployeeExcelUploadResponse toResponse(EmployeeExcelUploadResult result) {
-        List<EmployeeExcelUploadResponse.Failure> failures = result.failures().stream()
+        List<EmployeeExcelUploadResponse.Failure> failures = result.excelFailures().stream()
             .map(failure -> new EmployeeExcelUploadResponse.Failure(failure.rowNumber(), failure.message()))
             .toList();
         return new EmployeeExcelUploadResponse(result.successCount(), failures);
