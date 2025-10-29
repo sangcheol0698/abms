@@ -26,6 +26,4 @@ public interface EmployeeRepository extends Repository<Employee, UUID>, CustomEm
 
     List<Employee> findAllByDepartmentIdInAndDeletedFalse(List<UUID> departmentIds);
 
-    List<Employee> search(EmployeeSearchRequest request);
-
 }
