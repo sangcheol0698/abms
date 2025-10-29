@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.springframework.data.repository.Repository;
 
-import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.shared.Email;
 
