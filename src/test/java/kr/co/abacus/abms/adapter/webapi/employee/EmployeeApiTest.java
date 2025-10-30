@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeAvatarResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
@@ -161,6 +163,52 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(response.email()).isEqualTo(savedEmployee.getEmail().address());
         assertThat(response.avatarCode()).isEqualTo(savedEmployee.getAvatar().name());
         assertThat(response.avatarLabel()).isEqualTo(savedEmployee.getAvatar().getDisplayName());
+    }
+
+    @Test
+    void search_sortByGradeLevel() throws Exception {
+        // given: 등급 레벨이 다른 직원 3명을 생성하여 정렬 결과를 확인한다.
+        employeeManager.create(createCustomEmployee(teamId, "grade-junior@abms.co", "주니어", EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE));
+        employeeManager.create(createCustomEmployee(teamId, "grade-expert@abms.co", "익스퍼트", EmployeeGrade.EXPERT, EmployeePosition.MANAGER));
+        employeeManager.create(createCustomEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeeGrade.SENIOR, EmployeePosition.LEADER));
+        flushAndClear();
+
+        // when: grade desc 정렬로 검색 시 레벨이 높은 순서(EXPERT > SENIOR > JUNIOR)로 정렬되어야 한다.
+        MvcTestResult result = mvcTester.get()
+            .uri("/api/employees?sort=grade,desc&size=10&page=0")
+            .exchange();
+
+        // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
+        assertThat(result).apply(print()).hasStatusOk();
+
+        JsonNode content = extractContent(result);
+        assertThat(content).hasSize(3);
+        assertThat(content.get(0).get("grade").asText()).isEqualTo(EmployeeGrade.EXPERT.getDescription());
+        assertThat(content.get(1).get("grade").asText()).isEqualTo(EmployeeGrade.SENIOR.getDescription());
+        assertThat(content.get(2).get("grade").asText()).isEqualTo(EmployeeGrade.JUNIOR.getDescription());
+    }
+
+    @Test
+    void search_sortByPositionRank() throws Exception {
+        // given: 직위 rank가 다른 직원 3명을 생성하여 정렬 결과를 확인한다.
+        employeeManager.create(createCustomEmployee(teamId, "position-director@abms.co", "디렉터", EmployeeGrade.SENIOR, EmployeePosition.DIRECTOR));
+        employeeManager.create(createCustomEmployee(teamId, "position-associate@abms.co", "어소시에이트", EmployeeGrade.MID_LEVEL, EmployeePosition.ASSOCIATE));
+        employeeManager.create(createCustomEmployee(teamId, "position-vice@abms.co", "부사장", EmployeeGrade.EXPERT, EmployeePosition.VICE_PRESIDENT));
+        flushAndClear();
+
+        // when: position asc 정렬 시 rank가 낮은 순서(ASSOCIATE > DIRECTOR > VICE_PRESIDENT)로 정렬되어야 한다.
+        MvcTestResult result = mvcTester.get()
+            .uri("/api/employees?sort=position,asc&size=10&page=0")
+            .exchange();
+
+        // then: 응답이 200이며 직위 설명이 rank 오름차순으로 정렬되었는지 확인한다.
+        assertThat(result).apply(print()).hasStatusOk();
+
+        JsonNode content = extractContent(result);
+        assertThat(content).hasSize(3);
+        assertThat(content.get(0).get("position").asText()).isEqualTo(EmployeePosition.ASSOCIATE.getDescription());
+        assertThat(content.get(1).get("position").asText()).isEqualTo(EmployeePosition.DIRECTOR.getDescription());
+        assertThat(content.get(2).get("position").asText()).isEqualTo(EmployeePosition.VICE_PRESIDENT.getDescription());
     }
 
     @Test
@@ -510,6 +558,33 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(restoredEmployee.getDeletedAt()).isNull();
         assertThat(restoredEmployee.getDeletedBy()).isNull();
         assertThat(restoredEmployee.getEmail().address()).isEqualTo("restore@email.com");
+    }
+
+    private EmployeeCreateRequest createCustomEmployee(
+        UUID departmentId,
+        String email,
+        String name,
+        EmployeeGrade grade,
+        EmployeePosition position
+    ) {
+        // 정렬 검증을 위해 입력값을 자유롭게 조합할 수 있는 테스트 전용 팩토리 메서드다.
+        return new EmployeeCreateRequest(
+            departmentId,
+            email,
+            name,
+            LocalDate.of(2024, 1, 1),
+            LocalDate.of(1990, 1, 1),
+            position,
+            EmployeeType.FULL_TIME,
+            grade,
+            EmployeeAvatar.SKY_GLOW,
+            null
+        );
+    }
+
+    private JsonNode extractContent(MvcTestResult result) throws JsonProcessingException, UnsupportedEncodingException {
+        // MockMvc 응답에서 content 배열만 추출해 정렬 순서를 명확히 검증한다.
+        return objectMapper.readTree(result.getResponse().getContentAsString()).path("content");
     }
 
 }
