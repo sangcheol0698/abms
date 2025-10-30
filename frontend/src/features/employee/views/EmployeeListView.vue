@@ -371,7 +371,7 @@ const columns: ColumnDef<EmployeeListItem>[] = [
       const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
       return candidate.length === 0 || candidate.includes(row.original.positionCode);
     },
-    enableSorting: false,
+    enableSorting: true,
     size: 120,
     meta: { skeleton: 'text-short' },
   },
@@ -385,7 +385,7 @@ const columns: ColumnDef<EmployeeListItem>[] = [
       const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
       return candidate.length === 0 || candidate.includes(row.original.gradeCode);
     },
-    enableSorting: false,
+    enableSorting: true,
     size: 80,
     meta: { skeleton: 'text-short' },
   },
@@ -423,7 +423,7 @@ const columns: ColumnDef<EmployeeListItem>[] = [
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '생년월일', align: 'left' }),
     cell: ({ row }) =>
       h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.birthDate)),
-    enableSorting: false,
+    enableSorting: true,
     enableHiding: true,
     size: 120,
     meta: { skeleton: 'text-short' },
@@ -434,7 +434,7 @@ const columns: ColumnDef<EmployeeListItem>[] = [
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '입사일', align: 'left' }),
     cell: ({ row }) =>
       h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.joinDate)),
-    enableSorting: false,
+    enableSorting: true,
     enableHiding: true,
     size: 120,
     meta: { skeleton: 'text-short' },
