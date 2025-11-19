@@ -86,8 +86,7 @@
 
     <template #default="{ pane }">
       <div class="flex h-full min-h-0 flex-1 flex-col bg-background">
-        <header class="flex items-center justify-between border-b border-border/60"
-          :class="pane.isLargeScreen.value ? 'px-8 py-5' : 'px-4 py-4'">
+        <header class="flex items-center justify-between border-b border-border/40 px-4 py-3">
           <div class="flex items-center gap-3">
             <Button variant="ghost" size="icon"
               class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground" aria-label="채팅 사이드바 토글"
@@ -114,9 +113,11 @@
           </div>
         </header>
 
-        <div class="flex h-full min-h-0 flex-col" :class="pane.isLargeScreen.value ? 'px-8 py-6' : 'px-4 py-4'">
-          <ChatWidget class="flex flex-1 min-h-0" v-model="draft" :messages="messages" :is-responding="isResponding"
-            :suggestions="[]" :info-text="infoText" @submit="handleSubmit" @suggestion="handleSuggestion" />
+        <div class="flex h-full min-h-0 flex-col items-center bg-background" :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'">
+          <div class="flex w-full max-w-3xl flex-1 flex-col min-h-0">
+            <ChatWidget class="flex flex-1 min-h-0" v-model="draft" :messages="messages" :is-responding="isResponding"
+              :suggestions="[]" :info-text="infoText" @submit="handleSubmit" @suggestion="handleSuggestion" />
+          </div>
         </div>
       </div>
     </template>

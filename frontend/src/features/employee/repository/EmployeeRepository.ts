@@ -66,39 +66,34 @@ function toFilterOption(response: { name: string; description?: string }): Emplo
   };
 }
 
-function buildRequestParams(params: EmployeeSearchParams): Record<string, unknown> {
-  const query: Record<string, unknown> = {
-    page: Math.max(params.page - 1, 0),
-    size: params.size,
+function buildRequestParams(params: EmployeeSearchParams): Record<string, string> {
+  const query: Record<string, string> = {
+    page: Math.max(params.page - 1, 0).toString(),
+    size: params.size.toString(),
   };
 
   if (params.name) {
     query.name = params.name;
   }
 
-  if (params.statuses?.length) {
-    query.statuses = params.statuses.join(',');
-  }
-
-  if (params.types?.length) {
-    query.types = params.types.join(',');
-  }
-
-  if (params.grades?.length) {
-    query.grades = params.grades.join(',');
-  }
-
-  if (params.positions?.length) {
-    query.positions = params.positions.join(',');
-  }
-
-  if (params.departmentIds?.length) {
-    query.departmentIds = params.departmentIds.join(',');
-  }
-
   if (params.sort) {
     query.sort = params.sort;
   }
+
+  const arrayFields: (keyof EmployeeSearchParams)[] = [
+    'statuses',
+    'types',
+    'grades',
+    'positions',
+    'departmentIds',
+  ];
+
+  arrayFields.forEach((field) => {
+    const value = params[field];
+    if (Array.isArray(value) && value.length > 0) {
+      query[field] = value.join(',');
+    }
+  });
 
   return query;
 }

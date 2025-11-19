@@ -1,22 +1,23 @@
 <template>
-  <div class="flex items-start gap-3" :class="isUser ? 'flex-row-reverse text-right' : ''">
+  <div class="flex items-start gap-4" :class="isUser ? 'flex-row-reverse' : ''">
     <div
-      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-semibold"
+      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold shadow-sm"
       :class="
         isUser
-          ? 'border-muted-foreground/40 text-muted-foreground'
-          : 'border-primary/30 bg-primary/10 text-primary'
+          ? 'border-muted-foreground/20 bg-muted/50 text-muted-foreground'
+          : 'border-primary/10 bg-primary/5 text-primary'
       "
     >
-      {{ isUser ? '나' : 'AI' }}
+      <template v-if="isUser">나</template>
+      <template v-else>AI</template>
     </div>
 
     <div
-      class="flex max-w-[80%] flex-col gap-2 text-sm"
-      :class="isUser ? 'items-end text-right' : 'items-start text-left'"
+      class="flex max-w-[85%] flex-col gap-1 text-sm"
+      :class="isUser ? 'items-end' : 'items-start'"
     >
-      <div class="text-[11px] uppercase tracking-wide text-muted-foreground">
-        {{ authorLabel }} · {{ formattedTimestamp }}
+      <div class="text-[11px] font-medium text-muted-foreground/70">
+        {{ authorLabel }}
       </div>
 
       <div v-if="isUser" class="flex flex-col items-end gap-2">
@@ -26,7 +27,7 @@
           :class="
             block.type === 'code'
               ? 'rounded-2xl border border-border/70 bg-muted/50 px-4 py-3 text-xs font-mono text-foreground'
-              : 'rounded-3xl bg-primary text-primary-foreground px-4 py-3 text-sm leading-relaxed whitespace-pre-line shadow-sm'
+              : 'rounded-[20px] bg-secondary/80 px-5 py-3 text-sm leading-relaxed text-secondary-foreground shadow-sm'
           "
         >
           <template v-if="block.type === 'code'">
@@ -38,24 +39,27 @@
         </div>
       </div>
 
-      <div v-else class="flex flex-col items-start gap-3">
+      <div v-else class="flex flex-col items-start gap-3 pt-1">
         <div
           v-for="(block, index) in blocks"
           :key="index"
-          :class="block.type === 'code' ? 'w-full overflow-hidden rounded-2xl border border-border/70 bg-muted/30 px-4 py-3 font-mono text-xs text-foreground' : ''"
+          class="w-full"
+          :class="block.type === 'code' ? 'overflow-hidden rounded-lg border border-border/50 bg-muted/30' : ''"
         >
           <template v-if="block.type === 'code'">
-            <div class="mb-2 flex items-center justify-between text-[11px] uppercase text-muted-foreground">
-              <span>{{ block.language?.toUpperCase() ?? 'CODE' }}</span>
-              <Button variant="ghost" size="icon" class="h-6 w-6" @click="copy(block.content)">
+            <div class="flex items-center justify-between border-b border-border/50 bg-muted/30 px-4 py-2 text-[11px] text-muted-foreground">
+              <span class="font-mono">{{ block.language?.toUpperCase() ?? 'CODE' }}</span>
+              <Button variant="ghost" size="icon" class="h-6 w-6 hover:bg-background/50" @click="copy(block.content)">
                 <Copy class="h-3.5 w-3.5" />
                 <span class="sr-only">코드 복사</span>
               </Button>
             </div>
-            <pre class="whitespace-pre-wrap text-xs leading-relaxed">{{ block.content }}</pre>
+            <div class="overflow-x-auto p-4">
+              <pre class="font-mono text-xs leading-relaxed">{{ block.content }}</pre>
+            </div>
           </template>
           <template v-else>
-            <p class="whitespace-pre-line text-sm leading-relaxed text-foreground">{{ block.content }}</p>
+            <p class="whitespace-pre-line text-[15px] leading-7 text-foreground/90">{{ block.content }}</p>
           </template>
         </div>
       </div>
@@ -79,9 +83,6 @@ const props = defineProps<{ message: ChatMessage }>();
 
 const isUser = computed(() => props.message.role === 'user');
 const authorLabel = computed(() => (isUser.value ? 'You' : 'ABMS Copilot'));
-const formattedTimestamp = computed(() =>
-  props.message.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-);
 
 const blocks = computed<Block[]>(() => parseContent(props.message.content));
 
