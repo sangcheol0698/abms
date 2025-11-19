@@ -468,7 +468,7 @@ import {
 import { toast } from 'vue-sonner';
 import OrganizationSelectDialog from '@/features/organization/components/OrganizationSelectDialog.vue';
 import EmployeeAvatarSelectDialog from '@/features/employee/components/EmployeeAvatarSelectDialog.vue';
-import type { EmployeeAvatarOption } from '@/features/employee/constants/avatars';
+import type { EmployeeAvatarOption, EmployeeAvatarCode } from '@/features/employee/constants/avatars';
 import {
   defaultEmployeeAvatar,
   getEmployeeAvatarOptions,
@@ -636,14 +636,14 @@ async function ensureAvatarOptionsLoaded() {
   }
 }
 
-function resolveAvatarCode(candidate?: string | null): string {
+function resolveAvatarCode(candidate?: string | null): EmployeeAvatarCode {
   if (typeof candidate === 'string' && candidate.length > 0) {
     const exists = avatarOptions.value.some((option) => option.code === candidate);
     if (exists) {
-      return candidate;
+      return candidate as EmployeeAvatarCode;
     }
   }
-  return avatarOptions.value.length > 0 ? avatarOptions.value[0].code : defaultEmployeeAvatar;
+  return (avatarOptions.value.length > 0 && avatarOptions.value[0] ? avatarOptions.value[0].code : defaultEmployeeAvatar) as EmployeeAvatarCode;
 }
 
 function getAvatarOptionForDisplay(value: unknown): EmployeeAvatarOption | null {

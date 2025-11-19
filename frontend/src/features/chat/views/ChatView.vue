@@ -126,7 +126,6 @@
 <script setup lang="ts">
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import {
-  ChevronsLeftRight,
   History,
   PanelLeft,
   MoreHorizontal,

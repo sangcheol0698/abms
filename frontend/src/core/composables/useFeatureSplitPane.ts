@@ -11,7 +11,7 @@ export interface FeatureSplitPaneOptions {
 }
 
 export interface FeatureSplitPaneContext {
-  isLargeScreen: ComputedRef<boolean>;
+  isLargeScreen: Ref<boolean>;
   isSidebarCollapsed: Ref<boolean>;
   isSidebarOpen: Ref<boolean>;
   openSidebar: () => void;

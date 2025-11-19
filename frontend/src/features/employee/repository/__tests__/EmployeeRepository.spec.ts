@@ -285,7 +285,7 @@ describe('EmployeeRepository.fetch filter options', () => {
     expect(httpGet).toHaveBeenCalledWith({ path: '/api/employees/avatars' });
     const aqua = result.find((option) => option.code === 'AQUA_SPLASH');
     const skyGlow = result.find((option) => option.code === 'SKY_GLOW');
-    const unknown = result.find((option) => option.code === 'UNKNOWN');
+    const unknown = result.find((option) => (option.code as string) === 'UNKNOWN');
 
     expect(aqua).toBeDefined();
     expect(aqua?.label).toBe('Aqua Splash Custom');

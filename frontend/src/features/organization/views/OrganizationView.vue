@@ -94,7 +94,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { ChevronsLeftRight, PanelLeft, RefreshCcw } from 'lucide-vue-next';
+import { PanelLeft } from 'lucide-vue-next';
 
 const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartNode[]>([]);
@@ -130,19 +130,11 @@ const headerBreadcrumbs = computed<HeaderBreadcrumb[]>(() => {
     });
   });
 
-  if (crumbs.length === 1) {
+  if (crumbs.length === 1 && crumbs[0]) {
     crumbs[0].clickable = false;
   }
 
   return crumbs;
-});
-
-const currentDepartmentTitle = computed(() => {
-  if (!selectedDepartmentId.value) {
-    return '전체 조직';
-  }
-  const target = findDepartment(chart.value, selectedDepartmentId.value);
-  return target?.departmentName ?? '전체 조직';
 });
 
 let detailRequestToken = 0;
@@ -222,15 +214,6 @@ async function loadDepartmentDetail(departmentId: string) {
     if (token === detailRequestToken) {
       isDepartmentLoading.value = false;
     }
-  }
-}
-
-function refreshDepartment() {
-  if (selectedDepartmentId.value) {
-    departmentDetail.value = null;
-    void loadDepartmentDetail(selectedDepartmentId.value);
-  } else {
-    void loadOrganizationChart();
   }
 }
 
