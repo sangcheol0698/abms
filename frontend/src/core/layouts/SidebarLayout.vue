@@ -3,8 +3,7 @@
     <AppSidebar :onOpenProfileDialog="openProfileDialog" />
     <SidebarInset>
       <header
-        class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur"
-      >
+        class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur">
         <div class="flex flex-1 items-center gap-3">
           <SidebarTrigger class="-ml-1" />
           <Separator orientation="vertical" class="hidden h-6 md:block" />
@@ -31,12 +30,9 @@
         </div>
 
         <div class="ml-auto flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <Button variant="outline" size="sm"
             class="relative hidden h-9 w-48 justify-start text-xs font-normal text-muted-foreground shadow-none sm:flex"
-            @click="openCommandPalette"
-          >
+            @click="openCommandPalette">
             <Search class="mr-2 h-4 w-4" />
             <span>검색...</span>
             <KbdGroup class="absolute right-2 items-center sm:flex">
@@ -45,18 +41,11 @@
               <Kbd>K</Kbd>
             </KbdGroup>
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            class="relative h-9 w-9"
-            @click="toggleNotifications"
-          >
+          <Button variant="outline" size="icon" class="relative h-9 w-9" @click="toggleNotifications">
             <Bell class="h-4 w-4" />
             <span class="sr-only">알림 보기</span>
-            <span
-              v-if="unreadCount > 0"
-              class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground"
-            >
+            <span v-if="unreadCount > 0"
+              class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground">
               {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>
           </Button>
@@ -69,16 +58,9 @@
       </main>
     </SidebarInset>
 
-    <ProfileDialog
-      :open="isProfileDialogOpen"
-      @update:open="isProfileDialogOpen = $event"
-      :user="user"
-    />
+    <ProfileDialog :open="isProfileDialogOpen" @update:open="isProfileDialogOpen = $event" :user="user" />
     <CommandPalette :open="isCommandPaletteOpen" @update:open="isCommandPaletteOpen = $event" />
-    <NotificationsSheet
-      :open="isNotificationsOpen"
-      @update:open="(value) => (isNotificationsOpen = value)"
-    />
+    <NotificationsSheet :open="isNotificationsOpen" @update:open="(value) => (isNotificationsOpen = value)" />
   </div>
 </template>
 
@@ -87,7 +69,7 @@ import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { Bell, Search } from 'lucide-vue-next';
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import AppSidebar from '@/components/sidebar/AppSidebar.vue';
@@ -108,6 +90,16 @@ import { storeToRefs } from 'pinia';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
 
 const route = useRoute();
+const { isMobile, setOpenMobile } = useSidebar();
+
+watch(
+  () => route.path,
+  () => {
+    if (isMobile.value) {
+      setOpenMobile(false);
+    }
+  },
+);
 
 interface BreadcrumbEntry {
   title: string;

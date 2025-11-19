@@ -2,13 +2,9 @@
   <section class="relative flex min-h-0 flex-1 flex-col overflow-hidden" :style="pane.sectionStyle.value">
     <template v-if="pane.isLargeScreen.value">
       <ResizablePanelGroup direction="horizontal" class="flex min-h-0 flex-1 overflow-hidden">
-        <ResizablePanel
-          :default-size="sidebarPanelSize"
-          :min-size="pane.isSidebarCollapsed.value ? sidebarCollapsedSize : sidebarMinSize"
-          :max-size="sidebarMaxSize"
-          :collapsed="pane.isSidebarCollapsed.value"
-          :collapsed-size="sidebarCollapsedSize"
-        >
+        <ResizablePanel :default-size="sidebarPanelSize"
+          :min-size="pane.isSidebarCollapsed.value ? sidebarCollapsedSize : sidebarMinSize" :max-size="sidebarMaxSize"
+          :collapsed="pane.isSidebarCollapsed.value" :collapsed-size="sidebarCollapsedSize">
           <div class="flex h-full min-h-0 flex-col overflow-hidden">
             <slot name="sidebar" :pane="pane" />
           </div>
@@ -16,10 +12,7 @@
 
         <ResizableHandle with-handle class="bg-border/70" />
 
-        <ResizablePanel
-          :default-size="contentPanelSize"
-          :min-size="contentMinSize"
-        >
+        <ResizablePanel :default-size="contentPanelSize" :min-size="contentMinSize">
           <div class="flex h-full min-h-0 flex-col overflow-hidden">
             <slot :pane="pane" />
           </div>
@@ -31,17 +24,13 @@
       <div class="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
         <slot :pane="pane" />
 
-        <Transition name="fade">
-          <div
-            v-if="pane.isSidebarOpen.value"
-            class="absolute inset-0 z-30 flex bg-background/80 backdrop-blur-sm"
-          >
-            <div class="w-10 flex-shrink-0" @click="pane.closeSidebar"></div>
-            <aside class="flex h-full w-full max-w-xs flex-col border-l border-border/60 bg-background">
+        <Sheet :open="pane.isSidebarOpen.value" @update:open="pane.isSidebarOpen.value = $event">
+          <SheetContent side="left" class="p-0 w-[80%] sm:w-[350px]">
+            <div class="flex h-full flex-col overflow-hidden">
               <slot name="sidebar" :pane="pane" />
-            </aside>
-          </div>
-        </Transition>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </template>
   </section>
@@ -50,6 +39,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useProvideFeatureSplitPane } from '@/core/composables/useFeatureSplitPane';
 
 const props = withDefaults(

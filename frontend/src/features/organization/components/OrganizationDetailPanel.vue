@@ -1,6 +1,6 @@
 <template>
-  <div class="h-full">
-    <div v-if="department" class="flex h-full flex-col gap-4 p-4">
+  <div class="min-h-full">
+    <div v-if="department" class="flex flex-col gap-4 p-4">
       <div class="flex flex-col gap-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-col">
@@ -30,9 +30,7 @@
       </div>
 
       <div class="grid gap-2 sm:grid-cols-3">
-        <article
-          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm"
-        >
+        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm">
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
             <UserRound class="h-4 w-4" />
           </div>
@@ -43,9 +41,7 @@
             </span>
           </div>
         </article>
-        <article
-          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm"
-        >
+        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm">
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Users class="h-4 w-4" />
           </div>
@@ -54,9 +50,7 @@
             <span class="font-semibold text-foreground">{{ department.employeeCount }}명</span>
           </div>
         </article>
-        <article
-          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm"
-        >
+        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm">
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
             <GitBranch class="h-4 w-4" />
           </div>
@@ -71,16 +65,16 @@
 
       <Separator />
 
-      <div class="flex flex-1 flex-col overflow-hidden">
-        <Tabs defaultValue="info" class="flex h-full flex-col">
+      <div class="flex flex-col">
+        <Tabs defaultValue="info" class="flex flex-col">
           <TabsList class="rounded-lg bg-muted/30 p-1">
             <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
             <TabsTrigger value="members" class="text-sm">구성원</TabsTrigger>
             <TabsTrigger value="revenue" class="text-sm">매출</TabsTrigger>
           </TabsList>
 
-          <div class="flex-1 overflow-hidden pt-3">
-            <TabsContent value="info" class="flex h-full flex-col gap-4">
+          <div class="pt-3">
+            <TabsContent value="info" class="flex flex-col gap-4">
               <div class="grid gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
                 <div class="grid grid-cols-[120px_1fr] gap-2">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -136,7 +130,7 @@
               </div>
             </TabsContent>
 
-            <TabsContent value="members" class="flex h-full flex-col">
+            <TabsContent value="members" class="flex flex-col">
               <div v-if="isLoading" class="space-y-3 rounded-lg border border-border/60 bg-muted/10 p-4">
                 <Skeleton class="h-4 w-1/3" />
                 <div class="space-y-2">
@@ -150,21 +144,16 @@
                   </div>
                 </div>
               </div>
-              <div v-else-if="department.employees?.length" class="flex h-full flex-col gap-3">
+              <div v-else-if="department.employees?.length" class="flex flex-col gap-3">
                 <div class="flex items-center justify-between text-xs text-muted-foreground">
                   <span>구성원 {{ department.employees.length }}명</span>
                   <span class="hidden md:inline-flex">
                     최근 배치는 인사 시스템과 자동 동기화됩니다.
                   </span>
                 </div>
-                <div
-                  class="flex-1 space-y-2 overflow-y-auto rounded-lg border border-border/60 bg-background/60 p-3"
-                >
-                  <div
-                    v-for="employee in department.employees ?? []"
-                    :key="employee.employeeId"
-                    class="flex items-center justify-between rounded-md border border-border/50 bg-card/80 px-3 py-2 text-sm"
-                  >
+                <div class="space-y-2 rounded-lg border border-border/60 bg-background/60 p-3">
+                  <div v-for="employee in department.employees ?? []" :key="employee.employeeId"
+                    class="flex items-center justify-between rounded-md border border-border/50 bg-card/80 px-3 py-2 text-sm">
                     <div class="flex items-center gap-3">
                       <Avatar class="size-9 border border-border/50 bg-muted/40">
                         <AvatarFallback class="text-xs font-semibold">
@@ -182,19 +171,15 @@
                   </div>
                 </div>
               </div>
-              <div
-                v-else
-                class="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground"
-              >
+              <div v-else
+                class="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground">
                 아직 등록된 구성원이 없습니다.
                 <span class="mt-1 text-xs">인사 정보 연동 후 자동으로 채워집니다.</span>
               </div>
             </TabsContent>
 
-            <TabsContent value="revenue" class="flex h-full flex-col">
-              <div
-                class="flex flex-1 flex-col gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm"
-              >
+            <TabsContent value="revenue" class="flex flex-col">
+              <div class="flex flex-col gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
                 <p class="text-sm font-semibold text-foreground">매출 지표</p>
                 <p class="text-xs text-muted-foreground">
                   매출 데이터 연동을 준비 중입니다. 연결된 ERP 또는 회계 시스템 API가 마련되면 이
@@ -207,10 +192,7 @@
       </div>
     </div>
 
-    <div
-      v-else
-      class="flex h-full flex-col items-center justify-center rounded-lg bg-muted/10 p-6 text-center"
-    >
+    <div v-else class="flex h-full flex-col items-center justify-center rounded-lg bg-muted/10 p-6 text-center">
       <h3 class="text-base font-semibold text-foreground">조직 노드를 선택해 주세요</h3>
       <p class="mt-2 text-sm text-muted-foreground">
         왼쪽 조직도에서 팀을 선택하면 이 영역에 상세 정보가 표시됩니다.

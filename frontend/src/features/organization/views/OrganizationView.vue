@@ -1,11 +1,8 @@
 <template>
   <section class="flex h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden">
-    <div
-      v-if="isLoading"
+    <div v-if="isLoading"
       class="flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground"
-      role="status"
-      aria-live="polite"
-    >
+      role="status" aria-live="polite">
       조직도를 불러오는 중입니다...
     </div>
 
@@ -14,35 +11,16 @@
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <FeatureSplitLayout
-      v-else
-      :sidebar-default-size="20"
-      :sidebar-min-size="14"
-      :sidebar-max-size="32"
-      :content-min-size="52"
-    >
+    <FeatureSplitLayout v-else :sidebar-default-size="20" :sidebar-min-size="14" :sidebar-max-size="32"
+      :content-min-size="52">
       <template #sidebar="{ pane }">
         <div class="flex h-full min-h-0 flex-col shadow-sm">
           <div class="flex items-center justify-between px-4 py-3 text-sm">
-            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-              >조직도</span
-            >
-            <Button
-              variant="ghost"
-              size="icon"
-              class="h-8 w-8 text-muted-foreground transition hover:text-foreground"
-              aria-label="사이드바 닫기"
-              @click="pane.closeSidebar()"
-            >
-              <ChevronsLeftRight class="h-4 w-4" />
-            </Button>
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">조직도</span>
+
           </div>
-          <OrganizationTree
-            class="flex-1"
-            :nodes="chart"
-            v-model:selectedNodeId="selectedDepartmentId"
-            @update:selectedNodeId="handleTreeSelection($event, pane)"
-          />
+          <OrganizationTree class="flex-1" :nodes="chart" v-model:selectedNodeId="selectedDepartmentId"
+            @update:selectedNodeId="handleTreeSelection($event, pane)" />
         </div>
       </template>
 
@@ -50,17 +28,10 @@
         <div class="flex h-full min-h-0 flex-col">
           <header class="flex flex-col px-4 py-4">
             <div class="flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground"
-                aria-label="조직도 사이드바 토글"
-                @click="pane.toggleSidebar()"
-              >
-                <PanelLeft
-                  class="h-4 w-4 transition"
-                  :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''"
-                />
+              <Button variant="ghost" size="icon"
+                class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground" aria-label="조직도 사이드바 토글"
+                @click="pane.toggleSidebar()">
+                <PanelLeft class="h-4 w-4 transition" :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''" />
               </Button>
               <Breadcrumb class="flex flex-wrap text-sm text-muted-foreground">
                 <BreadcrumbList>
@@ -68,19 +39,11 @@
                     <BreadcrumbItem>
                       <template v-if="segment.clickable">
                         <BreadcrumbLink as-child>
-                          <router-link
-                            v-if="segment.to"
-                            :to="segment.to"
-                            class="transition hover:text-foreground"
-                          >
+                          <router-link v-if="segment.to" :to="segment.to" class="transition hover:text-foreground">
                             {{ segment.name }}
                           </router-link>
-                          <button
-                            v-else
-                            type="button"
-                            class="transition hover:text-foreground"
-                            @click="handleBreadcrumbSelect(segment.id)"
-                          >
+                          <button v-else type="button" class="transition hover:text-foreground"
+                            @click="handleBreadcrumbSelect(segment.id)">
                             {{ segment.name }}
                           </button>
                         </BreadcrumbLink>
@@ -96,10 +59,7 @@
 
           <div class="flex h-full min-h-0 flex-col overflow-hidden">
             <div class="flex-1 min-h-0 overflow-y-auto pl-4">
-              <OrganizationDetailPanel
-                :department="selectedDepartment"
-                :isLoading="isDepartmentLoading"
-              />
+              <OrganizationDetailPanel :department="selectedDepartment" :isLoading="isDepartmentLoading" />
             </div>
           </div>
         </div>
