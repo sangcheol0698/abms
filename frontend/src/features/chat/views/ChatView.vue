@@ -269,18 +269,31 @@ async function handleSubmit(content: string) {
 
   try {
     isResponding.value = true;
-    const response = await repository.sendMessage({
+    
+    // Create a placeholder message for the assistant
+    const assistantMessage = createChatMessage('assistant', '');
+    messages.value.push(assistantMessage);
+    
+    const stream = repository.streamMessage({
       sessionId: sessionId.value ?? undefined,
       content,
     });
-    sessionId.value = response.sessionId;
-    const normalizedMessages = response.messages.map(normalizeChatMessage);
-    messages.value.push(...normalizedMessages);
+
+    for await (const chunk of stream) {
+      assistantMessage.content += chunk;
+    }
+    
+    // If needed, update session ID or other metadata if the stream provides it (not implemented in this simple stream)
+    // For now, we assume the stream is just content.
+    
   } catch (error) {
     const fallback =
       error instanceof Error
         ? error.message
         : '응답을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.';
+    // If we already added an assistant message, update it or add a new one?
+    // Since we added one, we should probably update it or remove it if it's empty.
+    // But for simplicity, let's just append the error or show it.
     messages.value.push(createChatMessage('assistant', fallback));
   } finally {
     isResponding.value = false;

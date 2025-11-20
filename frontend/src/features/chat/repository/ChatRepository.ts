@@ -2,4 +2,5 @@ import type { ChatRequest, ChatResponse } from '@/features/chat/entity/ChatMessa
 
 export interface ChatRepository {
   sendMessage(request: ChatRequest): Promise<ChatResponse>;
+  streamMessage(request: ChatRequest): AsyncGenerator<string, void, unknown>;
 }
