@@ -19,4 +19,11 @@ public class ChatService {
                 .stream()
                 .content();
     }
+
+    public String sendMessage(String message) {
+        return chatClient.prompt()
+                .user(message)
+                .call()
+                .content();
+    }
 }

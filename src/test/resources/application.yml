@@ -2,3 +2,7 @@ spring:
   config:
     activate:
       on-profile: test
+  ai:
+    google:
+      genai:
+        api-key: ${AI_GOOGLE_GENAI_API_KEY}

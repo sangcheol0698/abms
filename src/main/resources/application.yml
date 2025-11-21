@@ -11,6 +11,11 @@ spring:
     virtual:
       enabled: true
 
+  ai:
+    google:
+      genai:
+        api-key: ${AI_GOOGLE_GENAI_API_KEY}
+
 logging:
   level:
     p6spy: debug
