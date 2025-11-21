@@ -45,3 +45,5 @@ spy.log
 /AGENTS.md
 /frontend/docs/
 /frontend/AGENTS.md
+
+.env
