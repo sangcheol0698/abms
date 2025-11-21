@@ -113,7 +113,8 @@
           </div>
         </header>
 
-        <div class="flex h-full min-h-0 flex-col items-center bg-background" :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'">
+        <div class="flex h-full min-h-0 flex-col items-center bg-background"
+          :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'">
           <div class="flex w-full max-w-3xl flex-1 flex-col min-h-0">
             <ChatWidget class="flex flex-1 min-h-0" v-model="draft" :messages="messages" :is-responding="isResponding"
               :suggestions="[]" :info-text="infoText" @submit="handleSubmit" @suggestion="handleSuggestion" />
@@ -191,10 +192,7 @@ const currentSessionId = ref<string>('design-review');
 const searchQuery = ref('');
 const sessionId = ref<string | null>(null);
 
-const greetingText =
-  '안녕하세요! 저는 ABMS Copilot입니다.\n\n다음과 같은 질문을 할 수 있어요:\n• "이번 달 신규 입사자 목록 알려줘"\n• "휴직 중인 구성원은 누구야?"\n• "조직도에서 인사팀 위치 보여줘"';
-
-const messages = ref<ChatMessage[]>([createChatMessage('assistant', greetingText)]);
+const messages = ref<ChatMessage[]>([]);
 const draft = ref('');
 const isResponding = ref(false);
 
@@ -248,7 +246,7 @@ function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
 
 function selectSession(id: string) {
   currentSessionId.value = id;
-  messages.value = [createChatMessage('assistant', greetingText)];
+  messages.value = [];
   draft.value = '';
   sessionId.value = null;
 }
@@ -269,34 +267,32 @@ async function handleSubmit(content: string) {
 
   try {
     isResponding.value = true;
-    
+
     // Create a placeholder message for the assistant
     const assistantMessage = createChatMessage('assistant', '');
     messages.value.push(assistantMessage);
-    
-    const stream = repository.streamMessage({
+
+    // Get the index of the assistant message we just added
+    const assistantMessageIndex = messages.value.length - 1;
+
+    const responseContent = await repository.sendMessage({
       sessionId: sessionId.value ?? undefined,
       content,
     });
 
-    for await (const chunk of stream) {
-      assistantMessage.content += chunk;
+    const message = messages.value[assistantMessageIndex];
+    if (message) {
+      message.content = responseContent;
     }
-    
-    // If needed, update session ID or other metadata if the stream provides it (not implemented in this simple stream)
-    // For now, we assume the stream is just content.
-    
   } catch (error) {
     const fallback =
       error instanceof Error
         ? error.message
         : '응답을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.';
-    // If we already added an assistant message, update it or add a new one?
-    // Since we added one, we should probably update it or remove it if it's empty.
-    // But for simplicity, let's just append the error or show it.
     messages.value.push(createChatMessage('assistant', fallback));
   } finally {
     isResponding.value = false;
   }
 }
+
 </script>

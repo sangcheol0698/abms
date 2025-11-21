@@ -17,12 +17,16 @@ export class MockChatRepository implements ChatRepository {
     };
   }
 
-  async *streamMessage(request: ChatRequest): AsyncGenerator<string, void, unknown> {
-    const responseText = `\n현재는 샘플 응답만 제공하고 있어요.\n\n> “${request.content}”에 대한 정보는 곧 실제 서비스 데이터와 연동될 예정입니다.`;
+  async streamMessage(
+    request: ChatRequest,
+    onChunk: (chunk: string) => void,
+    onError?: (error: Error) => void
+  ): Promise<void> {
+    const responseText = `\n현재는 샘플 응답만 제공하고 있어요.\n\n> "${request.content}"에 대한 정보는 곧 실제 서비스 데이터와 연동될 예정입니다.`;
     const chunks = responseText.split('');
     for (const chunk of chunks) {
       await new Promise((resolve) => setTimeout(resolve, 20));
-      yield chunk;
+      onChunk(chunk);
     }
   }
 }
