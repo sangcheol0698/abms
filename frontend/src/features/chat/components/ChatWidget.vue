@@ -17,13 +17,9 @@
               </div>
 
               <div class="mt-8 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
-                <button
-                  v-for="suggestion in defaultSuggestions"
-                  :key="suggestion.label"
-                  type="button"
+                <button v-for="suggestion in defaultSuggestions" :key="suggestion.label" type="button"
                   class="flex flex-col items-start gap-1 rounded-xl border border-border/40 bg-card p-4 text-left transition-all hover:bg-muted/50 hover:shadow-sm"
-                  @click="$emit('submit', suggestion.query)"
-                >
+                  @click="$emit('submit', suggestion.query)">
                   <span class="text-sm font-medium text-foreground">{{ suggestion.label }}</span>
                   <span class="text-xs text-muted-foreground">{{ suggestion.description }}</span>
                 </button>
@@ -32,15 +28,16 @@
           </template>
           <template v-else>
             <div class="flex flex-col gap-6">
-              <ClaudeMessage v-for="message in messages" :key="message.id" :message="message" />
-              <div
-                v-if="isResponding"
-                class="flex items-center gap-2 self-start rounded-2xl px-3 py-2 text-sm text-muted-foreground"
-              >
+              <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
+              <div v-if="isResponding"
+                class="flex items-center gap-2 self-start rounded-2xl px-3 py-2 text-sm text-muted-foreground">
                 <div class="flex gap-1">
-                  <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40" style="animation-delay: 0ms"></span>
-                  <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40" style="animation-delay: 150ms"></span>
-                  <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40" style="animation-delay: 300ms"></span>
+                  <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40"
+                    style="animation-delay: 0ms"></span>
+                  <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40"
+                    style="animation-delay: 150ms"></span>
+                  <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40"
+                    style="animation-delay: 300ms"></span>
                 </div>
               </div>
             </div>
@@ -51,13 +48,8 @@
 
     <div class="bg-background px-4 pb-6 pt-2">
       <div class="mx-auto w-full max-w-3xl">
-        <ChatComposer
-          v-model="draftValue"
-          :disabled="isResponding"
-          :info-text="infoText"
-          @submit="$emit('submit', $event)"
-          @suggestion="$emit('suggestion', $event)"
-        />
+        <ChatComposer v-model="draftValue" :disabled="isResponding" :info-text="infoText"
+          @submit="$emit('submit', $event)" @suggestion="$emit('suggestion', $event)" />
       </div>
     </div>
   </div>
@@ -68,7 +60,7 @@ import type { ComponentPublicInstance } from 'vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { Bot } from 'lucide-vue-next';
 import ChatComposer from '@/features/chat/components/ChatComposer.vue';
-import ClaudeMessage from '@/features/chat/components/ClaudeMessage.vue';
+import ChatMessage from '@/features/chat/components/ChatMessage.vue';
 import type { ChatMessage as ChatMessageModel } from '@/features/chat/entity/ChatMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -111,6 +103,20 @@ watch(
   },
   { immediate: true },
 );
+
+// Also watch for content changes in the last message (for streaming)
+watch(
+  () => props.messages[props.messages.length - 1]?.content,
+  async () => {
+    await nextTick();
+    await nextTick(); // Double nextTick for markdown rendering
+    const viewport = getViewport();
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  },
+);
+
 const defaultSuggestions = [
   {
     label: '신규 입사자 현황',

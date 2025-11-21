@@ -29,6 +29,7 @@ repositories {
 }
 
 extra["snippetsDir"] = file("build/generated-snippets")
+val springAiVersion by extra("1.1.0")
 
 var mockitoAgent: Configuration = configurations.create("mockitoAgent")
 
@@ -37,6 +38,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
 
     runtimeOnly("com.h2database:h2")
     runtimeOnly("com.mysql:mysql-connector-j")
@@ -62,6 +64,11 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.18.0")
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
     mockitoAgent("org.mockito:mockito-core:5.18.0") { isTransitive = false }
+}
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
+    }
 }
 
 tasks.withType<Test> {
