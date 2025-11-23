@@ -10,10 +10,19 @@ public class ChatService {
 
     private final ChatClient chatClient;
     private final EmployeeInfoTools employeeInfoTools;
+    private final OrganizationTools organizationTools;
+    private final EmployeeSearchTools employeeSearchTools;
 
-    public ChatService(ChatClient.Builder chatClientBuilder, EmployeeInfoTools employeeInfoTools) {
+    public ChatService(
+        ChatClient.Builder chatClientBuilder,
+        EmployeeInfoTools employeeInfoTools,
+        OrganizationTools organizationTools,
+        EmployeeSearchTools employeeSearchTools
+    ) {
         this.chatClient = chatClientBuilder.build();
         this.employeeInfoTools = employeeInfoTools;
+        this.organizationTools = organizationTools;
+        this.employeeSearchTools = employeeSearchTools;
     }
 
     public Flux<String> streamMessage(String message) {
@@ -26,7 +35,7 @@ public class ChatService {
     public String sendMessage(String message) {
         return chatClient.prompt()
             .user(message)
-            .tools(employeeInfoTools)
+            .tools(employeeInfoTools, organizationTools, employeeSearchTools)
             .call()
             .content();
     }

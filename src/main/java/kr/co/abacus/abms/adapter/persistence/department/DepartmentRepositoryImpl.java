@@ -5,6 +5,7 @@ import static kr.co.abacus.abms.domain.employee.QEmployee.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.required.CustomDepartmentRepository;
+import kr.co.abacus.abms.domain.department.Department;
 
 @RequiredArgsConstructor
 @Repository
@@ -39,6 +41,19 @@ public class DepartmentRepositoryImpl implements CustomDepartmentRepository {
                 tuple -> tuple.get(0, UUID.class),
                 tuple -> tuple.get(1, Long.class)
             ));
+    }
+
+    @Override
+    public Optional<Department> findByName(String name) {
+        Department result = queryFactory
+            .selectFrom(department)
+            .where(
+                department.name.eq(name),
+                department.deleted.isFalse()
+            )
+            .fetchOne();
+
+        return Optional.ofNullable(result);
     }
 
 }
