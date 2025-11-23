@@ -9,7 +9,7 @@ import kr.co.abacus.abms.domain.employee.Employee;
 public record EmployeeResponse(
     UUID departmentId,
     String departmentName,
-    String employeeId,
+    UUID employeeId,
     String name,
     String email,
     LocalDate joinDate,
@@ -27,7 +27,7 @@ public record EmployeeResponse(
         return new EmployeeResponse(
             employee.getDepartmentId(),
             department.getName(),
-            employee.getId().toString(),
+            employee.getId(),
             employee.getName(),
             employee.getEmail().address(),
             employee.getJoinDate(),

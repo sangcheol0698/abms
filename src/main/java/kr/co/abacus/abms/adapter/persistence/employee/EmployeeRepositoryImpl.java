@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter.persistence.employee;
 
 import static kr.co.abacus.abms.domain.employee.QEmployee.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
 import static org.springframework.util.StringUtils.*;
 
 import java.util.ArrayList;
@@ -14,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.ObjectUtils;
 
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -91,35 +91,35 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
     }
 
     private @Nullable BooleanExpression inPositions(@Nullable List<EmployeePosition> positions) {
-        if (isEmpty(positions)) {
+        if (ObjectUtils.isEmpty(positions)) {
             return null;
         }
         return employee.position.in(positions);
     }
 
     private @Nullable BooleanExpression inTypes(@Nullable List<EmployeeType> types) {
-        if (isEmpty(types)) {
+        if (ObjectUtils.isEmpty(types)) {
             return null;
         }
         return employee.type.in(types);
     }
 
     private @Nullable BooleanExpression inGrades(@Nullable List<EmployeeGrade> grades) {
-        if (isEmpty(grades)) {
+        if (ObjectUtils.isEmpty(grades)) {
             return null;
         }
         return employee.grade.in(grades);
     }
 
     private @Nullable BooleanExpression inDepartments(@Nullable List<UUID> departmentIds) {
-        if (isEmpty(departmentIds)) {
+        if (ObjectUtils.isEmpty(departmentIds)) {
             return null;
         }
         return employee.departmentId.in(departmentIds);
     }
 
     private @Nullable BooleanExpression inStatuses(List<EmployeeStatus> statuses) {
-        if (isEmpty(statuses)) {
+        if (ObjectUtils.isEmpty(statuses)) {
             return null;
         }
         return employee.status.in(statuses);

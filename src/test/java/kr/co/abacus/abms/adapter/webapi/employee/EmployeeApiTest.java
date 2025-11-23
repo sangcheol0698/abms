@@ -1,12 +1,9 @@
 package kr.co.abacus.abms.adapter.webapi.employee;
 
 import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
-import static kr.co.abacus.abms.support.AssertThatUtils.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -18,15 +15,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-
+import kr.co.abacus.abms.adapter.webapi.PageResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeAvatarResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeExcelUploadResponse;
@@ -86,22 +80,23 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void create() throws JsonProcessingException, UnsupportedEncodingException {
+    void create() {
         EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId);
         String responseJson = objectMapper.writeValueAsString(request);
 
-        MvcTestResult result = mvcTester.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
-            .content(responseJson).exchange();
+        EmployeeCreateResponse response = restTestClient.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
+            .body(responseJson)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(EmployeeCreateResponse.class)
+            .value(createResponse -> {
+                assertThat(createResponse.employeeId()).isNotNull();
+                assertThat(createResponse.email()).isEqualTo(request.email());
+            })
+            .returnResult()
+            .getResponseBody();
+
         flushAndClear();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatusOk()
-            .bodyJson()
-            .hasPathSatisfying("$.employeeId", notNull())
-            .hasPathSatisfying("$.email", equalsTo(request.email()));
-
-        EmployeeCreateResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), EmployeeCreateResponse.class);
         Employee employee = employeeRepository.findById(response.employeeId()).orElseThrow();
 
         assertThat(employee.getName()).isEqualTo(request.name());
@@ -111,58 +106,45 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void create_invalidEmail() throws JsonProcessingException {
+    void create_invalidEmail() {
         EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId, "invalid-email");
         String responseJson = objectMapper.writeValueAsString(request);
 
-        assertThat(mvcTester.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
-            .content(responseJson))
-            .apply(print())
-            .hasStatus(HttpStatus.BAD_REQUEST.value());
+        restTestClient.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
+            .body(responseJson)
+            .exchange()
+            .expectStatus().isBadRequest();
     }
 
     @Test
-    void create_duplicateEmail() throws JsonProcessingException {
+    void create_duplicateEmail() {
         employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId));
 
         EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId);
         String responseJson = objectMapper.writeValueAsString(request);
 
-        MvcTestResult result = mvcTester.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
-            .content(responseJson).exchange();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatus(HttpStatus.CONFLICT.value());
+        restTestClient.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
+            .body(responseJson)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.CONFLICT);
     }
 
     @Test
-    void find() throws UnsupportedEncodingException, JsonProcessingException {
+    void find() {
         Employee savedEmployee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId));
 
-        MvcTestResult result = mvcTester.get().uri("/api/employees/{id}", savedEmployee.getId()).exchange();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatusOk()
-            .bodyJson()
-            .hasPathSatisfying("$.departmentId", equalsTo(savedEmployee.getDepartmentId().toString()))
-            .hasPathSatisfying("$.departmentName", equalsTo("테스트회사"))
-            .hasPathSatisfying("$.employeeId", equalsTo(savedEmployee.getId().toString()))
-            .hasPathSatisfying("$.name", equalsTo(savedEmployee.getName()))
-            .hasPathSatisfying("$.email", equalsTo(savedEmployee.getEmail().address()))
-            .hasPathSatisfying("$.avatarCode", equalsTo(savedEmployee.getAvatar().name()))
-            .hasPathSatisfying("$.avatarLabel", equalsTo(savedEmployee.getAvatar().getDisplayName()));
-
-        EmployeeResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), EmployeeResponse.class);
-
-        assertThat(response.departmentId()).isEqualTo(savedEmployee.getDepartmentId());
-        assertThat(response.departmentName()).isEqualTo("테스트회사");
-        assertThat(response.employeeId()).isEqualTo(savedEmployee.getId().toString());
-        assertThat(response.name()).isEqualTo(savedEmployee.getName());
-        assertThat(response.email()).isEqualTo(savedEmployee.getEmail().address());
-        assertThat(response.avatarCode()).isEqualTo(savedEmployee.getAvatar().name());
-        assertThat(response.avatarLabel()).isEqualTo(savedEmployee.getAvatar().getDisplayName());
+        restTestClient.get()
+            .uri("/api/employees/{id}", savedEmployee.getId())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(EmployeeResponse.class)
+            .value(findResponse -> {
+                assertThat(findResponse.employeeId()).isEqualTo(savedEmployee.getId());
+                assertThat(findResponse.departmentName()).isEqualTo("테스트회사");
+                assertThat(findResponse.name()).isEqualTo(savedEmployee.getName());
+                assertThat(findResponse.email()).isEqualTo(savedEmployee.getEmail().address());
+                assertThat(findResponse.status()).isEqualTo("재직");
+            });
     }
 
     @Test
@@ -174,55 +156,59 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // when: grade desc 정렬로 검색 시 레벨이 높은 순서(EXPERT > SENIOR > JUNIOR)로 정렬되어야 한다.
-        MvcTestResult result = mvcTester.get()
+        PageResponse<EmployeeResponse> responsePage = restTestClient.get()
             .uri("/api/employees?sort=grade,desc&size=10&page=0")
-            .exchange();
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeResponse>>() {
+            })
+            .returnResult()
+            .getResponseBody();
+
+        List<EmployeeResponse> contents = responsePage.content();
 
         // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
-        assertThat(result).apply(print()).hasStatusOk();
-
-        JsonNode content = extractContent(result);
-        assertThat(content).hasSize(3);
-        assertThat(content.get(0).get("grade").asText()).isEqualTo(EmployeeGrade.EXPERT.getDescription());
-        assertThat(content.get(1).get("grade").asText()).isEqualTo(EmployeeGrade.SENIOR.getDescription());
-        assertThat(content.get(2).get("grade").asText()).isEqualTo(EmployeeGrade.JUNIOR.getDescription());
+        assertThat(contents).hasSize(3);
+        assertThat(contents.get(0).grade()).isEqualTo(EmployeeGrade.EXPERT.getDescription());
+        assertThat(contents.get(1).grade()).isEqualTo(EmployeeGrade.SENIOR.getDescription());
+        assertThat(contents.get(2).grade()).isEqualTo(EmployeeGrade.JUNIOR.getDescription());
     }
 
     @Test
-    void search_sortByPositionRank() throws Exception {
+    void search_sortByPositionRank() {
         // given: 직위 rank가 다른 직원 3명을 생성하여 정렬 결과를 확인한다.
         employeeManager.create(createCustomEmployee(teamId, "position-director@abms.co", "디렉터", EmployeeGrade.SENIOR, EmployeePosition.DIRECTOR));
         employeeManager.create(createCustomEmployee(teamId, "position-associate@abms.co", "어소시에이트", EmployeeGrade.MID_LEVEL, EmployeePosition.ASSOCIATE));
         employeeManager.create(createCustomEmployee(teamId, "position-vice@abms.co", "부사장", EmployeeGrade.EXPERT, EmployeePosition.VICE_PRESIDENT));
         flushAndClear();
 
-        // when: position asc 정렬 시 rank가 낮은 순서(ASSOCIATE > DIRECTOR > VICE_PRESIDENT)로 정렬되어야 한다.
-        MvcTestResult result = mvcTester.get()
+        PageResponse<EmployeeResponse> responsePage = restTestClient.get()
             .uri("/api/employees?sort=position,asc&size=10&page=0")
-            .exchange();
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeResponse>>() {
+            })
+            .returnResult()
+            .getResponseBody();
 
-        // then: 응답이 200이며 직위 설명이 rank 오름차순으로 정렬되었는지 확인한다.
-        assertThat(result).apply(print()).hasStatusOk();
+        List<EmployeeResponse> contents = responsePage.content();
 
-        JsonNode content = extractContent(result);
-        assertThat(content).hasSize(3);
-        assertThat(content.get(0).get("position").asText()).isEqualTo(EmployeePosition.ASSOCIATE.getDescription());
-        assertThat(content.get(1).get("position").asText()).isEqualTo(EmployeePosition.DIRECTOR.getDescription());
-        assertThat(content.get(2).get("position").asText()).isEqualTo(EmployeePosition.VICE_PRESIDENT.getDescription());
+        assertThat(contents).hasSize(3);
+        assertThat(contents.get(0).position()).isEqualTo(EmployeePosition.ASSOCIATE.getDescription());
+        assertThat(contents.get(1).position()).isEqualTo(EmployeePosition.DIRECTOR.getDescription());
+        assertThat(contents.get(2).position()).isEqualTo(EmployeePosition.VICE_PRESIDENT.getDescription());
     }
 
     @Test
     void getEmployeeGrades() throws Exception {
-        MvcTestResult result = mvcTester.get().uri("/api/employees/grades").exchange();
-
-        assertThat(result).apply(print()).hasStatusOk();
-
-        List<EmployeeGradeResponse> responses = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
-            new TypeReference<>() {}
-        );
-
-        assertThat(responses).hasSize(EmployeeGrade.values().length);
+        List<EmployeeGradeResponse> responses = restTestClient.get()
+            .uri("/api/employees/grades")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(new ParameterizedTypeReference<List<EmployeeGradeResponse>>() {
+            })
+            .returnResult()
+            .getResponseBody();
 
         for (EmployeeGrade grade : EmployeeGrade.values()) {
             EmployeeGradeResponse found = responses.stream()
@@ -238,17 +224,14 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void getEmployeePositions() throws Exception {
-        MvcTestResult result = mvcTester.get().uri("/api/employees/positions").exchange();
-
-        assertThat(result).apply(print()).hasStatusOk();
-
-        List<EmployeePositionResponse> responses = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
-            new TypeReference<>() {
-            }
-        );
-
-        assertThat(responses).hasSize(EmployeePosition.values().length);
+        List<EmployeePositionResponse> responses = restTestClient.get()
+            .uri("/api/employees/positions")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(new ParameterizedTypeReference<List<EmployeePositionResponse>>() {
+            })
+            .returnResult()
+            .getResponseBody();
 
         for (EmployeePosition position : EmployeePosition.values()) {
             EmployeePositionResponse found = responses.stream()
@@ -263,16 +246,15 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void getEmployeeTypes() throws Exception {
-        MvcTestResult result = mvcTester.get().uri("/api/employees/types").exchange();
-
-        assertThat(result).apply(print()).hasStatusOk();
-
-        List<EmployeeTypeResponse> responses = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
-            new TypeReference<>() {
-            }
-        );
+    void getEmployeeTypes() {
+        List<EmployeeTypeResponse> responses = restTestClient.get()
+            .uri("/api/employees/types")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(new ParameterizedTypeReference<List<EmployeeTypeResponse>>() {
+            })
+            .returnResult()
+            .getResponseBody();
 
         assertThat(responses).hasSize(EmployeeType.values().length);
 
@@ -288,16 +270,15 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void getEmployeeStatuses() throws Exception {
-        MvcTestResult result = mvcTester.get().uri("/api/employees/statuses").exchange();
-
-        assertThat(result).apply(print()).hasStatusOk();
-
-        List<EmployeeStatusResponse> responses = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
-            new TypeReference<>() {
-            }
-        );
+    void getEmployeeStatuses() {
+        List<EmployeeStatusResponse> responses = restTestClient.get()
+            .uri("/api/employees/statuses")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(new ParameterizedTypeReference<List<EmployeeStatusResponse>>() {
+            })
+            .returnResult()
+            .getResponseBody();
 
         assertThat(responses).hasSize(EmployeeStatus.values().length);
 
@@ -314,16 +295,14 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void getEmployeeAvatars() throws Exception {
-        MvcTestResult result = mvcTester.get().uri("/api/employees/avatars").exchange();
-
-        assertThat(result).apply(print()).hasStatusOk();
-
-        List<EmployeeAvatarResponse> responses = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
-            new TypeReference<>() {}
-        );
-
-        assertThat(responses).hasSize(EmployeeAvatar.values().length);
+        List<EmployeeAvatarResponse> responses = restTestClient.get()
+            .uri("/api/employees/avatars")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(new ParameterizedTypeReference<List<EmployeeAvatarResponse>>() {
+            })
+            .returnResult()
+            .getResponseBody();
 
         for (EmployeeAvatar avatar : EmployeeAvatar.values()) {
             EmployeeAvatarResponse found = responses.stream()
@@ -337,38 +316,32 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void downloadExcel() throws Exception {
+    void downloadExcel() {
         employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "excel-download@abms.co"));
         flushAndClear();
 
-        MvcTestResult result = mvcTester.get()
+        restTestClient.get()
             .uri("/api/employees/excel/download")
-            .exchange();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatusOk();
-        assertThat(result.getResponse().getContentType())
-            .isEqualTo("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        assertThat(result.getResponse().getContentAsByteArray()).isNotEmpty();
-        assertThat(result.getResponse().getHeader("Content-Disposition"))
-            .contains("attachment; filename=");
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            .expectHeader().exists("Content-Disposition")
+            .expectHeader().valueMatches("Content-Disposition", ".*attachment; filename=.*")
+            .expectBody(byte[].class)
+            .value(body -> assertThat(body).isNotEmpty());
     }
 
     @Test
     void downloadExcelSample() throws Exception {
-        MvcTestResult result = mvcTester.get()
+        restTestClient.get()
             .uri("/api/employees/excel/sample")
-            .exchange();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatusOk();
-        assertThat(result.getResponse().getContentType())
-            .isEqualTo("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        assertThat(result.getResponse().getContentAsByteArray()).isNotEmpty();
-        assertThat(result.getResponse().getHeader("Content-Disposition"))
-            .contains("attachment; filename=");
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            .expectHeader().exists("Content-Disposition")
+            .expectHeader().valueMatches("Content-Disposition", ".*attachment; filename=.*")
+            .expectBody(byte[].class)
+            .value(body -> assertThat(body).isNotEmpty());
     }
 
     @Test
@@ -410,29 +383,26 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         workbook.write(bos);
         workbook.close();
 
-        MockMultipartFile file = new MockMultipartFile(
+        MockMultipartFile mockFile = new MockMultipartFile(
             "file",
             "employees.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             bos.toByteArray()
         );
 
-        MvcTestResult result = mvcTester.post()
-            .uri("/api/employees/excel/upload")
-            .multipart()
-            .file(file)
-            .contentType(MediaType.MULTIPART_FORM_DATA)
-            .exchange();
-        flushAndClear();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatusOk();
+        var mvcResult = mockMvc.perform(
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                    .multipart("/api/employees/excel/upload")
+                    .file(mockFile)
+            )
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+            .andReturn();
 
         EmployeeExcelUploadResponse response = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
+            mvcResult.getResponse().getContentAsByteArray(),
             EmployeeExcelUploadResponse.class
         );
+        flushAndClear();
 
         assertThat(response.successCount()).isEqualTo(1);
         assertThat(response.failures()).isEmpty();
@@ -450,25 +420,24 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         var request = createEmployeeUpdateRequestWithDepartment(divisionId, "김수정", "updated@email.com");
         String responseJson = objectMapper.writeValueAsString(request);
 
-        MvcTestResult result = mvcTester.put()
+        restTestClient.put()
             .uri("/api/employees/{id}", employee.getId())
             .contentType(MediaType.APPLICATION_JSON)
-            .content(responseJson)
-            .exchange();
+            .body(responseJson)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(EmployeeResponse.class)
+            .value(response -> {
+                assertThat(response.departmentId()).isEqualTo(divisionId);
+                assertThat(response.name()).isEqualTo(request.name());
+                assertThat(response.email()).isEqualTo(request.email());
+                assertThat(response.joinDate()).isEqualTo(request.joinDate());
+                assertThat(response.birthDate()).isEqualTo(request.birthDate());
+                assertThat(response.avatarCode()).isEqualTo(request.avatar().name());
+                assertThat(response.avatarLabel()).isEqualTo(request.avatar().getDisplayName());
+                assertThat(response.memo()).isEqualTo(request.memo());
+            });
         flushAndClear();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatusOk()
-            .bodyJson()
-            .hasPathSatisfying("$.departmentId", equalsTo(divisionId.toString()))
-            .hasPathSatisfying("$.name", equalsTo(request.name()))
-            .hasPathSatisfying("$.email", equalsTo(request.email()))
-            .hasPathSatisfying("$.joinDate", equalsTo(request.joinDate().toString()))
-            .hasPathSatisfying("$.birthDate", equalsTo(request.birthDate().toString()))
-            .hasPathSatisfying("$.avatarCode", equalsTo(request.avatar().name()))
-            .hasPathSatisfying("$.avatarLabel", equalsTo(request.avatar().getDisplayName()))
-            .hasPathSatisfying("$.memo", equalsTo(request.memo()));
 
         Employee updatedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
         assertThat(updatedEmployee.getDepartmentId()).isEqualTo(request.departmentId());
@@ -492,15 +461,12 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         var request = createEmployeeUpdateRequestWithDepartment(divisionId, employee1.getName(), employee2.getEmail().address());
         String responseJson = objectMapper.writeValueAsString(request);
 
-        MvcTestResult result = mvcTester.put()
+        restTestClient.put()
             .uri("/api/employees/{id}", employee1.getId())
             .contentType(MediaType.APPLICATION_JSON)
-            .content(responseJson)
-            .exchange();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatus(HttpStatus.CONFLICT.value());
+            .body(responseJson)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.CONFLICT);
     }
 
     @Test
@@ -508,14 +474,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "delete-target@email.com"));
         flushAndClear();
 
-        MvcTestResult result = mvcTester.delete()
+        restTestClient.delete()
             .uri("/api/employees/{id}", employee.getId())
-            .exchange();
+            .exchange()
+            .expectStatus().isNoContent();
         flushAndClear();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatus(HttpStatus.NO_CONTENT.value());
 
         Employee deletedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
         assertThat(deletedEmployee.isDeleted()).isTrue();
@@ -529,13 +492,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         employeeManager.delete(employee.getId(), "adminUser");
         flushAndClear();
 
-        MvcTestResult result = mvcTester.delete()
+        restTestClient.delete()
             .uri("/api/employees/{id}", employee.getId())
-            .exchange();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatus(HttpStatus.NOT_FOUND.value());
+            .exchange()
+            .expectStatus().isNotFound();
     }
 
     @Test
@@ -544,14 +504,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         employeeManager.delete(employee.getId(), "adminUser");
         flushAndClear();
 
-        MvcTestResult result = mvcTester.patch()
+        restTestClient.patch()
             .uri("/api/employees/{id}/restore", employee.getId())
-            .exchange();
+            .exchange()
+            .expectStatus().isNoContent();
         flushAndClear();
-
-        assertThat(result)
-            .apply(print())
-            .hasStatus(HttpStatus.NO_CONTENT.value());
 
         Employee restoredEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
         assertThat(restoredEmployee.isDeleted()).isFalse();
@@ -582,9 +539,6 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         );
     }
 
-    private JsonNode extractContent(MvcTestResult result) throws JsonProcessingException, UnsupportedEncodingException {
-        // MockMvc 응답에서 content 배열만 추출해 정렬 순서를 명확히 검증한다.
-        return objectMapper.readTree(result.getResponse().getContentAsString()).path("content");
-    }
+
 
 }

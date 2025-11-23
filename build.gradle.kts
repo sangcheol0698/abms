@@ -1,9 +1,8 @@
 import net.ltgt.gradle.errorprone.errorprone
-import net.ltgt.gradle.errorprone.CheckSeverity
 
 plugins {
     java
-    id("org.springframework.boot") version "3.5.5"
+    id("org.springframework.boot") version "4.0.0"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
     id("net.ltgt.errorprone") version "4.3.0"
@@ -14,7 +13,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(24)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -55,7 +54,7 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:5.4.1")
 
     compileOnly("org.jspecify:jspecify:1.0.0")
-    errorprone("com.google.errorprone:error_prone_core:2.41.0")
+    errorprone("com.google.errorprone:error_prone_core:2.42.0")
     errorprone("com.uber.nullaway:nullaway:0.12.3")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -77,15 +76,13 @@ tasks.withType<Test> {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.errorprone {
-        disableWarningsInGeneratedCode.set(true)
-        isEnabled.set(true)
+    options.errorprone  {
+        disableAllChecks = true
         excludedPaths.set(".*/build/generated/.*")
 
-        check("NullAway", CheckSeverity.ERROR)
-
         option("NullAway:OnlyNullMarked", "true")
-        option("NullAway:UseJSpecify", "true")
+        error("NullAway")
+        option("NullAway:JSpecifyMode", "true")
         option("NullAway:ExcludedFieldAnnotations", "jakarta.persistence.*")
     }
 

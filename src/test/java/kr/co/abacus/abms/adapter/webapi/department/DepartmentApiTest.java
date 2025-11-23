@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter.webapi.department;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 import java.io.UnsupportedEncodingException;
 
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -25,6 +23,7 @@ import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeFixture;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
+
 
 class DepartmentApiTest extends ApiIntegrationTestBase {
 
@@ -73,15 +72,13 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("전체 부서 계층 구조를 올바르게 반환한다")
     void getOrganizationChart() throws Exception {
-        MvcTestResult mvcTestResult = mvcTester.get().uri("/api/departments/organization-chart")
-            .exchange();
-
-        assertThat(mvcTestResult).apply(print()).hasStatusOk();
-
-        OrganizationChartResponse response = objectMapper.readValue(
-            mvcTestResult.getMvcResult().getResponse().getContentAsString(),
-            OrganizationChartResponse.class
-        );
+        OrganizationChartResponse response = restTestClient.get()
+            .uri("/api/departments/organization-chart")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(OrganizationChartResponse.class)
+            .returnResult()
+            .getResponseBody();
 
         assertDepartmentNode(response, company, 1);
         assertThat(response.departmentLeader().employeeName()).isEqualTo("홍길동");
@@ -97,15 +94,12 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("전체 부서와 직원을 같이 조회한다")
     void getOrganizationChartWithEmployees() throws Exception {
-        MvcTestResult mvcTestResult = mvcTester.get().uri("/api/departments/organization-chart/employees")
-            .exchange();
-
-        assertThat(mvcTestResult).apply(print()).hasStatusOk();
-
-        OrganizationChartWithEmployeesResponse response = objectMapper.readValue(
-            mvcTestResult.getMvcResult().getResponse().getContentAsString(),
-            OrganizationChartWithEmployeesResponse.class
-        );
+        OrganizationChartWithEmployeesResponse response = restTestClient.get().uri("/api/departments/organization-chart/employees")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(OrganizationChartWithEmployeesResponse.class)
+            .returnResult()
+            .getResponseBody();
 
         assertDepartmentNode(response, company, 1);
         Assertions.assertNotNull(response.departmentLeader());
@@ -131,15 +125,12 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Test
     void getDepartment() throws UnsupportedEncodingException, JsonProcessingException {
-        MvcTestResult mvcTestResult = mvcTester.get().uri("/api/departments/{id}", team1.getId())
-            .exchange();
-
-        assertThat(mvcTestResult).apply(print()).hasStatusOk();
-
-        DepartmentResponse response = objectMapper.readValue(
-            mvcTestResult.getMvcResult().getResponse().getContentAsString(),
-            DepartmentResponse.class
-        );
+        DepartmentResponse response = restTestClient.get().uri("/api/departments/{id}", team1.getId())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(DepartmentResponse.class)
+            .returnResult()
+            .getResponseBody();
 
         assertThat(response.departmentId()).isEqualTo(team1.getId());
         assertThat(response.departmentName()).isEqualTo(team1.getName());

@@ -33,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.adapter.webapi.PageResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeAvatarResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeExcelUploadResponse;
@@ -105,14 +106,14 @@ public class EmployeeApi {
     }
 
     @GetMapping("/api/employees")
-    public Page<EmployeeResponse> search(@Valid EmployeeSearchRequest request, Pageable pageable) {
+    public PageResponse<EmployeeResponse> search(@Valid EmployeeSearchRequest request, Pageable pageable) {
         Page<Employee> employees = employeeFinder.search(request, pageable);
         List<Department> departments = departmentFinder.findAll(); // TODO: 최적화 방안 고려
 
-        return employees.map(employee -> {
+        return PageResponse.of(employees.map(employee -> {
             Department department = getDepartment(employee, departments);
             return EmployeeResponse.of(employee, department);
-        });
+        }));
     }
 
     @GetMapping("/api/employees/grades")

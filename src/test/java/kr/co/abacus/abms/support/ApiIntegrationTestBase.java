@@ -1,10 +1,13 @@
 package kr.co.abacus.abms.support;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * API 통합 테스트를 위한 베이스 클래스
@@ -14,13 +17,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * - JSON 직렬화/역직렬화 지원
  * - Web API 테스트에 최적화된 환경 제공
  */
-@AutoConfigureMockMvc
 public abstract class ApiIntegrationTestBase extends IntegrationTestBase {
 
     @Autowired
-    protected MockMvcTester mvcTester;
-
-    @Autowired
     protected ObjectMapper objectMapper;
+
+    protected RestTestClient restTestClient;
+    protected MockMvc mockMvc;
+
+    @BeforeEach
+    void setUpRestTestClient(WebApplicationContext applicationContext) {
+        restTestClient = RestTestClient.bindToApplicationContext(applicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(applicationContext).build();
+    }
 
 }

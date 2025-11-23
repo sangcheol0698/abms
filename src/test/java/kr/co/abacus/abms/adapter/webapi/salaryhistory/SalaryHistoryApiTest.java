@@ -2,7 +2,6 @@ package kr.co.abacus.abms.adapter.webapi.salaryhistory;
 
 import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,11 +10,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.assertj.MvcTestResult;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import kr.co.abacus.abms.adapter.webapi.salaryhistory.dto.SalaryHistoryCreateRequest;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
@@ -42,15 +37,16 @@ class SalaryHistoryApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void changeSalary() throws JsonProcessingException {
+    void changeSalary() {
         SalaryHistoryCreateRequest request = createSalaryHistoryCreateRequest(employee.getId());
         String responseJson = objectMapper.writeValueAsString(request);
 
-        MvcTestResult result = mvcTester.post().uri("/api/salary-history").contentType(MediaType.APPLICATION_JSON)
-            .content(responseJson)
-            .exchange();
-
-        assertThat(result).apply(print()).hasStatus(HttpStatus.NO_CONTENT);
+        restTestClient.post()
+            .uri("/api/salary-history")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(responseJson)
+            .exchange()
+            .expectStatus().isNoContent();
 
         SalaryHistory currentSalaryHistory = salaryHistoryRepository.findCurrentSalaryByEmployeeId(employee.getId()).orElseThrow();
 
