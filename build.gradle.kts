@@ -31,6 +31,7 @@ extra["snippetsDir"] = file("build/generated-snippets")
 val springAiVersion by extra("1.1.0")
 
 var mockitoAgent: Configuration = configurations.create("mockitoAgent")
+val p6spyVersion by extra("2.0.0")
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -48,7 +49,7 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
-    implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0")
+    implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:${p6spyVersion}")
 
     implementation("org.apache.poi:poi:5.4.1")
     implementation("org.apache.poi:poi-ooxml:5.4.1")
