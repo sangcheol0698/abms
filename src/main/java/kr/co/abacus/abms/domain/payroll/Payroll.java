@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.domain.salaryhistory;
+package kr.co.abacus.abms.domain.payroll;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -21,14 +21,14 @@ import kr.co.abacus.abms.domain.shared.Period;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "salary_history")
-public class SalaryHistory extends AbstractEntity {
+@Table(name = "payroll")
+public class Payroll extends AbstractEntity {
 
     @Column(name = "employee_id", nullable = false)
     private UUID employeeId;
 
     @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "annual_salary", nullable = false, precision = 10))
+    @AttributeOverride(name = "amount", column = @Column(name = "annual_salary", nullable = false))
     private Money annualSalary;
 
     @Embedded
@@ -36,14 +36,14 @@ public class SalaryHistory extends AbstractEntity {
     @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
     private Period period;
 
-    public static SalaryHistory startWith(UUID employeeId, Money annualSalary, LocalDate startDate) {
-        SalaryHistory salaryHistory = new SalaryHistory();
+    public static Payroll startWith(UUID employeeId, Money annualSalary, LocalDate startDate) {
+        Payroll payroll = new Payroll();
 
-        salaryHistory.employeeId = Objects.requireNonNull(employeeId);
-        salaryHistory.annualSalary = Objects.requireNonNull(annualSalary);
-        salaryHistory.period = new Period(Objects.requireNonNull(startDate), null);
+        payroll.employeeId = Objects.requireNonNull(employeeId);
+        payroll.annualSalary = Objects.requireNonNull(annualSalary);
+        payroll.period = new Period(Objects.requireNonNull(startDate), null);
 
-        return salaryHistory;
+        return payroll;
     }
 
     public void close(LocalDate endDate) {

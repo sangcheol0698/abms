@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.salaryhistory.required;
+package kr.co.abacus.abms.application.payroll.required;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -9,20 +9,20 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 
-import kr.co.abacus.abms.domain.salaryhistory.SalaryHistory;
+import kr.co.abacus.abms.domain.payroll.Payroll;
 
-public interface SalaryHistoryRepository extends Repository<SalaryHistory, UUID> {
+public interface PayrollRepository extends Repository<Payroll, UUID> {
 
-    SalaryHistory save(SalaryHistory salaryHistory);
+    Payroll save(Payroll payroll);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(
         "SELECT sh " +
-        "FROM SalaryHistory sh " +
+        "FROM Payroll sh " +
         "WHERE sh.employeeId = :employeeId " +
             "AND sh.period.endDate IS NULL " +
             "AND sh.deleted = false"
     )
-    Optional<SalaryHistory> findCurrentSalaryByEmployeeId(UUID employeeId);
+    Optional<Payroll> findCurrentSalaryByEmployeeId(UUID employeeId);
 
 }
