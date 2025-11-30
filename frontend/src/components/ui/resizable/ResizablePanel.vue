@@ -21,6 +21,7 @@ const forwarded = useForwardPropsEmits(props, emits)
 <template>
   <SplitterPanel
     data-slot="resizable-panel"
+    class="transition-all duration-300 ease-in-out"
     v-bind="forwarded"
     v-slot="slotProps"
   >

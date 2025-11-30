@@ -1,5 +1,7 @@
 <template>
-  <div class="flex h-full flex-col gap-4 rounded-lg border border-dashed border-border/60 bg-muted/10 p-6">
+  <div
+    class="flex h-full flex-col gap-4 rounded-lg border border-dashed border-border/60 bg-muted/10 p-6"
+  >
     <header class="flex items-start justify-between gap-4">
       <div>
         <h2 class="text-base font-semibold text-foreground">연봉 현황</h2>
@@ -7,7 +9,7 @@
           연봉 이력과 변경 내역은 전담 API 연동 후 이 영역에서 확인할 수 있습니다.
         </p>
       </div>
-      <Button variant="outline" disabled>연봉 변경</Button>
+      <Button variant="outline" @click="handleChangeSalary">연봉 변경</Button>
     </header>
 
     <Alert>
@@ -29,10 +31,19 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
+import { onMounted } from 'vue';
+import { toast } from 'vue-sonner';
 
 interface Props {
   employee: EmployeeSummary | null;
 }
 
 defineProps<Props>();
+
+const handleChangeSalary = () => {
+  // 연봉 변경 로직 구현 예정
+  toast.message('연봉 변경 기능은 아직 구현되지 않았습니다.');
+};
+
+onMounted(() => {});
 </script>

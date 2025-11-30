@@ -66,7 +66,7 @@
       <Separator />
 
       <div class="flex flex-col">
-        <Tabs defaultValue="info" class="flex flex-col">
+        <Tabs :model-value="selectedTab" @update:model-value="handleTabChange" class="flex flex-col">
           <TabsList class="rounded-lg bg-muted/30 p-1">
             <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
             <TabsTrigger value="members" class="text-sm">구성원</TabsTrigger>
@@ -131,50 +131,12 @@
             </TabsContent>
 
             <TabsContent value="members" class="flex flex-col">
-              <div v-if="isLoading" class="space-y-3 rounded-lg border border-border/60 bg-muted/10 p-4">
-                <Skeleton class="h-4 w-1/3" />
-                <div class="space-y-2">
-                  <div v-for="index in 3" :key="index" class="flex items-center gap-3">
-                    <Skeleton class="size-9 rounded-full" />
-                    <div class="flex-1 space-y-2">
-                      <Skeleton class="h-3 w-1/2" />
-                      <Skeleton class="h-3 w-1/3" />
-                    </div>
-                    <Skeleton class="h-5 w-16" />
-                  </div>
-                </div>
-              </div>
-              <div v-else-if="department.employees?.length" class="flex flex-col gap-3">
-                <div class="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>구성원 {{ department.employees.length }}명</span>
-                  <span class="hidden md:inline-flex">
-                    최근 배치는 인사 시스템과 자동 동기화됩니다.
-                  </span>
-                </div>
-                <div class="space-y-2 rounded-lg border border-border/60 bg-background/60 p-3">
-                  <div v-for="employee in department.employees ?? []" :key="employee.employeeId"
-                    class="flex items-center justify-between rounded-md border border-border/50 bg-card/80 px-3 py-2 text-sm">
-                    <div class="flex items-center gap-3">
-                      <Avatar class="size-9 border border-border/50 bg-muted/40">
-                        <AvatarFallback class="text-xs font-semibold">
-                          {{ getInitials(employee.employeeName) }}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div class="flex flex-col">
-                        <span class="font-semibold text-foreground">{{ employee.employeeName }}</span>
-                        <span class="text-xs text-muted-foreground">{{ employee.position }}</span>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" class="text-[11px] font-medium">
-                      {{ employee.employeeId }}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              <div v-else
-                class="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground">
-                아직 등록된 구성원이 없습니다.
-                <span class="mt-1 text-xs">인사 정보 연동 후 자동으로 채워집니다.</span>
+              <DepartmentEmployeeList
+                v-if="department.departmentId"
+                :department-id="department.departmentId"
+              />
+              <div v-else class="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground">
+                부서 정보가 올바르지 않습니다.
               </div>
             </TabsContent>
 
@@ -202,17 +164,19 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import { GitBranch, UserRound, Users } from 'lucide-vue-next';
 import type { OrganizationDepartmentSummary } from '@/features/organization/models/organization';
+import DepartmentEmployeeList from '@/features/organization/components/DepartmentEmployeeList.vue';
 
 defineOptions({ name: 'OrganizationDetailPanel' });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     department: OrganizationDepartmentSummary | null;
     isLoading?: boolean;
@@ -220,6 +184,97 @@ withDefaults(
   {
     department: null,
     isLoading: false,
+  },
+);
+
+const route = useRoute();
+const router = useRouter();
+
+// 탭 상태 관리
+const VALID_TABS = ['info', 'members', 'revenue'] as const;
+type TabValue = typeof VALID_TABS[number];
+
+const selectedTab = ref<TabValue>('info');
+let isUpdatingRoute = false;
+let isApplyingRoute = false;
+
+// URL에서 초기 탭 설정
+function extractTabFromQuery(value: unknown): TabValue {
+  if (typeof value === 'string' && VALID_TABS.includes(value as TabValue)) {
+    return value as TabValue;
+  }
+  if (Array.isArray(value)) {
+    const first = value.find((v) => typeof v === 'string' && VALID_TABS.includes(v as TabValue));
+    if (first) return first as TabValue;
+  }
+  return 'info';
+}
+
+// URL 쿼리에서 탭 값 읽어서 초기화
+const initialTab = extractTabFromQuery(route.query.tab);
+selectedTab.value = initialTab;
+
+// 탭 변경 핸들러
+function handleTabChange(newTab: string) {
+  if (!VALID_TABS.includes(newTab as TabValue)) {
+    return;
+  }
+  
+  selectedTab.value = newTab as TabValue;
+  
+  if (isApplyingRoute) {
+    return;
+  }
+  
+  updateRouteQuery(newTab as TabValue);
+}
+
+// URL 쿼리 업데이트
+function updateRouteQuery(tab: TabValue) {
+  const currentTab = extractTabFromQuery(route.query.tab);
+  
+  if (tab === currentTab) {
+    return;
+  }
+  
+  isUpdatingRoute = true;
+  
+  const query = { ...route.query };
+  
+  // 기본 탭(info)인 경우 쿼리 파라미터 제거
+  if (tab === 'info') {
+    delete query.tab;
+  } else {
+    query.tab = tab;
+  }
+  
+  router
+    .replace({ query })
+    .finally(() => {
+      isUpdatingRoute = false;
+    })
+    .catch((error) => {
+      console.warn('탭 정보를 URL에 반영하지 못했습니다.', error);
+    });
+}
+
+// URL 변경 감지하여 탭 업데이트
+watch(
+  () => route.query.tab,
+  (value) => {
+    if (isUpdatingRoute) {
+      return;
+    }
+    
+    const newTab = extractTabFromQuery(value);
+    
+    if (newTab === selectedTab.value) {
+      return;
+    }
+    
+    isApplyingRoute = true;
+    selectedTab.value = newTab;
+    isApplyingRoute = false;
   },
 );
 
@@ -239,3 +294,4 @@ function getInitials(name?: string) {
     .toUpperCase();
 }
 </script>
+

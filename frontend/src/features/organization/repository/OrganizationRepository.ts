@@ -6,6 +6,20 @@ import {
   type OrganizationChartNode,
   type OrganizationDepartmentDetail,
 } from '@/features/organization/models/organization';
+import PageResponse from '@/core/common/PageResponse';
+import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
+import { mapEmployeeListItem } from '@/features/employee/models/employeeListItem';
+
+// Department API의 EmployeeResponse는 employeeName을 사용하므로 별도 매퍼 필요
+function mapDepartmentEmployeeResponse(input: any): EmployeeListItem {
+  // employeeName을 name으로 변환하여 표준 매퍼에 전달
+  // avatarCode와 avatarLabel은 그대로 전달
+  const normalized = {
+    ...input,
+    name: input?.employeeName,
+  };
+  return mapEmployeeListItem(normalized);
+}
 
 @singleton()
 export default class OrganizationRepository {
@@ -22,5 +36,29 @@ export default class OrganizationRepository {
       path: `/api/departments/${departmentId}`,
     });
     return mapOrganizationDepartmentDetail(response);
+  }
+
+  async fetchDepartmentEmployees(
+    departmentId: string,
+    params: { page: number; size: number; name?: string; sort?: string },
+  ): Promise<PageResponse<EmployeeListItem>> {
+    const queryParams: Record<string, string> = {
+      page: Math.max(params.page - 1, 0).toString(),
+      size: params.size.toString(),
+    };
+
+    if (params.name) {
+      queryParams.name = params.name;
+    }
+
+    if (params.sort) {
+      queryParams.sort = params.sort;
+    }
+
+    const response = await this.httpRepository.get({
+      path: `/api/departments/${departmentId}/employees`,
+      params: queryParams,
+    });
+    return PageResponse.fromPage(response, mapDepartmentEmployeeResponse);
   }
 }

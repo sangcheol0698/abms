@@ -79,6 +79,46 @@ const routes = [
         },
       },
       {
+        path: 'projects',
+        name: 'projects',
+        component: () => import('@/features/project/views/ProjectListView.vue'),
+        meta: {
+          title: '프로젝트',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '프로젝트',
+              disabled: true,
+            },
+          ],
+        },
+      },
+      {
+        path: 'projects/:projectId',
+        name: 'project-detail',
+        component: () => import('@/features/project/views/ProjectDetailView.vue'),
+        meta: {
+          title: '프로젝트 상세',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '프로젝트',
+              to: '/projects',
+            },
+            {
+              title: '프로젝트 상세',
+              disabled: true,
+            },
+          ],
+        },
+      },
+      {
         path: 'assistant',
         name: 'assistant',
         component: () => import('@/features/chat/views/ChatView.vue'),

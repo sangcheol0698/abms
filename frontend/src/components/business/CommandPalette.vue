@@ -60,6 +60,8 @@ const navigationCommands: NavigationCommand[] = [
   { label: '대시보드', to: '/', shortcut: '' },
   { label: '조직도', to: '/organization', shortcut: '' },
   { label: '구성원', to: '/employees', shortcut: '' },
+  { label: '프로젝트', to: '/projects', shortcut: '' },
+  { label: 'AI Copilot', to: '/assistant', shortcut: '' },
 ];
 
 function handleOpenChange(value: boolean) {

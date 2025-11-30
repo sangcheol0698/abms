@@ -17,7 +17,6 @@
         <div class="flex h-full min-h-0 flex-col shadow-sm">
           <div class="flex items-center justify-between px-4 py-3 text-sm">
             <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">조직도</span>
-
           </div>
           <OrganizationTree class="flex-1" :nodes="chart" v-model:selectedNodeId="selectedDepartmentId"
             @update:selectedNodeId="handleTreeSelection($event, pane)" />
@@ -65,6 +64,8 @@
         </div>
       </template>
     </FeatureSplitLayout>
+
+
   </section>
 </template>
 

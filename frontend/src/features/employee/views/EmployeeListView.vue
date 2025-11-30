@@ -68,7 +68,8 @@
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="default" size="sm" class="h-8 px-3 sm:px-4" @click="openCreateDialog">
+          <Button variant="default" size="sm" class="h-8 px-2 sm:px-3 gap-1" @click="openCreateDialog">
+            <Plus class="h-4 w-4" />
             구성원 추가
           </Button>
         </template>
@@ -211,7 +212,13 @@ import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummary
 import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
-import { ChevronDown, Download, FileSpreadsheet, Upload } from 'lucide-vue-next';
+import {
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  Plus,
+  Upload,
+} from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import EmployeeRowActions from '@/features/employee/components/EmployeeRowActions.vue';
 import type { EmployeeSummary } from '@/features/employee/models/employee';

@@ -113,12 +113,11 @@
           </div>
         </header>
 
+
         <div class="flex h-full min-h-0 flex-col items-center bg-background"
           :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'">
-          <div class="flex w-full max-w-3xl flex-1 flex-col min-h-0">
-            <ChatWidget class="flex flex-1 min-h-0" v-model="draft" :messages="messages" :is-responding="isResponding"
-              :suggestions="[]" :info-text="infoText" @submit="handleSubmit" @suggestion="handleSuggestion" />
-          </div>
+          <ChatWidget class="flex w-full flex-1 min-h-0" v-model="draft" :messages="messages" :is-responding="isResponding"
+            :suggestions="[]" :info-text="infoText" @submit="handleSubmit" @suggestion="handleSuggestion" />
         </div>
       </div>
     </template>
