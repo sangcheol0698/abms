@@ -516,14 +516,6 @@ Or kill the process using port 8080:
 lsof -ti:8080 | xargs kill -9
 ```
 
-## Contributing
-
-TODO - Add contribution guidelines
-
-## License
-
-TODO - Add license information
-
 ---
 
 **Version:** 0.0.1-SNAPSHOT  
