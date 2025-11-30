@@ -63,7 +63,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         assertThat(response.projectId()).isNotNull();
         assertThat(response.code()).isEqualTo("PRJ-TEST-001");
         assertThat(response.name()).isEqualTo("테스트 프로젝트");
-        assertThat(response.statusDescription()).isEqualTo("계획");
+        assertThat(response.statusDescription()).isEqualTo("예약");
 
         flushAndClear();
         Project savedProject = projectRepository.findById(response.projectId()).orElseThrow();
