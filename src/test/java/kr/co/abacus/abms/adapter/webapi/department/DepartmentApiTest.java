@@ -3,6 +3,7 @@ package kr.co.abacus.abms.adapter.webapi.department;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.UnsupportedEncodingException;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import kr.co.abacus.abms.adapter.webapi.department.dto.DepartmentEmployeesResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartWithEmployeesResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationEmployeeResponse;
@@ -124,6 +126,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @DisplayName("부서 상세 정보를 조회한다")
     void getDepartment() throws UnsupportedEncodingException, JsonProcessingException {
         DepartmentResponse response = restTestClient.get().uri("/api/departments/{id}", team1.getId())
             .exchange()
@@ -136,6 +139,81 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         assertThat(response.departmentName()).isEqualTo(team1.getName());
         assertThat(response.departmentCode()).isEqualTo(team1.getCode());
         assertThat(response.departmentType()).isEqualTo(team1.getType().getDescription());
+    }
+
+    @Test
+    @DisplayName("부서 소속 직원들을 페이징하여 조회한다")
+    void getDepartmentEmployees_withPaging() throws Exception {
+        // Given: 부서에 여러 직원 생성
+        for (int i = 1; i <= 15; i++) {
+            Employee employee = Employee.create(
+                EmployeeFixture.createEmployeeCreateRequest("emp" + i + "@test.com", "직원" + i, team1.getId())
+            );
+            employeeRepository.save(employee);
+        }
+        flushAndClear();
+
+        // When: 첫 번째 페이지 조회 (size=10)
+        DepartmentEmployeesResponse response = restTestClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/api/departments/{departmentId}/employees")
+                .queryParam("page", 0)
+                .queryParam("size", 10)
+                .build(team1.getId()))
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(DepartmentEmployeesResponse.class)
+            .returnResult()
+            .getResponseBody();
+
+        // Then: 페이징 정보 검증
+        assertThat(response.content()).hasSize(10);
+        assertThat(response.totalElements()).isEqualTo(16); // 김철수 + 15명
+        assertThat(response.totalPages()).isEqualTo(2);
+        assertThat(response.currentPage()).isEqualTo(0);
+        assertThat(response.hasNext()).isTrue();
+    }
+
+    @Test
+    @DisplayName("부서 소속 직원이 없을 때 빈 페이지를 반환한다")
+    void getDepartmentEmployees_emptyDepartment() throws Exception {
+        // Given: 직원이 없는 부서 (team2)
+        
+        // When: 직원 조회
+        DepartmentEmployeesResponse response = restTestClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/api/departments/{departmentId}/employees")
+                .queryParam("page", 0)
+                .queryParam("size", 10)
+                .build(team2.getId()))
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(DepartmentEmployeesResponse.class)
+            .returnResult()
+            .getResponseBody();
+
+        // Then: 빈 결과 반환
+        assertThat(response.content()).isEmpty();
+        assertThat(response.totalElements()).isEqualTo(0);
+        assertThat(response.totalPages()).isEqualTo(0);
+        assertThat(response.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 부서 ID로 직원 조회 시 404를 반환한다")
+    void getDepartmentEmployees_notFoundDepartment() throws Exception {
+        // Given: 존재하지 않는 부서 ID
+        UUID nonExistentId = UUID.randomUUID();
+
+        // When & Then: 404 응답
+        restTestClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/api/departments/{departmentId}/employees")
+                .queryParam("page", 0)
+                .queryParam("size", 10)
+                .build(nonExistentId))
+            .exchange()
+            .expectStatus().isNotFound();
     }
 
     private void assertDepartmentNode(OrganizationChartResponse node, Department expected, int expectedChildrenSize) {
