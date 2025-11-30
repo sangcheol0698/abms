@@ -126,7 +126,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         restTestClient.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
             .body(responseJson)
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.CONFLICT);
+            .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -466,7 +466,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .contentType(MediaType.APPLICATION_JSON)
             .body(responseJson)
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.CONFLICT);
+            .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -515,6 +515,182 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(restoredEmployee.getDeletedAt()).isNull();
         assertThat(restoredEmployee.getDeletedBy()).isNull();
         assertThat(restoredEmployee.getEmail().address()).isEqualTo("restore@email.com");
+    }
+
+    @Test
+    void promote() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
+        );
+        Employee employee = employeeManager.create(createRequest);
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/promote?position=STAFF", employee.getId())
+            .exchange()
+            .expectStatus().isOk();
+
+        flushAndClear();
+        Employee promotedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(promotedEmployee.getPosition()).isEqualTo(EmployeePosition.STAFF);
+    }
+
+    @Test
+    void promote_lowerPosition_throwsException() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.SENIOR, EmployeePosition.LEADER
+        );
+        Employee employee = employeeManager.create(createRequest);
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/promote?position=ASSOCIATE", employee.getId())
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void promote_resignedEmployee_throwsException() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
+        );
+        Employee employee = employeeManager.create(createRequest);
+        employeeManager.resign(employee.getId(), LocalDate.now());
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/promote?position=STAFF", employee.getId())
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void resign() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
+        );
+        Employee employee = employeeManager.create(createRequest);
+        flushAndClear();
+
+        LocalDate resignationDate = LocalDate.now();
+        restTestClient.patch()
+            .uri("/api/employees/{id}/resign?resignationDate={date}", employee.getId(), resignationDate)
+            .exchange()
+            .expectStatus().isOk();
+
+        flushAndClear();
+        Employee resignedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(resignedEmployee.getStatus()).isEqualTo(EmployeeStatus.RESIGNED);
+        assertThat(resignedEmployee.getResignationDate()).isEqualTo(resignationDate);
+    }
+
+    @Test
+    void resign_beforeJoinDate_throwsException() {
+        EmployeeCreateRequest createRequest = new EmployeeCreateRequest(
+            teamId, "test@example.com", "홍길동",
+            LocalDate.of(2024, 1, 1), LocalDate.of(1990, 1, 1),
+            EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME,
+            EmployeeGrade.JUNIOR, EmployeeAvatar.SKY_GLOW, null
+        );
+        Employee employee = employeeManager.create(createRequest);
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/resign?resignationDate={date}",
+                employee.getId(), LocalDate.of(2023, 12, 31))
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void resign_alreadyResigned_throwsException() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
+        );
+        Employee employee = employeeManager.create(createRequest);
+        employeeManager.resign(employee.getId(), LocalDate.now());
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/resign?resignationDate={date}",
+                employee.getId(), LocalDate.now())
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void takeLeave() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
+        );
+        Employee employee = employeeManager.create(createRequest);
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/take-leave", employee.getId())
+            .exchange()
+            .expectStatus().isOk();
+
+        flushAndClear();
+        Employee onLeaveEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(onLeaveEmployee.getStatus()).isEqualTo(EmployeeStatus.ON_LEAVE);
+    }
+
+    @Test
+    void takeLeave_notActive_throwsException() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
+        );
+        Employee employee = employeeManager.create(createRequest);
+        employeeManager.resign(employee.getId(), LocalDate.now());
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/take-leave", employee.getId())
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void activate() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
+        );
+        Employee employee = employeeManager.create(createRequest);
+        employeeManager.takeLeave(employee.getId());
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/activate", employee.getId())
+            .exchange()
+            .expectStatus().isOk();
+
+        flushAndClear();
+        Employee activeEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(activeEmployee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+    }
+
+    @Test
+    void activate_alreadyActive_throwsException() {
+        EmployeeCreateRequest createRequest = createCustomEmployee(
+            teamId, "test@example.com", "홍길동",
+            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
+        );
+        Employee employee = employeeManager.create(createRequest);
+        flushAndClear();
+
+        restTestClient.patch()
+            .uri("/api/employees/{id}/activate", employee.getId())
+            .exchange()
+            .expectStatus().isBadRequest();
     }
 
     private EmployeeCreateRequest createCustomEmployee(

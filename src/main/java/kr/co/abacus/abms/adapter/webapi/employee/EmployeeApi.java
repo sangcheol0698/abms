@@ -62,7 +62,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 @RestController
 public class EmployeeApi {
 
-    private static final String SYSTEM_DELETER = "SYSTEM";
+    private static final String SYSTEM_DELETER = "SYSTEM"; // TODO: 추후 인증/인가 기능 도입 시 수정 필요
 
     private final EmployeeManager employeeManager;
     private final EmployeeFinder employeeFinder;
@@ -197,6 +197,11 @@ public class EmployeeApi {
     @PatchMapping("/api/employees/{id}/activate")
     public void activate(@PathVariable UUID id) {
         employeeManager.activate(id);
+    }
+
+    @PatchMapping("/api/employees/{id}/promote")
+    public void promote(@PathVariable UUID id, @RequestParam EmployeePosition position) {
+        employeeManager.promote(id, position);
     }
 
     private String buildFilename(String prefix) {

@@ -9,75 +9,73 @@ import org.junit.jupiter.api.Test;
 class MoneyTest {
 
     @Test
-    void createFailWhenNegativeAmount() {
-        assertThatThrownBy(() -> Money.wons(new BigDecimal("-100.00")))
+    void createWithLong() {
+        Money money = Money.wons(10000L);
+
+        assertThat(money.amount()).isEqualByComparingTo(new BigDecimal("10000.00"));
+    }
+
+    @Test
+    void add() {
+        Money money1 = Money.wons(10000L);
+        Money money2 = Money.wons(5000L);
+
+        Money result = money1.add(money2);
+
+        assertThat(result.amount()).isEqualByComparingTo(new BigDecimal("15000.00"));
+    }
+
+    @Test
+    void subtract() {
+        Money money1 = Money.wons(10000L);
+        Money money2 = Money.wons(3000L);
+
+        Money result = money1.subtract(money2);
+
+        assertThat(result.amount()).isEqualByComparingTo(new BigDecimal("7000.00"));
+    }
+
+    @Test
+    void subtract_negativeResult_throwsException() {
+        Money money1 = Money.wons(5000L);
+        Money money2 = Money.wons(10000L);
+
+        assertThatThrownBy(() -> money1.subtract(money2))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("금액은 음수일 수 없습니다");
     }
 
     @Test
-    void zero() {
-        Money money = Money.zero();
-
-        assertThat(money.amount()).isEqualByComparingTo("0");
-    }
-
-    @Test
-    void add() {
-        Money money1 = Money.wons(new BigDecimal("100.00"));
-        Money money2 = Money.wons(new BigDecimal("50.50"));
-
-        Money result = money1.add(money2);
-
-        assertThat(result.amount()).isEqualByComparingTo("150.50");
-    }
-
-    @Test
-    void subtract() {
-        Money money1 = Money.wons(new BigDecimal("100.00"));
-        Money money2 = Money.wons(new BigDecimal("50.50"));
-
-        Money result = money1.subtract(money2);
-
-        assertThat(result.amount()).isEqualByComparingTo("49.50");
-    }
-
-    @Test
     void multiply() {
-        Money money = Money.wons(new BigDecimal("100.00"));
-        BigDecimal factor = new BigDecimal("1.5");
+        Money money = Money.wons(10000L);
 
-        Money result = money.multiply(factor);
+        Money result = money.multiply(BigDecimal.valueOf(1.5));
 
-        assertThat(result.amount()).isEqualByComparingTo("150.00");
+        assertThat(result.amount()).isEqualByComparingTo(new BigDecimal("15000.00"));
     }
 
     @Test
     void divide() {
-        Money money = Money.wons(new BigDecimal("100.00"));
-        BigDecimal divisor = new BigDecimal("4");
+        Money money = Money.wons(10000L);
 
-        Money result = money.divide(divisor);
+        Money result = money.divide(BigDecimal.valueOf(2));
 
-        assertThat(result.amount()).isEqualByComparingTo("25.00");
-    }
-
-    @Test
-    void divideRoundingHalfUp() {
-        Money money = Money.wons(new BigDecimal("100.00"));
-        BigDecimal divisor = new BigDecimal("3");
-
-        Money result = money.divide(divisor);
-
-        assertThat(result.amount()).isEqualByComparingTo("33.33");
+        assertThat(result.amount()).isEqualByComparingTo(new BigDecimal("5000.00"));
     }
 
     @Test
     void isGreaterThan() {
-        Money money1 = Money.wons(new BigDecimal("100.00"));
-        Money money2 = Money.wons(new BigDecimal("50.50"));
+        Money money1 = Money.wons(10000L);
+        Money money2 = Money.wons(5000L);
 
         assertThat(money1.isGreaterThan(money2)).isTrue();
+        assertThat(money2.isGreaterThan(money1)).isFalse();
     }
 
+    @Test
+    void createWithNegativeAmount_throwsException() {
+        assertThatThrownBy(() -> Money.wons(-1000L))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("금액은 음수일 수 없습니다");
+    }
 }

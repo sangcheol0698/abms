@@ -8,10 +8,15 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public record Money(BigDecimal amount) {
 
-    public Money {
-        if (amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("금액은 음수일 수 없습니다: " + amount);
+    private static final int SCALE = 2;
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+
+    public Money(BigDecimal amount) {
+        BigDecimal normalized = amount.setScale(SCALE, ROUNDING_MODE);
+        if (normalized.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("금액은 음수일 수 없습니다: " + normalized);
         }
+        this.amount = normalized;
     }
 
     public static Money wons(BigDecimal amount) {
@@ -49,7 +54,7 @@ public record Money(BigDecimal amount) {
         if (divisor.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("나눗셈 인자는 양수여야 합니다: " + divisor);
         }
-        return Money.wons(this.amount.divide(divisor, RoundingMode.HALF_UP));
+        return Money.wons(this.amount.divide(divisor, SCALE, ROUNDING_MODE));
     }
 
     public boolean isGreaterThan(Money other) {
