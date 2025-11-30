@@ -133,4 +133,80 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         ));
     }
 
+    @Test
+    @DisplayName("부서 ID로 직원 페이징 조회")
+    void findAllByDepartmentIdAndDeletedFalse() {
+        // Given: 특정 부서에 직원 생성
+        UUID departmentId = UUID.randomUUID();
+        UUID otherDepartmentId = UUID.randomUUID();
+
+        Employee employee1 = Employee.create(createEmployeeCreateRequest("emp1@test.com", "직원1", departmentId));
+        Employee employee2 = Employee.create(createEmployeeCreateRequest("emp2@test.com", "직원2", departmentId));
+        Employee employee3 = Employee.create(createEmployeeCreateRequest("emp3@test.com", "직원3", otherDepartmentId));
+
+        employeeRepository.save(employee1);
+        employeeRepository.save(employee2);
+        employeeRepository.save(employee3);
+        flushAndClear();
+
+        // When: 부서 ID로 직원 조회
+        Page<Employee> result = employeeRepository.findAllByDepartmentIdAndDeletedFalse(
+            departmentId,
+            PageRequest.of(0, 10)
+        );
+
+        // Then: 해당 부서 직원만 조회됨
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent())
+            .extracting(Employee::getName)
+            .containsExactlyInAnyOrder("직원1", "직원2");
+    }
+
+    @Test
+    @DisplayName("부서 ID로 직원 조회 시 soft delete된 직원은 제외")
+    void findAllByDepartmentIdAndDeletedFalse_excludesDeleted() {
+        // Given: 부서에 직원 생성 후 일부 삭제
+        UUID departmentId = UUID.randomUUID();
+
+        Employee activeEmployee = Employee.create(createEmployeeCreateRequest("active@test.com", "활성직원", departmentId));
+        Employee deletedEmployee = Employee.create(createEmployeeCreateRequest("deleted@test.com", "삭제직원", departmentId));
+
+        employeeRepository.save(activeEmployee);
+        employeeRepository.save(deletedEmployee);
+        flushAndClear();
+
+        // 직원 soft delete
+        Employee toDelete = employeeRepository.findById(deletedEmployee.getId()).orElseThrow();
+        toDelete.softDelete("testUser");
+        employeeRepository.save(toDelete);
+        flushAndClear();
+
+        // When: 부서 ID로 직원 조회
+        Page<Employee> result = employeeRepository.findAllByDepartmentIdAndDeletedFalse(
+            departmentId,
+            PageRequest.of(0, 10)
+        );
+
+        // Then: 활성 직원만 조회됨
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getName()).isEqualTo("활성직원");
+    }
+
+    @Test
+    @DisplayName("부서에 직원이 없을 때 빈 페이지 반환")
+    void findAllByDepartmentIdAndDeletedFalse_emptyResult() {
+        // Given: 직원이 없는 부서 ID
+        UUID emptyDepartmentId = UUID.randomUUID();
+
+        // When: 조회
+        Page<Employee> result = employeeRepository.findAllByDepartmentIdAndDeletedFalse(
+            emptyDepartmentId,
+            PageRequest.of(0, 10)
+        );
+
+        // Then: 빈 페이지 반환
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(0);
+    }
+
 }

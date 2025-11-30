@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -24,6 +26,11 @@ public interface EmployeeRepository extends Repository<Employee, UUID>, CustomEm
     List<Employee> findAllByIdInAndDeletedFalse(List<UUID> leaderIds);
 
     List<Employee> findAllByDepartmentIdInAndDeletedFalse(List<UUID> departmentIds);
+
+    Page<Employee> findAllByDepartmentIdAndDeletedFalse(UUID departmentId, Pageable pageable);
+
+    Page<Employee> findAllByDepartmentIdAndNameContainingAndDeletedFalse(UUID departmentId, String name,
+            Pageable pageable);
 
     Optional<Employee> findByName(String name);
 

@@ -94,21 +94,29 @@ public class Employee extends AbstractEntity {
     }
 
     public void resign(LocalDate resignationDate) {
-        state(status != EmployeeStatus.RESIGNED, "이미 퇴사한 직원입니다.");
-        isTrue(resignationDate.isAfter(joinDate), "퇴사일은 입사일 이후여야 합니다.");
+        if (status == EmployeeStatus.RESIGNED) {
+            throw new InvalidEmployeeStatusException("이미 퇴사한 직원입니다.");
+        }
+        if (!resignationDate.isAfter(joinDate)) {
+            throw new InvalidEmployeeStatusException("퇴사일은 입사일 이후여야 합니다.");
+        }
 
         this.resignationDate = requireNonNull(resignationDate);
         this.status = EmployeeStatus.RESIGNED;
     }
 
     public void takeLeave() {
-        state(status == EmployeeStatus.ACTIVE, "재직 중인 직원만 휴직 처리 할 수 있습니다.");
+        if (status != EmployeeStatus.ACTIVE) {
+            throw new InvalidEmployeeStatusException("재직 중인 직원만 휴직 처리 할 수 있습니다.");
+        }
 
         this.status = EmployeeStatus.ON_LEAVE;
     }
 
     public void activate() {
-        state(status != EmployeeStatus.ACTIVE, "이미 재직 중인 직원입니다.");
+        if (status == EmployeeStatus.ACTIVE) {
+            throw new InvalidEmployeeStatusException("이미 재직 중인 직원입니다.");
+        }
 
         this.status = EmployeeStatus.ACTIVE;
         this.resignationDate = null;
@@ -130,9 +138,13 @@ public class Employee extends AbstractEntity {
     }
 
     public void promote(EmployeePosition newPosition) {
-        state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 승진할 수 없습니다.");
+        if (status == EmployeeStatus.RESIGNED) {
+            throw new InvalidEmployeeStatusException("퇴사한 직원은 승진할 수 없습니다.");
+        }
 
-        isTrue(newPosition.getRank() >= this.position.getRank(), "현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
+        if (newPosition.getRank() < this.position.getRank()) {
+            throw new InvalidEmployeeStatusException("현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
+        }
 
         this.position = requireNonNull(newPosition);
     }

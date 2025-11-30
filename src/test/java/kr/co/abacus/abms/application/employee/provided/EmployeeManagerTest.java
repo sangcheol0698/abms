@@ -23,6 +23,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
 class EmployeeManagerTest extends IntegrationTestBase {
@@ -174,7 +175,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2026, 1, 1)))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(InvalidEmployeeStatusException.class)
             .hasMessage("이미 퇴사한 직원입니다.");
     }
 
@@ -184,7 +185,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2024, 12, 31)))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(InvalidEmployeeStatusException.class)
             .hasMessage("퇴사일은 입사일 이후여야 합니다.");
     }
 
@@ -208,7 +209,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> employeeManager.takeLeave(employee.getId()))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(InvalidEmployeeStatusException.class)
             .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
     }
 
@@ -232,7 +233,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> employeeManager.activate(employee.getId()))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(InvalidEmployeeStatusException.class)
             .hasMessage("이미 재직 중인 직원입니다.");
     }
 

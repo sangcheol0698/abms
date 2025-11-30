@@ -16,6 +16,7 @@ import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 import kr.co.abacus.abms.domain.shared.Email;
 
@@ -79,6 +80,15 @@ public class EmployeeModifyService implements EmployeeManager {
         Employee employee = employeeFinder.find(id);
 
         employee.activate();
+
+        return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee promote(UUID id, EmployeePosition newPosition) {
+        Employee employee = employeeFinder.find(id);
+
+        employee.promote(newPosition);
 
         return employeeRepository.save(employee);
     }
