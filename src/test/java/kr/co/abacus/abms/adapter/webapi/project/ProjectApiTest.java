@@ -34,7 +34,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 생성")
-    void create() throws Exception {
+    void create() {
         // Given
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
             partyId,
@@ -72,7 +72,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 생성 - 중복 코드")
-    void create_duplicateCode() throws Exception {
+    void create_duplicateCode() {
         // Given: 동일한 코드의 프로젝트가 이미 존재
         projectRepository.save(ProjectFixture.createProject("PRJ-DUP-001"));
         flushAndClear();
@@ -100,7 +100,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 목록 조회 - 페이징")
-    void list_withPaging() throws Exception {
+    void list_withPaging() {
         // Given: 15개의 프로젝트 생성
         for (int i = 1; i <= 15; i++) {
             Project project = ProjectFixture.createProject("PRJ-LIST-" + String.format("%03d", i));
@@ -126,7 +126,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 상세 조회")
-    void find() throws Exception {
+    void find() {
         // Given
         Project project = ProjectFixture.createProject("PRJ-FIND-001");
         projectRepository.save(project);
@@ -149,7 +149,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 상세 조회 - 존재하지 않는 프로젝트")
-    void find_notFound() throws Exception {
+    void find_notFound() {
         // Given
         UUID nonExistentId = UUID.randomUUID();
 
@@ -162,7 +162,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 수정")
-    void update() throws Exception {
+    void update() {
         // Given
         Project project = ProjectFixture.createProject("PRJ-UPDATE-001");
         projectRepository.save(project);
@@ -201,7 +201,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 완료 처리")
-    void complete() throws Exception {
+    void complete() {
         // Given
         Project project = ProjectFixture.createProject("PRJ-COMPLETE-001");
         projectRepository.save(project);
@@ -226,7 +226,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 취소 처리")
-    void cancel() throws Exception {
+    void cancel() {
         // Given
         Project project = ProjectFixture.createProject("PRJ-CANCEL-001");
         projectRepository.save(project);
@@ -251,7 +251,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 삭제 (soft delete)")
-    void delete() throws Exception {
+    void delete() {
         // Given
         Project project = ProjectFixture.createProject("PRJ-DELETE-001");
         projectRepository.save(project);
@@ -269,7 +269,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 삭제 - 존재하지 않는 프로젝트")
-    void delete_notFound() throws Exception {
+    void delete_notFound() {
         // Given
         UUID nonExistentId = UUID.randomUUID();
 
