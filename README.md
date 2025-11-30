@@ -1,4 +1,4 @@
-# ABMS (Abacus Business Management System)
+# ABMS
 
 A modern business management system built with hexagonal architecture, featuring employee management, payroll processing, project tracking, and AI-powered chat assistance.
 
