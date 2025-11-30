@@ -47,3 +47,5 @@ spy.log
 /frontend/AGENTS.md
 
 .env
+/.junie/
+/CHANGELOG.md
