@@ -4,7 +4,7 @@ A modern business management system built with hexagonal architecture, featuring
 
 ## Overview
 
-ABMS is an enterprise-grade business management system that demonstrates clean architecture principles with a clear separation between domain logic, application services, and external adapters. The system includes:
+ABMS is an enterprise-grade business management system that demonstrates hexagonal architecture principles with a clear separation between domain logic, application services, and external adapters. The system includes:
 
 - **Employee Management**: Complete employee lifecycle management with department organization
 - **Payroll Processing**: Automated payroll calculations and processing
