@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import kr.co.abacus.abms.adapter.webapi.department.dto.DepartmentEmployeesResponse;
+import kr.co.abacus.abms.adapter.webapi.department.dto.EmployeeAssignTeamLeaderRequest;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartWithEmployeesResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationEmployeeResponse;
@@ -36,6 +37,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     private Department division;
     private Department team1;
     private Department team2;
+    private Employee employee1;
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -67,7 +69,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         departmentRepository.save(team2);
         flushAndClear();
 
-        employeeRepository.save(Employee.create(EmployeeFixture.createEmployeeCreateRequest("team2@email.com", "김철수", team1.getId())));
+        employee1 = employeeRepository.save(Employee.create(EmployeeFixture.createEmployeeCreateRequest("team2@email.com", "김철수", team1.getId())));
         flushAndClear();
     }
 
@@ -214,6 +216,22 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 .build(nonExistentId))
             .exchange()
             .expectStatus().isNotFound();
+    }
+
+    @Test
+    @DisplayName("팀의 리더를 임명한다")
+    void assignTeamLeader() {
+        restTestClient.post()
+            .uri("/api/departments/{departmentId}/assign-team-leader", team1.getId())
+            .body(new EmployeeAssignTeamLeaderRequest(employee1.getId()))
+            .exchange()
+            .expectStatus().isOk()
+            .returnResult();
+        flushAndClear();
+
+        Department department = departmentRepository.findByIdAndDeletedFalse(team1.getId()).orElseThrow();
+
+        assertThat(department.getLeaderEmployeeId()).isEqualTo(employee1.getId());
     }
 
     private void assertDepartmentNode(OrganizationChartResponse node, Department expected, int expectedChildrenSize) {

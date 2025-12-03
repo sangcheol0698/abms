@@ -30,9 +30,11 @@ public class DepartmentRepositoryImpl implements CustomDepartmentRepository {
         List<Tuple> results = queryFactory
             .select(department.id, employee.count())
             .from(department)
-            .leftJoin(employee).on(employee.departmentId.eq(department.id)
-                    .and(employee.deleted.isFalse()))
-            .where(department.deleted.isFalse())
+                .leftJoin(employee).on(employee.departmentId.eq(department.id))
+            .where(
+                department.deleted.isFalse(),
+                employee.deleted.isFalse()
+            )
             .groupBy(department.id)
             .fetch();
 

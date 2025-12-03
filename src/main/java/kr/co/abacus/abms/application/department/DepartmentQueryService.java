@@ -140,7 +140,8 @@ public class DepartmentQueryService implements DepartmentFinder {
     private @Nullable LeaderModel getLeaderModel(Department department, Map<UUID, Employee> leadersMap) {
         UUID leaderId = department.getLeaderEmployeeId();
         Employee leader = (leaderId == null) ? null : leadersMap.get(leaderId);
-        return (leader == null) ? null : new LeaderModel(leader.getId(), leader.getName(), leader.getPosition());
+        return (leader == null) ? null
+                : new LeaderModel(leader.getId(), leader.getName(), leader.getPosition(), leader.getAvatar());
     }
 
     private <T> T buildRecursiveChart(Department department, BiFunction<Department, List<T>, T> nodeFactory) {

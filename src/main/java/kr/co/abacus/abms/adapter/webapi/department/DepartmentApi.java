@@ -2,22 +2,28 @@ package kr.co.abacus.abms.adapter.webapi.department;
 
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.webapi.department.dto.DepartmentEmployeesResponse;
+import kr.co.abacus.abms.adapter.webapi.department.dto.EmployeeAssignTeamLeaderRequest;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartWithEmployeesResponse;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartModel;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
+import kr.co.abacus.abms.application.department.provided.DepartmentManager;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 
@@ -26,6 +32,7 @@ import kr.co.abacus.abms.domain.employee.Employee;
 public class DepartmentApi {
 
     private final DepartmentFinder departmentFinder;
+    private final DepartmentManager departmentManager;
 
     @GetMapping("/api/departments/organization-chart")
     public OrganizationChartResponse getOrganizationChart() {
@@ -57,5 +64,10 @@ public class DepartmentApi {
         Page<Employee> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
 
         return DepartmentEmployeesResponse.from(employeesPage);
+    }
+
+    @PostMapping("/api/departments/{departmentId}/assign-team-leader")
+    public void assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignTeamLeaderRequest request) {
+        departmentManager.assignTeamLeader(departmentId, request.leaderEmployeeId());
     }
 }
