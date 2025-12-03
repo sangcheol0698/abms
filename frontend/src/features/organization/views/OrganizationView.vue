@@ -58,7 +58,8 @@
 
           <div class="flex h-full min-h-0 flex-col overflow-hidden">
             <div class="flex-1 min-h-0 overflow-y-auto pl-4">
-              <OrganizationDetailPanel :department="selectedDepartment" :isLoading="isDepartmentLoading" />
+              <OrganizationDetailPanel :department="selectedDepartment" :isLoading="isDepartmentLoading"
+                @refresh="handleRefresh" />
             </div>
           </div>
         </div>
@@ -410,5 +411,12 @@ function buildDepartmentPath(
   }
 
   return [];
+}
+
+function handleRefresh() {
+  void loadOrganizationChart();
+  if (selectedDepartmentId.value) {
+    void loadDepartmentDetail(selectedDepartmentId.value);
+  }
 }
 </script>

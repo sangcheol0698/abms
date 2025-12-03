@@ -61,4 +61,11 @@ export default class OrganizationRepository {
     });
     return PageResponse.fromPage(response, mapDepartmentEmployeeResponse);
   }
+
+  async assignTeamLeader(departmentId: string, employeeId: string): Promise<void> {
+    await this.httpRepository.post({
+      path: `/api/departments/${departmentId}/assign-team-leader`,
+      data: { leaderEmployeeId: employeeId },
+    });
+  }
 }

@@ -30,7 +30,7 @@
       </div>
 
       <div class="grid gap-2 sm:grid-cols-3">
-        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm">
+        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm relative group">
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
             <UserRound class="h-4 w-4" />
           </div>
@@ -40,6 +40,14 @@
               {{ department.departmentLeader?.employeeName ?? '미지정' }}
             </span>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            class="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+            @click="isAssignDialogOpen = true"
+          >
+            <Pencil class="h-3.5 w-3.5 text-muted-foreground" />
+          </Button>
         </article>
         <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm">
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -92,25 +100,27 @@
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     리더
                   </dt>
-                  <dd>
+                  <dd class="flex items-center justify-between">
                     <div v-if="department.departmentLeader" class="flex items-center gap-3">
-                      <Avatar class="size-10 border border-border/60">
-                        <AvatarFallback class="text-xs font-semibold">
-                          {{ getInitials(department.departmentLeader?.employeeName) }}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div class="flex flex-col text-sm">
-                        <span class="font-semibold text-foreground">
+                      <div class="flex items-center gap-2 text-sm">
+                        <button
+                          type="button"
+                          class="text-left font-semibold text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline"
+                          @click="navigateToEmployee(department.departmentLeader?.employeeId)"
+                        >
                           {{ department.departmentLeader?.employeeName }}
-                        </span>
-                        <span class="text-xs text-muted-foreground">
+                        </button>
+                        <Badge variant="secondary" class="h-5 px-1.5 text-[10px] font-normal">
                           {{ department.departmentLeader?.position }}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
                     <p v-else class="text-sm text-muted-foreground">
                       리더가 아직 지정되지 않은 조직입니다.
                     </p>
+                    <Button variant="outline" size="sm" class="h-7 text-xs" @click="isAssignDialogOpen = true">
+                      변경
+                    </Button>
                   </dd>
                 </div>
                 <div class="grid grid-cols-[120px_1fr] gap-2">
@@ -160,23 +170,32 @@
         왼쪽 조직도에서 팀을 선택하면 이 영역에 상세 정보가 표시됩니다.
       </p>
     </div>
+
+    <DepartmentLeaderAssignDialog
+      v-if="department"
+      v-model:open="isAssignDialogOpen"
+      :department-id="department.departmentId"
+      :department-name="department.departmentName"
+      @assigned="$emit('refresh')"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { GitBranch, UserRound, Users } from 'lucide-vue-next';
+import { GitBranch, UserRound, Users, Pencil } from 'lucide-vue-next';
 import type { OrganizationDepartmentSummary } from '@/features/organization/models/organization';
 import DepartmentEmployeeList from '@/features/organization/components/DepartmentEmployeeList.vue';
+import DepartmentLeaderAssignDialog from '@/features/organization/components/DepartmentLeaderAssignDialog.vue';
 
 defineOptions({ name: 'OrganizationDetailPanel' });
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     department: OrganizationDepartmentSummary | null;
     isLoading?: boolean;
@@ -187,8 +206,14 @@ const props = withDefaults(
   },
 );
 
+const emit = defineEmits<{
+  (event: 'refresh'): void;
+}>();
+
 const route = useRoute();
 const router = useRouter();
+
+const isAssignDialogOpen = ref(false);
 
 // 탭 상태 관리
 const VALID_TABS = ['info', 'members', 'revenue'] as const;
@@ -215,7 +240,11 @@ const initialTab = extractTabFromQuery(route.query.tab);
 selectedTab.value = initialTab;
 
 // 탭 변경 핸들러
-function handleTabChange(newTab: string) {
+function handleTabChange(newTab: string | number) {
+  if (typeof newTab !== 'string') {
+    return;
+  }
+
   if (!VALID_TABS.includes(newTab as TabValue)) {
     return;
   }
@@ -278,20 +307,11 @@ watch(
   },
 );
 
-function getInitials(name?: string) {
-  if (!name) {
-    return '–';
+// 직원 상세 페이지로 이동
+function navigateToEmployee(employeeId?: string) {
+  if (!employeeId) {
+    return;
   }
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    const [first = ''] = parts;
-    return first.slice(0, 2).toUpperCase();
-  }
-  return parts
-    .map((part) => part.charAt(0))
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  router.push({ name: 'employee-detail', params: { employeeId } });
 }
 </script>
-

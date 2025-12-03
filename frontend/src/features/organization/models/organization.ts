@@ -1,7 +1,12 @@
+import { getEmployeeAvatarOption } from '@/features/employee/constants/avatars';
+
 export interface OrganizationLeader {
   employeeId: string;
   employeeName: string;
   position: string;
+  avatarCode: string;
+  avatarLabel: string;
+  avatarImageUrl: string;
 }
 
 export interface OrganizationEmployee {
@@ -25,10 +30,16 @@ function mapLeader(input: any): OrganizationLeader | null {
     return null;
   }
 
+  const rawAvatarCode = typeof input?.avatar === 'string' ? input.avatar : null;
+  const avatarOption = getEmployeeAvatarOption(rawAvatarCode);
+
   return {
     employeeId: input.employeeId,
     employeeName: input.employeeName,
     position: input.position,
+    avatarCode: avatarOption.code,
+    avatarLabel: avatarOption.label,
+    avatarImageUrl: avatarOption.imageUrl,
   };
 }
 
