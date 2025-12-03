@@ -67,7 +67,9 @@ public class DepartmentApi {
     }
 
     @PostMapping("/api/departments/{departmentId}/assign-team-leader")
-    public void assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignTeamLeaderRequest request) {
-        departmentManager.assignTeamLeader(departmentId, request.leaderEmployeeId());
+    public DepartmentResponse assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignTeamLeaderRequest request) {
+        Department department = departmentManager.assignTeamLeader(departmentId, request.leaderEmployeeId());
+
+        return DepartmentResponse.of(department);
     }
 }
