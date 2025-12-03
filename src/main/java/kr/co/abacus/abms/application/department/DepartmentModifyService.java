@@ -15,7 +15,7 @@ import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 
 @RequiredArgsConstructor
-@Transactional(readOnly = false)
+@Transactional(readOnly = true)
 @Service
 public class DepartmentModifyService implements DepartmentManager {
 
@@ -24,6 +24,7 @@ public class DepartmentModifyService implements DepartmentManager {
     private final EmployeeFinder employeeFinder;
 
     @Override
+    @Transactional
     public void assignTeamLeader(UUID departmentId, UUID leaderEmployeeId) {
         Department department = departmentFinder.find(departmentId);
         Employee employee = employeeFinder.find(leaderEmployeeId);
