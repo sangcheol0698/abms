@@ -35,7 +35,7 @@ public class ChatService {
     public String sendMessage(String message) {
         return chatClient.prompt()
             .user(message)
-            .tools(employeeInfoTools, organizationTools, employeeSearchTools)
+            // .tools(employeeInfoTools, organizationTools, employeeSearchTools)
             .call()
             .content();
     }

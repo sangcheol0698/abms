@@ -21,7 +21,7 @@ class PartyApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("협력사 목록 조회 - 페이징")
-    void list_withPaging() throws Exception {
+    void list_withPaging() {
         // Given: 15개의 협력사 생성
         for (int i = 1; i <= 15; i++) {
             Party party = Party.create(new PartyCreateRequest(
