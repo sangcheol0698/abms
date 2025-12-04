@@ -12,7 +12,7 @@
                   <Bot class="h-8 w-8 text-primary" />
                 </div>
                 <div class="space-y-2">
-                  <h3 class="text-lg font-semibold text-foreground">ABMS Copilot</h3>
+                  <h3 class="text-lg font-semibold text-foreground">AI Assistant</h3>
                   <p class="max-w-[320px] text-sm text-muted-foreground">
                     부서와 직원 데이터를 기반으로<br />
                     궁금한 점을 자유롭게 물어보세요.

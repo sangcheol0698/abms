@@ -3,9 +3,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-semibold tracking-tight">프로젝트</h1>
-        <p class="text-sm text-muted-foreground">
-          프로젝트를 관리하고 진행 상황을 확인하세요
-        </p>
+        <p class="text-sm text-muted-foreground">프로젝트를 관리하고 진행 상황을 확인하세요</p>
       </div>
     </div>
 
@@ -15,29 +13,15 @@
         searchPlaceholder="프로젝트명 또는 코드를 입력하세요"
         searchColumnId="name"
         :getColumnLabel="getColumnLabel"
+        :isExternalFiltered="isDateFiltered"
+        @reset="handleResetFilters"
       >
         <template #filters>
           <!-- 날짜 검색 유형 선택 -->
-          <Select v-model="searchType">
-            <SelectTrigger class="w-32 h-8">
-              <SelectValue placeholder="날짜 유형" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="option in searchTypeOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
           <!-- 날짜 범위 필터 -->
-          <DateRangeFilter
-            v-model="dateRange"
-            placeholder="날짜 범위 선택"
-          />
+          <div class="flex items-center gap-2">
+            <DateRangeFilter v-model="dateRange" placeholder="계약일 날짜 범위 선택" />
+          </div>
 
           <DataTableFacetedFilter
             v-if="table.getColumn('status')"
@@ -48,11 +32,16 @@
         </template>
 
         <template #actions>
-        <Button variant="default" size="sm" class="h-8 px-2 sm:px-3 gap-1" @click="handleCreateProject">
-          <Plus class="h-4 w-4" />
-          프로젝트 추가
-        </Button>
-      </template>
+          <Button
+            variant="default"
+            size="sm"
+            class="h-8 px-2 sm:px-3 gap-1"
+            @click="handleCreateProject"
+          >
+            <Plus class="h-4 w-4" />
+            프로젝트 추가
+          </Button>
+        </template>
       </DataTableToolbar>
 
       <DataTable
@@ -135,7 +124,6 @@ import {
   DataTableFacetedFilter,
   DateRangeFilter,
 } from '@/components/business';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { appContainer } from '@/core/di/container';
 import ProjectRepository from '@/features/project/repository/ProjectRepository';
 import ProjectCreateDialog from '@/features/project/components/ProjectCreateDialog.vue';
@@ -152,10 +140,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type { ProjectListItem } from '@/features/project/models/projectListItem';
-import {
-  formatCurrency,
-  formatProjectPeriod,
-} from '@/features/project/models/projectListItem';
+import { formatCurrency, formatProjectPeriod } from '@/features/project/models/projectListItem';
 import type { ProjectDetail } from '@/features/project/models/projectDetail';
 import { valueUpdater } from '@/components/ui/table/utils';
 import { toast } from 'vue-sonner';
@@ -186,12 +171,11 @@ const statusFilterOptions = ref<{ value: string; label: string; icon?: any }[]>(
 const searchType = ref('계약일자');
 const dateRange = ref<{ start?: Date; end?: Date } | null>(null);
 
-// 날짜 검색 유형 옵션
-const searchTypeOptions = [
-  { label: '계약일자', value: '계약일자' },
-  { label: '시작일자', value: '시작일자' },
-  { label: '종료일자', value: '종료일자' },
-];
+const isDateFiltered = computed(() => !!dateRange.value?.start || !!dateRange.value?.end);
+
+function handleResetFilters() {
+  dateRange.value = null;
+}
 
 // API용 날짜 포맷팅 함수
 function formatDateForAPI(date: Date | string): string {
@@ -237,7 +221,8 @@ const columns: ColumnDef<ProjectListItem>[] = [
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '프로젝트명', align: 'left' }),
+    header: ({ column }) =>
+      h(DataTableColumnHeader, { column, title: '프로젝트명', align: 'left' }),
     cell: ({ row }) => {
       const name = row.original.name ?? '';
       const code = row.original.code ?? '';
@@ -264,11 +249,7 @@ const columns: ColumnDef<ProjectListItem>[] = [
     accessorFn: (row) => row.statusLabel,
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '상태', align: 'left' }),
     cell: ({ row }) => {
-      return h(
-        Badge,
-        { variant: 'outline', class: 'font-medium' },
-        () => row.original.statusLabel,
-      );
+      return h(Badge, { variant: 'outline', class: 'font-medium' }, () => row.original.statusLabel);
     },
     enableSorting: false,
     size: 100,

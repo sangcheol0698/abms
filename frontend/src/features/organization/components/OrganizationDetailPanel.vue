@@ -2,19 +2,7 @@
   <div class="min-h-full">
     <div v-if="department" class="flex flex-col gap-4 p-4">
       <div class="flex flex-col gap-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex flex-col">
-            <h2 class="text-xl font-semibold text-foreground">
-              {{ department.departmentName }}
-            </h2>
-            <p class="text-sm text-muted-foreground">
-              팀 기본 현황과 직원, 매출 정보를 확인할 수 있습니다.
-            </p>
-          </div>
-          <Badge variant="outline" class="text-xs font-semibold">
-            직원 {{ department.employeeCount }}명
-          </Badge>
-        </div>
+
 
         <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Badge variant="outline" class="font-medium">

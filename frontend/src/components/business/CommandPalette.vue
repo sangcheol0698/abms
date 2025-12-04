@@ -61,7 +61,7 @@ const navigationCommands: NavigationCommand[] = [
   { label: '부서', to: '/organization', shortcut: '' },
   { label: '직원', to: '/employees', shortcut: '' },
   { label: '프로젝트', to: '/projects', shortcut: '' },
-  { label: 'AI Copilot', to: '/assistant', shortcut: '' },
+  { label: 'AI Assistant', to: '/assistant', shortcut: '' },
 ];
 
 function handleOpenChange(value: boolean) {

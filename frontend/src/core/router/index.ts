@@ -123,7 +123,7 @@ const routes = [
         name: 'assistant',
         component: () => import('@/features/chat/views/ChatView.vue'),
         meta: {
-          title: 'AI Copilot',
+          title: 'AI Assistant',
           padding: 'flush',
           breadcrumbs: [
             {
@@ -131,7 +131,7 @@ const routes = [
               to: '/',
             },
             {
-              title: 'AI Copilot',
+              title: 'AI Assistant',
               disabled: true,
             },
           ],

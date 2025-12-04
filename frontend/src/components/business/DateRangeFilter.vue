@@ -6,9 +6,9 @@
         size="sm"
         class="h-8 gap-2"
         :class="[
-          'justify-start text-left font-normal',
+          'justify-start text-left font-normal border-dashed',
           !modelValue?.start && !modelValue?.end && 'text-muted-foreground',
-          dense && '!h-7'
+          dense && '!h-6'
         ]"
       >
         <CalendarIcon class="h-4 w-4" />
@@ -301,8 +301,8 @@ function formatDateShort(date: Date | DateValue): string {
 }
 
 // Calendar 표시 월/년도(placeholder)
-const startPlaceholder = ref<DateValue>(today(getLocalTimeZone()));
-const endPlaceholder = ref<DateValue>(today(getLocalTimeZone()));
+const startPlaceholder = ref<any>(today(getLocalTimeZone()));
+const endPlaceholder = ref<any>(today(getLocalTimeZone()));
 
 // 캘린더 업데이트 함수들
 function updateStartCalendar() {
@@ -369,6 +369,14 @@ function selectPreset(preset: Preset) {
 
 // 선택 적용
 function applySelection() {
+  if (dateRange.value.start && dateRange.value.end) {
+    const start = new Date(dateRange.value.start);
+    const end = new Date(dateRange.value.end);
+
+    if (start > end) {
+      dateRange.value = { start: end, end: start };
+    }
+  }
   const result = dateRange.value.start && dateRange.value.end ? dateRange.value : null;
   emit('update:modelValue', result);
   emit('change', result);

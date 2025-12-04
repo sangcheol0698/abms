@@ -15,9 +15,7 @@
       :content-min-size="52">
       <template #sidebar="{ pane }">
         <div class="flex h-full min-h-0 flex-col shadow-sm">
-          <div class="flex items-center justify-between px-4 py-3 text-sm">
-            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">부서</span>
-          </div>
+
           <OrganizationTree class="flex-1" :nodes="chart" v-model:selectedNodeId="selectedDepartmentId"
             @update:selectedNodeId="handleTreeSelection($event, pane)" />
         </div>
@@ -25,7 +23,7 @@
 
       <template #default="{ pane }">
         <div class="flex h-full min-h-0 flex-col">
-          <header class="flex flex-col px-4 py-4">
+          <header class="flex flex-col px-4 pt-4 pb-2 gap-4">
             <div class="flex items-center">
               <Button variant="ghost" size="icon"
                 class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground" aria-label="부서 사이드바 토글"
@@ -47,17 +45,23 @@
                           </button>
                         </BreadcrumbLink>
                       </template>
-                      <BreadcrumbPage v-else>{{ segment.name }}</BreadcrumbPage>
+                      <BreadcrumbPage v-else class="font-semibold">{{ segment.name }}</BreadcrumbPage>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator v-if="index < headerBreadcrumbs.length - 1" />
+                    <BreadcrumbSeparator v-if="index < headerBreadcrumbs.length - 1">
+                      <Slash />
+                    </BreadcrumbSeparator>
                   </template>
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
+            <Separator />
+            <h2 class="text-2xl font-bold tracking-tight pl-2" v-if="selectedDepartment">
+              {{ selectedDepartment.departmentName }}
+            </h2>
           </header>
 
           <div class="flex h-full min-h-0 flex-col overflow-hidden">
-            <div class="flex-1 min-h-0 overflow-y-auto pl-4">
+            <div class="flex-1 min-h-0 overflow-y-auto pl-2">
               <OrganizationDetailPanel :department="selectedDepartment" :isLoading="isDepartmentLoading"
                 @refresh="handleRefresh" />
             </div>
@@ -96,7 +100,8 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-vue-next';
+import { Separator } from '@/components/ui/separator';
+import { Menu, Slash } from 'lucide-vue-next';
 
 const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartNode[]>([]);

@@ -133,6 +133,7 @@ interface DataTableToolbarProps {
   normalizeSearchValue?: (value: string) => string;
   extractSearchValue?: (value: unknown) => string;
   applySearchOnEnter?: boolean;
+  isExternalFiltered?: boolean;
 }
 
 const props = withDefaults(defineProps<DataTableToolbarProps>(), {
@@ -140,6 +141,7 @@ const props = withDefaults(defineProps<DataTableToolbarProps>(), {
   normalizeSearchValue: undefined,
   extractSearchValue: undefined,
   applySearchOnEnter: false,
+  isExternalFiltered: false,
 });
 
 const forceUpdate = ref(0);
@@ -147,7 +149,7 @@ const hideableColumns = computed(() => {
   return props.table.getAllColumns().filter((column) => column.getCanHide());
 });
 
-const isFiltered = computed(() => props.table.getState().columnFilters.length > 0);
+const isFiltered = computed(() => props.table.getState().columnFilters.length > 0 || props.isExternalFiltered);
 
 const selectedRowCount = computed(() => Object.keys(props.table.getState().rowSelection).length);
 
@@ -220,8 +222,13 @@ function handleSearchEnter() {
   setSearchFilter(internalSearchValue.value);
 }
 
+const emit = defineEmits<{
+  (e: 'reset'): void;
+}>();
+
 function resetFilters() {
   props.table.resetColumnFilters();
+  emit('reset');
 }
 
 function onToggleColumn(column: any, value?: boolean) {

@@ -1,6 +1,24 @@
 <template>
   <div class="flex h-full min-h-0 flex-col">
     <div class="sticky top-0 z-10 flex flex-col gap-1.5 border-b border-border/60 bg-card/95 px-3.5 pt-3 pb-2.5">
+      <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <span v-if="isSearching">검색 결과 {{ visibleDepartmentCount }}개</span>
+        <span v-else>총 부서 {{ totalDepartments }}개</span>
+        <div class="flex items-center gap-1.5">
+          <Button variant="ghost" size="icon" class="h-4 w-6" :disabled="isFullyExpanded || isSearching"
+            @click="expandAll" title="전체 펼치기">
+            <ChevronsUpDown class="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" class="h-4 w-6" :disabled="isFullyCollapsed || isSearching"
+            @click="collapseAll" title="전체 접기">
+            <ChevronsDownUp class="h-4 w-4" />
+          </Button>
+          <Button v-if="isSearching" variant="ghost" size="sm" class="h-7 px-2 text-xs" @click="clearSearch">
+            검색 초기화
+          </Button>
+        </div>
+      </div>
+
       <div class="relative">
         <Input v-model="searchTerm" type="text" placeholder="부서명, 코드, 리더를 검색하세요" class="h-9 pe-9 text-sm" />
         <button v-if="isSearching" type="button"
@@ -8,24 +26,6 @@
           @click="clearSearch" aria-label="검색어 지우기">
           <X class="h-4 w-4" />
         </button>
-      </div>
-
-      <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-        <div class="flex items-center gap-1.5">
-          <Button variant="outline" size="sm" class="h-5 px-3 text-xs" :disabled="isFullyExpanded || isSearching"
-            @click="expandAll">
-            전체 펼치기
-          </Button>
-          <Button variant="outline" size="sm" class="h-5 px-3 text-xs" :disabled="isFullyCollapsed || isSearching"
-            @click="collapseAll">
-            전체 접기
-          </Button>
-          <Button v-if="isSearching" variant="ghost" size="sm" class="h-7 px-2 text-xs" @click="clearSearch">
-            검색 초기화
-          </Button>
-        </div>
-        <span v-if="isSearching">검색 결과 {{ visibleDepartmentCount }}개</span>
-        <span v-else>총 부서 {{ totalDepartments }}개</span>
       </div>
     </div>
 
@@ -49,7 +49,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import OrganizationTreeNode from '@/features/organization/components/OrganizationTreeNode.vue';
 import type { OrganizationChartNode } from '@/features/organization/models/organization';
-import { X } from 'lucide-vue-next';
+import { X, ChevronsUpDown, ChevronsDownUp } from 'lucide-vue-next';
 
 interface Props {
   nodes: OrganizationChartNode[];
