@@ -2,12 +2,7 @@
   <FeatureSplitLayout :sidebar-default-size="18" :sidebar-min-size="10" :sidebar-max-size="26" :content-min-size="60">
     <template #sidebar="{ pane }">
       <div class="flex h-full min-h-0 flex-col border-r border-border/60 bg-background">
-        <div class="flex items-center justify-between px-3 py-3">
-          <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            채팅
-          </span>
-
-        </div>
+        <div class="flex items-center justify-between px-3 py-3"></div>
 
         <div class="px-4 pb-3">
           <Button class="w-full gap-2 text-sm" @click="handleCreateNewChat(pane)">
@@ -85,7 +80,29 @@
     </template>
 
     <template #default="{ pane }">
-      <div class="flex h-full min-h-0 flex-1 flex-col bg-background">
+      <div
+        class="relative flex h-full min-h-0 flex-1 flex-col bg-background"
+        @dragenter.prevent="handleDragEnter"
+        @dragleave.prevent="handleDragLeave"
+        @dragover.prevent
+        @drop.prevent="handleDrop"
+      >
+        <!-- Drag & Drop Overlay -->
+        <div
+          v-if="isDragging"
+          class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm transition-all animate-in fade-in duration-200"
+        >
+          <div class="flex flex-col items-center gap-4 p-8">
+            <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 shadow-lg ring-1 ring-primary/20">
+              <FileUp class="h-10 w-10 text-primary animate-bounce" />
+            </div>
+            <div class="text-center space-y-1">
+              <h3 class="text-xl font-semibold tracking-tight">무엇이든 추가하세요</h3>
+              <p class="text-sm text-muted-foreground">대화에 추가하려면 여기에 파일을 드롭하세요</p>
+            </div>
+          </div>
+        </div>
+
         <header class="flex items-center justify-between border-b border-border/40 px-4 py-3">
           <div class="flex items-center gap-3">
             <Button variant="ghost" size="icon"
@@ -116,8 +133,17 @@
 
         <div class="flex h-full min-h-0 flex-col items-center bg-background"
           :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'">
-          <ChatWidget class="flex w-full flex-1 min-h-0" v-model="draft" :messages="messages" :is-responding="isResponding"
-            :suggestions="[]" :info-text="infoText" @submit="handleSubmit" @suggestion="handleSuggestion" />
+          <ChatWidget
+            ref="chatWidgetRef"
+            class="flex w-full flex-1 min-h-0"
+            v-model="draft"
+            :messages="messages"
+            :is-responding="isResponding"
+            :suggestions="[]"
+            :info-text="infoText"
+            @submit="handleSubmit"
+            @suggestion="handleSuggestion"
+          />
         </div>
       </div>
     </template>
@@ -135,6 +161,7 @@ import {
   Share,
   Sparkles,
   Star,
+  FileUp,
 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -142,7 +169,6 @@ import { Input } from '@/components/ui/input';
 import ChatWidget from '@/features/chat/components/ChatWidget.vue';
 import {
   createChatMessage,
-  normalizeChatMessage,
   type ChatMessage,
 } from '@/features/chat/entity/ChatMessage';
 import { useChatRepository } from '@/features/chat/repository/useChatRepository';
@@ -194,6 +220,9 @@ const sessionId = ref<string | null>(null);
 const messages = ref<ChatMessage[]>([]);
 const draft = ref('');
 const isResponding = ref(false);
+const isDragging = ref(false);
+const chatWidgetRef = ref<any>(null);
+let dragCounter = 0;
 
 const infoText = computed(() =>
   isResponding.value ? '응답을 생성 중입니다...' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
@@ -261,6 +290,32 @@ function handleSuggestion(value: string) {
   draft.value = value;
 }
 
+function handleDragEnter(event: DragEvent) {
+  dragCounter++;
+  if (event.dataTransfer?.types.includes('Files')) {
+    isDragging.value = true;
+  }
+}
+
+function handleDragLeave(event: DragEvent) {
+  dragCounter--;
+  if (dragCounter === 0) {
+    isDragging.value = false;
+  }
+}
+
+function handleDrop(event: DragEvent) {
+  isDragging.value = false;
+  dragCounter = 0;
+  
+  if (event.dataTransfer?.files) {
+    const files = Array.from(event.dataTransfer.files);
+    if (files.length > 0) {
+      chatWidgetRef.value?.addFiles(files);
+    }
+  }
+}
+
 async function handleSubmit(content: string) {
   messages.value.push(createChatMessage('user', content));
 
@@ -293,5 +348,4 @@ async function handleSubmit(content: string) {
     isResponding.value = false;
   }
 }
-
 </script>

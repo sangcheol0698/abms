@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4">
     <!-- Search Bar -->
-   <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2">
       <Input
         v-model="searchName"
         placeholder="이름으로 검색..."
@@ -52,11 +52,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  DataTable,
-  DataTableColumnHeader,
-  DataTablePagination,
-} from '@/components/business';
+import { DataTable, DataTableColumnHeader, DataTablePagination } from '@/components/business';
 import { appContainer } from '@/core/di/container';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
@@ -75,7 +71,7 @@ const router = useRouter();
 const employees = ref<EmployeeListItem[]>([]);
 const isLoading = ref(false);
 const page = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(5);
 const totalPages = ref(1);
 const totalElements = ref(0);
 const searchName = ref('');
@@ -115,11 +111,14 @@ function handleCopyEmail(employee: EmployeeListItem) {
     toast.error('이메일 정보가 없습니다.');
     return;
   }
-  navigator.clipboard.writeText(employee.email).then(() => {
-    toast.success('이메일을 클립보드에 복사했습니다.');
-  }).catch(() => {
-    toast.error('이메일 복사에 실패했습니다.');
-  });
+  navigator.clipboard
+    .writeText(employee.email)
+    .then(() => {
+      toast.success('이메일을 클립보드에 복사했습니다.');
+    })
+    .catch(() => {
+      toast.error('이메일 복사에 실패했습니다.');
+    });
 }
 
 async function handleDeleteEmployee(employee: EmployeeListItem) {
@@ -187,7 +186,7 @@ const columns: ColumnDef<EmployeeListItem>[] = [
     size: 260,
     meta: { skeleton: 'title-subtitle' },
   },
- {
+  {
     id: 'position',
     accessorFn: (row) => row.positionLabel,
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '직책', align: 'left' }),
@@ -297,7 +296,7 @@ function buildSortParam(): string | undefined {
   if (sorting.value.length === 0) {
     return undefined;
   }
-  
+
   const sort = sorting.value[0];
   if (!sort) {
     return undefined;
@@ -308,19 +307,19 @@ function buildSortParam(): string | undefined {
 
 async function loadEmployees() {
   if (!props.departmentId) return;
-  
+
   isLoading.value = true;
   try {
     const name = searchName.value.trim() || undefined;
     const sort = buildSortParam();
-    
+
     const response = await repository.fetchDepartmentEmployees(props.departmentId, {
       page: page.value,
       size: pageSize.value,
       name,
       sort,
     });
-    
+
     employees.value = response.content;
     totalPages.value = response.totalPages;
     totalElements.value = response.totalElements;
@@ -364,16 +363,12 @@ watch(
     sorting.value = [];
     loadEmployees();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Watch for sorting change
-watch(
-  sorting,
-  () => {
-    page.value = 1;
-    loadEmployees();
-  }
-);
+watch(sorting, () => {
+  page.value = 1;
+  loadEmployees();
+});
 </script>
-

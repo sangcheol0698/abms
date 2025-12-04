@@ -1,5 +1,5 @@
 <template>
-    <div class="markdown-content" v-html="formattedContent" />
+    <div class="markdown-content" v-html="formattedContent" @click="handleCopy" />
 </template>
 
 <script setup lang="ts">
@@ -123,6 +123,10 @@ const processContent = async () => {
         <div class="code-block-container" data-language="${block.lang}">
           <div class="code-block-header">
             <span class="code-language">${block.lang.toUpperCase()}</span>
+            <button class="copy-code-btn" aria-label="복사">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>복사</span>
+            </button>
           </div>
           <div class="shiki-wrapper">${highlightedHtml}</div>
         </div>
@@ -146,13 +150,44 @@ watch(isDarkMode, () => {
     highlightCache.clear(); // 캐시 초기화하여 새로운 테마 적용
     processContent();
 });
+
+// 코드 복사 핸들러
+const handleCopy = async (event: MouseEvent) => {
+    const target = (event.target as HTMLElement).closest('.copy-code-btn');
+    if (!target) return;
+
+    const container = target.closest('.code-block-container');
+    if (!container) return;
+
+    const code = container.querySelector('code')?.innerText || '';
+    if (!code) return;
+
+    try {
+        await navigator.clipboard.writeText(code);
+        
+        // 복사 성공 피드백
+        target.classList.add('복사성공');
+        const originalHtml = target.innerHTML;
+        target.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>복사됨!</span>
+        `;
+        
+        setTimeout(() => {
+            target.classList.remove('복사성공');
+            target.innerHTML = originalHtml;
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy code:', err);
+    }
+};
 </script>
 
 <style>
 .markdown-content {
     color: var(--foreground);
     line-height: 1.7;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 /* 제목 스타일 - 그라데이션과 마진 최적화 */
@@ -162,10 +197,7 @@ watch(isDarkMode, () => {
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-    background: linear-gradient(135deg, var(--primary) 0%, color-mix(in oklch, var(--primary), transparent 20%) 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--foreground);
     font-weight: 700;
     margin: 1.5em 0 0.75em 0;
     line-height: 1.3;
@@ -173,27 +205,27 @@ watch(isDarkMode, () => {
 }
 
 .markdown-content h1 {
-    font-size: 1.75rem;
-}
-
-.markdown-content h2 {
     font-size: 1.5rem;
 }
 
-.markdown-content h3 {
+.markdown-content h2 {
     font-size: 1.25rem;
 }
 
-.markdown-content h4 {
+.markdown-content h3 {
     font-size: 1.125rem;
 }
 
-.markdown-content h5 {
+.markdown-content h4 {
     font-size: 1rem;
 }
 
+.markdown-content h5 {
+    font-size: 0.875rem;
+}
+
 .markdown-content h6 {
-    font-size: 0.9rem;
+    font-size: 0.8125rem;
 }
 
 /* 첫 번째 제목의 상단 마진 제거 */
@@ -210,9 +242,6 @@ watch(isDarkMode, () => {
 .markdown-content strong {
     color: var(--foreground);
     font-weight: 650;
-    background: color-mix(in oklch, var(--primary), transparent 90%);
-    padding: 0.125rem 0.25rem;
-    border-radius: 0.25rem;
 }
 
 .markdown-content em {
@@ -335,9 +364,9 @@ watch(isDarkMode, () => {
 .markdown-content code:not(pre code) {
     background: linear-gradient(135deg, var(--muted) 0%, color-mix(in oklch, var(--muted), transparent 20%) 100%);
     color: var(--primary);
-    padding: 0.2rem 0.4rem;
+    padding: 0.15rem 0.25rem;
     border-radius: 0.375rem;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
     font-weight: 500;
     border: 1px solid color-mix(in oklch, var(--border), transparent 50%);
@@ -371,6 +400,9 @@ watch(isDarkMode, () => {
     overflow: hidden;
     box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%);
     backdrop-filter: blur(8px);
+    max-width: 100%;
+    display: grid; /* Grid layout helps contain overflow in nested flex containers */
+    min-width: 0;
 }
 
 .markdown-content .code-block-header {
@@ -381,14 +413,7 @@ watch(isDarkMode, () => {
     background: color-mix(in oklch, var(--background), var(--foreground) 5%);
     border-bottom: 1px solid color-mix(in oklch, var(--border), var(--foreground) 30%);
     backdrop-filter: blur(4px);
-}
-
-.markdown-content .code-language {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--muted-foreground);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    width: 100%;
 }
 
 .markdown-content .code-language {
@@ -449,6 +474,8 @@ watch(isDarkMode, () => {
     tab-size: 4;
     -moz-tab-size: 4;
     -o-tab-size: 4;
+    white-space: pre;
+    overflow-x: auto;
 }
 
 .markdown-content .code-block-container pre code {
@@ -457,18 +484,20 @@ watch(isDarkMode, () => {
     border: none;
     font-size: 0.875rem;
     color: var(--foreground);
-    /* Slate-800 (어두운 색상) */
     box-shadow: none;
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
     tab-size: 4;
     -moz-tab-size: 4;
     -o-tab-size: 4;
+    white-space: pre;
 }
 
-/* Shiki 래퍼 스타일 - Shiki는 인라인 스타일을 사용하므로 래퍼만 설정 */
+/* Shiki 래퍼 스타일 */
 .markdown-content .shiki-wrapper {
     overflow-x: auto;
     border-radius: 0.5rem;
+    max-width: 100%;
+    width: 100%;
 }
 
 .markdown-content .shiki-wrapper pre {
@@ -483,6 +512,8 @@ watch(isDarkMode, () => {
     tab-size: 4 !important;
     -moz-tab-size: 4 !important;
     -o-tab-size: 4 !important;
+    white-space: pre !important;
+    width: 100%;
 }
 
 .markdown-content .shiki-wrapper code {
@@ -491,6 +522,9 @@ watch(isDarkMode, () => {
     border: none !important;
     box-shadow: none !important;
     font-family: inherit !important;
+    white-space: pre !important;
+    display: inline-block;
+    min-width: 100%;
 }
 
 /* 다크 테마에서 더 잘 보이도록 배경색 및 텍스트 조정 */
@@ -502,10 +536,7 @@ watch(isDarkMode, () => {
     color: hsl(var(--foreground) / 0.9);
 }
 
-.dark .markdown-content strong {
-    color: hsl(var(--foreground));
-    background: hsl(var(--primary) / 0.2);
-}
+
 
 .dark .markdown-content .code-block-container {
     background: hsl(var(--muted) / 0.3);
@@ -552,22 +583,7 @@ watch(isDarkMode, () => {
     border-left-color: hsl(var(--primary) / 0.7);
 }
 
-/* 다크 모드 링크 - 가독성 개선 */
-.dark .markdown-content a {
-    color: #60a5fa;
-    /* 밝은 파란색으로 변경하여 가독성 확보 */
-    text-decoration: underline;
-    text-decoration-color: rgba(96, 165, 250, 0.3);
-    text-underline-offset: 4px;
-    font-weight: 600;
-}
 
-.dark .markdown-content a:hover {
-    color: #93c5fd;
-    text-decoration-color: #93c5fd;
-    background: rgba(96, 165, 250, 0.1);
-    border-radius: 2px;
-}
 
 /* 다크 모드 헤더 */
 .dark .markdown-content h1,
@@ -701,17 +717,7 @@ watch(isDarkMode, () => {
 }
 
 /* 다크 모드 최적화 */
-.dark .markdown-content h1,
-.dark .markdown-content h2,
-.dark .markdown-content h3,
-.dark .markdown-content h4,
-.dark .markdown-content h5,
-.dark .markdown-content h6 {
-    background: linear-gradient(135deg, var(--primary) 0%, color-mix(in oklch, var(--primary), transparent 10%) 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+
 
 /* 다크 모드 구분선 */
 .dark .markdown-content hr {
@@ -773,8 +779,8 @@ watch(isDarkMode, () => {
     }
 
     .markdown-content pre {
-        padding: 1rem;
-        margin: 1rem 0;
+        padding: 0.75rem;
+        margin: 0.75rem 0;
         font-size: 0.8rem;
     }
 

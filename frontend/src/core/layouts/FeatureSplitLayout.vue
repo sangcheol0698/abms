@@ -26,6 +26,8 @@
 
         <Sheet :open="pane.isSidebarOpen.value" @update:open="pane.isSidebarOpen.value = $event">
           <SheetContent side="left" class="p-0 w-[80%] sm:w-[350px]">
+            <SheetTitle class="sr-only">Sidebar</SheetTitle>
+            <SheetDescription class="sr-only">Sidebar content</SheetDescription>
             <div class="flex h-full flex-col overflow-hidden">
               <slot name="sidebar" :pane="pane" />
             </div>
@@ -39,7 +41,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useProvideFeatureSplitPane } from '@/core/composables/useFeatureSplitPane';
 
 const props = withDefaults(

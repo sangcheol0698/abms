@@ -36,25 +36,7 @@
             <template v-else>
               <div class="flex flex-col gap-6">
                 <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
-                <div
-                  v-if="isResponding"
-                  class="flex items-center gap-2 self-start rounded-2xl px-3 py-2 text-sm text-muted-foreground"
-                >
-                  <div class="flex gap-1">
-                    <span
-                      class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40"
-                      style="animation-delay: 0ms"
-                    ></span>
-                    <span
-                      class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40"
-                      style="animation-delay: 150ms"
-                    ></span>
-                    <span
-                      class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40"
-                      style="animation-delay: 300ms"
-                    ></span>
-                  </div>
-                </div>
+                <ChatLoadingBubble v-if="isResponding" />
               </div>
             </template>
           </div>
@@ -65,6 +47,7 @@
     <div class="bg-background px-4 pb-6 pt-2">
       <div class="mx-auto w-full max-w-3xl">
         <ChatComposer
+          ref="composerRef"
           v-model="draftValue"
           :disabled="isResponding"
           :info-text="infoText"
@@ -81,6 +64,7 @@ import type { ComponentPublicInstance } from 'vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { Bot } from 'lucide-vue-next';
 import ChatComposer from '@/features/chat/components/ChatComposer.vue';
+import ChatLoadingBubble from '@/features/chat/components/ChatLoadingBubble.vue';
 import ChatMessage from '@/features/chat/components/ChatMessage.vue';
 import type { ChatMessage as ChatMessageModel } from '@/features/chat/entity/ChatMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -160,4 +144,13 @@ const defaultSuggestions = [
     query: '인사팀은 부서 구조 어디에 있어?',
   },
 ];
+const composerRef = ref<any>(null);
+
+function addFiles(files: File[]) {
+  composerRef.value?.addFiles(files);
+}
+
+defineExpose({
+  addFiles,
+});
 </script>

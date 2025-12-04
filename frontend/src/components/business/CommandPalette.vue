@@ -1,29 +1,13 @@
-<template>
-  <CommandDialog :open="open" @update:open="handleOpenChange">
-    <CommandInput placeholder="명령을 검색하세요..." />
-    <CommandList>
-      <CommandEmpty>일치하는 명령이 없습니다.</CommandEmpty>
-      <CommandGroup heading="화면 이동">
-        <CommandItem
-          v-for="item in navigationCommands"
-          :key="item.to"
-          :value="item.label"
-          @select="navigate(item.to)"
-        >
-          {{ item.label }}
-          <CommandShortcut>{{ item.shortcut }}</CommandShortcut>
-        </CommandItem>
-      </CommandGroup>
-      <CommandSeparator />
-      <CommandGroup heading="도움말">
-        <CommandItem value="docs" @select="openDocs">문서 열기</CommandItem>
-      </CommandGroup>
-    </CommandList>
-  </CommandDialog>
-</template>
-
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import {
+  Bot,
+  Briefcase,
+  FileText,
+  Network,
+  PieChart,
+  UserCircle,
+} from 'lucide-vue-next';
 import {
   CommandDialog,
   CommandEmpty,
@@ -39,6 +23,7 @@ interface NavigationCommand {
   label: string;
   to: string;
   shortcut: string;
+  icon: any;
 }
 
 withDefaults(
@@ -57,11 +42,11 @@ const emit = defineEmits<{
 const router = useRouter();
 
 const navigationCommands: NavigationCommand[] = [
-  { label: '대시보드', to: '/', shortcut: '' },
-  { label: '부서', to: '/organization', shortcut: '' },
-  { label: '직원', to: '/employees', shortcut: '' },
-  { label: '프로젝트', to: '/projects', shortcut: '' },
-  { label: 'AI Assistant', to: '/assistant', shortcut: '' },
+  { label: '대시보드', to: '/', shortcut: '', icon: PieChart },
+  { label: '부서', to: '/organization', shortcut: '', icon: Network },
+  { label: '직원', to: '/employees', shortcut: '', icon: UserCircle },
+  { label: '프로젝트', to: '/projects', shortcut: '', icon: Briefcase },
+  { label: 'AI Assistant', to: '/assistant', shortcut: '', icon: Bot },
 ];
 
 function handleOpenChange(value: boolean) {
@@ -78,3 +63,31 @@ function openDocs() {
   window.open('/docs/도메인모델.md', '_blank');
 }
 </script>
+
+<template>
+  <CommandDialog :open="open" @update:open="handleOpenChange">
+    <CommandInput placeholder="명령을 검색하세요..." />
+    <CommandList>
+      <CommandEmpty>일치하는 명령이 없습니다.</CommandEmpty>
+      <CommandGroup heading="화면 이동">
+        <CommandItem
+          v-for="item in navigationCommands"
+          :key="item.to"
+          :value="item.label"
+          @select="navigate(item.to)"
+        >
+          <component :is="item.icon" class="mr-2 h-4 w-4" />
+          <span>{{ item.label }}</span>
+          <CommandShortcut>{{ item.shortcut }}</CommandShortcut>
+        </CommandItem>
+      </CommandGroup>
+      <CommandSeparator />
+      <CommandGroup heading="도움말">
+        <CommandItem value="docs" @select="openDocs">
+          <FileText class="mr-2 h-4 w-4" />
+          <span>문서 열기</span>
+        </CommandItem>
+      </CommandGroup>
+    </CommandList>
+  </CommandDialog>
+</template>
