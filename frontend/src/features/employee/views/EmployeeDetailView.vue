@@ -17,7 +17,14 @@
         :employee="employee"
         :employee-initials="employeeInitials"
         @department-click="goToDepartment"
-      />
+      >
+        <template #actions>
+          <Button variant="outline" size="sm" @click="openEditDialog">
+            <Pencil class="mr-2 h-4 w-4" />
+            직원 편집
+          </Button>
+        </template>
+      </EmployeeDetailHeader>
 
       <Tabs default-value="overview" class="flex min-h-[320px] flex-1 flex-col gap-4">
         <TabsList class="flex-wrap">
@@ -62,27 +69,47 @@
         </div>
       </Tabs>
     </template>
+
+    <EmployeeUpdateDialog
+      :open="isEmployeeUpdateDialogOpen"
+      :department-options="departmentOptions"
+      :grade-options="gradeOptions"
+      :position-options="positionOptions"
+      :type-options="typeOptions"
+      :employee="employee ?? undefined"
+      @update:open="isEmployeeUpdateDialogOpen = $event"
+      @updated="handleEmployeeUpdated"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Pencil } from 'lucide-vue-next';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
+import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
+import type { OrganizationChartNode } from '@/features/organization/models/organization';
+import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
+
 import HttpError from '@/core/http/HttpError';
 import EmployeeDetailHeader from '@/features/employee/components/EmployeeDetailHeader.vue';
 import EmployeeOverviewPanel from '@/features/employee/components/EmployeeOverviewPanel.vue';
 import EmployeeEmploymentPanel from '@/features/employee/components/EmployeeEmploymentPanel.vue';
 import EmployeeSalaryPanel from '@/features/employee/components/EmployeeSalaryPanel.vue';
 import EmployeeProjectsPanel from '@/features/employee/components/EmployeeProjectsPanel.vue';
+import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
 
 const route = useRoute();
 const router = useRouter();
+
 const repository = appContainer.resolve(EmployeeRepository);
+const organizationRepository = appContainer.resolve(OrganizationRepository);
 
 const employee = ref<EmployeeSummary | null>(null);
 const isLoading = ref(true);
@@ -100,6 +127,13 @@ const employeeInitials = computed(() => {
   const name = employee.value?.name ?? '';
   return name.trim().slice(0, 2).toUpperCase() || '??';
 });
+
+const isEmployeeUpdateDialogOpen = ref(false);
+const departmentOptions = ref<{ label: string; value: string }[]>([]);
+const statusOptions = ref<EmployeeFilterOption[]>([]);
+const typeOptions = ref<EmployeeFilterOption[]>([]);
+const gradeOptions = ref<EmployeeFilterOption[]>([]);
+const positionOptions = ref<EmployeeFilterOption[]>([]);
 
 watch(
   () => route.params.employeeId,
@@ -240,4 +274,52 @@ function formatDate(value?: string | null) {
   }
   return parsed.toLocaleDateString();
 }
+
+async function loadOptions() {
+  try {
+    const [chart, statuses, types, grades, positions] = await Promise.all([
+      organizationRepository.fetchOrganizationChart(),
+      repository.fetchStatuses(),
+      repository.fetchTypes(),
+      repository.fetchGrades(),
+      repository.fetchPositions(),
+    ]);
+
+    const map = new Map<string, string>();
+    const traverse = (nodes: OrganizationChartNode[]) => {
+      nodes.forEach((node) => {
+        if (!map.has(node.departmentId)) {
+          map.set(node.departmentId, node.departmentName);
+        }
+        if (Array.isArray(node.children) && node.children.length > 0) {
+          traverse(node.children);
+        }
+      });
+    };
+    traverse(chart);
+    departmentOptions.value = Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+
+    statusOptions.value = statuses;
+    typeOptions.value = types;
+    gradeOptions.value = grades;
+    positionOptions.value = positions;
+  } catch (error) {
+    console.error('옵션 정보를 불러오지 못했습니다.', error);
+  }
+}
+
+function openEditDialog() {
+  isEmployeeUpdateDialogOpen.value = true;
+}
+
+function handleEmployeeUpdated() {
+  isEmployeeUpdateDialogOpen.value = false;
+  if (employee.value?.employeeId) {
+    fetchEmployee(employee.value.employeeId, { showLoading: false });
+  }
+}
+
+onMounted(() => {
+  loadOptions();
+});
 </script>

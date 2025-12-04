@@ -1,11 +1,12 @@
 <template>
   <li :data-node-id="node.departmentId" class="space-y-1">
     <div
-      class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition"
+      class="group flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition"
       :class="{
         'bg-primary text-primary-foreground font-medium shadow-sm': isSelected,
         'hover:bg-muted/50 text-foreground': !isSelected,
       }"
+      @click="selectNode(node.departmentId)"
     >
       <button
         v-if="showToggle"
@@ -21,11 +22,7 @@
       </button>
       <span v-else class="inline-flex h-5 w-5 shrink-0" aria-hidden="true" />
 
-      <button
-        type="button"
-        class="flex flex-1 items-center gap-2 truncate text-left"
-        @click="selectNode(node.departmentId)"
-      >
+      <div class="flex flex-1 items-center gap-2 truncate text-left">
         <component
           :is="departmentIcon"
           class="h-4 w-4 shrink-0 transition"
@@ -47,7 +44,7 @@
             <span v-else>{{ segment.text }}</span>
           </template>
         </span>
-      </button>
+      </div>
 
       <div
         class="ms-2 flex shrink-0 items-center gap-1 text-[11px] font-medium"

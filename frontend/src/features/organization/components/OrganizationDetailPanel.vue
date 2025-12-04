@@ -18,7 +18,7 @@
       </div>
 
       <div class="grid gap-2 sm:grid-cols-3">
-        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm relative group">
+        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 relative group">
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
             <UserRound class="h-4 w-4" />
           </div>
@@ -37,7 +37,7 @@
             <Pencil class="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         </article>
-        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm">
+        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3">
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Users class="h-4 w-4" />
           </div>
@@ -46,7 +46,7 @@
             <span class="font-semibold text-foreground">{{ department.employeeCount }}명</span>
           </div>
         </article>
-        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 shadow-sm">
+        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3">
           <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
             <GitBranch class="h-4 w-4" />
           </div>

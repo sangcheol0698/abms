@@ -30,6 +30,9 @@
         <span>{{ employee.position || '—' }}</span>
       </div>
     </div>
+    <div class="flex items-center gap-2">
+      <slot name="actions" />
+    </div>
   </div>
 </template>
 
