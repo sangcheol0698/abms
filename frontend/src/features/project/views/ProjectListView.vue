@@ -17,6 +17,28 @@
         :getColumnLabel="getColumnLabel"
       >
         <template #filters>
+          <!-- 날짜 검색 유형 선택 -->
+          <Select v-model="searchType">
+            <SelectTrigger class="w-32 h-8">
+              <SelectValue placeholder="날짜 유형" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="option in searchTypeOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <!-- 날짜 범위 필터 -->
+          <DateRangeFilter
+            v-model="dateRange"
+            placeholder="날짜 범위 선택"
+          />
+
           <DataTableFacetedFilter
             v-if="table.getColumn('status')"
             :column="table.getColumn('status')"
@@ -111,7 +133,9 @@ import {
   DataTablePagination,
   DataTableToolbar,
   DataTableFacetedFilter,
+  DateRangeFilter,
 } from '@/components/business';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { appContainer } from '@/core/di/container';
 import ProjectRepository from '@/features/project/repository/ProjectRepository';
 import ProjectCreateDialog from '@/features/project/components/ProjectCreateDialog.vue';
@@ -157,6 +181,26 @@ const editingProject = ref<ProjectDetail | null>(null);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 const statusFilterOptions = ref<{ value: string; label: string; icon?: any }[]>([]);
+
+// 날짜 필터 상태
+const searchType = ref('계약일자');
+const dateRange = ref<{ start?: Date; end?: Date } | null>(null);
+
+// 날짜 검색 유형 옵션
+const searchTypeOptions = [
+  { label: '계약일자', value: '계약일자' },
+  { label: '시작일자', value: '시작일자' },
+  { label: '종료일자', value: '종료일자' },
+];
+
+// API용 날짜 포맷팅 함수
+function formatDateForAPI(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 function getColumnLabel(columnId: string): string {
   const labels: Record<string, string> = {
@@ -296,10 +340,20 @@ const table = useVueTable({
 async function loadProjects() {
   isLoading.value = true;
   try {
-    const response = await repository.list({
+    const params: any = {
       page: page.value,
       size: pageSize.value,
-    });
+    };
+
+    if (dateRange.value && dateRange.value.start) {
+      params.searchType = searchType.value;
+      params.startDate = formatDateForAPI(dateRange.value.start);
+      if (dateRange.value.end) {
+        params.endDate = formatDateForAPI(dateRange.value.end);
+      }
+    }
+
+    const response = await repository.list(params);
 
     projects.value = response.content;
     totalPages.value = response.totalPages;
@@ -411,6 +465,20 @@ function handleDeleteProject(project: ProjectListItem) {
 
 // Auto-load on mount
 watch(() => true, loadProjects, { immediate: true });
+
+// 날짜 범위 변경 감지하여 데이터 로드
+watch(dateRange, () => {
+  page.value = 1; // 검색 조건 변경 시 첫 페이지로 이동
+  loadProjects();
+});
+
+// 검색 유형 변경 감지하여 데이터 로드 (날짜 범위가 선택된 경우에만)
+watch(searchType, () => {
+  if (dateRange.value) {
+    page.value = 1;
+    loadProjects();
+  }
+});
 
 onMounted(async () => {
   try {

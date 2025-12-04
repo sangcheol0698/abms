@@ -47,7 +47,7 @@ import {
   type SidebarProps,
   SidebarRail
 } from '@/components/ui/sidebar';
-import { Building2, FolderKanban, GalleryVerticalEnd, LayoutDashboard, MessageCircle, Users } from 'lucide-vue-next';
+import { Bot, Briefcase, GalleryVerticalEnd, Network, PieChart, UserCircle } from 'lucide-vue-next';
 import NavMain from './NavMain.vue';
 import NavUser from './NavUser.vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
@@ -120,27 +120,27 @@ const data = {
     {
       title: '대시보드',
       url: '/',
-      icon: LayoutDashboard,
+      icon: PieChart,
     },
     {
-      title: '조직도',
+      title: '부서',
       url: '/organization',
-      icon: Building2,
+      icon: Network,
     },
     {
-      title: '구성원',
+      title: '직원',
       url: '/employees',
-      icon: Users,
+      icon: UserCircle,
     },
     {
       title: '프로젝트',
       url: '/projects',
-      icon: FolderKanban,
+      icon: Briefcase,
     },
     {
       title: 'AI Assistant',
       url: '/assistant',
-      icon: MessageCircle
+      icon: Bot
     }
   ],
   navSecondary: [],

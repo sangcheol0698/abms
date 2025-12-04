@@ -62,7 +62,7 @@ const positionOptions = [
 
 const organizationChartResponse: any[] = [];
 
-test.describe('구성원 수정 다이얼로그', () => {
+test.describe('부서 수정 다이얼로그', () => {
   test('기존 입사일과 생년월일을 그대로 표시한다', async ({ page }) => {
     await page.route('**/api/employees', async (route) => {
       const url = route.request().url();
@@ -79,36 +79,60 @@ test.describe('구성원 수정 다이얼로그', () => {
     });
 
     await page.route('**/api/employees/statuses', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(statusOptions) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(statusOptions),
+      }),
     );
     await page.route('**/api/employees/types', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(typeOptions) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(typeOptions),
+      }),
     );
     await page.route('**/api/employees/grades', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(gradeOptions) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(gradeOptions),
+      }),
     );
     await page.route('**/api/employees/positions', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(positionOptions) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(positionOptions),
+      }),
     );
 
     await page.route('**/api/departments/organization-chart', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(organizationChartResponse) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(organizationChartResponse),
+      }),
     );
 
     await page.route('**/api/employees/02ed3834-6350-4e83-8eec-77352e1412b1', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(employeeDetailResponse) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(employeeDetailResponse),
+      }),
     );
 
     await page.goto(`${BASE_URL}/employees`);
 
-    await expect(page.getByRole('heading', { name: '구성원 목록' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '부서 목록' })).toBeVisible();
     await expect(page.getByRole('row', { name: /박지훈/ })).toBeVisible();
 
     const targetRow = page.getByRole('row', { name: /박지훈/ });
-    await targetRow.getByRole('button', { name: '구성원 메뉴 열기' }).click();
-    await page.getByRole('menuitem', { name: '구성원 편집' }).click();
+    await targetRow.getByRole('button', { name: '부서 메뉴 열기' }).click();
+    await page.getByRole('menuitem', { name: '부서 편집' }).click();
 
-    const dialog = page.getByRole('dialog', { name: '구성원 편집' });
+    const dialog = page.getByRole('dialog', { name: '부서 편집' });
     await expect(dialog).toBeVisible();
 
     await expect(dialog.getByRole('button', { name: /1999\.\s03\.\s09(?:\.)?/ })).toBeVisible();

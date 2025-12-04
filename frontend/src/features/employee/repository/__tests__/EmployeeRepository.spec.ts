@@ -139,7 +139,7 @@ describe('EmployeeRepository.search', () => {
     const item = result.content[0];
     expect(item).toBeDefined();
     if (!item) {
-      throw new Error('변환된 구성원 항목이 존재해야 합니다.');
+      throw new Error('변환된 직원 항목이 존재해야 합니다.');
     }
 
     expect(item.employeeId).toBe('E-01');
@@ -157,7 +157,7 @@ describe('EmployeeRepository.search', () => {
     expect(item.avatarImageUrl).toMatch(/(data:image\/svg\+xml|\.svg$)/);
   });
 
-  it('구성원 정보를 업데이트한다', async () => {
+  it('직원 정보를 업데이트한다', async () => {
     primeFilterOptions();
     httpGet.mockResolvedValueOnce(null);
     const httpPut = vi.fn().mockResolvedValue({

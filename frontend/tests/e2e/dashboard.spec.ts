@@ -9,10 +9,10 @@ test.describe('대시보드 화면', () => {
     await expect(page.getByRole('heading', { level: 1, name: '대시보드' })).toBeVisible();
     await expect(page.getByText('서비스 주요 지표와 최근 활동을 한눈에 확인하세요.')).toBeVisible();
 
-    await expect(page.getByText('총 구성원')).toBeVisible();
+    await expect(page.getByText('총 부서')).toBeVisible();
     await expect(page.getByText('활성 프로젝트')).toBeVisible();
     await expect(page.getByText('이번 달 신규 입사')).toBeVisible();
-    await expect(page.getByText('휴가 중 구성원')).toBeVisible();
+    await expect(page.getByText('휴가 중 부서')).toBeVisible();
 
     await expect(page.getByRole('heading', { name: '최근 알림' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '빠른 작업' })).toBeVisible();

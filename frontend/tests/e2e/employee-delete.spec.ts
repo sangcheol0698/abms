@@ -47,7 +47,7 @@ const positionOptions = [
   { name: 'MANAGER', description: '팀장', rank: 2 },
 ];
 
-test.describe('구성원 삭제', () => {
+test.describe('부서 삭제', () => {
   test('삭제 확인 후 API 호출과 목록 갱신이 이뤄진다', async ({ page }) => {
     let deleteCalled = false;
 
@@ -68,16 +68,32 @@ test.describe('구성원 삭제', () => {
     });
 
     await page.route('**/api/employees/statuses', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(statusOptions) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(statusOptions),
+      }),
     );
     await page.route('**/api/employees/types', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(typeOptions) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(typeOptions),
+      }),
     );
     await page.route('**/api/employees/grades', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(gradeOptions) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(gradeOptions),
+      }),
     );
     await page.route('**/api/employees/positions', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(positionOptions) }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(positionOptions),
+      }),
     );
 
     await page.route(`**/api/employees/${employeeId}`, async (route) => {
@@ -91,22 +107,22 @@ test.describe('구성원 삭제', () => {
 
     await page.goto(`${BASE_URL}/employees`);
 
-    await expect(page.getByRole('heading', { name: '구성원 목록' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '부서 목록' })).toBeVisible();
     const row = page.getByRole('row', { name: /박지훈/ });
     await expect(row).toBeVisible();
 
-    await row.getByRole('button', { name: '구성원 메뉴 열기' }).click();
-    await page.getByRole('menuitem', { name: '구성원 삭제' }).click();
+    await row.getByRole('button', { name: '부서 메뉴 열기' }).click();
+    await page.getByRole('menuitem', { name: '부서 삭제' }).click();
 
-    await expect(page.getByRole('dialog', { name: '구성원을 삭제할까요?' })).toBeVisible();
-    await expect(page.getByText(/박지훈 구성원을 삭제하면/)).toBeVisible();
+    await expect(page.getByRole('dialog', { name: '부서을 삭제할까요?' })).toBeVisible();
+    await expect(page.getByText(/박지훈 부서을 삭제하면/)).toBeVisible();
 
     await page.getByRole('button', { name: '삭제' }).click();
 
     await expect.poll(() => deleteCalled).toBeTruthy();
 
-    await expect(page.getByText('구성원을 삭제했습니다.')).toBeVisible();
+    await expect(page.getByText('부서을 삭제했습니다.')).toBeVisible();
     await expect(page.getByRole('row', { name: /박지훈/ })).toHaveCount(0);
-    await expect(page.getByText('구성원 정보를 찾을 수 없습니다')).toBeVisible();
+    await expect(page.getByText('부서 정보를 찾을 수 없습니다')).toBeVisible();
   });
 });

@@ -15,7 +15,7 @@ export function useEmployeeDeletion(onDeleted: () => Promise<void> | void) {
   const description = computed(() => {
     const name = candidateName.value;
     return name
-      ? `'${name}' 구성원을 삭제하면 복구할 수 없습니다.`
+      ? `'${name}' 직원을 삭제하면 복구할 수 없습니다.`
       : '삭제 후에는 복구할 수 없습니다.';
   });
 
@@ -43,7 +43,7 @@ export function useEmployeeDeletion(onDeleted: () => Promise<void> | void) {
     try {
       await employeeRepository.delete(id);
 
-      toast.success('구성원을 삭제했습니다.', {
+      toast.success('직원을 삭제했습니다.', {
         description: name ?? undefined,
         action: {
           label: '되돌리기',
@@ -71,8 +71,8 @@ export function useEmployeeDeletion(onDeleted: () => Promise<void> | void) {
       close();
     } catch (error) {
       const message =
-        error instanceof HttpError ? error.message : '구성원 삭제 중 오류가 발생했습니다.';
-      toast.error('구성원을 삭제하지 못했습니다.', {
+        error instanceof HttpError ? error.message : '직원 삭제 중 오류가 발생했습니다.';
+      toast.error('직원을 삭제하지 못했습니다.', {
         description: message,
       });
     } finally {

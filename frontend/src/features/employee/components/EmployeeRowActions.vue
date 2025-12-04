@@ -3,13 +3,13 @@
     <DropdownMenuTrigger as-child>
       <Button variant="ghost" size="icon" class="h-8 w-8 p-0 data-[state=open]:bg-muted">
         <MoreHorizontal class="h-4 w-4" />
-        <span class="sr-only">구성원 메뉴 열기</span>
+        <span class="sr-only">직원 메뉴 열기</span>
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-[180px]">
       <DropdownMenuItem @click="$emit('edit')">
         <Pencil class="mr-2 h-4 w-4" />
-        구성원 편집
+        직원 편집
       </DropdownMenuItem>
       <DropdownMenuItem @click="$emit('copyEmail')">
         <Copy class="mr-2 h-4 w-4" />
@@ -18,7 +18,7 @@
       <DropdownMenuSeparator />
       <DropdownMenuItem class="text-destructive" @click="$emit('delete')">
         <Trash class="mr-2 h-4 w-4" />
-        구성원 삭제
+        직원 삭제
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>

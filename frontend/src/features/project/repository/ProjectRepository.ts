@@ -13,11 +13,19 @@ export default class ProjectRepository {
   /**
    * 프로젝트 목록 조회 (페이징)
    */
-  async list(params: { page: number; size: number; sort?: string }): Promise<PageResponse<ProjectListItem>> {
-    const queryParams: Record<string, string> = {
-      page: Math.max(params.page - 1, 0).toString(),
-      size: params.size.toString(),
-    };
+  async list(params: { page: number; size: number; sort?: string } & Record<string, any>): Promise<PageResponse<ProjectListItem>> {
+    const queryParams: Record<string, string> = {};
+
+    // Copy all params to queryParams, converting non-string values to string
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null) {
+        queryParams[key] = String(params[key]);
+      }
+    });
+
+    // Override page and size with calculated values
+    queryParams.page = Math.max(params.page - 1, 0).toString();
+    queryParams.size = params.size.toString();
 
     if (params.sort) {
       queryParams.sort = params.sort;

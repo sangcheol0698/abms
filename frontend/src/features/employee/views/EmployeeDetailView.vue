@@ -4,11 +4,11 @@
       v-if="isLoading"
       class="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10"
     >
-      <span class="text-sm text-muted-foreground">구성원 정보를 불러오는 중입니다...</span>
+      <span class="text-sm text-muted-foreground">직원 정보를 불러오는 중입니다...</span>
     </div>
 
     <Alert v-else-if="errorMessage" variant="destructive">
-      <AlertTitle>구성원 정보를 불러오지 못했습니다.</AlertTitle>
+      <AlertTitle>직원 정보를 불러오지 못했습니다.</AlertTitle>
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
@@ -138,7 +138,7 @@ async function fetchEmployee(employeeId: string, options: { showLoading?: boolea
     employee.value = result;
     return result;
   } catch (error) {
-    const message = resolveErrorMessage(error, '구성원 정보를 불러오는 중 오류가 발생했습니다.');
+    const message = resolveErrorMessage(error, '직원 정보를 불러오는 중 오류가 발생했습니다.');
     if (showLoading) {
       errorMessage.value = message;
       employee.value = null;

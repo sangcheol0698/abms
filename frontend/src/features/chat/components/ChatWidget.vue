@@ -14,7 +14,7 @@
                 <div class="space-y-2">
                   <h3 class="text-lg font-semibold text-foreground">ABMS Copilot</h3>
                   <p class="max-w-[320px] text-sm text-muted-foreground">
-                    조직도와 구성원 데이터를 기반으로<br />
+                    부서와 직원 데이터를 기반으로<br />
                     궁금한 점을 자유롭게 물어보세요.
                   </p>
                 </div>
@@ -141,7 +141,7 @@ watch(
 const defaultSuggestions = [
   {
     label: '신규 입사자 현황',
-    description: '이번 달 새로 합류한 구성원 목록을 보여줘',
+    description: '이번 달 새로 합류한 직원 목록을 보여줘',
     query: '이번 달 신규 입사자 목록 알려줘',
   },
   {
@@ -151,13 +151,13 @@ const defaultSuggestions = [
   },
   {
     label: '휴직자 조회',
-    description: '현재 휴직 중인 구성원 목록 확인',
-    query: '현재 휴직 중인 구성원은 누구야?',
+    description: '현재 휴직 중인 직원 목록 확인',
+    query: '현재 휴직 중인 직원은 누구야?',
   },
   {
-    label: '조직도 위치 찾기',
+    label: '부서 위치 찾기',
     description: '특정 부서나 팀의 위치 확인',
-    query: '인사팀은 조직도 어디에 있어?',
+    query: '인사팀은 부서 구조 어디에 있어?',
   },
 ];
 </script>

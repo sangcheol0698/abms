@@ -24,7 +24,7 @@ const routes = [
         name: 'organization',
         component: () => import('@/features/organization/views/OrganizationView.vue'),
         meta: {
-          title: '조직도',
+          title: '부서',
           padding: 'flush',
           breadcrumbs: [
             {
@@ -32,7 +32,7 @@ const routes = [
               to: '/',
             },
             {
-              title: '조직도',
+              title: '부서',
               disabled: true,
             },
           ],
@@ -43,14 +43,14 @@ const routes = [
         name: 'employees',
         component: () => import('@/features/employee/views/EmployeeListView.vue'),
         meta: {
-          title: '구성원',
+          title: '직원',
           breadcrumbs: [
             {
               title: '대시보드',
               to: '/',
             },
             {
-              title: '구성원',
+              title: '직원',
               disabled: true,
             },
           ],
@@ -61,14 +61,14 @@ const routes = [
         name: 'employee-detail',
         component: () => import('@/features/employee/views/EmployeeDetailView.vue'),
         meta: {
-          title: '구성원 상세',
+          title: '직원 상세',
           breadcrumbs: [
             {
               title: '대시보드',
               to: '/',
             },
             {
-              title: '구성원',
+              title: '직원',
               to: '/employees',
             },
             {

@@ -62,9 +62,9 @@ export function useEmployeeSummary(params: UseEmployeeSummaryParams) {
     const cards: EmployeeSummaryCard[] = [
       {
         id: 'total',
-        title: '총 구성원',
+        title: '총 직원',
         value: `${total.toLocaleString()}명`,
-        description: '현재 테이블 기준 구성원 수',
+        description: '현재 테이블 기준 직원 수',
         trend: {
           label:
             totalDelta > 0
@@ -87,7 +87,7 @@ export function useEmployeeSummary(params: UseEmployeeSummaryParams) {
         value: `${onLeaveCount.toLocaleString()}명`,
         description:
           onLeaveCount === 0
-            ? '휴가 중 구성원이 없습니다'
+            ? '휴가 중 직원이 없습니다'
             : total === 0
               ? '데이터 없음'
               : `전체의 ${leaveRatio}%`,

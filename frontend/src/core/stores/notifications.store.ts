@@ -23,7 +23,7 @@ export const useNotificationsStore = defineStore('notifications', {
       {
         id: 'n-organization',
         title: '조직 구조 변경',
-        description: '조직도에서 경영기획실이 신설되었습니다.',
+        description: '부서 목록에서 경영기획실이 신설되었습니다.',
         type: 'info' as NotificationType,
         createdAt: toIsoMinutesAgo(3),
         read: false,
@@ -32,7 +32,7 @@ export const useNotificationsStore = defineStore('notifications', {
       {
         id: 'n-employee',
         title: '직원 정보 갱신',
-        description: '인사팀이 구성원 정보를 최신화했습니다.',
+        description: '인사팀이 직원 정보를 최신화했습니다.',
         type: 'success' as NotificationType,
         createdAt: toIsoMinutesAgo(18),
         read: false,

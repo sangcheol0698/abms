@@ -3,7 +3,7 @@
     v-if="!employee"
     class="flex h-full items-center justify-center text-sm text-muted-foreground"
   >
-    근무 이력을 불러올 구성원이 없습니다.
+    근무 이력을 불러올 직원이 없습니다.
   </div>
   <div v-else class="grid gap-6 lg:grid-cols-[1fr_320px]">
     <section class="rounded-lg border border-border/60 bg-background p-5">
@@ -61,7 +61,7 @@
         </div>
 
         <p class="mt-2 text-xs text-muted-foreground">
-          휴직 처리는 재직 중인 구성원에게만 노출되며, 재직 처리는 휴직 또는 퇴사 상태에서도
+          휴직 처리는 재직 중인 직원에게만 노출되며, 재직 처리는 휴직 또는 퇴사 상태에서도
           가능합니다.
         </p>
 
@@ -111,7 +111,7 @@
               </Button>
             </div>
             <p class="text-xs text-muted-foreground">
-              퇴사 처리가 완료되면 구성원 상태가 `퇴사`로 변경됩니다. 잘못된 경우 관리자에게
+              퇴사 처리가 완료되면 직원 상태가 `퇴사`로 변경됩니다. 잘못된 경우 관리자에게
               문의하세요.
             </p>
           </div>
@@ -127,9 +127,9 @@
           </Alert>
 
           <Alert v-if="isResigned" class="mt-4">
-            <AlertTitle>이미 퇴사 처리된 구성원입니다.</AlertTitle>
+            <AlertTitle>이미 퇴사 처리된 직원입니다.</AlertTitle>
             <AlertDescription>
-              복구하려면 구성원 상세에서 `복구` 기능을 제공할 예정입니다.
+              복구하려면 직원 상세에서 `복구` 기능을 제공할 예정입니다.
             </AlertDescription>
           </Alert>
         </div>

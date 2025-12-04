@@ -91,7 +91,7 @@
             <Button variant="ghost" size="icon"
               class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground" aria-label="채팅 사이드바 토글"
               @click="pane.toggleSidebar()">
-              <PanelLeft class="h-4 w-4 transition" :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''" />
+              <Menu class="h-4 w-4 transition" :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''" />
             </Button>
             <div class="flex flex-col">
               <h2 class="text-base font-semibold text-foreground">{{ currentSessionTitle }}</h2>
@@ -128,7 +128,7 @@
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import {
   History,
-  PanelLeft,
+  Menu,
   MoreHorizontal,
   SquarePen,
   Search,

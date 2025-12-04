@@ -3,7 +3,7 @@
     v-if="!employee"
     class="rounded-lg border border-dashed border-border/60 bg-muted/10 p-6 text-sm text-muted-foreground"
   >
-    구성원 정보를 찾을 수 없습니다.
+    직원 정보를 찾을 수 없습니다.
   </div>
   <div v-else class="flex flex-col gap-4 rounded-lg md:flex-row md:items-center md:gap-6">
     <Avatar class="h-20 w-20 rounded-2xl border border-border/60 bg-background">

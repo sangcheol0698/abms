@@ -66,7 +66,7 @@ import { Badge } from '@/components/ui/badge';
 
 const metrics = computed(() => [
   {
-    title: '총 구성원',
+    title: '총 직원',
     value: '128명',
     trend: 3.5,
     description: '지난달 대비 3.5% 증가했습니다.',
@@ -81,10 +81,10 @@ const metrics = computed(() => [
     title: '이번 달 신규 입사',
     value: '4명',
     trend: 0.0,
-    description: '이번 달 입사 완료된 구성원 수입니다.',
+    description: '이번 달 입사 완료된 직원 수입니다.',
   },
   {
-    title: '휴가 중 구성원',
+    title: '휴가 중 직원',
     value: '3명',
     trend: -1.5,
     description: '현재 휴직 또는 장기 휴가 중인 인원입니다.',
@@ -95,7 +95,7 @@ const notifications = computed(() => [
   {
     id: 'n-1',
     title: '조직 개편 완료',
-    description: '경영기획실이 신설되어 조직도가 업데이트되었습니다.',
+    description: '경영기획실이 신설되어 부서 정보가 업데이트되었습니다.',
     time: '2시간 전',
   },
   {
@@ -113,7 +113,7 @@ const notifications = computed(() => [
 ]);
 
 const quickActions = [
-  { label: '조직도 확인', to: '/organization' },
-  { label: '구성원 관리', to: '/employees' },
+  { label: '부서 확인', to: '/organization' },
+  { label: '직원 관리', to: '/employees' },
 ];
 </script>

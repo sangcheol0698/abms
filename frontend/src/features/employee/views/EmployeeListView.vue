@@ -70,7 +70,7 @@
           </DropdownMenu>
           <Button variant="default" size="sm" class="h-8 px-2 sm:px-3 gap-1" @click="openCreateDialog">
             <Plus class="h-4 w-4" />
-            구성원 추가
+            직원 추가
           </Button>
         </template>
       </DataTableToolbar>
@@ -81,7 +81,7 @@
         :data="employees"
         :tableInstance="table"
         :loading="isLoading"
-        emptyMessage="구성원 정보를 찾을 수 없습니다"
+        emptyMessage="직원 정보를 찾을 수 없습니다"
         emptyDescription="검색어나 필터 조건을 조정해 다시 시도해 보세요"
         :pageSize="pageSize"
       />
@@ -128,7 +128,7 @@
   <AlertDialog :open="deletion.isDialogOpen.value">
     <AlertDialogContent>
       <AlertDialogHeader>
-        <AlertDialogTitle>구성원을 삭제할까요?</AlertDialogTitle>
+        <AlertDialogTitle>직원을 삭제할까요?</AlertDialogTitle>
         <AlertDialogDescription>{{ deletion.description.value }}</AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
@@ -869,7 +869,7 @@ async function loadEmployees() {
     rowSelection.value = {};
     tableRenderKey.value += 1;
   } catch (error) {
-    console.error('구성원 목록을 불러오지 못했습니다.', error);
+    console.error('직원 목록을 불러오지 못했습니다.', error);
     employees.value = [];
     totalElements.value = 0;
     totalPages.value = 1;
@@ -1016,7 +1016,7 @@ function handleEmployeeUpdated() {
 async function handleEditEmployee(row: EmployeeListItem) {
   editingEmployee.value = null;
   isLoadingEmployee.value = true;
-  const loadingToast = toast.loading('구성원 정보를 불러오는 중입니다.');
+  const loadingToast = toast.loading('직원 정보를 불러오는 중입니다.');
   try {
     const detail = await employeeRepository.findById(row.employeeId);
     editingEmployee.value = detail;
@@ -1025,8 +1025,8 @@ async function handleEditEmployee(row: EmployeeListItem) {
   } catch (error) {
     toast.dismiss(loadingToast);
     const message =
-      error instanceof HttpError ? error.message : '구성원 정보를 불러오지 못했습니다.';
-    toast.error('구성원 정보를 불러오지 못했습니다.', {
+      error instanceof HttpError ? error.message : '직원 정보를 불러오지 못했습니다.';
+    toast.error('직원 정보를 불러오지 못했습니다.', {
       description: message,
     });
   } finally {

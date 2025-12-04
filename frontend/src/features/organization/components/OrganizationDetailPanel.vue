@@ -8,11 +8,11 @@
               {{ department.departmentName }}
             </h2>
             <p class="text-sm text-muted-foreground">
-              팀 기본 현황과 구성원, 매출 정보를 확인할 수 있습니다.
+              팀 기본 현황과 직원, 매출 정보를 확인할 수 있습니다.
             </p>
           </div>
           <Badge variant="outline" class="text-xs font-semibold">
-            구성원 {{ department.employeeCount }}명
+            직원 {{ department.employeeCount }}명
           </Badge>
         </div>
 
@@ -54,7 +54,7 @@
             <Users class="h-4 w-4" />
           </div>
           <div class="flex flex-col text-sm">
-            <span class="text-xs font-medium text-muted-foreground">구성원 수</span>
+            <span class="text-xs font-medium text-muted-foreground">직원 수</span>
             <span class="font-semibold text-foreground">{{ department.employeeCount }}명</span>
           </div>
         </article>
@@ -77,7 +77,7 @@
         <Tabs :model-value="selectedTab" @update:model-value="handleTabChange" class="flex flex-col">
           <TabsList class="rounded-lg bg-muted/30 p-1">
             <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
-            <TabsTrigger value="members" class="text-sm">구성원</TabsTrigger>
+            <TabsTrigger value="members" class="text-sm">직원</TabsTrigger>
             <TabsTrigger value="revenue" class="text-sm">매출</TabsTrigger>
           </TabsList>
 
@@ -116,7 +116,7 @@
                       </div>
                     </div>
                     <p v-else class="text-sm text-muted-foreground">
-                      리더가 아직 지정되지 않은 조직입니다.
+                      리더가 아직 지정되지 않은 부서입니다.
                     </p>
                     <Button variant="outline" size="sm" class="h-7 text-xs" @click="isAssignDialogOpen = true">
                       변경
@@ -125,7 +125,7 @@
                 </div>
                 <div class="grid grid-cols-[120px_1fr] gap-2">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    구성원 수
+                    직원 수
                   </dt>
                   <dd class="text-foreground">{{ department.employeeCount }}명</dd>
                 </div>
@@ -165,9 +165,9 @@
     </div>
 
     <div v-else class="flex h-full flex-col items-center justify-center rounded-lg bg-muted/10 p-6 text-center">
-      <h3 class="text-base font-semibold text-foreground">조직 노드를 선택해 주세요</h3>
+      <h3 class="text-base font-semibold text-foreground">부서를 선택해 주세요</h3>
       <p class="mt-2 text-sm text-muted-foreground">
-        왼쪽 조직도에서 팀을 선택하면 이 영역에 상세 정보가 표시됩니다.
+        왼쪽 부서 목록에서 팀을 선택하면 이 영역에 상세 정보가 표시됩니다.
       </p>
     </div>
 

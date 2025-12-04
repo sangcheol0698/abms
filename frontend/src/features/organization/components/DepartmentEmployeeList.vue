@@ -16,7 +16,7 @@
         :data="employees"
         :tableInstance="table"
         :loading="isLoading"
-        emptyMessage="구성원 정보를 찾을 수 없습니다"
+        emptyMessage="직원 정보를 찾을 수 없습니다"
         emptyDescription="아직 이 부서에 배정된 직원이 없습니다."
         :pageSize="pageSize"
       />

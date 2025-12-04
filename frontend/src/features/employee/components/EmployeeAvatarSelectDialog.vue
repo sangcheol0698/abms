@@ -3,7 +3,7 @@
     <DialogContent class="w-full max-w-3xl">
       <DialogHeader>
         <DialogTitle>아바타 선택</DialogTitle>
-        <DialogDescription>구성원의 프로필에 사용할 아바타를 선택하세요.</DialogDescription>
+        <DialogDescription>직원의 프로필에 사용할 아바타를 선택하세요.</DialogDescription>
       </DialogHeader>
       <div class="max-h-[60vh] overflow-y-auto pr-1">
         <EmployeeAvatarPicker

@@ -3,11 +3,11 @@
     <div v-if="isLoading"
       class="flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground"
       role="status" aria-live="polite">
-      조직도를 불러오는 중입니다...
+      부서 정보를 불러오는 중입니다...
     </div>
 
     <Alert v-else-if="errorMessage" variant="destructive">
-      <AlertTitle>조직도를 불러오지 못했습니다</AlertTitle>
+      <AlertTitle>부서 정보를 불러오지 못했습니다</AlertTitle>
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
@@ -16,7 +16,7 @@
       <template #sidebar="{ pane }">
         <div class="flex h-full min-h-0 flex-col shadow-sm">
           <div class="flex items-center justify-between px-4 py-3 text-sm">
-            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">조직도</span>
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">부서</span>
           </div>
           <OrganizationTree class="flex-1" :nodes="chart" v-model:selectedNodeId="selectedDepartmentId"
             @update:selectedNodeId="handleTreeSelection($event, pane)" />
@@ -28,9 +28,9 @@
           <header class="flex flex-col px-4 py-4">
             <div class="flex items-center">
               <Button variant="ghost" size="icon"
-                class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground" aria-label="조직도 사이드바 토글"
+                class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground" aria-label="부서 사이드바 토글"
                 @click="pane.toggleSidebar()">
-                <PanelLeft class="h-4 w-4 transition" :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''" />
+                <Menu class="h-4 w-4 transition" :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''" />
               </Button>
               <Breadcrumb class="flex flex-wrap text-sm text-muted-foreground">
                 <BreadcrumbList>
@@ -96,7 +96,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { PanelLeft } from 'lucide-vue-next';
+import { Menu } from 'lucide-vue-next';
 
 const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartNode[]>([]);
@@ -182,7 +182,7 @@ async function loadOrganizationChart() {
     if (error instanceof HttpError) {
       errorMessage.value = error.message;
     } else {
-      errorMessage.value = '조직도 정보를 불러오지 못했습니다.';
+      errorMessage.value = '부서 정보를 불러오지 못했습니다.';
     }
   } finally {
     isLoading.value = false;

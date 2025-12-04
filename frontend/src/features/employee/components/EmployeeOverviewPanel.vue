@@ -3,7 +3,7 @@
     v-if="!employee"
     class="flex h-full items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-6 text-sm text-muted-foreground"
   >
-    구성원 정보를 불러오지 못했습니다.
+    직원 정보를 불러오지 못했습니다.
   </div>
   <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
     <div class="space-y-6">

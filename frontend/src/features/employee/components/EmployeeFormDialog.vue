@@ -47,7 +47,7 @@
                             {{ getAvatarOptionForDisplay(field.value)?.label ?? '아바타 미선택' }}
                           </p>
                           <p class="text-sm text-muted-foreground">
-                            이 아바타는 구성원 목록과 상세 화면에 표시됩니다.
+                            이 아바타는 직원 목록과 상세 화면에 표시됩니다.
                           </p>
                         </div>
                       </div>
@@ -74,7 +74,7 @@
                 <div class="space-y-1">
                   <h3 class="text-lg font-semibold text-foreground">기본 정보</h3>
                   <p class="text-sm text-muted-foreground">
-                    구성원의 기본 인적 사항과 소속을 입력하세요.
+                    직원의 기본 인적 사항과 소속을 입력하세요.
                   </p>
                 </div>
                 <div class="grid gap-4 md:grid-cols-2">
@@ -142,7 +142,7 @@
                             "
                           >
                             <Building2 class="h-4 w-4" />
-                            <span>조직도</span>
+                            <span>부서</span>
                           </Button>
                         </div>
                       </FormControl>
@@ -566,11 +566,11 @@ const selectedAvatarCodeForDialog = ref(defaultEmployeeAvatar);
 let hasLoadedAvatarOptions = false;
 
 const isEditMode = computed(() => props.mode === 'edit');
-const dialogTitle = computed(() => (isEditMode.value ? '구성원 편집' : '구성원 추가'));
+const dialogTitle = computed(() => (isEditMode.value ? '직원 편집' : '직원 추가'));
 const dialogDescription = computed(() =>
   isEditMode.value
     ? '필요한 정보를 수정한 뒤 저장하세요.'
-    : '필수 정보를 입력해 신규 구성원을 등록하세요.',
+    : '필수 정보를 입력해 신규 직원을 등록하세요.',
 );
 
 watch(
@@ -746,11 +746,11 @@ async function onSubmit(rawValues: Record<string, unknown>) {
   try {
     if (isEditMode.value && props.employee?.employeeId) {
       await repository.update(props.employee.employeeId, payload);
-      toast.success('구성원 정보를 업데이트했습니다.');
+      toast.success('직원 정보를 업데이트했습니다.');
       emit('updated');
     } else {
       await repository.create(payload);
-      toast.success('구성원을 성공적으로 추가했습니다.');
+      toast.success('직원을 성공적으로 추가했습니다.');
       emit('created');
     }
     emit('update:open', false);
@@ -759,10 +759,10 @@ async function onSubmit(rawValues: Record<string, unknown>) {
       error instanceof HttpError
         ? error.message
         : isEditMode.value
-          ? '구성원 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
-          : '구성원 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+          ? '직원 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+          : '직원 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
     errorMessage.value = message;
-    toast.error(isEditMode.value ? '구성원 수정에 실패했습니다.' : '구성원 등록에 실패했습니다.', {
+    toast.error(isEditMode.value ? '직원 수정에 실패했습니다.' : '직원 등록에 실패했습니다.', {
       description: message,
     });
   }

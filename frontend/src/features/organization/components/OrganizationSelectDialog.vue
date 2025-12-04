@@ -3,7 +3,7 @@
     <DialogContent class="w-full max-w-xl overflow-hidden">
       <DialogHeader>
         <DialogTitle>부서 선택</DialogTitle>
-        <DialogDescription>조직도에서 원하는 부서를 검색하거나 직접 선택하세요.</DialogDescription>
+        <DialogDescription>부서 목록에서 원하는 부서를 검색하거나 직접 선택하세요.</DialogDescription>
       </DialogHeader>
 
       <div class="max-h-[55vh] overflow-y-auto rounded-md border px-2 py-2">
@@ -117,8 +117,8 @@ async function loadChart() {
   try {
     nodes.value = await repository.fetchOrganizationChart();
   } catch (error) {
-    console.warn('조직도 불러오기 중 오류가 발생했습니다.', error);
-    toast.error('조직도를 불러오지 못했습니다.', {
+    console.warn('부서 목록 불러오기 중 오류가 발생했습니다.', error);
+    toast.error('부서 목록을 불러오지 못했습니다.', {
       description: '네트워크 상태를 확인한 뒤 다시 시도해 주세요.',
     });
   } finally {

@@ -3,14 +3,15 @@
     <div
       class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition"
       :class="{
-        'bg-primary/10 border border-primary/40 shadow-sm': isSelected,
-        'border border-transparent': !isSelected,
+        'bg-primary text-primary-foreground font-medium shadow-sm': isSelected,
+        'hover:bg-muted/50 text-foreground': !isSelected,
       }"
     >
       <button
         v-if="showToggle"
         type="button"
-        class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:text-foreground"
+        class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition"
+        :class="isSelected ? 'text-primary-foreground/90 hover:text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
         :aria-expanded="!isCollapsed"
         :aria-label="isCollapsed ? '하위 조직 펼치기' : '하위 조직 접기'"
         @click.stop="toggleNode(node.departmentId)"
@@ -27,12 +28,20 @@
       >
         <component
           :is="departmentIcon"
-          class="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground"
+          class="h-4 w-4 shrink-0 transition"
+          :class="isSelected ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'"
           aria-hidden="true"
         />
-        <span class="truncate text-[13px] font-medium text-foreground">
+        <span 
+          class="truncate text-[13px] font-medium"
+          :class="isSelected ? 'text-primary-foreground' : 'text-foreground'"
+        >
           <template v-for="(segment, index) in nameSegments" :key="index">
-            <mark v-if="segment.matched" class="rounded bg-primary/20 px-0.5 text-primary">
+            <mark 
+              v-if="segment.matched" 
+              class="rounded px-0.5"
+              :class="isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/20 text-primary'"
+            >
               {{ segment.text }}
             </mark>
             <span v-else>{{ segment.text }}</span>
@@ -41,7 +50,8 @@
       </button>
 
       <div
-        class="ms-2 flex shrink-0 items-center gap-1 text-[11px] font-medium text-muted-foreground"
+        class="ms-2 flex shrink-0 items-center gap-1 text-[11px] font-medium"
+        :class="isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'"
       >
         <component :is="headcountIcon" class="h-3 w-3" aria-hidden="true" />
         <span class="whitespace-nowrap">{{ displayHeadcount }}</span>
