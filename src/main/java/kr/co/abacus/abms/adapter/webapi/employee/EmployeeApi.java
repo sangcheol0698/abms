@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -108,10 +109,21 @@ public class EmployeeApi {
     @GetMapping("/api/employees")
     public PageResponse<EmployeeResponse> search(@Valid EmployeeSearchRequest request, Pageable pageable) {
         Page<Employee> employees = employeeFinder.search(request, pageable);
-        List<Department> departments = departmentFinder.findAll(); // TODO: 최적화 방안 고려
+
+        // 페이지에 포함된 직원들의 부서 ID만 추출하여 배치 조회 (N+1 문제 해결)
+        List<UUID> departmentIds = employees.getContent().stream()
+            .map(Employee::getDepartmentId)
+            .distinct()
+            .toList();
+
+        Map<UUID, Department> departmentMap = departmentFinder.findAllByIds(departmentIds).stream()
+            .collect(java.util.stream.Collectors.toMap(Department::getId, dept -> dept));
 
         return PageResponse.of(employees.map(employee -> {
-            Department department = getDepartment(employee, departments);
+            Department department = departmentMap.get(employee.getDepartmentId());
+            if (department == null) {
+                throw new IllegalStateException("부서를 찾을 수 없습니다: " + employee.getDepartmentId());
+            }
             return EmployeeResponse.of(employee, department);
         }));
     }
@@ -216,11 +228,5 @@ public class EmployeeApi {
         return new EmployeeExcelUploadResponse(result.successCount(), failures);
     }
 
-    private Department getDepartment(Employee employee, List<Department> departments) {
-        return departments.stream()
-            .filter(d -> d.getId().equals(employee.getDepartmentId()))
-            .findFirst()
-            .orElseThrow();
-    }
 
 }

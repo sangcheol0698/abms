@@ -47,6 +47,14 @@ public class DepartmentQueryService implements DepartmentFinder {
     }
 
     @Override
+    public List<Department> findAllByIds(List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return departmentRepository.findAllByIdInAndDeletedFalse(ids);
+    }
+
+    @Override
     public OrganizationChartModel getOrganizationChart() {
         List<Department> allDepartments = departmentRepository.findAllByDeletedFalseWithChildren();
         Map<UUID, Long> employeeCountMap = departmentRepository.getDepartmentHeadcounts();

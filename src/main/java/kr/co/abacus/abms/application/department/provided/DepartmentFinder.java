@@ -17,6 +17,8 @@ public interface DepartmentFinder {
 
     List<Department> findAll();
 
+    List<Department> findAllByIds(List<UUID> ids);
+
     OrganizationChartModel getOrganizationChart();
 
     OrganizationChartWithEmployeesModel getOrganizationChartWithEmployees();

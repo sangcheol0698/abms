@@ -16,7 +16,7 @@ public class EmployeeInfoTools {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
 
-    @Tool(description = "구성원(직원)의 정보를 이름으로 조회하는 도구입니다. 이름, 부서명, 이메일, 직급, 등급, 상태, 입사일, 생년월일을 반환합니다.")
+    @Tool(description = "부서(직원)의 정보를 이름으로 조회하는 도구입니다. 이름, 부서명, 이메일, 직급, 등급, 상태, 입사일, 생년월일을 반환합니다.")
     public @Nullable EmployeeInfo getEmployeeInfo(String name) {
         return employeeRepository.findByName(name)
             .map(employee -> {

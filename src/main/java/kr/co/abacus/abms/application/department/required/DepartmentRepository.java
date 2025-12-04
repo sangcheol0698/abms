@@ -20,4 +20,6 @@ public interface DepartmentRepository extends Repository<Department, UUID>, Cust
 
     List<Department> findAllByDeletedFalse();
 
+    List<Department> findAllByIdInAndDeletedFalse(List<UUID> ids);
+
 }
