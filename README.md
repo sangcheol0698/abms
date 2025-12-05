@@ -35,7 +35,7 @@ ABMS is an enterprise-grade business management system that demonstrates hexagon
 - Playwright (e2e testing)
 
 **Build & Tools:**
-- Gradle 8.x with Kotlin DSL
+- Gradle 9.x with Kotlin DSL
 - Lombok for code generation
 - Apache POI for Excel processing
 - ArchUnit for architecture validation
@@ -58,7 +58,7 @@ Layer rules are enforced by ArchUnit tests to maintain architectural integrity.
 ### Prerequisites
 
 - **Java 25**: Configured via Gradle toolchain
-- **Gradle 8.x**: Wrapper included (`./gradlew`)
+- **Gradle 9.x**: Wrapper included (`./gradlew`)
 - **Docker**: For MySQL database
 - **Docker Compose**: For container orchestration
 - **Node.js & npm**: For frontend development (if working with UI)
