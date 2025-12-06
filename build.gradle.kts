@@ -4,7 +4,6 @@ plugins {
     java
     id("org.springframework.boot") version "4.0.0"
     id("io.spring.dependency-management") version "1.1.7"
-    id("org.asciidoctor.jvm.convert") version "3.3.2"
     id("net.ltgt.errorprone") version "4.3.0"
 }
 
@@ -59,7 +58,6 @@ dependencies {
     errorprone("com.uber.nullaway:nullaway:0.12.3")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.18.0")
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
@@ -96,13 +94,4 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-tasks.test {
-    outputs.dir(project.extra["snippetsDir"]!!)
-}
-
-tasks.asciidoctor {
-    inputs.dir(project.extra["snippetsDir"]!!)
-    dependsOn(tasks.test)
 }
