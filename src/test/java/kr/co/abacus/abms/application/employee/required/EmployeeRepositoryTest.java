@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
@@ -111,10 +112,10 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         employeeRepository.save(getEmployee("test2@email.com", "김길동", EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR));
         employeeRepository.save(getEmployee("test3@email.com", "이길동", EmployeePosition.DIRECTOR, EmployeeType.FREELANCER, EmployeeGrade.MID_LEVEL));
 
-        Page<Employee> employees = employeeRepository.search(new EmployeeSearchRequest("길동", List.of(EmployeePosition.MANAGER, EmployeePosition.ASSOCIATE), null, null, null, null), PageRequest.of(0, 10));
+        Page<EmployeeResponse> employees = employeeRepository.search(new EmployeeSearchRequest("길동", List.of(EmployeePosition.MANAGER, EmployeePosition.ASSOCIATE), null, null, null, null), PageRequest.of(0, 10));
 
         assertThat(employees).hasSize(2)
-            .extracting(Employee::getName)
+            .extracting(EmployeeResponse::name)
             .containsExactlyInAnyOrder("홍길동", "김길동");
     }
 

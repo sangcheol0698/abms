@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
-import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 
 public record DepartmentEmployeesResponse(
     List<EmployeeResponse> content,
@@ -16,13 +16,9 @@ public record DepartmentEmployeesResponse(
     boolean hasPrevious
 ) {
 
-    public static DepartmentEmployeesResponse from(Page<Employee> page) {
-        List<EmployeeResponse> content = page.getContent().stream()
-            .map(EmployeeResponse::from)
-            .toList();
-
+    public static DepartmentEmployeesResponse from(Page<EmployeeResponse> page) {
         return new DepartmentEmployeesResponse(
-            content,
+            page.getContent(),
             page.getTotalElements(),
             page.getTotalPages(),
             page.getNumber(),

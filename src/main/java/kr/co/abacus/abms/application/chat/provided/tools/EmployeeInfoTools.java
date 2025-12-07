@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.chat;
+package kr.co.abacus.abms.application.chat.provided.tools;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.tool.annotation.Tool;

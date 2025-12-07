@@ -20,12 +20,12 @@ import kr.co.abacus.abms.adapter.webapi.department.dto.DepartmentEmployeesRespon
 import kr.co.abacus.abms.adapter.webapi.department.dto.EmployeeAssignTeamLeaderRequest;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartWithEmployeesResponse;
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartModel;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.department.provided.DepartmentManager;
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.employee.Employee;
 
 @RequiredArgsConstructor
 @RestController
@@ -61,7 +61,7 @@ public class DepartmentApi {
             @PathVariable UUID departmentId,
             @RequestParam(required = false) String name,
             @PageableDefault(size = 20, sort = "name") Pageable pageable) {
-        Page<Employee> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
+        Page<EmployeeResponse> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
 
         return DepartmentEmployeesResponse.from(employeesPage);
     }

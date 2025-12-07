@@ -1,9 +1,14 @@
 package kr.co.abacus.abms.application.chat;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Service;
 
 import reactor.core.publisher.Flux;
+
+import kr.co.abacus.abms.application.chat.provided.tools.EmployeeInfoTools;
+import kr.co.abacus.abms.application.chat.provided.tools.EmployeeSearchTools;
+import kr.co.abacus.abms.application.chat.provided.tools.OrganizationTools;
 
 @Service
 public class ChatService {
@@ -25,6 +30,19 @@ public class ChatService {
         this.employeeSearchTools = employeeSearchTools;
     }
 
+    public String sendMessage(String message) {
+        String currentDateTime = java.time.LocalDateTime.now().toString();
+
+        return chatClient.prompt()
+            .system("""
+                당신은 유능한 비서입니다. 현재 날짜와 시간은 %s 입니다.
+                """.formatted(currentDateTime))
+            .user(message)
+            // .tools(employeeInfoTools, organizationTools, employeeSearchTools)
+            .call()
+            .content();
+    }
+
     public Flux<String> streamMessage(String message) {
         return chatClient.prompt()
             .user(message)
@@ -32,12 +50,12 @@ public class ChatService {
             .content();
     }
 
-    public String sendMessage(String message) {
+    public ChatResponse getJoke() {
         return chatClient.prompt()
-            .user(message)
-            // .tools(employeeInfoTools, organizationTools, employeeSearchTools)
+            .system("당신은 유머러스한 조크 생성기입니다.")
+            .user("재미있는 농담 하나 해줘.")
             .call()
-            .content();
+            .chatResponse();
     }
 
 }

@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.chat;
+package kr.co.abacus.abms.application.chat.provided.tools;
 
 import java.util.Arrays;
 import java.util.List;

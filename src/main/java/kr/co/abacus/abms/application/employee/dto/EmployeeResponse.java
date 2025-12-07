@@ -1,10 +1,11 @@
-package kr.co.abacus.abms.adapter.webapi.employee.dto;
+package kr.co.abacus.abms.application.employee.dto;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 
 public record EmployeeResponse(
     UUID departmentId,
@@ -18,8 +19,7 @@ public record EmployeeResponse(
     String status,
     String grade,
     String type,
-    String avatarCode,
-    String avatarLabel,
+    EmployeeAvatar avatar,
     String memo
 ) {
 
@@ -36,8 +36,7 @@ public record EmployeeResponse(
             employee.getStatus().getDescription(),
             employee.getGrade().getDescription(),
             employee.getType().getDescription(),
-            employee.getAvatar().name(),
-            employee.getAvatar().getDisplayName(),
+            employee.getAvatar(),
             employee.getMemo()
         );
     }

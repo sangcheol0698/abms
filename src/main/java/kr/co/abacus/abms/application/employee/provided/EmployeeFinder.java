@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.domain.employee.Employee;
 
 /**
@@ -14,6 +15,6 @@ public interface EmployeeFinder {
 
     Employee find(UUID id);
 
-    Page<Employee> search(EmployeeSearchRequest request, Pageable pageable);
+    Page<EmployeeResponse> search(EmployeeSearchRequest request, Pageable pageable);
 
 }
