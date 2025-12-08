@@ -26,10 +26,10 @@ import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeGradeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
-import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeStatusResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeTypeResponse;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
@@ -42,6 +42,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.shared.Email;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 class EmployeeApiTest extends ApiIntegrationTestBase {
@@ -142,8 +143,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 assertThat(findResponse.employeeId()).isEqualTo(savedEmployee.getId());
                 assertThat(findResponse.departmentName()).isEqualTo("테스트회사");
                 assertThat(findResponse.name()).isEqualTo(savedEmployee.getName());
-                assertThat(findResponse.email()).isEqualTo(savedEmployee.getEmail().address());
-                assertThat(findResponse.status()).isEqualTo("재직");
+                assertThat(findResponse.email()).isEqualTo(savedEmployee.getEmail());
+                assertThat(findResponse.status()).isEqualTo(savedEmployee.getStatus());
             });
     }
 
@@ -169,9 +170,9 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
         // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).grade()).isEqualTo(EmployeeGrade.EXPERT.getDescription());
-        assertThat(contents.get(1).grade()).isEqualTo(EmployeeGrade.SENIOR.getDescription());
-        assertThat(contents.get(2).grade()).isEqualTo(EmployeeGrade.JUNIOR.getDescription());
+        assertThat(contents.get(0).grade()).isEqualTo(EmployeeGrade.EXPERT);
+        assertThat(contents.get(1).grade()).isEqualTo(EmployeeGrade.SENIOR);
+        assertThat(contents.get(2).grade()).isEqualTo(EmployeeGrade.JUNIOR);
     }
 
     @Test
@@ -194,9 +195,9 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         List<EmployeeResponse> contents = responsePage.content();
 
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).position()).isEqualTo(EmployeePosition.ASSOCIATE.getDescription());
-        assertThat(contents.get(1).position()).isEqualTo(EmployeePosition.DIRECTOR.getDescription());
-        assertThat(contents.get(2).position()).isEqualTo(EmployeePosition.VICE_PRESIDENT.getDescription());
+        assertThat(contents.get(0).position()).isEqualTo(EmployeePosition.ASSOCIATE);
+        assertThat(contents.get(1).position()).isEqualTo(EmployeePosition.DIRECTOR);
+        assertThat(contents.get(2).position()).isEqualTo(EmployeePosition.VICE_PRESIDENT);
     }
 
     @Test
@@ -430,11 +431,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .value(response -> {
                 assertThat(response.departmentId()).isEqualTo(divisionId);
                 assertThat(response.name()).isEqualTo(request.name());
-                assertThat(response.email()).isEqualTo(request.email());
+                assertThat(response.email()).isEqualTo(new Email(request.email()));
                 assertThat(response.joinDate()).isEqualTo(request.joinDate());
                 assertThat(response.birthDate()).isEqualTo(request.birthDate());
-                assertThat(response.avatarCode()).isEqualTo(request.avatar().name());
-                assertThat(response.avatarLabel()).isEqualTo(request.avatar().getDisplayName());
+                assertThat(response.avatar()).isEqualTo(request.avatar());
                 assertThat(response.memo()).isEqualTo(request.memo());
             });
         flushAndClear();

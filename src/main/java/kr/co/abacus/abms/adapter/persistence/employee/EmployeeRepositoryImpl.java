@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.adapter.persistence.employee;
 
+import static kr.co.abacus.abms.domain.department.QDepartment.*;
 import static kr.co.abacus.abms.domain.employee.QEmployee.*;
 import static org.springframework.util.StringUtils.*;
 
@@ -17,6 +18,7 @@ import org.springframework.util.ObjectUtils;
 
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.NumberExpression;
@@ -25,6 +27,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
 import kr.co.abacus.abms.application.employee.required.CustomEmployeeRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -40,17 +43,46 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Employee> search(EmployeeSearchRequest request, Pageable pageable) {
+    public Page<EmployeeResponse> search(EmployeeSearchRequest request, Pageable pageable) {
         OrderSpecifier<?>[] orderSpecifiers = resolveSort(pageable);
 
-        List<Employee> content = createBaseQuery(request)
+        List<EmployeeResponse> content = queryFactory
+            .select(Projections.constructor(EmployeeResponse.class,
+                    department.id,
+                    department.name,
+                    employee.id,
+                    employee.name,
+                    employee.email,
+                    employee.joinDate,
+                    employee.birthDate,
+                    employee.position,
+                    employee.status,
+                    employee.grade,
+                    employee.type,
+                    employee.avatar,
+                    employee.memo
+                )
+            )
+            .from(employee)
+            .join(department).on(employee.departmentId.eq(department.id))
+            .where(
+                containsName(request.name()),
+                inPositions(request.positions()),
+                inTypes(request.types()),
+                inGrades(request.grades()),
+                inDepartments(request.departmentIds()),
+                inStatuses(request.statuses()),
+                employee.deleted.isFalse()
+            )
             .orderBy(orderSpecifiers)
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();
 
-        JPAQuery<Long> countQuery = queryFactory.select(employee.count())
+        JPAQuery<Long> countQuery = queryFactory
+            .select(employee.count())
             .from(employee)
+            .join(department).on(employee.departmentId.eq(department.id))
             .where(
                 containsName(request.name()),
                 inPositions(request.positions()),
@@ -66,13 +98,6 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
     @Override
     public List<Employee> search(EmployeeSearchRequest request) {
-        return createBaseQuery(request)
-            .orderBy(defaultSort())
-            .fetch();
-    }
-
-    private JPAQuery<Employee> createBaseQuery(EmployeeSearchRequest request) {
-        // 공통 필터 조건만 구성하고 정렬은 search 메서드에서 최종 결정한다.
         return queryFactory.select(employee)
             .from(employee)
             .where(
@@ -83,7 +108,9 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 inDepartments(request.departmentIds()),
                 inStatuses(request.statuses()),
                 employee.deleted.isFalse()
-            );
+            )
+            .orderBy(defaultSort())
+            .fetch();
     }
 
     private @Nullable BooleanExpression containsName(@Nullable String name) {

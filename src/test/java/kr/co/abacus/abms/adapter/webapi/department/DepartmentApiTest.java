@@ -2,7 +2,6 @@ package kr.co.abacus.abms.adapter.webapi.department;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Assertions;
@@ -10,15 +9,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import kr.co.abacus.abms.adapter.webapi.department.dto.DepartmentEmployeesResponse;
+import kr.co.abacus.abms.adapter.webapi.PageResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.EmployeeAssignTeamLeaderRequest;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartWithEmployeesResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationEmployeeResponse;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
@@ -75,7 +74,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("전체 부서 계층 구조를 올바르게 반환한다")
-    void getOrganizationChart() throws Exception {
+    void getOrganizationChart() {
         OrganizationChartResponse response = restTestClient.get()
             .uri("/api/departments/organization-chart")
             .exchange()
@@ -97,7 +96,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("전체 부서와 직원을 같이 조회한다")
-    void getOrganizationChartWithEmployees() throws Exception {
+    void getOrganizationChartWithEmployees() {
         OrganizationChartWithEmployeesResponse response = restTestClient.get().uri("/api/departments/organization-chart/employees")
             .exchange()
             .expectStatus().isOk()
@@ -129,7 +128,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("부서 상세 정보를 조회한다")
-    void getDepartment() throws UnsupportedEncodingException, JsonProcessingException {
+    void getDepartment() {
         DepartmentResponse response = restTestClient.get().uri("/api/departments/{id}", team1.getId())
             .exchange()
             .expectStatus().isOk()
@@ -156,7 +155,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // When: 첫 번째 페이지 조회 (size=10)
-        DepartmentEmployeesResponse response = restTestClient.get()
+        PageResponse<EmployeeResponse> response = restTestClient.get()
             .uri(uriBuilder -> uriBuilder
                 .path("/api/departments/{departmentId}/employees")
                 .queryParam("page", 0)
@@ -164,7 +163,8 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 .build(team1.getId()))
             .exchange()
             .expectStatus().isOk()
-            .expectBody(DepartmentEmployeesResponse.class)
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeResponse>>() {
+            })
             .returnResult()
             .getResponseBody();
 
@@ -172,8 +172,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         assertThat(response.content()).hasSize(10);
         assertThat(response.totalElements()).isEqualTo(16); // 김철수 + 15명
         assertThat(response.totalPages()).isEqualTo(2);
-        assertThat(response.currentPage()).isEqualTo(0);
-        assertThat(response.hasNext()).isTrue();
+        assertThat(response.pageNumber()).isEqualTo(0);
     }
 
     @Test
@@ -182,7 +181,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         // Given: 직원이 없는 부서 (team2)
         
         // When: 직원 조회
-        DepartmentEmployeesResponse response = restTestClient.get()
+        PageResponse<EmployeeResponse> response = restTestClient.get()
             .uri(uriBuilder -> uriBuilder
                 .path("/api/departments/{departmentId}/employees")
                 .queryParam("page", 0)
@@ -190,7 +189,8 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 .build(team2.getId()))
             .exchange()
             .expectStatus().isOk()
-            .expectBody(DepartmentEmployeesResponse.class)
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeResponse>>() {
+            })
             .returnResult()
             .getResponseBody();
 
@@ -198,7 +198,6 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         assertThat(response.content()).isEmpty();
         assertThat(response.totalElements()).isEqualTo(0);
         assertThat(response.totalPages()).isEqualTo(0);
-        assertThat(response.hasNext()).isFalse();
     }
 
     @Test

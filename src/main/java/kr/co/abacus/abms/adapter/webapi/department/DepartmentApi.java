@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.adapter.webapi.department.dto.DepartmentEmployeesResponse;
+import kr.co.abacus.abms.adapter.webapi.PageResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.EmployeeAssignTeamLeaderRequest;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.webapi.department.dto.OrganizationChartWithEmployeesResponse;
@@ -24,8 +24,8 @@ import kr.co.abacus.abms.application.department.dto.OrganizationChartModel;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.department.provided.DepartmentManager;
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.employee.Employee;
 
 @RequiredArgsConstructor
 @RestController
@@ -44,7 +44,7 @@ public class DepartmentApi {
     @GetMapping("/api/departments/organization-chart/employees")
     public OrganizationChartWithEmployeesResponse getOrganizationChartWithEmployee() {
         OrganizationChartWithEmployeesModel organizationChartWithEmployee = departmentFinder
-                .getOrganizationChartWithEmployees();
+            .getOrganizationChartWithEmployees();
 
         return OrganizationChartWithEmployeesResponse.of(organizationChartWithEmployee);
     }
@@ -57,13 +57,14 @@ public class DepartmentApi {
     }
 
     @GetMapping("/api/departments/{departmentId}/employees")
-    public DepartmentEmployeesResponse getDepartmentEmployees(
-            @PathVariable UUID departmentId,
-            @RequestParam(required = false) String name,
-            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
-        Page<Employee> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
+    public PageResponse<EmployeeResponse> getDepartmentEmployees(
+        @PathVariable UUID departmentId,
+        @RequestParam(required = false) String name,
+        @PageableDefault(size = 20, sort = "name") Pageable pageable
+    ) {
+        Page<EmployeeResponse> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
 
-        return DepartmentEmployeesResponse.from(employeesPage);
+        return PageResponse.of(employeesPage);
     }
 
     @PostMapping("/api/departments/{departmentId}/assign-team-leader")
@@ -72,4 +73,5 @@ public class DepartmentApi {
 
         return DepartmentResponse.of(department);
     }
+
 }

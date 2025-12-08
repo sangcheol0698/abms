@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
@@ -79,7 +80,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
         flushAndClear();
 
         // When: 첫 번째 페이지 조회
-        Page<Employee> result = departmentFinder.getEmployees(teamId, null, PageRequest.of(0, 10));
+        Page<EmployeeResponse> result = departmentFinder.getEmployees(teamId, null, PageRequest.of(0, 10));
 
         // Then: 페이징 정보 검증
         assertThat(result.getContent()).hasSize(10);
@@ -94,7 +95,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
         // Given: 직원이 없는 부서 (company는 직원 없음)
 
         // When: 조회
-        Page<Employee> result = departmentFinder.getEmployees(companyId, null, PageRequest.of(0, 10));
+        Page<EmployeeResponse> result = departmentFinder.getEmployees(companyId, null, PageRequest.of(0, 10));
 
         // Then: 빈 페이지 반환
         assertThat(result.getContent()).isEmpty();

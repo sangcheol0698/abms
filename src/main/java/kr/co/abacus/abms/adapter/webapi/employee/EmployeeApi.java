@@ -8,7 +8,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -40,12 +39,12 @@ import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeGradeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeePositionResponse;
-import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeStatusResponse;
 import kr.co.abacus.abms.adapter.webapi.employee.dto.EmployeeTypeResponse;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.employee.EmployeeExcelService;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
@@ -99,33 +98,14 @@ public class EmployeeApi {
 
     @GetMapping("/api/employees/{id}")
     public EmployeeResponse find(@PathVariable UUID id) {
-        Employee employee = employeeFinder.find(id);
-
-        Department department = departmentFinder.find(employee.getDepartmentId());
-
-        return EmployeeResponse.of(employee, department);
+        return employeeFinder.findWithDepartment(id);
     }
 
     @GetMapping("/api/employees")
     public PageResponse<EmployeeResponse> search(@Valid EmployeeSearchRequest request, Pageable pageable) {
-        Page<Employee> employees = employeeFinder.search(request, pageable);
+        Page<EmployeeResponse> employeePage = employeeFinder.search(request, pageable);
 
-        // 페이지에 포함된 직원들의 부서 ID만 추출하여 배치 조회 (N+1 문제 해결)
-        List<UUID> departmentIds = employees.getContent().stream()
-            .map(Employee::getDepartmentId)
-            .distinct()
-            .toList();
-
-        Map<UUID, Department> departmentMap = departmentFinder.findAllByIds(departmentIds).stream()
-            .collect(java.util.stream.Collectors.toMap(Department::getId, dept -> dept));
-
-        return PageResponse.of(employees.map(employee -> {
-            Department department = departmentMap.get(employee.getDepartmentId());
-            if (department == null) {
-                throw new IllegalStateException("부서를 찾을 수 없습니다: " + employee.getDepartmentId());
-            }
-            return EmployeeResponse.of(employee, department);
-        }));
+        return PageResponse.of(employeePage);
     }
 
     @GetMapping("/api/employees/grades")

@@ -11,18 +11,15 @@ public class ChatService {
     private final ChatClient chatClient;
     private final EmployeeInfoTools employeeInfoTools;
     private final OrganizationTools organizationTools;
-    private final EmployeeSearchTools employeeSearchTools;
 
     public ChatService(
         ChatClient.Builder chatClientBuilder,
         EmployeeInfoTools employeeInfoTools,
-        OrganizationTools organizationTools,
-        EmployeeSearchTools employeeSearchTools
+        OrganizationTools organizationTools
     ) {
         this.chatClient = chatClientBuilder.build();
         this.employeeInfoTools = employeeInfoTools;
         this.organizationTools = organizationTools;
-        this.employeeSearchTools = employeeSearchTools;
     }
 
     public Flux<String> streamMessage(String message) {

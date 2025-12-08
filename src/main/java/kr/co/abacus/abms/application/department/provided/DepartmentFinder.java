@@ -8,8 +8,8 @@ import org.springframework.data.domain.Pageable;
 
 import kr.co.abacus.abms.application.department.dto.OrganizationChartModel;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
+import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.employee.Employee;
 
 public interface DepartmentFinder {
 
@@ -23,6 +23,6 @@ public interface DepartmentFinder {
 
     OrganizationChartWithEmployeesModel getOrganizationChartWithEmployees();
 
-    Page<Employee> getEmployees(UUID departmentId, String name, Pageable pageable);
+    Page<EmployeeResponse> getEmployees(UUID departmentId, String name, Pageable pageable);
 
 }
