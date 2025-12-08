@@ -1,9 +1,9 @@
 import { getEmployeeAvatarOption } from '@/features/employee/constants/avatars';
 import {
-  toGradeCode,
-  toPositionCode,
-  toStatusCode,
-  toTypeCode,
+  toGradeLabel,
+  toPositionLabel,
+  toStatusLabel,
+  toTypeLabel,
 } from '@/features/employee/models/employeeFilters';
 
 function toIsoDateString(value: unknown): string | undefined {
@@ -70,31 +70,41 @@ export interface EmployeeListItem {
 }
 
 export function mapEmployeeListItem(input: any): EmployeeListItem {
-  const statusLabel = String(input?.status ?? '');
-  const gradeLabel = String(input?.grade ?? '');
-  const typeLabel = String(input?.type ?? '');
-  const positionLabel = String(input?.position ?? '');
+  const statusCode = String(input?.status ?? '');
+  const gradeCode = String(input?.grade ?? '');
+  const typeCode = String(input?.type ?? '');
+  const positionCode = String(input?.position ?? '');
   const joinDate = toIsoDateString(input?.joinDate);
   const birthDate = toIsoDateString(input?.birthDate);
-  const rawAvatarCode = typeof input?.avatarCode === 'string' ? input.avatarCode : null;
-  const avatarLabelFromApi = typeof input?.avatarLabel === 'string' ? input.avatarLabel : '';
+
+  // Email handling: can be string or object { address: string }
+  let email = '';
+  if (typeof input?.email === 'string') {
+    email = input.email;
+  } else if (input?.email?.address) {
+    email = input.email.address;
+  }
+
+  // Avatar handling: input.avatar is now the enum name (code)
+  const rawAvatarCode = typeof input?.avatar === 'string' ? input.avatar : null;
   const avatarOption = getEmployeeAvatarOption(rawAvatarCode);
-  const avatarLabel = avatarLabelFromApi.length > 0 ? avatarLabelFromApi : avatarOption.label;
+  // label is derived from the option, or falls back to code if not found (though option always returns something)
+  const avatarLabel = avatarOption.label;
 
   return {
     employeeId: String(input?.employeeId ?? ''),
     departmentId: String(input?.departmentId ?? ''),
     departmentName: String(input?.departmentName ?? ''),
     name: String(input?.name ?? ''),
-    email: String(input?.email ?? ''),
-    positionCode: toPositionCode(positionLabel),
-    positionLabel,
-    statusCode: toStatusCode(statusLabel),
-    statusLabel,
-    gradeCode: toGradeCode(gradeLabel),
-    gradeLabel,
-    typeCode: toTypeCode(typeLabel),
-    typeLabel,
+    email,
+    positionCode,
+    positionLabel: toPositionLabel(positionCode),
+    statusCode,
+    statusLabel: toStatusLabel(statusCode),
+    gradeCode,
+    gradeLabel: toGradeLabel(gradeCode),
+    typeCode,
+    typeLabel: toTypeLabel(typeCode),
     avatarCode: avatarOption.code,
     avatarLabel,
     avatarImageUrl: avatarOption.imageUrl,

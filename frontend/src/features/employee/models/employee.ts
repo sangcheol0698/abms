@@ -1,9 +1,9 @@
 import { getEmployeeAvatarOption } from '@/features/employee/constants/avatars';
 import {
-  toGradeCode,
-  toPositionCode,
-  toStatusCode,
-  toTypeCode,
+  toGradeLabel,
+  toPositionLabel,
+  toStatusLabel,
+  toTypeLabel,
 } from '@/features/employee/models/employeeFilters';
 
 function toIsoDateString(value: unknown): string {
@@ -67,31 +67,40 @@ export interface EmployeeSummary {
 }
 
 export function mapEmployeeSummary(input: any): EmployeeSummary {
-  const positionLabel = String(input?.position ?? '');
-  const statusLabel = String(input?.status ?? '');
-  const gradeLabel = String(input?.grade ?? '');
-  const typeLabel = String(input?.type ?? '');
+  const positionCode = String(input?.position ?? '');
+  const statusCode = String(input?.status ?? '');
+  const gradeCode = String(input?.grade ?? '');
+  const typeCode = String(input?.type ?? '');
   const joinDate = toIsoDateString(input?.joinDate);
   const birthDate = toIsoDateString(input?.birthDate);
-  const rawAvatarCode = typeof input?.avatarCode === 'string' ? input.avatarCode : null;
-  const avatarLabelFromApi = typeof input?.avatarLabel === 'string' ? input.avatarLabel : '';
+
+  // Email handling
+  let email = '';
+  if (typeof input?.email === 'string') {
+    email = input.email;
+  } else if (input?.email?.address) {
+    email = input.email.address;
+  }
+
+  // Avatar handling
+  const rawAvatarCode = typeof input?.avatar === 'string' ? input.avatar : null;
   const avatarOption = getEmployeeAvatarOption(rawAvatarCode);
-  const avatarLabel = avatarLabelFromApi.length > 0 ? avatarLabelFromApi : avatarOption.label;
+  const avatarLabel = avatarOption.label;
 
   return {
     departmentId: String(input?.departmentId ?? ''),
     departmentName: String(input?.departmentName ?? ''),
     employeeId: String(input?.employeeId ?? ''),
     name: String(input?.name ?? ''),
-    email: String(input?.email ?? ''),
-    position: positionLabel,
-    positionCode: toPositionCode(positionLabel),
-    status: statusLabel,
-    statusCode: toStatusCode(statusLabel),
-    grade: gradeLabel,
-    gradeCode: toGradeCode(gradeLabel),
-    type: typeLabel,
-    typeCode: toTypeCode(typeLabel),
+    email,
+    position: toPositionLabel(positionCode),
+    positionCode,
+    status: toStatusLabel(statusCode),
+    statusCode,
+    grade: toGradeLabel(gradeCode),
+    gradeCode,
+    type: toTypeLabel(typeCode),
+    typeCode,
     avatarCode: avatarOption.code,
     avatarLabel,
     avatarImageUrl: avatarOption.imageUrl,
