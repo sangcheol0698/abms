@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.adapter.persistence.employee;
+package kr.co.abacus.abms.adapter.infrastructure.employee;
 
 import static kr.co.abacus.abms.domain.department.QDepartment.*;
 import static kr.co.abacus.abms.domain.employee.QEmployee.*;

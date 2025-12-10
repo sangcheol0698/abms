@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.adapter.persistence.party;
+package kr.co.abacus.abms.adapter.infrastructure.party;
 
 import static kr.co.abacus.abms.domain.party.QParty.*;
 
