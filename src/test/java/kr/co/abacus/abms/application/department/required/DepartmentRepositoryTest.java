@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 

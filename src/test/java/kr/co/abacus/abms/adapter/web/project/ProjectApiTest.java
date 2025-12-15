@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,19 +24,12 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @Autowired
     private ProjectRepository projectRepository;
 
-    private UUID partyId;
-
-    @BeforeEach
-    void setUp() {
-        partyId = UUID.randomUUID();
-    }
-
     @Test
     @DisplayName("프로젝트 생성")
     void create() {
         // Given
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
-            partyId,
+            UUID.randomUUID(),
             "PRJ-TEST-001",
             "테스트 프로젝트",
             "테스트 프로젝트 설명",
@@ -78,7 +70,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
-            partyId,
+            UUID.randomUUID(),
             "PRJ-DUP-001",
             "중복 프로젝트",
             null,
@@ -169,7 +161,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         ProjectUpdateApiRequest request = new ProjectUpdateApiRequest(
-            partyId,
+            UUID.randomUUID(),
             "수정된 프로젝트명",
             "수정된 설명",
             ProjectStatus.IN_PROGRESS.name(),

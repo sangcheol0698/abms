@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
-import kr.co.abacus.abms.application.employee.required.CustomEmployeeRepository;
+import kr.co.abacus.abms.application.employee.outbound.CustomEmployeeRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;

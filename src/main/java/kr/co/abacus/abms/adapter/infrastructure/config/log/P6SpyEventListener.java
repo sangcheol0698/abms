@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.adapter.infrastructure.config;
+package kr.co.abacus.abms.adapter.infrastructure.config.log;
 
 import java.sql.SQLException;
 

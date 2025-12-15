@@ -13,8 +13,8 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
-import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 

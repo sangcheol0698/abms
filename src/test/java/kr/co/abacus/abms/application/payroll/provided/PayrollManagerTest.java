@@ -8,10 +8,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.payroll.required.PayrollRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
-import kr.co.abacus.abms.domain.employee.EmployeeFixture;
 import kr.co.abacus.abms.domain.payroll.Payroll;
 import kr.co.abacus.abms.domain.shared.Money;
 import kr.co.abacus.abms.domain.shared.Period;

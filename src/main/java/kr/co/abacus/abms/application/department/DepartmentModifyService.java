@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.department.provided.DepartmentManager;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 

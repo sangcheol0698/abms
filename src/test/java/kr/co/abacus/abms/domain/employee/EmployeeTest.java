@@ -255,18 +255,18 @@ class EmployeeTest {
     }
 
     private Employee createEmployee(LocalDate joinDate) {
-        return Employee.builder()
-            .departmentId(UUID.randomUUID())
-            .email("testUser@email.com")
-            .name("홍길동")
-            .joinDate(joinDate)
-            .birthDate(LocalDate.of(1990, 1, 1))
-            .position(EmployeePosition.MANAGER)
-            .type(EmployeeType.FULL_TIME)
-            .grade(EmployeeGrade.SENIOR)
-            .avatar(EmployeeAvatar.SKY_GLOW)
-            .memo("This is a memo for the employee.")
-            .build();
+        return Employee.create(
+            UUID.randomUUID(),
+            "홍길동",
+            "testUser@email.com",
+            joinDate,
+            LocalDate.of(1990, 1, 1),
+            EmployeePosition.MANAGER,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.SENIOR,
+            EmployeeAvatar.SKY_GLOW,
+            "This is a memo for the employee."
+        );
     }
 
 }

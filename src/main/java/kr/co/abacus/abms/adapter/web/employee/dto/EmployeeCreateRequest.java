@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size;
 
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
@@ -28,8 +29,8 @@ public record EmployeeCreateRequest(
     @Nullable String memo
 ) {
 
-    public kr.co.abacus.abms.application.employee.dto.EmployeeCreateRequest toCommand() {
-        return kr.co.abacus.abms.application.employee.dto.EmployeeCreateRequest.builder()
+    public EmployeeCreateCommand toCommand() {
+        return EmployeeCreateCommand.builder()
             .departmentId(departmentId)
             .email(email)
             .name(name)

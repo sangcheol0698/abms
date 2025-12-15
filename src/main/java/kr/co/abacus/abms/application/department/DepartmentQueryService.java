@@ -23,7 +23,7 @@ import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.Employee;

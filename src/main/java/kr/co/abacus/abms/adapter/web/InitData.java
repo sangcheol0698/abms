@@ -8,12 +8,14 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.party.required.PartyRepository;
 import kr.co.abacus.abms.application.project.required.ProjectRepository;
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.department.DepartmentCreateRequest;
+
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
@@ -26,6 +28,7 @@ import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 
+@RequiredArgsConstructor
 @Profile({"local", "default"})
 @Component
 public class InitData {
@@ -35,76 +38,66 @@ public class InitData {
     private final ProjectRepository projectRepository;
     private final PartyRepository partyRepository;
 
-    public InitData(
-        EmployeeRepository employeeRepository,
-        DepartmentRepository departmentRepository,
-        ProjectRepository projectRepository, PartyRepository partyRepository) {
-        this.employeeRepository = employeeRepository;
-        this.departmentRepository = departmentRepository;
-        this.projectRepository = projectRepository;
-        this.partyRepository = partyRepository;
-    }
-
     @PostConstruct
     public void init() {
         // 회사 루트
-        Department company = departmentRepository.save(Department.createRoot(
-            new DepartmentCreateRequest("ABMS", "아바쿠스", DepartmentType.COMPANY, null)));
+        Department company = departmentRepository.save(Department.create(
+            "ABMS", "아바쿠스", DepartmentType.COMPANY, null, null));
 
         // 본부 구성
         Department mgmtDivision = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("DIV-MGMT", "경영관리본부", DepartmentType.DIVISION, null),
+            "DIV-MGMT", "경영관리본부", DepartmentType.DIVISION, null,
             company));
         Department techDivision = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("DIV-TECH", "기술본부", DepartmentType.DIVISION, null),
+            "DIV-TECH", "기술본부", DepartmentType.DIVISION, null,
             company));
         Department salesDivision = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("DIV-SALES", "영업본부", DepartmentType.DIVISION, null),
+            "DIV-SALES", "영업본부", DepartmentType.DIVISION, null,
             company));
 
         // 경영관리본부 하위 조직
         Department hrDept = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("DEPT-HR", "인사담당", DepartmentType.DEPARTMENT, null),
+            "DEPT-HR", "인사담당", DepartmentType.DEPARTMENT, null,
             mgmtDivision));
         Department finDept = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("DEPT-FIN", "재무담당", DepartmentType.DEPARTMENT, null),
+            "DEPT-FIN", "재무담당", DepartmentType.DEPARTMENT, null,
             mgmtDivision));
         Department hrTeam = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TEAM-HR", "인사팀", DepartmentType.TEAM, null), hrDept));
+            "TEAM-HR", "인사팀", DepartmentType.TEAM, null, hrDept));
         Department finTeam = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TEAM-FIN", "재무팀", DepartmentType.TEAM, null), finDept));
+            "TEAM-FIN", "재무팀", DepartmentType.TEAM, null, finDept));
 
         // 기술본부 하위 조직
         Department platformDept = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("DEPT-PLAT", "플랫폼개발담당", DepartmentType.DEPARTMENT, null),
+            "DEPT-PLAT", "플랫폼개발담당", DepartmentType.DEPARTMENT, null,
             techDivision));
         Department dataDept = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("DEPT-DATA", "데이터담당", DepartmentType.DEPARTMENT, null),
+            "DEPT-DATA", "데이터담당", DepartmentType.DEPARTMENT, null,
             techDivision));
         Department beTeam = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TEAM-BE", "백엔드팀", DepartmentType.TEAM, null),
+            "TEAM-BE", "백엔드팀", DepartmentType.TEAM, null,
             platformDept));
         Department feTeam = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TEAM-FE", "프론트엔드팀", DepartmentType.TEAM, null),
+            "TEAM-FE", "프론트엔드팀", DepartmentType.TEAM, null,
             platformDept));
         Department deTeam = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TEAM-DE", "데이터엔지니어링팀", DepartmentType.TEAM, null),
+            "TEAM-DE", "데이터엔지니어링팀", DepartmentType.TEAM, null,
             dataDept));
         Department lab = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("LAB-RND", "기술연구소", DepartmentType.LAB, null),
+            "LAB-RND", "기술연구소", DepartmentType.LAB, null,
             techDivision));
         Department aiTeam = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TEAM-AI", "AI팀", DepartmentType.TEAM, null), lab));
+            "TEAM-AI", "AI팀", DepartmentType.TEAM, null, lab));
 
         // 영업본부 하위 조직
         Department krSalesTeam = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TEAM-SALES-KR", "국내영업팀", DepartmentType.TEAM, null),
+            "TEAM-SALES-KR", "국내영업팀", DepartmentType.TEAM, null,
             salesDivision));
         Department globalSalesTeam = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TEAM-SALES-GLOBAL", "해외영업팀", DepartmentType.TEAM, null),
+            "TEAM-SALES-GLOBAL", "해외영업팀", DepartmentType.TEAM, null,
             salesDivision));
         Department bizTf = departmentRepository.save(Department.create(
-            new DepartmentCreateRequest("TF-BIZ", "사업기획TF", DepartmentType.TF, null),
+            "TF-BIZ", "사업기획TF", DepartmentType.TF, null,
             salesDivision));
 
         // 경영진 (회사 소속)
@@ -519,18 +512,18 @@ public class InitData {
     private Employee createEmployee(UUID departmentId, String email, String name, LocalDate joinDate,
                                     LocalDate birthDate, EmployeePosition position, EmployeeType type,
                                     EmployeeGrade grade, EmployeeAvatar avatar, String memo) {
-        return Employee.builder()
-            .departmentId(departmentId)
-            .email(email)
-            .name(name)
-            .joinDate(joinDate)
-            .birthDate(birthDate)
-            .position(position)
-            .type(type)
-            .grade(grade)
-            .avatar(avatar)
-            .memo(memo)
-            .build();
+        return Employee.create(
+            departmentId,
+            email,
+            name,
+            joinDate,
+            birthDate,
+            position,
+            type,
+            grade,
+            avatar,
+            memo
+        );
     }
 
 }

@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.payroll.provided.PayrollManager;
 import kr.co.abacus.abms.application.payroll.required.PayrollRepository;
 import kr.co.abacus.abms.domain.payroll.Payroll;

@@ -9,10 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.dto.EmployeeCreateRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -29,7 +29,7 @@ public class EmployeeModifyService implements EmployeeManager {
     private final DepartmentRepository departmentRepository;
 
     @Override
-    public UUID create(EmployeeCreateRequest command) {
+    public UUID create(EmployeeCreateCommand command) {
         validateDepartmentExists(command.departmentId());
         validateDuplicateEmail(command.email());
 

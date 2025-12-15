@@ -28,7 +28,9 @@ import kr.co.abacus.abms.domain.shared.Email;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "employee", uniqueConstraints = {@UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")})
+@Table(name = "employee", uniqueConstraints = {
+    @UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")
+})
 public class Employee extends AbstractEntity {
 
     @Column(name = "department_id", nullable = false)
@@ -75,11 +77,10 @@ public class Employee extends AbstractEntity {
     @Column(name = "memo", columnDefinition = "TEXT")
     private String memo;
 
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private Employee(UUID departmentId, String name, String email, LocalDate joinDate, LocalDate birthDate,
-                    EmployeePosition position, EmployeeType type, EmployeeGrade grade, EmployeeAvatar avatar,
-                    @Nullable LocalDate resignationDate, @Nullable String memo) {
-
+                     EmployeePosition position, EmployeeType type, EmployeeGrade grade, EmployeeAvatar avatar,
+                     @Nullable LocalDate resignationDate, @Nullable String memo) {
         this.departmentId = requireNonNull(departmentId);
         this.name = requireNonNull(name);
         this.email = new Email(requireNonNull(email));
@@ -93,6 +94,23 @@ public class Employee extends AbstractEntity {
         this.memo = memo;
 
         this.status = EmployeeStatus.ACTIVE;
+    }
+
+    public static Employee create(UUID departmentId, String name, String email, LocalDate joinDate,
+                                  LocalDate birthDate, EmployeePosition position, EmployeeType type,
+                                  EmployeeGrade grade, EmployeeAvatar avatar, @Nullable String memo) {
+        return Employee.builder()
+            .departmentId(departmentId)
+            .name(name)
+            .email(email)
+            .joinDate(joinDate)
+            .birthDate(birthDate)
+            .position(position)
+            .type(type)
+            .grade(grade)
+            .avatar(avatar)
+            .memo(memo)
+            .build();
     }
 
     public void resign(LocalDate resignationDate) {

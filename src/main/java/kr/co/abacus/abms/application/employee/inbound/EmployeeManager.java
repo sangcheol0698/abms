@@ -1,9 +1,9 @@
-package kr.co.abacus.abms.application.employee.provided;
+package kr.co.abacus.abms.application.employee.inbound;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-import kr.co.abacus.abms.application.employee.dto.EmployeeCreateRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 
@@ -12,7 +12,7 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
  */
 public interface EmployeeManager {
 
-    UUID create(EmployeeCreateRequest command);
+    UUID create(EmployeeCreateCommand command);
 
     UUID updateInfo(UUID id, EmployeeUpdateCommand command);
 

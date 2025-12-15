@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.employee.required;
+package kr.co.abacus.abms.application.employee.outbound;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -15,7 +15,6 @@ import org.springframework.data.domain.PageRequest;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
-import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;

@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.employee.provided;
+package kr.co.abacus.abms.application.employee.inbound;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -10,10 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
-import kr.co.abacus.abms.domain.employee.EmployeeFixture;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 

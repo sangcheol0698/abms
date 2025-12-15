@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +18,9 @@ import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartWithEmploye
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationEmployeeResponse;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.department.DepartmentFixture;
-import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeFixture;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
@@ -37,50 +32,10 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @Autowired
     private DepartmentRepository departmentRepository;
 
-    private Department company;
-    private Department division;
-    private Department team1;
-    private Department team2;
-    private Employee employee1;
-
-    @Autowired
-    private EmployeeRepository employeeRepository;
-
-    @BeforeEach
-    void setUpDepartments() {
-        Employee employee = EmployeeFixture.createEmployee();
-        employeeRepository.save(employee);
-        flushAndClear();
-
-        company = Department.createRoot(
-            DepartmentFixture.createDepartmentCreateRequest("테스트회사", "TEST_COM", DepartmentType.COMPANY, employee.getId())
-        );
-        departmentRepository.save(company);
-        division = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트본부", "TEST_DIV", DepartmentType.DIVISION, null),
-            company
-        );
-        departmentRepository.save(division);
-        team1 = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM, null),
-            division
-        );
-        team2 = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트팀2", "TEST_TEAM2", DepartmentType.TEAM, null),
-            division
-        );
-        departmentRepository.save(team1);
-        departmentRepository.save(team2);
-        flushAndClear();
-
-        // 팀1에 소속된 직원 생성
-        employee1 = employeeRepository.save(createEmployee("testUser@email.com"));
-        flushAndClear();
-    }
-
     @Test
     @DisplayName("전체 부서 계층 구조를 올바르게 반환한다")
     void getOrganizationChart() {
+
         OrganizationChartResponse response = restTestClient.get()
             .uri("/api/departments/organization-chart")
             .exchange()

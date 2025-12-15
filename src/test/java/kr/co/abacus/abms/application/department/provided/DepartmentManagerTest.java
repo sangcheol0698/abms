@@ -10,10 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.department.DepartmentFixture;
-import kr.co.abacus.abms.domain.employee.EmployeeFixture;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
 class DepartmentManagerTest extends IntegrationTestBase {

@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.employee.required;
+package kr.co.abacus.abms.application.employee.outbound;
 
 import java.util.List;
 import java.util.Optional;
