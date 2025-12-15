@@ -2,17 +2,24 @@ package kr.co.abacus.abms.application.employee.inbound;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
 class EmployeeFinderTest extends IntegrationTestBase {
@@ -28,27 +35,23 @@ class EmployeeFinderTest extends IntegrationTestBase {
 
     private UUID companyId;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     @BeforeEach
     void setUpDepartments() {
-        Department company = DepartmentFixture.createTestCompany();
-        departmentRepository.save(company);
-        Department division = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트본부", "TEST_DIV", DepartmentType.DIVISION, null),
-            company
-        );
-        departmentRepository.save(division);
-        Department team = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM, null),
-            division
-        );
-        departmentRepository.save(team);
-        flushAndClear();
+        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
+        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
+        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
+        Department team2 = createDepartment("TEAM002", "ABC Corp", DepartmentType.TEAM, null, division);
+        departmentRepository.saveAll(List.of(company, division, team1, team2));
+
         companyId = company.getId();
     }
 
     @Test
     void find() {
-        UUID employeeId = employeeManager.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeRepository.save(createEmployee(companyId, "test@email.com")).getId();
         flushAndClear();
 
         Employee foundEmployee = employeeFinder.find(employeeId);
@@ -63,7 +66,7 @@ class EmployeeFinderTest extends IntegrationTestBase {
 
     @Test
     void findDeleted() {
-        UUID employeeId = employeeManager.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeRepository.save(createEmployee(companyId, "testUser@email.com")).getId();
         flush();
 
         Employee savedEmployee = employeeFinder.find(employeeId);
@@ -72,6 +75,31 @@ class EmployeeFinderTest extends IntegrationTestBase {
 
         assertThatThrownBy(() -> employeeFinder.find(employeeId))
             .isInstanceOf(EmployeeNotFoundException.class);
+    }
+
+    private Department createDepartment(String code, String name, DepartmentType type, UUID leaderId, Department parent) {
+        return Department.create(
+            code,
+            name,
+            type,
+            leaderId,
+            parent
+        );
+    }
+
+    private Employee createEmployee(UUID teamId, String email) {
+        return Employee.create(
+            teamId,
+            email,
+            "홍길동",
+            LocalDate.of(2024, 1, 1),
+            LocalDate.of(1990, 5, 20),
+            EmployeePosition.ASSOCIATE,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.JUNIOR,
+            EmployeeAvatar.SKY_GLOW,
+            null
+        );
     }
 
 }

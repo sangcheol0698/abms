@@ -5,14 +5,14 @@ import java.util.UUID;
 
 import kr.co.abacus.abms.domain.department.DepartmentType;
 
-public record OrganizationChartWithEmployeesModel(
+public record OrganizationChartInfo(
     UUID departmentId,
     String departmentName,
     String departmentCode,
     DepartmentType departmentType,
     DepartmentLeaderInfo leader,
-    List<EmployeeModel> employeeModels,
-    List<OrganizationChartWithEmployeesModel> children
+    int employeeCount,
+    List<OrganizationChartInfo> children
 ) {
 
 }

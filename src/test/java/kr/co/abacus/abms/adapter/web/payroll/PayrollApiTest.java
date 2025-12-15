@@ -67,8 +67,8 @@ class PayrollApiTest extends ApiIntegrationTestBase {
     private Employee createEmployee(UUID teamId, String email, String name) {
         return Employee.create(
             teamId,
-            email,
             name,
+            email,
             LocalDate.of(2024, 1, 1),
             LocalDate.of(1990, 5, 20),
             EmployeePosition.ASSOCIATE,

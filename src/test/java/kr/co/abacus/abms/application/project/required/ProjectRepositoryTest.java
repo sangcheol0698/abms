@@ -143,7 +143,7 @@ class ProjectRepositoryTest extends IntegrationTestBase {
     void findAllByStatusAndDeletedFalse() {
         projectRepository.save(createProject("PRJ-001")); // IN_PROGRESS
         projectRepository.save(createProject("PRJ-002")); // IN_PROGRESS
-        
+
         Project completedProject = createProject("PRJ-003");
         completedProject.complete();
         projectRepository.save(completedProject);

@@ -30,11 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateRequest;
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
-import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -76,10 +74,9 @@ public class EmployeeExcelService {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
-    private final EmployeeManager employeeManager;
 
-    public byte[] download(EmployeeSearchCondition request) {
-        List<Employee> employees = employeeRepository.search(request);
+    public byte[] download(EmployeeSearchCondition condition) {
+        List<Employee> employees = employeeRepository.search(condition);
         Map<UUID, String> departmentNames = loadDepartmentNameMap();
 
         try (Workbook workbook = new XSSFWorkbook();
@@ -148,7 +145,7 @@ public class EmployeeExcelService {
                 }
 
                 try {
-                    EmployeeCreateRequest createRequest = toCreateRequest(row, departmentCodeMap);
+                    // EmployeeCreateRequest createRequest = toCreateRequest(row, departmentCodeMap);
                     // employeeManager.create(createRequest);
                     successCount++;
                 } catch (Exception ex) {
@@ -216,39 +213,6 @@ public class EmployeeExcelService {
             int width = sheet.getColumnWidth(i);
             sheet.setColumnWidth(i, Math.min(width + 1024, 10000));
         }
-    }
-
-    private EmployeeCreateRequest toCreateRequest(Row row, Map<String, UUID> departmentByCode) {
-        String departmentCodeRaw = getCellValue(row, 0);
-        String email = getCellValue(row, 1);
-        String name = getCellValue(row, 2);
-        String joinDateRaw = getCellValue(row, 3);
-        String birthDateRaw = getCellValue(row, 4);
-        String positionRaw = getCellValue(row, 5);
-        String typeRaw = getCellValue(row, 6);
-        String gradeRaw = getCellValue(row, 7);
-        String memo = getCellValue(row, 8);
-
-        UUID departmentId = resolveDepartmentId(departmentCodeRaw, departmentByCode);
-        LocalDate joinDate = parseDate(joinDateRaw, "입사일");
-        LocalDate birthDate = parseDate(birthDateRaw, "생년월일");
-        EmployeePosition position = parseEnum(positionRaw, EmployeePosition.class, "직책");
-        EmployeeType type = parseEnum(typeRaw, EmployeeType.class, "근무 유형");
-        EmployeeGrade grade = parseEnum(gradeRaw, EmployeeGrade.class, "등급");
-        EmployeeAvatar avatar = randomAvatar();
-
-        return new EmployeeCreateRequest(
-            departmentId,
-            email,
-            name,
-            joinDate,
-            birthDate,
-            position,
-            type,
-            grade,
-            avatar,
-            memo.isEmpty() ? null : memo
-        );
     }
 
     private boolean isRowEmpty(Row row) {

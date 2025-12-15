@@ -1,6 +1,5 @@
 package kr.co.abacus.abms.domain.department;
 
-import static kr.co.abacus.abms.domain.department.DepartmentFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;

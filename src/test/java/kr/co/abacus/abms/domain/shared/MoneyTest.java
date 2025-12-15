@@ -78,4 +78,5 @@ class MoneyTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("금액은 음수일 수 없습니다");
     }
+
 }

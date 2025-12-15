@@ -5,10 +5,11 @@ import java.util.UUID;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 
-public record LeaderModel(
-        UUID employeeId,
-        String employeeName,
-        EmployeePosition position,
-        EmployeeAvatar avatar) {
+public record DepartmentLeaderInfo(
+    UUID employeeId,
+    String employeeName,
+    EmployeePosition position,
+    EmployeeAvatar avatar
+) {
 
 }

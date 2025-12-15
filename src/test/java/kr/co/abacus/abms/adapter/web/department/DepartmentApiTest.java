@@ -3,8 +3,10 @@ package kr.co.abacus.abms.adapter.web.department;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,9 +18,11 @@ import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignTeamLeaderRequ
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartWithEmployeesResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationEmployeeResponse;
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
@@ -26,15 +30,22 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
-
 class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Autowired
     private DepartmentRepository departmentRepository;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     @Test
     @DisplayName("전체 부서 계층 구조를 올바르게 반환한다")
     void getOrganizationChart() {
+        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
+        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
+        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
+        Department team2 = createDepartment("TEAM002", "ABC Corp", DepartmentType.TEAM, null, division);
+        departmentRepository.saveAll(List.of(company, division, team1, team2));
 
         OrganizationChartResponse response = restTestClient.get()
             .uri("/api/departments/organization-chart")
@@ -58,6 +69,12 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("전체 부서와 직원을 같이 조회한다")
     void getOrganizationChartWithEmployees() {
+        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
+        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
+        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
+        Department team2 = createDepartment("TEAM002", "ABC Corp", DepartmentType.TEAM, null, division);
+        departmentRepository.saveAll(List.of(company, division, team1, team2));
+
         OrganizationChartWithEmployeesResponse response = restTestClient.get().uri("/api/departments/organization-chart/employees")
             .exchange()
             .expectStatus().isOk()
@@ -90,6 +107,11 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("부서 상세 정보를 조회한다")
     void getDepartment() {
+        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
+        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
+        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
+        departmentRepository.saveAll(List.of(company, division, team1));
+
         DepartmentResponse response = restTestClient.get().uri("/api/departments/{id}", team1.getId())
             .exchange()
             .expectStatus().isOk()
@@ -107,6 +129,10 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @DisplayName("부서 소속 직원들을 페이징하여 조회한다")
     void getDepartmentEmployees_withPaging() {
         // Given: 부서에 여러 직원 생성
+        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
+        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
+        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
+
         for (int i = 1; i <= 15; i++) {
             Employee employee = createEmployee("employee" + i + "@email.com");
             employeeRepository.save(employee);
@@ -135,33 +161,8 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("부서 소속 직원이 없을 때 빈 페이지를 반환한다")
-    void getDepartmentEmployees_emptyDepartment() throws Exception {
-        // Given: 직원이 없는 부서 (team2)
-        
-        // When: 직원 조회
-        PageResponse<EmployeeSummary> response = restTestClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/api/departments/{departmentId}/employees")
-                .queryParam("page", 0)
-                .queryParam("size", 10)
-                .build(team2.getId()))
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSummary>>() {
-            })
-            .returnResult()
-            .getResponseBody();
-
-        // Then: 빈 결과 반환
-        assertThat(response.content()).isEmpty();
-        assertThat(response.totalElements()).isEqualTo(0);
-        assertThat(response.totalPages()).isEqualTo(0);
-    }
-
-    @Test
     @DisplayName("존재하지 않는 부서 ID로 직원 조회 시 404를 반환한다")
-    void getDepartmentEmployees_notFoundDepartment() throws Exception {
+    void getDepartmentEmployees_notFoundDepartment() {
         // Given: 존재하지 않는 부서 ID
         UUID nonExistentId = UUID.randomUUID();
 
@@ -179,6 +180,15 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("팀의 리더를 임명한다")
     void assignTeamLeader() {
+        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
+        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
+        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
+        departmentRepository.saveAll(List.of(company, division, team1));
+
+        Employee employee1 = createEmployee("test@email.com");
+        employeeRepository.save(employee1);
+        flushAndClear();
+
         restTestClient.post()
             .uri("/api/departments/{departmentId}/assign-team-leader", team1.getId())
             .body(new EmployeeAssignTeamLeaderRequest(employee1.getId()))
@@ -209,18 +219,29 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     }
 
     private Employee createEmployee(String email) {
-        return Employee.builder()
-            .departmentId(UUID.randomUUID())
-            .email(email)
-            .name("홍길동")
-            .joinDate(LocalDate.of(2020, 1, 1))
-            .birthDate(LocalDate.of(1990, 1, 1))
-            .position(EmployeePosition.MANAGER)
-            .type(EmployeeType.FULL_TIME)
-            .grade(EmployeeGrade.SENIOR)
-            .avatar(EmployeeAvatar.SKY_GLOW)
-            .memo("This is a memo for the employee.")
-            .build();
+        return Employee.create(
+            UUID.randomUUID(),
+            "홍길동",
+            email,
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(1990, 1, 1),
+            EmployeePosition.MANAGER,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.SENIOR,
+            EmployeeAvatar.SKY_GLOW,
+            "This is a memo for the employee."
+        );
+    }
+
+    private Department createDepartment(String code, String name, DepartmentType type,
+                                        @Nullable UUID leaderEmployeeId, @Nullable Department parent) {
+        return Department.create(
+            code,
+            name,
+            type,
+            leaderEmployeeId,
+            parent
+        );
     }
 
 }

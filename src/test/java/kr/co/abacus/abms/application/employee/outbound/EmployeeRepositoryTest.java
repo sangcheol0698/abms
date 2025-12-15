@@ -12,9 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
@@ -110,7 +112,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
     @Test
     @DisplayName("직원 조건에 따른 검색")
     void search() {
-        UUID departmentId = departmentRepository.save(DepartmentFixture.createRootDepartment()).getId();
+        UUID departmentId = departmentRepository.save(createDepartment()).getId();
 
         employeeRepository.save(getEmployee("test1@email.com", "홍길동", EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, departmentId));
         employeeRepository.save(getEmployee("test2@email.com", "김길동", EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR, departmentId));
@@ -181,7 +183,6 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         employeeRepository.save(deletedEmployee);
         flushAndClear();
 
-        // 직원 soft delete
         Employee toDelete = employeeRepository.findById(deletedEmployee.getId()).orElseThrow();
         toDelete.softDelete("testUser");
         employeeRepository.save(toDelete);
@@ -215,21 +216,31 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         assertThat(result.getTotalElements()).isEqualTo(0);
     }
 
+    private Department createDepartment() {
+        return Department.create(
+            "TEST-CODE",
+            "테스트 부서",
+            DepartmentType.DEPARTMENT,
+            null,
+            null
+        );
+    }
+
     private Employee createEmployee(UUID departmentId, String email, String name, LocalDate joinDate,
                                     LocalDate birthDate, EmployeePosition position, EmployeeType type,
                                     EmployeeGrade grade, EmployeeAvatar avatar, String memo) {
-        return Employee.builder()
-            .departmentId(departmentId)
-            .email(email)
-            .name(name)
-            .joinDate(joinDate)
-            .birthDate(birthDate)
-            .position(position)
-            .type(type)
-            .grade(grade)
-            .avatar(avatar)
-            .memo(memo)
-            .build();
+        return Employee.create(
+            departmentId,
+            email,
+            name,
+            joinDate,
+            birthDate,
+            position,
+            type,
+            grade,
+            avatar,
+            memo
+        );
     }
 
     private Employee createEmployee() {

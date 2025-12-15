@@ -16,7 +16,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 public record EmployeeUpdateRequest(
     @NotNull UUID departmentId,
-    @NotBlank @Email String email,
+    @NotBlank @Email(message = "이메일 형식이 아닙니다.") String email,
     @NotBlank @Size(min = 1, max = 10) String name,
     @NotNull LocalDate joinDate,
     @NotNull LocalDate birthDate,

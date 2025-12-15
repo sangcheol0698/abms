@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.party.required.PartyRepository;
 import kr.co.abacus.abms.application.project.required.ProjectRepository;
@@ -514,8 +514,8 @@ public class InitData {
                                     EmployeeGrade grade, EmployeeAvatar avatar, String memo) {
         return Employee.create(
             departmentId,
-            email,
             name,
+            email,
             joinDate,
             birthDate,
             position,

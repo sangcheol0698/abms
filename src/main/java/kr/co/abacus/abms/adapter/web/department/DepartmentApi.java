@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.adapter.web.department;
 
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -19,11 +20,10 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.adapter.web.PageResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignTeamLeaderRequest;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
-import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartWithEmployeesResponse;
-import kr.co.abacus.abms.application.department.dto.OrganizationChartModel;
-import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
-import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
-import kr.co.abacus.abms.application.department.provided.DepartmentManager;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.application.department.dto.OrganizationChartInfo;
+import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
+import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.domain.department.Department;
 
@@ -35,18 +35,12 @@ public class DepartmentApi {
     private final DepartmentManager departmentManager;
 
     @GetMapping("/api/departments/organization-chart")
-    public OrganizationChartResponse getOrganizationChart() {
-        OrganizationChartModel organizationChartModel = departmentFinder.getOrganizationChart();
+    public List<OrganizationChartResponse> getOrganizationChart() {
+        List<OrganizationChartInfo> organizationChartInfos = departmentFinder.getOrganizationChart();
 
-        return OrganizationChartResponse.of(organizationChartModel);
-    }
-
-    @GetMapping("/api/departments/organization-chart/employees")
-    public OrganizationChartWithEmployeesResponse getOrganizationChartWithEmployee() {
-        OrganizationChartWithEmployeesModel organizationChartWithEmployee = departmentFinder
-            .getOrganizationChartWithEmployees();
-
-        return OrganizationChartWithEmployeesResponse.of(organizationChartWithEmployee);
+        return organizationChartInfos.stream()
+            .map(OrganizationChartResponse::of)
+            .toList();
     }
 
     @GetMapping("/api/departments/{departmentId}")
@@ -57,14 +51,16 @@ public class DepartmentApi {
     }
 
     @GetMapping("/api/departments/{departmentId}/employees")
-    public PageResponse<EmployeeSummary> getDepartmentEmployees(
+    public PageResponse<EmployeeSearchResponse> getDepartmentEmployees(
         @PathVariable UUID departmentId,
         @RequestParam(required = false) String name,
         @PageableDefault(size = 20, sort = "name") Pageable pageable
     ) {
         Page<EmployeeSummary> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
 
-        return PageResponse.of(employeesPage);
+        Page<EmployeeSearchResponse> responses = employeesPage.map(EmployeeSearchResponse::of);
+
+        return PageResponse.of(responses);
     }
 
     @PostMapping("/api/departments/{departmentId}/assign-team-leader")

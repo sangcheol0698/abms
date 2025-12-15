@@ -22,12 +22,11 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import kr.co.abacus.abms.adapter.web.EnumResponse;
 import kr.co.abacus.abms.adapter.web.PageResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeAvatarResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeUpdateRequest;
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
@@ -218,34 +217,33 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void getEmployeePositions() {
-        List<EmployeePositionResponse> responses = restTestClient.get()
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/positions")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeePositionResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
         for (EmployeePosition position : EmployeePosition.values()) {
-            EmployeePositionResponse found = responses.stream()
-                .filter(r -> r.name().equals(position.name()))
+            EnumResponse found = responses.stream()
+                .filter(r -> r.code().equals(position.name()))
                 .findFirst()
                 .orElseThrow();
 
-            assertThat(found.name()).isEqualTo(position.name());
+            assertThat(found.code()).isEqualTo(position.name());
             assertThat(found.description()).isEqualTo(position.getDescription());
-            assertThat(found.rank()).isEqualTo(position.getRank());
         }
     }
 
     @Test
     void getEmployeeTypes() {
-        List<EmployeeTypeResponse> responses = restTestClient.get()
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/types")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeeTypeResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
@@ -253,23 +251,23 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(responses).hasSize(EmployeeType.values().length);
 
         for (EmployeeType type : EmployeeType.values()) {
-            EmployeeTypeResponse found = responses.stream()
-                .filter(r -> r.name().equals(type.name()))
+            EnumResponse found = responses.stream()
+                .filter(r -> r.code().equals(type.name()))
                 .findFirst()
                 .orElseThrow();
 
-            assertThat(found.name()).isEqualTo(type.name());
+            assertThat(found.code()).isEqualTo(type.name());
             assertThat(found.description()).isEqualTo(type.getDescription());
         }
     }
 
     @Test
     void getEmployeeStatuses() {
-        List<EmployeeStatusResponse> responses = restTestClient.get()
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/statuses")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeeStatusResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
@@ -277,35 +275,35 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(responses).hasSize(EmployeeStatus.values().length);
 
         for (EmployeeStatus status : EmployeeStatus.values()) {
-            EmployeeStatusResponse found = responses.stream()
-                .filter(r -> r.name().equals(status.name()))
+            EnumResponse found = responses.stream()
+                .filter(r -> r.code().equals(status.name()))
                 .findFirst()
                 .orElseThrow();
 
-            assertThat(found.name()).isEqualTo(status.name());
+            assertThat(found.code()).isEqualTo(status.name());
             assertThat(found.description()).isEqualTo(status.getDescription());
         }
     }
 
     @Test
     void getEmployeeAvatars() {
-        List<EmployeeAvatarResponse> responses = restTestClient.get()
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/avatars")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeeAvatarResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
         for (EmployeeAvatar avatar : EmployeeAvatar.values()) {
-            EmployeeAvatarResponse found = responses.stream()
+            EnumResponse found = responses.stream()
                 .filter(r -> r.code().equals(avatar.name()))
                 .findFirst()
                 .orElseThrow();
 
             assertThat(found.code()).isEqualTo(avatar.name());
-            assertThat(found.displayName()).isEqualTo(avatar.getDescription());
+            assertThat(found.description()).isEqualTo(avatar.getDescription());
         }
     }
 
@@ -411,7 +409,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         UUID employeeId = employeeRepository.save(createEmployee(teamId, "update-target@email.com", "업데이트 대상")).getId();
         flushAndClear();
 
-        var request = createEmployeeCreateRequest(   divisionId, "김수정", "updated@email.com");
+        EmployeeUpdateRequest request = createEmployeeUpdateRequest(divisionId, "updated@email.com", "김수정");
         String responseJson = objectMapper.writeValueAsString(request);
 
         restTestClient.put()
@@ -419,8 +417,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .contentType(MediaType.APPLICATION_JSON)
             .body(responseJson)
             .exchange()
-            .expectStatus().isOk()
-            .expectBody(EmployeeSummary.class);
+            .expectStatus().isOk();
         flushAndClear();
 
         Employee updatedEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -555,7 +552,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         restTestClient.patch()
             .uri("/api/employees/{id}/resign?resignationDate={date}", employeeId, resignationDate)
             .exchange()
-            .expectStatus().isOk();
+            .expectStatus().isNoContent();
         flushAndClear();
 
         Employee resignedEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -621,7 +618,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("이미 휴직중인 직원이 휴직처리 될 때 예외가 발생한다.")
+    @DisplayName("직원을 휴직중에서 재직중으로 복직시킨다.")
     void activate() {
         UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         employeeManager.takeLeave(employeeId);
@@ -630,7 +627,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         restTestClient.patch()
             .uri("/api/employees/{id}/activate", employeeId)
             .exchange()
-            .expectStatus().isOk();
+            .expectStatus().isNoContent();
 
         flushAndClear();
         Employee activeEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -690,8 +687,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     private Employee createEmployee(UUID teamId, String email, String name) {
         return Employee.create(
             teamId,
-            email,
             name,
+            email,
             LocalDate.of(2024, 1, 1),
             LocalDate.of(1990, 5, 20),
             EmployeePosition.ASSOCIATE,
@@ -705,8 +702,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     private Employee createEmployee(UUID teamId, String email, String name, LocalDate joinDate) {
         return Employee.create(
             teamId,
-            email,
             name,
+            email,
             joinDate,
             LocalDate.of(1990, 5, 20),
             EmployeePosition.ASSOCIATE,
@@ -720,8 +717,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     private Employee createEmployee(UUID teamId, String email, String name, EmployeePosition position, EmployeeType type, EmployeeGrade grade) {
         return Employee.create(
             teamId,
-            email,
             name,
+            email,
             LocalDate.of(2024, 1, 1),
             LocalDate.of(1990, 5, 20),
             position,

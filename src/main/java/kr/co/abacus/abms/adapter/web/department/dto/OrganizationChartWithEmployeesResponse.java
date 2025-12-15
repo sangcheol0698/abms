@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 import kr.co.abacus.abms.application.department.dto.EmployeeModel;
-import kr.co.abacus.abms.application.department.dto.LeaderModel;
+import kr.co.abacus.abms.application.department.dto.DepartmentLeaderInfo;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
 
 public record OrganizationChartWithEmployeesResponse(
@@ -20,7 +20,7 @@ public record OrganizationChartWithEmployeesResponse(
 ) {
 
     public static OrganizationChartWithEmployeesResponse of(OrganizationChartWithEmployeesModel organizationChartWithEmployeesModel) {
-        LeaderModel leaderModel = organizationChartWithEmployeesModel.leader();
+        DepartmentLeaderInfo departmentLeaderInfo = organizationChartWithEmployeesModel.leader();
         List<EmployeeModel> employeeModels = organizationChartWithEmployeesModel.employeeModels();
         List<OrganizationChartWithEmployeesModel> children = organizationChartWithEmployeesModel.children();
 
@@ -29,7 +29,7 @@ public record OrganizationChartWithEmployeesResponse(
             organizationChartWithEmployeesModel.departmentName(),
             organizationChartWithEmployeesModel.departmentCode(),
             organizationChartWithEmployeesModel.departmentType().getDescription(),
-            leaderModel != null ? LeaderResponse.of(leaderModel.employeeId(), leaderModel.employeeName(), leaderModel.position()) : null,
+            departmentLeaderInfo != null ? LeaderResponse.of(departmentLeaderInfo.employeeId(), departmentLeaderInfo.employeeName(), departmentLeaderInfo.position()) : null,
             getOrganizationEmployeeResponse(employeeModels),
             getOrganizationChartWithEmployeesResponses(children)
         );
