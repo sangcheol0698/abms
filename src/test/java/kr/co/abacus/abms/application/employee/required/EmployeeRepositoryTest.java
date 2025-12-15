@@ -1,6 +1,5 @@
 package kr.co.abacus.abms.application.employee.required;
 
-import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
@@ -14,12 +13,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
-import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
@@ -119,16 +117,16 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         employeeRepository.save(getEmployee("test2@email.com", "김길동", EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR, departmentId));
         employeeRepository.save(getEmployee("test3@email.com", "이길동", EmployeePosition.DIRECTOR, EmployeeType.FREELANCER, EmployeeGrade.MID_LEVEL, departmentId));
 
-        EmployeeSearchRequest request = new EmployeeSearchRequest("길동", List.of(EmployeePosition.MANAGER, EmployeePosition.ASSOCIATE), null, null, null, null);
-        Page<EmployeeResponse> employees = employeeRepository.search(request, PageRequest.of(0, 10));
+        EmployeeSearchCondition request = new EmployeeSearchCondition("길동", List.of(EmployeePosition.MANAGER, EmployeePosition.ASSOCIATE), null, null, null, null);
+        Page<EmployeeSummary> employees = employeeRepository.search(request, PageRequest.of(0, 10));
 
         assertThat(employees).hasSize(2)
-            .extracting(EmployeeResponse::name)
+            .extracting(EmployeeSummary::name)
             .containsExactlyInAnyOrder("홍길동", "김길동");
     }
 
     private Employee getEmployee(String email, String name, EmployeePosition employeePosition, EmployeeType employeeType, EmployeeGrade employeeGrade, UUID departmentId) {
-        return Employee.create(new EmployeeCreateRequest(
+        return createEmployee(
             departmentId,
             email,
             name,
@@ -139,7 +137,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
             employeeGrade,
             EmployeeAvatar.FOREST_MINT,
             "This is a memo for the employee."
-        ));
+        );
     }
 
     @Test
@@ -149,9 +147,9 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         UUID departmentId = UUID.randomUUID();
         UUID otherDepartmentId = UUID.randomUUID();
 
-        Employee employee1 = Employee.create(createEmployeeCreateRequest("emp1@test.com", "직원1", departmentId));
-        Employee employee2 = Employee.create(createEmployeeCreateRequest("emp2@test.com", "직원2", departmentId));
-        Employee employee3 = Employee.create(createEmployeeCreateRequest("emp3@test.com", "직원3", otherDepartmentId));
+        Employee employee1 = createEmployee(departmentId, "emp1@test.com", "직원1", LocalDate.of(2025, 1, 1), LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, EmployeeAvatar.FOREST_MINT, "memo");
+        Employee employee2 = createEmployee(departmentId, "emp2@test.com", "직원2", LocalDate.of(2025, 1, 1), LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, EmployeeAvatar.FOREST_MINT, "memo");
+        Employee employee3 = createEmployee(otherDepartmentId, "emp3@test.com", "직원3", LocalDate.of(2025, 1, 1), LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, EmployeeAvatar.FOREST_MINT, "memo");
 
         employeeRepository.save(employee1);
         employeeRepository.save(employee2);
@@ -177,8 +175,8 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         // Given: 부서에 직원 생성 후 일부 삭제
         UUID departmentId = UUID.randomUUID();
 
-        Employee activeEmployee = Employee.create(createEmployeeCreateRequest("active@test.com", "활성직원", departmentId));
-        Employee deletedEmployee = Employee.create(createEmployeeCreateRequest("deleted@test.com", "삭제직원", departmentId));
+        Employee activeEmployee = createEmployee(departmentId, "active@test.com", "활성직원", LocalDate.of(2025, 1, 1), LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, EmployeeAvatar.FOREST_MINT, "memo");
+        Employee deletedEmployee = createEmployee(departmentId, "deleted@test.com", "삭제직원", LocalDate.of(2025, 1, 1), LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, EmployeeAvatar.FOREST_MINT, "memo");
 
         employeeRepository.save(activeEmployee);
         employeeRepository.save(deletedEmployee);
@@ -216,6 +214,53 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         // Then: 빈 페이지 반환
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getTotalElements()).isEqualTo(0);
+    }
+
+    private Employee createEmployee(UUID departmentId, String email, String name, LocalDate joinDate,
+                                    LocalDate birthDate, EmployeePosition position, EmployeeType type,
+                                    EmployeeGrade grade, EmployeeAvatar avatar, String memo) {
+        return Employee.builder()
+            .departmentId(departmentId)
+            .email(email)
+            .name(name)
+            .joinDate(joinDate)
+            .birthDate(birthDate)
+            .position(position)
+            .type(type)
+            .grade(grade)
+            .avatar(avatar)
+            .memo(memo)
+            .build();
+    }
+
+    private Employee createEmployee() {
+        return createEmployee(
+            UUID.randomUUID(),
+            "testUser@email.com",
+            "홍길동",
+            LocalDate.of(2025, 1, 1),
+            LocalDate.of(1990, 1, 1),
+            EmployeePosition.MANAGER,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.SENIOR,
+            EmployeeAvatar.SKY_GLOW,
+            "This is a memo for the employee."
+        );
+    }
+
+    private Employee createEmployee(String email) {
+        return createEmployee(
+            UUID.randomUUID(),
+            email,
+            "홍길동",
+            LocalDate.of(2025, 1, 1),
+            LocalDate.of(1990, 1, 1),
+            EmployeePosition.MANAGER,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.SENIOR,
+            EmployeeAvatar.SKY_GLOW,
+            "This is a memo for the employee."
+        );
     }
 
 }

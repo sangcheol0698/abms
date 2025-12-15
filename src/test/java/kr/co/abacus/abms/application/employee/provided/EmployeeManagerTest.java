@@ -64,8 +64,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void create() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
         flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
 
         assertThat(employee.getId()).isNotNull();
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
@@ -90,10 +92,11 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void updateInfo() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
         flushAndClear();
 
-        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(divisionId));
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommandWithDepartment(divisionId));
         flushAndClear();
 
         Employee updatedEmployee = employeeFinder.find(employee.getId());
@@ -110,11 +113,12 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void updateInfo_noChangeEmail() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
         flushAndClear();
 
         // 이메일이 변경되지 않은 경우, 이메일 중복 체크를 하지 않음
-        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(employee.getDepartmentId(), employee.getName(), employee.getEmail().address()));
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommandWithDepartment(employee.getDepartmentId(), employee.getName(), employee.getEmail().address()));
         flushAndClear();
 
         Employee updatedEmployee = employeeFinder.find(employee.getId());
@@ -123,40 +127,47 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void updateInfoFail_duplicateEmail() {
-        Employee employee1 = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
-        Employee employee2 = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser2@email.com"));
+
+        UUID employeeId1 = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId2 = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser2@email.com"));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee1.getId(), createEmployeeUpdateRequestWithDepartment(employee1.getDepartmentId(), employee1.getName(), employee2.getEmail().address())))
+        Employee employee1 = employeeFinder.find(employeeId1);
+        Employee employee2 = employeeFinder.find(employeeId2);
+        assertThatThrownBy(() -> employeeManager.updateInfo(employee1.getId(), createEmployeeUpdateCommandWithDepartment(employee1.getDepartmentId(), employee1.getName(), employee2.getEmail().address())))
             .isInstanceOf(DuplicateEmailException.class)
             .hasMessageContaining("이미 존재하는 이메일입니다");
     }
 
     @Test
     void updateInfoFail_invalidName() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(employee.getDepartmentId(), "", "updateUser@email.com")))
+        Employee employee = employeeFinder.find(employeeId);
+        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommandWithDepartment(employee.getDepartmentId(), "", "updateUser@email.com")))
             .isInstanceOf(ConstraintViolationException.class);
 
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(employee.getDepartmentId(), "a".repeat(11), "updateUser@email.com")))
+        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommandWithDepartment(employee.getDepartmentId(), "a".repeat(11), "updateUser@email.com")))
             .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test
     void updateInfoFail_invalidEmail() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateRequestWithDepartment(employee.getDepartmentId(), "updateUser", null)))
+        Employee employee = employeeFinder.find(employeeId);
+        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommandWithDepartment(employee.getDepartmentId(), "updateUser", null)))
             .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test
     void resign() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
         flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
 
         employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
@@ -169,8 +180,9 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void resignFail_alreadyResigned() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
 
+        Employee employee = employeeFinder.find(employeeId);
         employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
         flushAndClear();
 
@@ -181,9 +193,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void resignFail_beforeJoinDate() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
         flushAndClear();
 
+        Employee employee = employeeFinder.find(employeeId);
         assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2024, 12, 31)))
             .isInstanceOf(InvalidEmployeeStatusException.class)
             .hasMessage("퇴사일은 입사일 이후여야 합니다.");
@@ -191,8 +204,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void takeLeave() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
         flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
 
         employeeManager.takeLeave(employee.getId());
@@ -204,7 +219,9 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void takeLeaveFail_notActive() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+
+        Employee employee = employeeFinder.find(employeeId);
         employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
         flushAndClear();
 
@@ -215,7 +232,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void activate() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com", "홍길동"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
         employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31)); // 퇴사 처리
         flushAndClear();
 
@@ -229,9 +249,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void activateFail_alreadyActive() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com", "홍길동"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
+        Employee employee = employeeFinder.find(employeeId);
         assertThatThrownBy(() -> employeeManager.activate(employee.getId()))
             .isInstanceOf(InvalidEmployeeStatusException.class)
             .hasMessage("이미 재직 중인 직원입니다.");
@@ -239,9 +260,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void delete() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com", "홍길동"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
+        Employee employee = employeeFinder.find(employeeId);
         employeeManager.delete(employee.getId(), "adminUser");
         flushAndClear();
 
@@ -254,7 +276,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void restore() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "restore@email.com", "홍길동"));
+        UUID employeeId = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId, "restore@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
         employeeManager.delete(employee.getId(), "adminUser");
         flushAndClear();
 

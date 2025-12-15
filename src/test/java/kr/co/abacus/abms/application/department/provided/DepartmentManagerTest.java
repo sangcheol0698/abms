@@ -13,7 +13,6 @@ import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
-import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeFixture;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
@@ -36,12 +35,11 @@ class DepartmentManagerTest extends IntegrationTestBase {
         Department rootDepartment = departmentRepository.save(DepartmentFixture.createRootDepartment());
         departmentId = rootDepartment.getId();
 
-        Employee employee = employeeManager.create(EmployeeFixture.createEmployeeCreateRequest(
+        teamLeaderId = employeeManager.create(EmployeeFixture.createEmployeeCreateRequest(
             "email@test.com",
             "김팀장",
             rootDepartment.getId()
         ));
-        teamLeaderId = employee.getId();
     }
 
     @Test

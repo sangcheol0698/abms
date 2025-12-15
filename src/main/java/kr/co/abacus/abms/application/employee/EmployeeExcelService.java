@@ -33,12 +33,12 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
-import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeExcelException;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
@@ -78,7 +78,7 @@ public class EmployeeExcelService {
     private final DepartmentRepository departmentRepository;
     private final EmployeeManager employeeManager;
 
-    public byte[] download(EmployeeSearchRequest request) {
+    public byte[] download(EmployeeSearchCondition request) {
         List<Employee> employees = employeeRepository.search(request);
         Map<UUID, String> departmentNames = loadDepartmentNameMap();
 

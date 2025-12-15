@@ -3,16 +3,26 @@ package kr.co.abacus.abms.domain.employee;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeUpdateRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 
 public class EmployeeFixture {
 
     public static Employee createEmployee() {
-        return Employee.create(createEmployeeCreateRequest());
-    }
-
-    public static Employee createEmployee(String email) {
-        return Employee.create(createEmployeeCreateRequest(email));
+        return Employee.builder()
+            .departmentId(UUID.randomUUID())
+            .email("email@email.com")
+            .name("홍길동")
+            .joinDate(LocalDate.of(2020, 1, 1))
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .position(EmployeePosition.MANAGER)
+            .type(EmployeeType.FULL_TIME)
+            .grade(EmployeeGrade.SENIOR)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .memo("This is a memo for the employee.")
+            .build();
     }
 
     public static EmployeeCreateRequest createEmployeeCreateRequest() {
@@ -85,12 +95,12 @@ public class EmployeeFixture {
         );
     }
 
-    public static EmployeeUpdateRequest createEmployeeUpdateRequestWithDepartment(UUID departmentId) {
-        return createEmployeeUpdateRequestWithDepartment(departmentId, "김철수", "updateUser@email.com");
+    public static EmployeeUpdateCommand createEmployeeUpdateCommandWithDepartment(UUID departmentId) {
+        return createEmployeeUpdateCommandWithDepartment(departmentId, "김철수", "updateUser@email.com");
     }
 
-    public static EmployeeUpdateRequest createEmployeeUpdateRequestWithDepartment(UUID departmentId, String name, String email) {
-        return new EmployeeUpdateRequest(
+    public static EmployeeUpdateCommand createEmployeeUpdateCommandWithDepartment(UUID departmentId, String name, String email) {
+        return new EmployeeUpdateCommand(
             departmentId,  // 실제 부서 ID 사용
             email,
             name,

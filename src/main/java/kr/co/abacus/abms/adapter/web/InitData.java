@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.adapter.web;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import jakarta.annotation.PostConstruct;
 
@@ -16,7 +17,6 @@ import kr.co.abacus.abms.domain.department.DepartmentCreateRequest;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
@@ -108,295 +108,295 @@ public class InitData {
             salesDivision));
 
         // 경영진 (회사 소속)
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             company.getId(), "ceo@abms.co", "안사장", LocalDate.of(2015, 3, 1),
             LocalDate.of(1970, 5, 12),
             EmployeePosition.PRESIDENT, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "대표이사")));
-        employeeRepository.save(Employee.create(employee(
+            "대표이사"));
+        employeeRepository.save(createEmployee(
             company.getId(), "vp@abms.co", "김부사장", LocalDate.of(2017, 7, 1),
             LocalDate.of(1973, 9, 3),
             EmployeePosition.VICE_PRESIDENT, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT,
-            EmployeeAvatar.SUNSET_BREEZE, "경영총괄")));
+            EmployeeAvatar.SUNSET_BREEZE, "경영총괄"));
 
         // 경영관리본부 인사팀
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             hrTeam.getId(), "hr.mgr@abms.co", "유인사", LocalDate.of(2019, 2, 18),
             LocalDate.of(1985, 2, 21),
             EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.CORAL_SPARK,
-            "인사팀장")));
-        employeeRepository.save(Employee.create(employee(
+            "인사팀장"));
+        employeeRepository.save(createEmployee(
             hrTeam.getId(), "hr1@abms.co", "박서연", LocalDate.of(2021, 4, 5),
             LocalDate.of(1994, 11, 13),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.FOREST_MINT,
-            "채용/평가")));
-        employeeRepository.save(Employee.create(employee(
+            "채용/평가"));
+        employeeRepository.save(createEmployee(
             hrTeam.getId(), "hr2@abms.co", "최민준", LocalDate.of(2023, 1, 9),
             LocalDate.of(1997, 8, 22),
             EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.LAVENDER_MOON,
-            "인턴/보조")));
+            "인턴/보조"));
 
         // 경영관리본부 재무팀
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             finTeam.getId(), "fin.mgr@abms.co", "한재무", LocalDate.of(2018, 6, 11),
             LocalDate.of(1983, 12, 2),
             EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.COBALT_WAVE,
-            "재무팀장")));
-        employeeRepository.save(Employee.create(employee(
+            "재무팀장"));
+        employeeRepository.save(createEmployee(
             finTeam.getId(), "fin1@abms.co", "이지은", LocalDate.of(2020, 9, 14),
             LocalDate.of(1992, 1, 28),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.ORANGE_BURST,
-            "결산/세무")));
-        employeeRepository.save(Employee.create(employee(
+            "결산/세무"));
+        employeeRepository.save(createEmployee(
             finTeam.getId(), "fin2@abms.co", "정우성", LocalDate.of(2022, 5, 2),
             LocalDate.of(1996, 6, 9),
             EmployeePosition.ASSOCIATE, EmployeeType.OUTSOURCING, EmployeeGrade.JUNIOR,
             EmployeeAvatar.SAGE_GUARD,
-            "외주 지원")));
+            "외주 지원"));
 
         // 기술본부 - 플랫폼개발담당: 백엔드팀
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be.lead@abms.co", "홍백엔", LocalDate.of(2018, 4, 2),
             LocalDate.of(1988, 4, 30),
             EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.BLOSSOM_SMILE,
-            "백엔드팀장")));
-        employeeRepository.save(Employee.create(employee(
+            "백엔드팀장"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be1@abms.co", "김백엔", LocalDate.of(2021, 3, 8),
             LocalDate.of(1993, 10, 5),
             EmployeePosition.LEADER, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT,
             EmployeeAvatar.MIDNIGHT_WINK,
-            "마이크로서비스/아키텍처")));
-        employeeRepository.save(Employee.create(employee(
+            "마이크로서비스/아키텍처"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be2@abms.co", "이도윤", LocalDate.of(2022, 7, 4),
             LocalDate.of(1995, 2, 17),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.AQUA_SPLASH,
-            "도메인/영속성")));
-        employeeRepository.save(Employee.create(employee(
+            "도메인/영속성"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be3@abms.co", "박지훈", LocalDate.of(2024, 1, 2),
             LocalDate.of(1999, 3, 9),
             EmployeePosition.ASSOCIATE, EmployeeType.FREELANCER, EmployeeGrade.JUNIOR,
             EmployeeAvatar.GOLDEN_RAY,
-            "배치/ETL")));
+            "배치/ETL"));
 
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be4@abms.co", "김민수", LocalDate.of(2024, 2, 1),
             LocalDate.of(2000, 1, 15),
             EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.CORAL_SPARK,
-            "API 개발")));
-        employeeRepository.save(Employee.create(employee(
+            "API 개발"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be5@abms.co", "이지훈", LocalDate.of(2023, 5, 10),
             LocalDate.of(1999, 8, 20),
             EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.FOREST_MINT,
-            "DB 설계")));
-        employeeRepository.save(Employee.create(employee(
+            "DB 설계"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be6@abms.co", "박서준", LocalDate.of(2022, 11, 15),
             LocalDate.of(1997, 3, 5),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.LAVENDER_MOON,
-            "서버 구축")));
-        employeeRepository.save(Employee.create(employee(
+            "서버 구축"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be7@abms.co", "최도현", LocalDate.of(2021, 8, 20),
             LocalDate.of(1995, 12, 10),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.COBALT_WAVE,
-            "클라우드 인프라")));
-        employeeRepository.save(Employee.create(employee(
+            "클라우드 인프라"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be8@abms.co", "정하은", LocalDate.of(2024, 3, 1),
             LocalDate.of(2001, 5, 25),
             EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.ORANGE_BURST,
-            "테스트 자동화")));
-        employeeRepository.save(Employee.create(employee(
+            "테스트 자동화"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be9@abms.co", "강지우", LocalDate.of(2023, 1, 5),
             LocalDate.of(1998, 9, 30),
             EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.SAGE_GUARD,
-            "보안 모듈")));
-        employeeRepository.save(Employee.create(employee(
+            "보안 모듈"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be10@abms.co", "조서연", LocalDate.of(2022, 6, 15),
             LocalDate.of(1996, 2, 14),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.BLOSSOM_SMILE,
-            "결제 시스템")));
-        employeeRepository.save(Employee.create(employee(
+            "결제 시스템"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be11@abms.co", "윤민지", LocalDate.of(2021, 9, 10),
             LocalDate.of(1994, 7, 7),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.MIDNIGHT_WINK,
-            "로그 분석")));
-        employeeRepository.save(Employee.create(employee(
+            "로그 분석"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be12@abms.co", "장우진", LocalDate.of(2024, 4, 1),
             LocalDate.of(2000, 11, 11),
             EmployeePosition.ASSOCIATE, EmployeeType.FREELANCER, EmployeeGrade.JUNIOR,
             EmployeeAvatar.AQUA_SPLASH,
-            "배포 파이프라인")));
-        employeeRepository.save(Employee.create(employee(
+            "배포 파이프라인"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be13@abms.co", "임현우", LocalDate.of(2023, 8, 20),
             LocalDate.of(1999, 4, 4),
             EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.GOLDEN_RAY,
-            "모니터링")));
-        employeeRepository.save(Employee.create(employee(
+            "모니터링"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be14@abms.co", "한지민", LocalDate.of(2022, 12, 5),
             LocalDate.of(1997, 10, 20),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.SUNSET_BREEZE,
-            "알림 서비스")));
-        employeeRepository.save(Employee.create(employee(
+            "알림 서비스"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be15@abms.co", "오서윤", LocalDate.of(2021, 5, 15),
             LocalDate.of(1995, 6, 6),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.SKY_GLOW,
-            "회원 관리")));
-        employeeRepository.save(Employee.create(employee(
+            "회원 관리"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be16@abms.co", "서준호", LocalDate.of(2024, 1, 10),
             LocalDate.of(2001, 12, 12),
             EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.CORAL_SPARK,
-            "데이터 마이그레이션")));
-        employeeRepository.save(Employee.create(employee(
+            "데이터 마이그레이션"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be17@abms.co", "신예은", LocalDate.of(2023, 10, 1),
             LocalDate.of(1998, 1, 1),
             EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.FOREST_MINT,
-            "API 문서화")));
-        employeeRepository.save(Employee.create(employee(
+            "API 문서화"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be18@abms.co", "권민재", LocalDate.of(2022, 3, 20),
             LocalDate.of(1996, 8, 15),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.LAVENDER_MOON,
-            "성능 최적화")));
-        employeeRepository.save(Employee.create(employee(
+            "성능 최적화"));
+        employeeRepository.save(createEmployee(
             beTeam.getId(), "be19@abms.co", "황지수", LocalDate.of(2021, 7, 5),
             LocalDate.of(1994, 5, 5),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.COBALT_WAVE,
-            "레거시 청산")));
+            "레거시 청산"));
 
         // 기술본부 - 플랫폼개발담당: 프론트엔드팀
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             feTeam.getId(), "fe.lead@abms.co", "이프론", LocalDate.of(2019, 8, 19),
             LocalDate.of(1989, 7, 21),
             EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.SUNSET_BREEZE,
-            "프론트엔드팀장")));
-        employeeRepository.save(Employee.create(employee(
+            "프론트엔드팀장"));
+        employeeRepository.save(createEmployee(
             feTeam.getId(), "fe1@abms.co", "최유진", LocalDate.of(2021, 11, 1),
             LocalDate.of(1994, 5, 6),
             EmployeePosition.LEADER, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT,
             EmployeeAvatar.ORANGE_BURST,
-            "Vue/Tailwind")));
-        employeeRepository.save(Employee.create(employee(
+            "Vue/Tailwind"));
+        employeeRepository.save(createEmployee(
             feTeam.getId(), "fe2@abms.co", "강서현", LocalDate.of(2023, 3, 6),
             LocalDate.of(1998, 12, 1),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.SKY_GLOW,
-            "CSR/SSR")));
+            "CSR/SSR"));
 
         // 기술본부 - 데이터담당: 데이터엔지니어링팀
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             deTeam.getId(), "de.lead@abms.co", "유데엔", LocalDate.of(2017, 5, 22),
             LocalDate.of(1987, 9, 14),
             EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.COBALT_WAVE,
-            "데이터팀장")));
-        employeeRepository.save(Employee.create(employee(
+            "데이터팀장"));
+        employeeRepository.save(createEmployee(
             deTeam.getId(), "de1@abms.co", "이현우", LocalDate.of(2020, 10, 12),
             LocalDate.of(1993, 1, 20),
             EmployeePosition.STAFF, EmployeeType.OUTSOURCING, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.LAVENDER_MOON,
-            "파이프라인/모델서빙")));
+            "파이프라인/모델서빙"));
 
         // 기술연구소 - AI팀
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             aiTeam.getId(), "ai.lead@abms.co", "오에이", LocalDate.of(2019, 1, 14),
             LocalDate.of(1990, 2, 1),
             EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.MIDNIGHT_WINK,
-            "AI팀장")));
-        employeeRepository.save(Employee.create(employee(
+            "AI팀장"));
+        employeeRepository.save(createEmployee(
             aiTeam.getId(), "ai1@abms.co", "김가람", LocalDate.of(2022, 2, 7),
             LocalDate.of(1996, 4, 11),
             EmployeePosition.LEADER, EmployeeType.FREELANCER, EmployeeGrade.EXPERT,
             EmployeeAvatar.AQUA_SPLASH,
-            "LLM/프롬프트")));
-        employeeRepository.save(Employee.create(employee(
+            "LLM/프롬프트"));
+        employeeRepository.save(createEmployee(
             aiTeam.getId(), "ai2@abms.co", "박하늘", LocalDate.of(2023, 9, 4),
             LocalDate.of(1998, 7, 19),
             EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR,
             EmployeeAvatar.SAGE_GUARD,
-            "리서치 보조")));
+            "리서치 보조"));
 
         // 영업본부 - 국내영업팀
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             krSalesTeam.getId(), "sales.kr.mgr@abms.co", "민영국", LocalDate.of(2018, 9, 3),
             LocalDate.of(1986, 11, 23),
             EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.GOLDEN_RAY,
-            "국내영업팀장")));
-        employeeRepository.save(Employee.create(employee(
+            "국내영업팀장"));
+        employeeRepository.save(createEmployee(
             krSalesTeam.getId(), "sales.kr1@abms.co", "서지호", LocalDate.of(2021, 6, 7),
             LocalDate.of(1994, 9, 2),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.BLOSSOM_SMILE,
-            "영업/견적")));
+            "영업/견적"));
 
         // 영업본부 - 해외영업팀
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             globalSalesTeam.getId(), "sales.gl.mgr@abms.co", "노해외", LocalDate.of(2017, 4, 10),
             LocalDate.of(1985, 8, 7),
             EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
             EmployeeAvatar.SUNSET_BREEZE,
-            "해외영업팀장")));
-        employeeRepository.save(Employee.create(employee(
+            "해외영업팀장"));
+        employeeRepository.save(createEmployee(
             globalSalesTeam.getId(), "sales.gl1@abms.co", "장예린", LocalDate.of(2022, 1, 3),
             LocalDate.of(1996, 10, 10),
             EmployeePosition.STAFF, EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL,
             EmployeeAvatar.ORANGE_BURST,
-            "수출/파트너")));
+            "수출/파트너"));
 
         // 영업본부 - 사업기획TF
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             bizTf.getId(), "biztf.lead@abms.co", "문기획", LocalDate.of(2020, 12, 1),
             LocalDate.of(1989, 1, 9),
             EmployeePosition.LEADER, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT,
             EmployeeAvatar.CORAL_SPARK,
-            "TF 리더")));
-        employeeRepository.save(Employee.create(employee(
+            "TF 리더"));
+        employeeRepository.save(createEmployee(
             bizTf.getId(), "biztf1@abms.co", "배수아", LocalDate.of(2023, 4, 3),
             LocalDate.of(1997, 12, 25),
             EmployeePosition.ASSOCIATE, EmployeeType.OUTSOURCING, EmployeeGrade.JUNIOR,
             EmployeeAvatar.FOREST_MINT,
-            "시장/경쟁 분석")));
+            "시장/경쟁 분석"));
 
         // 임원 (본부 소속)
-        employeeRepository.save(Employee.create(employee(
+        employeeRepository.save(createEmployee(
             mgmtDivision.getId(), "dir.mgmt@abms.co", "박이사", LocalDate.of(2016, 2, 1),
             LocalDate.of(1978, 6, 18),
             EmployeePosition.DIRECTOR, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT,
             EmployeeAvatar.SAGE_GUARD,
-            "경영관리본부장")));
-        employeeRepository.save(Employee.create(employee(
+            "경영관리본부장"));
+        employeeRepository.save(createEmployee(
             techDivision.getId(), "md.tech@abms.co", "정상무", LocalDate.of(2016, 9, 1),
             LocalDate.of(1976, 3, 12),
             EmployeePosition.MANAGING_DIRECTOR, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT,
-            EmployeeAvatar.COBALT_WAVE, "기술본부장")));
-        employeeRepository.save(Employee.create(employee(
+            EmployeeAvatar.COBALT_WAVE, "기술본부장"));
+        employeeRepository.save(createEmployee(
             salesDivision.getId(), "dir.sales@abms.co", "이영업", LocalDate.of(2017, 1, 2),
             LocalDate.of(1979, 10, 4),
             EmployeePosition.DIRECTOR, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT,
             EmployeeAvatar.GOLDEN_RAY,
-            "영업본부장")));
+            "영업본부장"));
 
         // ===== 협력사 생성 =====
         Party partyNaverCloud = partyRepository.save(Party.create(new PartyCreateRequest(
@@ -516,28 +516,21 @@ public class InitData {
             LocalDate.of(2025, 12, 31))));
     }
 
-    private EmployeeCreateRequest employee(
-        java.util.UUID departmentId,
-        String email,
-        String name,
-        LocalDate joinDate,
-        LocalDate birthDate,
-        EmployeePosition position,
-        EmployeeType type,
-        EmployeeGrade grade,
-        EmployeeAvatar avatar,
-        String memo) {
-        return new EmployeeCreateRequest(
-            departmentId,
-            email,
-            name,
-            joinDate,
-            birthDate,
-            position,
-            type,
-            grade,
-            avatar,
-            memo);
+    private Employee createEmployee(UUID departmentId, String email, String name, LocalDate joinDate,
+                                    LocalDate birthDate, EmployeePosition position, EmployeeType type,
+                                    EmployeeGrade grade, EmployeeAvatar avatar, String memo) {
+        return Employee.builder()
+            .departmentId(departmentId)
+            .email(email)
+            .name(name)
+            .joinDate(joinDate)
+            .birthDate(birthDate)
+            .position(position)
+            .type(type)
+            .grade(grade)
+            .avatar(avatar)
+            .memo(memo)
+            .build();
     }
 
 }

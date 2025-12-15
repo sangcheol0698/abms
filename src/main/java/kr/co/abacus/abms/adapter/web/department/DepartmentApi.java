@@ -24,7 +24,7 @@ import kr.co.abacus.abms.application.department.dto.OrganizationChartModel;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.department.provided.DepartmentManager;
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.domain.department.Department;
 
 @RequiredArgsConstructor
@@ -57,12 +57,12 @@ public class DepartmentApi {
     }
 
     @GetMapping("/api/departments/{departmentId}/employees")
-    public PageResponse<EmployeeResponse> getDepartmentEmployees(
+    public PageResponse<EmployeeSummary> getDepartmentEmployees(
         @PathVariable UUID departmentId,
         @RequestParam(required = false) String name,
         @PageableDefault(size = 20, sort = "name") Pageable pageable
     ) {
-        Page<EmployeeResponse> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
+        Page<EmployeeSummary> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
 
         return PageResponse.of(employeesPage);
     }

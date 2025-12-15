@@ -21,8 +21,8 @@ import kr.co.abacus.abms.application.department.dto.OrganizationChartModel;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
 import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
-import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
@@ -106,12 +106,12 @@ public class DepartmentQueryService implements DepartmentFinder {
     }
 
     @Override
-    public Page<EmployeeResponse> getEmployees(UUID departmentId, String name, Pageable pageable) {
+    public Page<EmployeeSummary> getEmployees(UUID departmentId, String name, Pageable pageable) {
         // 부서 존재 여부 확인
         find(departmentId);
 
         // EmployeeRepository의 검색 기능 재사용 (정렬 로직 포함)
-        EmployeeSearchRequest searchRequest = new EmployeeSearchRequest(
+        EmployeeSearchCondition searchRequest = new EmployeeSearchCondition(
                 name,
                 null, // positions
                 null, // types

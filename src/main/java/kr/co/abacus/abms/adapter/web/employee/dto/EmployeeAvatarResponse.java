@@ -8,7 +8,7 @@ public record EmployeeAvatarResponse(
 ) {
 
     public static EmployeeAvatarResponse of(EmployeeAvatar avatar) {
-        return new EmployeeAvatarResponse(avatar.name(), avatar.getDisplayName());
+        return new EmployeeAvatarResponse(avatar.name(), avatar.getDescription());
     }
 
 }

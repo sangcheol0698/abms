@@ -2,6 +2,7 @@ package kr.co.abacus.abms.adapter.web.department;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Assertions;
@@ -17,13 +18,17 @@ import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartWithEmployeesResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationEmployeeResponse;
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeFixture;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 
@@ -68,7 +73,8 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         departmentRepository.save(team2);
         flushAndClear();
 
-        employee1 = employeeRepository.save(Employee.create(EmployeeFixture.createEmployeeCreateRequest("team2@email.com", "김철수", team1.getId())));
+        // 팀1에 소속된 직원 생성
+        employee1 = employeeRepository.save(createEmployee("testUser@email.com"));
         flushAndClear();
     }
 
@@ -144,18 +150,16 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("부서 소속 직원들을 페이징하여 조회한다")
-    void getDepartmentEmployees_withPaging() throws Exception {
+    void getDepartmentEmployees_withPaging() {
         // Given: 부서에 여러 직원 생성
         for (int i = 1; i <= 15; i++) {
-            Employee employee = Employee.create(
-                EmployeeFixture.createEmployeeCreateRequest("emp" + i + "@test.com", "직원" + i, team1.getId())
-            );
+            Employee employee = createEmployee("employee" + i + "@email.com");
             employeeRepository.save(employee);
         }
         flushAndClear();
 
         // When: 첫 번째 페이지 조회 (size=10)
-        PageResponse<EmployeeResponse> response = restTestClient.get()
+        PageResponse<EmployeeSummary> response = restTestClient.get()
             .uri(uriBuilder -> uriBuilder
                 .path("/api/departments/{departmentId}/employees")
                 .queryParam("page", 0)
@@ -163,7 +167,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 .build(team1.getId()))
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeResponse>>() {
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSummary>>() {
             })
             .returnResult()
             .getResponseBody();
@@ -181,7 +185,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         // Given: 직원이 없는 부서 (team2)
         
         // When: 직원 조회
-        PageResponse<EmployeeResponse> response = restTestClient.get()
+        PageResponse<EmployeeSummary> response = restTestClient.get()
             .uri(uriBuilder -> uriBuilder
                 .path("/api/departments/{departmentId}/employees")
                 .queryParam("page", 0)
@@ -189,7 +193,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 .build(team2.getId()))
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeResponse>>() {
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSummary>>() {
             })
             .returnResult()
             .getResponseBody();
@@ -247,6 +251,21 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         assertThat(node.departmentCode()).isEqualTo(expected.getCode());
         assertThat(node.departmentType()).isEqualTo(expected.getType().getDescription()); // Enum -> String 변환 로직에 맞게 수정
         assertThat(node.children()).hasSize(expectedChildrenSize);
+    }
+
+    private Employee createEmployee(String email) {
+        return Employee.builder()
+            .departmentId(UUID.randomUUID())
+            .email(email)
+            .name("홍길동")
+            .joinDate(LocalDate.of(2020, 1, 1))
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .position(EmployeePosition.MANAGER)
+            .type(EmployeeType.FULL_TIME)
+            .grade(EmployeeGrade.SENIOR)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .memo("This is a memo for the employee.")
+            .build();
     }
 
 }

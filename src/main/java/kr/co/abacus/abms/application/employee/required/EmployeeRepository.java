@@ -21,16 +21,11 @@ public interface EmployeeRepository extends Repository<Employee, UUID>, CustomEm
 
     Optional<Employee> findByIdAndDeletedFalse(UUID id);
 
-    boolean existsByEmailAndIdNot(Email email, UUID employeeId);
-
     List<Employee> findAllByIdInAndDeletedFalse(List<UUID> leaderIds);
 
     List<Employee> findAllByDepartmentIdInAndDeletedFalse(List<UUID> departmentIds);
 
     Page<Employee> findAllByDepartmentIdAndDeletedFalse(UUID departmentId, Pageable pageable);
-
-    Page<Employee> findAllByDepartmentIdAndNameContainingAndDeletedFalse(UUID departmentId, String name,
-            Pageable pageable);
 
     Optional<Employee> findByName(String name);
 

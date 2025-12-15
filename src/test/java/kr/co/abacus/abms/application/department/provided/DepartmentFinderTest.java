@@ -2,6 +2,7 @@ package kr.co.abacus.abms.application.department.provided;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,14 +13,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
-import kr.co.abacus.abms.domain.employee.EmployeeFixture;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
 class DepartmentFinderTest extends IntegrationTestBase {
@@ -73,14 +77,14 @@ class DepartmentFinderTest extends IntegrationTestBase {
     void getEmployees() {
         // Given: 부서에 직원 추가
         for (int i = 1; i <= 15; i++) {
-            Employee employee = Employee.create(
-                    EmployeeFixture.createEmployeeCreateRequest("emp" + i + "@test.com", "직원" + i, teamId));
+            Employee employee = createEmployee(teamId, "emp" + i + "@test.com");
+
             employeeRepository.save(employee);
         }
         flushAndClear();
 
         // When: 첫 번째 페이지 조회
-        Page<EmployeeResponse> result = departmentFinder.getEmployees(teamId, null, PageRequest.of(0, 10));
+        Page<EmployeeSummary> result = departmentFinder.getEmployees(teamId, null, PageRequest.of(0, 10));
 
         // Then: 페이징 정보 검증
         assertThat(result.getContent()).hasSize(10);
@@ -95,7 +99,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
         // Given: 직원이 없는 부서 (company는 직원 없음)
 
         // When: 조회
-        Page<EmployeeResponse> result = departmentFinder.getEmployees(companyId, null, PageRequest.of(0, 10));
+        Page<EmployeeSummary> result = departmentFinder.getEmployees(companyId, null, PageRequest.of(0, 10));
 
         // Then: 빈 페이지 반환
         assertThat(result.getContent()).isEmpty();
@@ -111,6 +115,21 @@ class DepartmentFinderTest extends IntegrationTestBase {
         // When & Then: DepartmentNotFoundException 발생
         assertThatThrownBy(() -> departmentFinder.getEmployees(nonExistentId, null, PageRequest.of(0, 10)))
                 .isInstanceOf(DepartmentNotFoundException.class);
+    }
+
+    private Employee createEmployee(UUID departmentId, String email) {
+        return Employee.builder()
+            .departmentId(departmentId)
+            .email(email)
+            .name("홍길동")
+            .joinDate(LocalDate.of(2020, 1, 1))
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .position(EmployeePosition.MANAGER)
+            .type(EmployeeType.FULL_TIME)
+            .grade(EmployeeGrade.SENIOR)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .memo("This is a memo for the employee.")
+            .build();
     }
 
 }

@@ -1,23 +1,21 @@
 package kr.co.abacus.abms.application.employee.provided;
 
-import kr.co.abacus.abms.domain.employee.Employee;
-import kr.co.abacus.abms.domain.employee.EmployeeFixture;
-import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
-import kr.co.abacus.abms.support.IntegrationTestBase;
+import static org.assertj.core.api.Assertions.*;
+
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.UUID;
-
 import kr.co.abacus.abms.application.department.required.DepartmentRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeFixture;
+import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
+import kr.co.abacus.abms.support.IntegrationTestBase;
 
 class EmployeeFinderTest extends IntegrationTestBase {
 
@@ -52,11 +50,11 @@ class EmployeeFinderTest extends IntegrationTestBase {
 
     @Test
     void find() {
-        Employee savedEmployee = employeeManager.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
         flushAndClear();
 
-        Employee foundEmployee = employeeFinder.find(savedEmployee.getId());
-        assertThat(foundEmployee).isEqualTo(savedEmployee);
+        Employee foundEmployee = employeeFinder.find(employeeId);
+        assertThat(foundEmployee.getId()).isEqualTo(employeeId);
     }
 
     @Test
@@ -67,14 +65,14 @@ class EmployeeFinderTest extends IntegrationTestBase {
 
     @Test
     void findDeleted() {
-        Employee savedEmployee = employeeManager.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
+        UUID employeeId = employeeManager.create(EmployeeFixture.createEmployeeCreateRequestWithDepartment(companyId, "testUser@email.com"));
         flush();
 
-        // Soft delete the employee
+        Employee savedEmployee = employeeFinder.find(employeeId);
         savedEmployee.softDelete("testUser");
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeFinder.find(savedEmployee.getId()))
+        assertThatThrownBy(() -> employeeFinder.find(employeeId))
             .isInstanceOf(EmployeeNotFoundException.class);
     }
 
