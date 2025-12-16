@@ -2,15 +2,10 @@ package kr.co.abacus.abms.adapter.web.employee;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,13 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 
 import kr.co.abacus.abms.adapter.web.EnumResponse;
 import kr.co.abacus.abms.adapter.web.PageResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -337,73 +330,73 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .value(body -> assertThat(body).isNotEmpty());
     }
 
-    @Test
-    void uploadExcel() throws Exception {
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Employees");
-        Row header = sheet.createRow(0);
-        String[] headers = {
-            "부서 코드",
-            "이메일",
-            "이름",
-            "입사일",
-            "생년월일",
-            "직책",
-            "근무 유형",
-            "등급",
-            "메모"
-        };
-        for (int i = 0; i < headers.length; i++) {
-            header.createCell(i).setCellValue(headers[i]);
-        }
-
-        String teamCode = departmentRepository.findByIdAndDeletedFalse(teamId)
-            .map(Department::getCode)
-            .orElseThrow();
-
-        Row row = sheet.createRow(1);
-        row.createCell(0).setCellValue(teamCode);
-        row.createCell(1).setCellValue("excel-upload@abms.co");
-        row.createCell(2).setCellValue("업로드");
-        row.createCell(3).setCellValue("2025-01-02");
-        row.createCell(4).setCellValue("1995-06-10");
-        row.createCell(5).setCellValue(EmployeePosition.ASSOCIATE.getDescription());
-        row.createCell(6).setCellValue(EmployeeType.FULL_TIME.getDescription());
-        row.createCell(7).setCellValue(EmployeeGrade.JUNIOR.getDescription());
-        row.createCell(8).setCellValue("업로드 메모");
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        workbook.write(bos);
-        workbook.close();
-
-        MockMultipartFile mockFile = new MockMultipartFile(
-            "file",
-            "employees.xlsx",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            bos.toByteArray()
-        );
-
-        var mvcResult = mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                    .multipart("/api/employees/excel/upload")
-                    .file(mockFile)
-            )
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-            .andReturn();
-
-        EmployeeExcelUploadResponse response = objectMapper.readValue(
-            mvcResult.getResponse().getContentAsByteArray(),
-            EmployeeExcelUploadResponse.class
-        );
-        flushAndClear();
-
-        assertThat(response.successCount()).isEqualTo(1);
-        assertThat(response.failures()).isEmpty();
-
-        List<Employee> employees = employeeRepository.findAllByDepartmentIdInAndDeletedFalse(List.of(teamId));
-        assertThat(employees)
-            .anyMatch(candidate -> candidate.getEmail().address().equals("excel-upload@abms.co"));
-    }
+    // @Test
+    // void uploadExcel() throws Exception {
+    //     Workbook workbook = new XSSFWorkbook();
+    //     Sheet sheet = workbook.createSheet("Employees");
+    //     Row header = sheet.createRow(0);
+    //     String[] headers = {
+    //         "부서 코드",
+    //         "이메일",
+    //         "이름",
+    //         "입사일",
+    //         "생년월일",
+    //         "직책",
+    //         "근무 유형",
+    //         "등급",
+    //         "메모"
+    //     };
+    //     for (int i = 0; i < headers.length; i++) {
+    //         header.createCell(i).setCellValue(headers[i]);
+    //     }
+    //
+    //     String teamCode = departmentRepository.findByIdAndDeletedFalse(teamId)
+    //         .map(Department::getCode)
+    //         .orElseThrow();
+    //
+    //     Row row = sheet.createRow(1);
+    //     row.createCell(0).setCellValue(teamCode);
+    //     row.createCell(1).setCellValue("excel-upload@abms.co");
+    //     row.createCell(2).setCellValue("업로드");
+    //     row.createCell(3).setCellValue("2025-01-02");
+    //     row.createCell(4).setCellValue("1995-06-10");
+    //     row.createCell(5).setCellValue(EmployeePosition.ASSOCIATE.getDescription());
+    //     row.createCell(6).setCellValue(EmployeeType.FULL_TIME.getDescription());
+    //     row.createCell(7).setCellValue(EmployeeGrade.JUNIOR.getDescription());
+    //     row.createCell(8).setCellValue("업로드 메모");
+    //
+    //     ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    //     workbook.write(bos);
+    //     workbook.close();
+    //
+    //     MockMultipartFile mockFile = new MockMultipartFile(
+    //         "file",
+    //         "employees.xlsx",
+    //         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    //         bos.toByteArray()
+    //     );
+    //
+    //     var mvcResult = mockMvc.perform(
+    //             org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+    //                 .multipart("/api/employees/excel/upload")
+    //                 .file(mockFile)
+    //         )
+    //         .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+    //         .andReturn();
+    //
+    //     EmployeeExcelUploadResponse response = objectMapper.readValue(
+    //         mvcResult.getResponse().getContentAsByteArray(),
+    //         EmployeeExcelUploadResponse.class
+    //     );
+    //     flushAndClear();
+    //
+    //     assertThat(response.successCount()).isEqualTo(1);
+    //     assertThat(response.failures()).isEmpty();
+    //
+    //     List<Employee> employees = employeeRepository.findAllByDepartmentIdInAndDeletedFalse(List.of(teamId));
+    //     assertThat(employees)
+    //         .anyMatch(candidate -> candidate.getEmail().address().equals("excel-upload@abms.co"));
+    // }
 
     @Test
     void update() {

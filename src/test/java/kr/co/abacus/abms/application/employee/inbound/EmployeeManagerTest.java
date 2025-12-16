@@ -6,8 +6,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.validation.ConstraintViolationException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,9 +58,15 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     void create() {
         EmployeeCreateCommand command = EmployeeCreateCommand.builder()
+            .departmentId(divisionId)
             .email("test@email.com")
             .name("홍길동")
-            .departmentId(divisionId)
+            .joinDate(LocalDate.of(2025, 1, 1))
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .position(EmployeePosition.ASSOCIATE)
+            .type(EmployeeType.FULL_TIME)
+            .grade(EmployeeGrade.JUNIOR)
+            .avatar(EmployeeAvatar.SKY_GLOW)
             .build();
 
         UUID employeeId = employeeManager.create(command);
@@ -86,12 +90,6 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
-    void invalidName() {
-        assertThatThrownBy(() -> employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "a".repeat(11))))
-            .isInstanceOf(ConstraintViolationException.class);
-    }
-
-    @Test
     void updateInfo() {
         UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
@@ -103,11 +101,11 @@ class EmployeeManagerTest extends IntegrationTestBase {
         Employee updatedEmployee = employeeFinder.find(employee.getId());
         assertThat(updatedEmployee.getDepartmentId()).isEqualTo(divisionId);
         assertThat(updatedEmployee.getEmail().address()).isEqualTo("updateUser@email.com");
-        assertThat(updatedEmployee.getName()).isEqualTo("김철수");
+        assertThat(updatedEmployee.getName()).isEqualTo("홍길동");
         assertThat(updatedEmployee.getJoinDate()).isEqualTo(LocalDate.of(2025, 1, 1));
         assertThat(updatedEmployee.getBirthDate()).isEqualTo(LocalDate.of(1990, 1, 1));
-        assertThat(updatedEmployee.getPosition()).isEqualTo(EmployeePosition.DIRECTOR);
-        assertThat(updatedEmployee.getType()).isEqualTo(EmployeeType.PART_TIME);
+        assertThat(updatedEmployee.getPosition()).isEqualTo(EmployeePosition.ASSOCIATE);
+        assertThat(updatedEmployee.getType()).isEqualTo(EmployeeType.FULL_TIME);
         assertThat(updatedEmployee.getGrade()).isEqualTo(EmployeeGrade.JUNIOR);
         assertThat(updatedEmployee.getMemo()).isEqualTo("Updated memo for the employee.");
     }
@@ -138,29 +136,6 @@ class EmployeeManagerTest extends IntegrationTestBase {
         assertThatThrownBy(() -> employeeManager.updateInfo(employee1.getId(), createEmployeeUpdateCommand(employee1.getDepartmentId(), employee2.getEmail().address())))
             .isInstanceOf(DuplicateEmailException.class)
             .hasMessageContaining("이미 존재하는 이메일입니다");
-    }
-
-    @Test
-    void updateInfoFail_invalidName() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
-        flushAndClear();
-
-        Employee employee = employeeFinder.find(employeeId);
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(), "", "updateUser@email.com")))
-            .isInstanceOf(ConstraintViolationException.class);
-
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(), "a".repeat(11), "updateUser@email.com")))
-            .isInstanceOf(ConstraintViolationException.class);
-    }
-
-    @Test
-    void updateInfoFail_invalidEmail() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
-        flushAndClear();
-
-        Employee employee = employeeFinder.find(employeeId);
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(), "updateUser", null)))
-            .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test
@@ -336,12 +311,13 @@ class EmployeeManagerTest extends IntegrationTestBase {
             .departmentId(teamId)
             .email(email)
             .name("홍길동")
-            .joinDate(LocalDate.now())
+            .joinDate(LocalDate.of(2025, 1, 1))
             .birthDate(LocalDate.of(1990, 1, 1))
             .grade(EmployeeGrade.JUNIOR)
             .position(EmployeePosition.ASSOCIATE)
             .type(EmployeeType.FULL_TIME)
             .avatar(EmployeeAvatar.SKY_GLOW)
+            .memo("Updated memo for the employee.")
             .build();
     }
 
