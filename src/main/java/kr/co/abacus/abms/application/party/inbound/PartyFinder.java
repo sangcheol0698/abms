@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.party.provided;
+package kr.co.abacus.abms.application.party.inbound;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

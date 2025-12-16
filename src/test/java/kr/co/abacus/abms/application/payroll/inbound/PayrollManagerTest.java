@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.payroll.provided;
+package kr.co.abacus.abms.application.payroll.inbound;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
-import kr.co.abacus.abms.application.payroll.required.PayrollRepository;
+import kr.co.abacus.abms.application.payroll.outbound.PayrollRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;

@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.project.provided;
+package kr.co.abacus.abms.application.project.inbound;
 
 import java.util.UUID;
 

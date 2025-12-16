@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.project.required;
+package kr.co.abacus.abms.application.project.outbound;
 
 import static kr.co.abacus.abms.domain.project.ProjectFixture.*;
 import static org.assertj.core.api.Assertions.*;

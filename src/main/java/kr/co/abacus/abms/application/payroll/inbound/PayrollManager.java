@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.payroll.provided;
+package kr.co.abacus.abms.application.payroll.inbound;
 
 import java.time.LocalDate;
 import java.util.UUID;

@@ -13,7 +13,7 @@ import org.springframework.http.MediaType;
 
 import kr.co.abacus.abms.adapter.web.payroll.dto.PayrollCreateRequest;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
-import kr.co.abacus.abms.application.payroll.required.PayrollRepository;
+import kr.co.abacus.abms.application.payroll.outbound.PayrollRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;

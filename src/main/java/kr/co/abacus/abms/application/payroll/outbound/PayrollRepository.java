@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.payroll.required;
+package kr.co.abacus.abms.application.payroll.outbound;
 
 import java.util.Optional;
 import java.util.UUID;

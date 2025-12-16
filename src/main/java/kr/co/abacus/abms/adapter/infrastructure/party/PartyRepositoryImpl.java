@@ -16,7 +16,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.party.required.CustomPartyRepository;
+import kr.co.abacus.abms.application.party.outbound.CustomPartyRepository;
 import kr.co.abacus.abms.domain.party.Party;
 
 @RequiredArgsConstructor

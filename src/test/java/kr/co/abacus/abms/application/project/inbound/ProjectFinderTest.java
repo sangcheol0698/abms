@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.project.provided;
+package kr.co.abacus.abms.application.project.inbound;
 
 import static kr.co.abacus.abms.domain.project.ProjectFixture.*;
 import static org.assertj.core.api.Assertions.*;
@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
-import kr.co.abacus.abms.application.project.required.ProjectRepository;
+import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectStatus;

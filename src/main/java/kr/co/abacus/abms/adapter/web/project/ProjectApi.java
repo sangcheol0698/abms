@@ -25,8 +25,8 @@ import kr.co.abacus.abms.adapter.web.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.web.project.dto.ProjectStatusResponse;
 import kr.co.abacus.abms.adapter.web.project.dto.ProjectUpdateApiRequest;
 import kr.co.abacus.abms.application.party.PartyQueryService;
-import kr.co.abacus.abms.application.project.provided.ProjectFinder;
-import kr.co.abacus.abms.application.project.provided.ProjectManager;
+import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
+import kr.co.abacus.abms.application.project.inbound.ProjectManager;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 

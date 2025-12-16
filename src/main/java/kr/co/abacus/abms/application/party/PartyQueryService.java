@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.party.provided.PartyFinder;
-import kr.co.abacus.abms.application.party.required.PartyRepository;
+import kr.co.abacus.abms.application.party.inbound.PartyFinder;
+import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.domain.party.Party;
 
 @RequiredArgsConstructor

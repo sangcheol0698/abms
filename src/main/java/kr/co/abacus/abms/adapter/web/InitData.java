@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
-import kr.co.abacus.abms.application.party.required.PartyRepository;
-import kr.co.abacus.abms.application.project.required.ProjectRepository;
+import kr.co.abacus.abms.application.party.outbound.PartyRepository;
+import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.department.Department;
 
 import kr.co.abacus.abms.domain.department.DepartmentType;

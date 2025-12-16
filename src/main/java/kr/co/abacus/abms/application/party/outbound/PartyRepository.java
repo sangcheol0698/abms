@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.party.required;
+package kr.co.abacus.abms.application.party.outbound;
 
 import java.util.Optional;
 import java.util.UUID;

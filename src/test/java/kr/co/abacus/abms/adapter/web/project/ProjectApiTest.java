@@ -13,7 +13,7 @@ import org.springframework.http.MediaType;
 import kr.co.abacus.abms.adapter.web.project.dto.ProjectCreateApiRequest;
 import kr.co.abacus.abms.adapter.web.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.web.project.dto.ProjectUpdateApiRequest;
-import kr.co.abacus.abms.application.project.required.ProjectRepository;
+import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectFixture;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
