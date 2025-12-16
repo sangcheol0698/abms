@@ -11,8 +11,8 @@ class DepartmentTest {
     void createRoot() {
         Department rootDepartment = createRootDepartment();
 
-        assertThat(rootDepartment.getName()).isEqualTo("(주)애버커스");
-        assertThat(rootDepartment.getCode()).isEqualTo("ABACUS");
+        assertThat(rootDepartment.getName()).isEqualTo("테스트회사");
+        assertThat(rootDepartment.getCode()).isEqualTo("CODE-TEST");
         assertThat(rootDepartment.getType()).isEqualTo(DepartmentType.COMPANY);
         assertThat(rootDepartment.getParent()).isNull();
         assertThat(rootDepartment.getChildren()).isEmpty();

@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.adapter.web.department;
+package kr.co.abacus.abms.adapter.web.department.dto;
 
 import java.util.UUID;
 

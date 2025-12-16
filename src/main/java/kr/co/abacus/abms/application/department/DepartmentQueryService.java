@@ -97,11 +97,10 @@ public class DepartmentQueryService implements DepartmentFinder {
             current.departmentName(),
             current.departmentCode(),
             current.departmentType(),
-            current.leader() != null ? new DepartmentLeaderInfo(
-                current.leader().employeeId(),
-                current.leader().employeeName(),
-                current.leader().position(),
-                current.leader().avatar()
+            current.leaderEmployeeId() != null ? new DepartmentLeaderInfo(
+                current.leaderEmployeeId(),
+                current.leaderEmployeeName(),
+                current.leaderEmployeePosition()
             ) : null,
             current.employeeCount(),
             children

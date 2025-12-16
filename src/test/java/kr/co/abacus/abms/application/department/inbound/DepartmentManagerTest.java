@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -30,7 +30,7 @@ class DepartmentManagerTest extends IntegrationTestBase {
     private DepartmentRepository departmentRepository;
 
     @Autowired
-    private EmployeeManager employeeManager;
+    private EmployeeRepository employeeRepository;
 
     @Test
     @DisplayName("팀의 팀장을 지정한다.")
@@ -40,6 +40,7 @@ class DepartmentManagerTest extends IntegrationTestBase {
         departmentRepository.save(department1);
 
         Employee employee = createEmployee();
+        employeeRepository.save(employee);
 
         Department department = departmentManager.assignTeamLeader(department1.getId(), employee.getId());
 

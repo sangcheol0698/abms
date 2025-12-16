@@ -164,8 +164,8 @@ public class Employee extends AbstractEntity {
             throw new InvalidEmployeeStatusException("퇴사한 직원은 승진할 수 없습니다.");
         }
 
-        if (newPosition.getRank() < this.position.getRank()) {
-            throw new InvalidEmployeeStatusException("현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
+        if (newPosition.getRank() <= this.position.getRank()) {
+            throw new InvalidEmployeeStatusException("현재 직급보다 낮거나 같은 직급으로 변경할 수 없습니다.");
         }
 
         this.position = requireNonNull(newPosition);

@@ -231,8 +231,8 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
                                     EmployeeGrade grade, EmployeeAvatar avatar, String memo) {
         return Employee.create(
             departmentId,
-            email,
             name,
+            email,
             joinDate,
             birthDate,
             position,

@@ -33,7 +33,9 @@ public record OrganizationChartResponse(
     }
 
     private static @Nullable LeaderResponse getLeader(@Nullable DepartmentLeaderInfo departmentLeaderInfo) {
-        return departmentLeaderInfo != null && departmentLeaderInfo.employeeId() != null ? LeaderResponse.of(departmentLeaderInfo.employeeId(), departmentLeaderInfo.employeeName(), departmentLeaderInfo.position()) : null;
+        return departmentLeaderInfo != null ? LeaderResponse.of(
+            departmentLeaderInfo.leaderEmployeeId(), departmentLeaderInfo.leaderEmployeeName(), departmentLeaderInfo.leaderPosition()
+        ) : null;
     }
 
     private static List<OrganizationChartResponse> getOrganizationChartResponses(OrganizationChartInfo organizationChartInfo) {

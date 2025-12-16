@@ -25,6 +25,7 @@ import kr.co.abacus.abms.adapter.web.PageResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeExcelUploadResponse;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
@@ -149,22 +150,22 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // when: grade desc 정렬로 검색 시 레벨이 높은 순서(EXPERT > SENIOR > JUNIOR)로 정렬되어야 한다.
-        PageResponse<EmployeeSummary> responsePage = restTestClient.get()
+        PageResponse<EmployeeSearchResponse> responsePage = restTestClient.get()
             .uri("/api/employees?sort=grade,desc&size=10&page=0")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSummary>>() {
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSearchResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
-        List<EmployeeSummary> contents = responsePage.content();
+        List<EmployeeSearchResponse> contents = responsePage.content();
 
         // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).grade()).isEqualTo(EmployeeGrade.EXPERT);
-        assertThat(contents.get(1).grade()).isEqualTo(EmployeeGrade.SENIOR);
-        assertThat(contents.get(2).grade()).isEqualTo(EmployeeGrade.JUNIOR);
+        assertThat(contents.get(0).grade()).isEqualTo(EmployeeGrade.EXPERT.getDescription());
+        assertThat(contents.get(1).grade()).isEqualTo(EmployeeGrade.SENIOR.getDescription());
+        assertThat(contents.get(2).grade()).isEqualTo(EmployeeGrade.JUNIOR.getDescription());
     }
 
     @Test
@@ -175,22 +176,22 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         employeeRepository.save(createEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeePosition.VICE_PRESIDENT, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR));
         flushAndClear();
 
-        PageResponse<EmployeeSummary> responsePage = restTestClient.get()
+        PageResponse<EmployeeSearchResponse> responsePage = restTestClient.get()
             .uri("/api/employees?sort=position,asc&size=10&page=0")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSummary>>() {
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSearchResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
         assertThat(responsePage).isNotNull();
-        List<EmployeeSummary> contents = responsePage.content();
+        List<EmployeeSearchResponse> contents = responsePage.content();
 
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).position()).isEqualTo(EmployeePosition.ASSOCIATE);
-        assertThat(contents.get(1).position()).isEqualTo(EmployeePosition.DIRECTOR);
-        assertThat(contents.get(2).position()).isEqualTo(EmployeePosition.VICE_PRESIDENT);
+        assertThat(contents.get(0).position()).isEqualTo(EmployeePosition.ASSOCIATE.getDescription());
+        assertThat(contents.get(1).position()).isEqualTo(EmployeePosition.DIRECTOR.getDescription());
+        assertThat(contents.get(2).position()).isEqualTo(EmployeePosition.VICE_PRESIDENT.getDescription());
     }
 
     @Test
@@ -509,7 +510,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         restTestClient.patch()
             .uri("/api/employees/{id}/promote?position=STAFF", employeeId)
             .exchange()
-            .expectStatus().isOk();
+            .expectStatus().isNoContent();
         flushAndClear();
 
         Employee promotedEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -517,7 +518,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("직원의 직급를 현재 직급보다 낮은 직급로 승진시키려 할 때 예외가 발생한다.")
+    @DisplayName("직원의 직급를 현재 직급보다 낮거나 같은 직급로 승진시키려 할 때 예외가 발생한다.")
     void promote_lowerPosition_throwsException() {
         UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
@@ -595,7 +596,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         restTestClient.patch()
             .uri("/api/employees/{id}/take-leave", employeeId)
             .exchange()
-            .expectStatus().isOk();
+            .expectStatus().isNoContent();
         flushAndClear();
 
         Employee onLeaveEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -691,7 +692,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             email,
             LocalDate.of(2024, 1, 1),
             LocalDate.of(1990, 5, 20),
-            EmployeePosition.ASSOCIATE,
+            EmployeePosition.STAFF,
             EmployeeType.FULL_TIME,
             EmployeeGrade.JUNIOR,
             EmployeeAvatar.SKY_GLOW,

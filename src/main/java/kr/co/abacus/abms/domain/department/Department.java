@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -58,7 +57,7 @@ public class Department extends AbstractEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Department parent;
 
-    @OneToMany(mappedBy = "parent", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "parent")
     private List<Department> children = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)

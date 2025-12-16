@@ -59,16 +59,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void create() {
-        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
-        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
-        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
-        Department team2 = createDepartment("TEAM002", "ABC Corp", DepartmentType.TEAM, null, division);
-        departmentRepository.saveAll(List.of(company, division, team1, team2));
-
         EmployeeCreateCommand command = EmployeeCreateCommand.builder()
             .email("test@email.com")
             .name("홍길동")
-            .departmentId(team1.getId())
+            .departmentId(divisionId)
             .build();
 
         UUID employeeId = employeeManager.create(command);
@@ -78,7 +72,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
         assertThat(employee.getId()).isNotNull();
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
-        assertThat(employee.getDepartmentId()).isEqualTo(company.getId());
+        assertThat(employee.getDepartmentId()).isEqualTo(divisionId);
     }
 
     @Test
@@ -323,9 +317,9 @@ class EmployeeManagerTest extends IntegrationTestBase {
             .build();
     }
 
-    private EmployeeCreateCommand createEmployeeCreateCommand(UUID teamId, String email, String name) {
+    private EmployeeCreateCommand createEmployeeCreateCommand(UUID departmentId, String email, String name) {
         return EmployeeCreateCommand.builder()
-            .departmentId(teamId)
+            .departmentId(departmentId)
             .email(email)
             .name(name)
             .joinDate(LocalDate.now())

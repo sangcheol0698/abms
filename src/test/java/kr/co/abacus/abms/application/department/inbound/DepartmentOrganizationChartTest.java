@@ -50,33 +50,36 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
 
         assertThat(chart).isNotNull();
         assertThat(chart.departmentId()).isEqualTo(company.getId());
-        assertThat(chart.departmentName()).isEqualTo("테스트회사");
-        assertThat(chart.departmentCode()).isEqualTo("TEST_COMPANY");
+        assertThat(chart.departmentName()).isEqualTo("ABC Corp");
+        assertThat(chart.departmentCode()).isEqualTo("COMP001");
         assertThat(chart.departmentType()).isEqualTo(DepartmentType.COMPANY);
         assertThat(chart.leader()).isNull();
 
         // and: division level
         assertThat(chart.children()).hasSize(1);
         OrganizationChartInfo div = chart.children().getFirst();
-        assertThat(div.departmentName()).isEqualTo("테스트본부");
-        assertThat(div.departmentCode()).isEqualTo("TEST_DIV");
+        assertThat(div.departmentName()).isEqualTo("ABC Corp");
+        assertThat(div.departmentCode()).isEqualTo("DIV001");
         assertThat(div.departmentType()).isEqualTo(DepartmentType.DIVISION);
         assertThat(div.leader()).isNull();
 
         // and: team level
-        assertThat(div.children()).hasSize(1);
+        assertThat(div.children()).hasSize(2);
         OrganizationChartInfo team = div.children().getFirst();
-        assertThat(team.departmentName()).isEqualTo("테스트팀");
-        assertThat(team.departmentCode()).isEqualTo("TEST_TEAM");
+        assertThat(team.departmentName()).isEqualTo("ABC Corp");
+        assertThat(team.departmentCode()).isEqualTo("TEAM001");
         assertThat(team.departmentType()).isEqualTo(DepartmentType.TEAM);
         assertThat(team.leader()).isNull();
     }
 
     @Test
     void getOrganizationChard_employeeCount() {
-        employeeRepository.save(createEmployee());
-        employeeRepository.save(createEmployee());
-        employeeRepository.save(createEmployee());
+        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
+        departmentRepository.save(company);
+
+        employeeRepository.save(createEmployee(company.getId(), "test1@email.com"));
+        employeeRepository.save(createEmployee(company.getId(), "test2@email.com"));
+        employeeRepository.save(createEmployee(company.getId(), "test3@email.com"));
 
         List<OrganizationChartInfo> charts = departmentFinder.getOrganizationChart();
 
@@ -88,11 +91,11 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
         assertThat(employeeCount).isEqualTo(3);
     }
 
-    private Employee createEmployee() {
+    private Employee createEmployee(UUID departmentId, String email) {
         return Employee.create(
-            UUID.randomUUID(),
+            departmentId,
             "홍길동",
-            "test@email.com",
+            email,
             LocalDate.of(2020, 1, 1),
             LocalDate.of(1990, 1, 1),
             EmployeePosition.MANAGER,

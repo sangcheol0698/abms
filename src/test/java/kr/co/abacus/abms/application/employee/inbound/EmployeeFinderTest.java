@@ -90,8 +90,8 @@ class EmployeeFinderTest extends IntegrationTestBase {
     private Employee createEmployee(UUID teamId, String email) {
         return Employee.create(
             teamId,
-            email,
             "홍길동",
+            email,
             LocalDate.of(2024, 1, 1),
             LocalDate.of(1990, 5, 20),
             EmployeePosition.ASSOCIATE,

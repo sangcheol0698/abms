@@ -45,8 +45,8 @@ class DepartmentFinderTest extends IntegrationTestBase {
         Department foundDepartment = departmentFinder.find(company.getId());
 
         assertThat(foundDepartment.getId()).isEqualTo(company.getId());
-        assertThat(foundDepartment.getCode()).isEqualTo("ABC Corp");
-        assertThat(foundDepartment.getName()).isEqualTo("COMP001");
+        assertThat(foundDepartment.getCode()).isEqualTo("COMP001");
+        assertThat(foundDepartment.getName()).isEqualTo("ABC Corp");
     }
 
     @Test
