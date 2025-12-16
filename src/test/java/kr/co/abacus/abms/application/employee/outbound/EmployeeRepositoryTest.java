@@ -114,9 +114,9 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
     void search() {
         UUID departmentId = departmentRepository.save(createDepartment()).getId();
 
-        employeeRepository.save(getEmployee("test1@email.com", "홍길동", EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, departmentId));
-        employeeRepository.save(getEmployee("test2@email.com", "김길동", EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR, departmentId));
-        employeeRepository.save(getEmployee("test3@email.com", "이길동", EmployeePosition.DIRECTOR, EmployeeType.FREELANCER, EmployeeGrade.MID_LEVEL, departmentId));
+        employeeRepository.save(createEmployee("test1@email.com", "홍길동", EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, departmentId));
+        employeeRepository.save(createEmployee("test2@email.com", "김길동", EmployeePosition.ASSOCIATE, EmployeeType.PART_TIME, EmployeeGrade.JUNIOR, departmentId));
+        employeeRepository.save(createEmployee("test3@email.com", "이길동", EmployeePosition.DIRECTOR, EmployeeType.FREELANCER, EmployeeGrade.MID_LEVEL, departmentId));
 
         EmployeeSearchCondition request = new EmployeeSearchCondition("길동", List.of(EmployeePosition.MANAGER, EmployeePosition.ASSOCIATE), null, null, null, null);
         Page<EmployeeSummary> employees = employeeRepository.search(request, PageRequest.of(0, 10));
@@ -124,21 +124,6 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         assertThat(employees).hasSize(2)
             .extracting(EmployeeSummary::name)
             .containsExactlyInAnyOrder("홍길동", "김길동");
-    }
-
-    private Employee getEmployee(String email, String name, EmployeePosition employeePosition, EmployeeType employeeType, EmployeeGrade employeeGrade, UUID departmentId) {
-        return createEmployee(
-            departmentId,
-            email,
-            name,
-            LocalDate.of(2025, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            employeePosition,
-            employeeType,
-            employeeGrade,
-            EmployeeAvatar.FOREST_MINT,
-            "This is a memo for the employee."
-        );
     }
 
     @Test
@@ -269,6 +254,22 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
+            "This is a memo for the employee."
+        );
+    }
+
+    private Employee createEmployee(String email, String name, EmployeePosition employeePosition,
+                                    EmployeeType employeeType, EmployeeGrade employeeGrade, UUID departmentId) {
+        return createEmployee(
+            departmentId,
+            email,
+            name,
+            LocalDate.of(2025, 1, 1),
+            LocalDate.of(1990, 1, 1),
+            employeePosition,
+            employeeType,
+            employeeGrade,
+            EmployeeAvatar.FOREST_MINT,
             "This is a memo for the employee."
         );
     }

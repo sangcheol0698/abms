@@ -16,8 +16,6 @@ public interface DepartmentRepository extends Repository<Department, UUID>, Cust
 
     List<Department> findAllByDeletedFalse();
 
-    List<Department> findAllByIdInAndDeletedFalse(List<UUID> ids);
-
     boolean existsByIdAndDeletedFalse(UUID newDepartmentId);
 
     void saveAll(Iterable<Department> departments);

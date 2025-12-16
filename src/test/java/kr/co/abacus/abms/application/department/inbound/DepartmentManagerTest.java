@@ -42,8 +42,10 @@ class DepartmentManagerTest extends IntegrationTestBase {
         Employee employee = createEmployee();
         employeeRepository.save(employee);
 
-        Department department = departmentManager.assignTeamLeader(department1.getId(), employee.getId());
+        UUID departmentId = departmentManager.assignTeamLeader(department1.getId(), employee.getId());
+        flushAndClear();
 
+        Department department = departmentRepository.findByIdAndDeletedFalse(departmentId).orElseThrow();
         assertThat(department.getLeaderEmployeeId()).isEqualTo(employee.getId());
     }
 

@@ -18,15 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.web.PageResponse;
-import kr.co.abacus.abms.adapter.web.department.dto.DepartmentResponse;
+import kr.co.abacus.abms.adapter.web.department.dto.DepartmentAssignLeaderResponse;
+import kr.co.abacus.abms.adapter.web.department.dto.DepartmentDetailResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignTeamLeaderRequest;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartInfo;
 import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
 import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
-import kr.co.abacus.abms.domain.department.Department;
 
 @RequiredArgsConstructor
 @RestController
@@ -45,10 +46,10 @@ public class DepartmentApi {
     }
 
     @GetMapping("/api/departments/{departmentId}")
-    public DepartmentResponse getDepartment(@PathVariable UUID departmentId) {
-        Department department = departmentFinder.find(departmentId);
+    public DepartmentDetailResponse getDepartment(@PathVariable UUID departmentId) {
+        DepartmentDetail detail = departmentFinder.findDetail(departmentId);
 
-        return DepartmentResponse.of(department);
+        return DepartmentDetailResponse.of(detail);
     }
 
     @GetMapping("/api/departments/{departmentId}/employees")
@@ -65,10 +66,10 @@ public class DepartmentApi {
     }
 
     @PostMapping("/api/departments/{departmentId}/assign-team-leader")
-    public DepartmentResponse assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignTeamLeaderRequest request) {
-        Department department = departmentManager.assignTeamLeader(departmentId, request.leaderEmployeeId());
+    public DepartmentAssignLeaderResponse assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignTeamLeaderRequest request) {
+        UUID id = departmentManager.assignTeamLeader(departmentId, request.leaderEmployeeId());
 
-        return DepartmentResponse.of(department);
+        return DepartmentAssignLeaderResponse.of(id);
     }
 
 }

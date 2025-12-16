@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
 import kr.co.abacus.abms.application.department.dto.DepartmentLeaderInfo;
 import kr.co.abacus.abms.application.department.dto.DepartmentProjection;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartInfo;
@@ -54,6 +55,12 @@ public class DepartmentQueryService implements DepartmentFinder {
             departmentId != null ? List.of(departmentId) : null);
 
         return employeeRepository.search(searchRequest, pageable);
+    }
+
+    @Override
+    public DepartmentDetail findDetail(UUID departmentId) {
+        return departmentRepository.findDetail(departmentId)
+            .orElseThrow(() -> new DepartmentNotFoundException("존재하지 않는 부서입니다: " + departmentId));
     }
 
     @Override

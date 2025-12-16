@@ -93,10 +93,6 @@ public class Department extends AbstractEntity {
         }
     }
 
-    public boolean isRoot() {
-        return parent == null;
-    }
-
     public void assignTeamLeader(UUID leaderEmployeeId) {
         this.leaderEmployeeId = leaderEmployeeId;
     }

@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 
 import kr.co.abacus.abms.adapter.web.PageResponse;
-import kr.co.abacus.abms.adapter.web.department.dto.DepartmentResponse;
+import kr.co.abacus.abms.adapter.web.department.dto.DepartmentDetailResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignTeamLeaderRequest;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
@@ -75,22 +75,24 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("부서 상세 정보를 조회한다")
     void getDepartment() {
-        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
-        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
-        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
+        Department company = createDepartment("COMP001", "ABC Corp1", DepartmentType.COMPANY, null, null);
+        Department division = createDepartment("DIV001", "ABC Corp2", DepartmentType.DIVISION, null, company);
+        Department team1 = createDepartment("TEAM001", "ABC Corp3", DepartmentType.TEAM, null, division);
         departmentRepository.saveAll(List.of(company, division, team1));
 
-        DepartmentResponse response = restTestClient.get().uri("/api/departments/{id}", team1.getId())
+        DepartmentDetailResponse response = restTestClient.get().uri("/api/departments/{id}", team1.getId())
             .exchange()
             .expectStatus().isOk()
-            .expectBody(DepartmentResponse.class)
+            .expectBody(DepartmentDetailResponse.class)
             .returnResult()
             .getResponseBody();
 
-        assertThat(response.departmentId()).isEqualTo(team1.getId());
-        assertThat(response.departmentName()).isEqualTo(team1.getName());
-        assertThat(response.departmentCode()).isEqualTo(team1.getCode());
-        assertThat(response.departmentType()).isEqualTo(team1.getType().getDescription());
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(team1.getId());
+        assertThat(response.code()).isEqualTo(team1.getCode());
+        assertThat(response.name()).isEqualTo(team1.getName());
+        assertThat(response.parentDepartmentId()).isEqualTo(division.getId());
+        assertThat(response.parentDepartmentName()).isEqualTo(division.getName());
     }
 
     @Test
