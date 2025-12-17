@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 
-import kr.co.abacus.abms.application.department.dto.DepartmentLeaderInfo;
-import kr.co.abacus.abms.application.department.dto.OrganizationChartInfo;
+import kr.co.abacus.abms.application.department.dto.DepartmentLeaderDetail;
+import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 
 public record OrganizationChartResponse(
     UUID departmentId,
@@ -18,28 +18,28 @@ public record OrganizationChartResponse(
     List<OrganizationChartResponse> children
 ) {
 
-    public static OrganizationChartResponse of(OrganizationChartInfo organizationChartInfo) {
-        DepartmentLeaderInfo departmentLeaderInfo = organizationChartInfo.leader();
+    public static OrganizationChartResponse of(OrganizationChartDetail organizationChartDetail) {
+        DepartmentLeaderDetail departmentLeaderDetail = organizationChartDetail.leader();
 
         return new OrganizationChartResponse(
-            organizationChartInfo.departmentId(),
-            organizationChartInfo.departmentName(),
-            organizationChartInfo.departmentCode(),
-            organizationChartInfo.departmentType().getDescription(),
-            getLeader(departmentLeaderInfo),
-            organizationChartInfo.employeeCount(),
-            getOrganizationChartResponses(organizationChartInfo)
+            organizationChartDetail.departmentId(),
+            organizationChartDetail.departmentName(),
+            organizationChartDetail.departmentCode(),
+            organizationChartDetail.departmentType().getDescription(),
+            getLeader(departmentLeaderDetail),
+            organizationChartDetail.employeeCount(),
+            getOrganizationChartResponses(organizationChartDetail)
         );
     }
 
-    private static @Nullable LeaderResponse getLeader(@Nullable DepartmentLeaderInfo departmentLeaderInfo) {
-        return departmentLeaderInfo != null ? LeaderResponse.of(
-            departmentLeaderInfo.leaderEmployeeId(), departmentLeaderInfo.leaderEmployeeName(), departmentLeaderInfo.leaderPosition()
+    private static @Nullable LeaderResponse getLeader(@Nullable DepartmentLeaderDetail departmentLeaderDetail) {
+        return departmentLeaderDetail != null ? LeaderResponse.of(
+            departmentLeaderDetail.leaderEmployeeId(), departmentLeaderDetail.leaderEmployeeName(), departmentLeaderDetail.leaderPosition()
         ) : null;
     }
 
-    private static List<OrganizationChartResponse> getOrganizationChartResponses(OrganizationChartInfo organizationChartInfo) {
-        return organizationChartInfo.children().stream()
+    private static List<OrganizationChartResponse> getOrganizationChartResponses(OrganizationChartDetail organizationChartDetail) {
+        return organizationChartDetail.children().stream()
             .map(OrganizationChartResponse::of)
             .toList();
     }

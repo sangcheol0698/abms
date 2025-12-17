@@ -24,7 +24,7 @@ import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignTeamLeaderRequ
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
-import kr.co.abacus.abms.application.department.dto.OrganizationChartInfo;
+import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
 import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
@@ -38,9 +38,9 @@ public class DepartmentApi {
 
     @GetMapping("/api/departments/organization-chart")
     public List<OrganizationChartResponse> getOrganizationChart() {
-        List<OrganizationChartInfo> organizationChartInfos = departmentFinder.getOrganizationChart();
+        List<OrganizationChartDetail> organizationChartDetails = departmentFinder.getOrganizationChart();
 
-        return organizationChartInfos.stream()
+        return organizationChartDetails.stream()
             .map(OrganizationChartResponse::of)
             .toList();
     }

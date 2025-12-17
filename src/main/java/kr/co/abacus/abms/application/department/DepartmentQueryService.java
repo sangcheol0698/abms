@@ -15,9 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
-import kr.co.abacus.abms.application.department.dto.DepartmentLeaderInfo;
+import kr.co.abacus.abms.application.department.dto.DepartmentLeaderDetail;
 import kr.co.abacus.abms.application.department.dto.DepartmentProjection;
-import kr.co.abacus.abms.application.department.dto.OrganizationChartInfo;
+import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
@@ -64,7 +64,7 @@ public class DepartmentQueryService implements DepartmentFinder {
     }
 
     @Override
-    public List<OrganizationChartInfo> getOrganizationChart() {
+    public List<OrganizationChartDetail> getOrganizationChart() {
         List<DepartmentProjection> projections = departmentRepository.findAllDepartmentProjections();
 
         Map<UUID, List<DepartmentProjection>> childrenMap = groupByParentId(projections);
@@ -88,23 +88,23 @@ public class DepartmentQueryService implements DepartmentFinder {
             .toList();
     }
 
-    private OrganizationChartInfo mapToOrganizationChartInfo(
+    private OrganizationChartDetail mapToOrganizationChartInfo(
         DepartmentProjection current,
         Map<UUID, List<DepartmentProjection>> childrenMap
     ) {
         List<DepartmentProjection> childrenList = childrenMap.getOrDefault(current.departmentId(), Collections.emptyList());
 
-        List<OrganizationChartInfo> children = childrenList.stream()
+        List<OrganizationChartDetail> children = childrenList.stream()
             .sorted(Comparator.comparing(DepartmentProjection::departmentName))
             .map(child -> mapToOrganizationChartInfo(child, childrenMap))
             .toList();
 
-        return new OrganizationChartInfo(
+        return new OrganizationChartDetail(
             current.departmentId(),
             current.departmentName(),
             current.departmentCode(),
             current.departmentType(),
-            current.leaderEmployeeId() != null ? new DepartmentLeaderInfo(
+            current.leaderEmployeeId() != null ? new DepartmentLeaderDetail(
                 current.leaderEmployeeId(),
                 current.leaderEmployeeName(),
                 current.leaderEmployeePosition()

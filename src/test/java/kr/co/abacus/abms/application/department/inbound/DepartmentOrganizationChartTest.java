@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.co.abacus.abms.application.department.dto.OrganizationChartInfo;
+import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
@@ -43,10 +43,10 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
         departmentRepository.saveAll(List.of(company, division, team1, team2));
 
         // when
-        List<OrganizationChartInfo> charts = departmentFinder.getOrganizationChart();
+        List<OrganizationChartDetail> charts = departmentFinder.getOrganizationChart();
 
         // then: root
-        OrganizationChartInfo chart = charts.get(0);
+        OrganizationChartDetail chart = charts.get(0);
 
         assertThat(chart).isNotNull();
         assertThat(chart.departmentId()).isEqualTo(company.getId());
@@ -57,7 +57,7 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
 
         // and: division level
         assertThat(chart.children()).hasSize(1);
-        OrganizationChartInfo div = chart.children().getFirst();
+        OrganizationChartDetail div = chart.children().getFirst();
         assertThat(div.departmentName()).isEqualTo("ABC Corp");
         assertThat(div.departmentCode()).isEqualTo("DIV001");
         assertThat(div.departmentType()).isEqualTo(DepartmentType.DIVISION);
@@ -65,7 +65,7 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
 
         // and: team level
         assertThat(div.children()).hasSize(2);
-        OrganizationChartInfo team = div.children().getFirst();
+        OrganizationChartDetail team = div.children().getFirst();
         assertThat(team.departmentName()).isEqualTo("ABC Corp");
         assertThat(team.departmentCode()).isEqualTo("TEAM001");
         assertThat(team.departmentType()).isEqualTo(DepartmentType.TEAM);
@@ -81,10 +81,10 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
         employeeRepository.save(createEmployee(company.getId(), "test2@email.com"));
         employeeRepository.save(createEmployee(company.getId(), "test3@email.com"));
 
-        List<OrganizationChartInfo> charts = departmentFinder.getOrganizationChart();
+        List<OrganizationChartDetail> charts = departmentFinder.getOrganizationChart();
 
         // then: root
-        OrganizationChartInfo chart = charts.get(0);
+        OrganizationChartDetail chart = charts.get(0);
         int employeeCount = chart.employeeCount();
 
         // then: 3 employees in each team

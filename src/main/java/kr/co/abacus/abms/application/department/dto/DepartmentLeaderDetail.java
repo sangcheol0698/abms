@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 
-public record DepartmentLeaderInfo(
+public record DepartmentLeaderDetail(
     UUID leaderEmployeeId,
     String leaderEmployeeName,
     EmployeePosition leaderPosition
