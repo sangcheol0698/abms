@@ -1,5 +1,7 @@
 package kr.co.abacus.abms.domain.employee;
 
+import java.util.Arrays;
+
 import lombok.Getter;
 
 @Getter
@@ -22,5 +24,12 @@ public enum EmployeePosition {
     EmployeePosition(String description, int rank) {
         this.description = description;
         this.rank = rank;
+    }
+
+    public static EmployeePosition fromDescription(String description) {
+        return Arrays.stream(values())
+            .filter(v -> v.description.equals(description))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("알 수 없는 직책: " + description));
     }
 }

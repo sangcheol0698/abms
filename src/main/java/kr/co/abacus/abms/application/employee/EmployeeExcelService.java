@@ -31,8 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -74,6 +76,7 @@ public class EmployeeExcelService {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
+    private final EmployeeManager employeeManager;
 
     public byte[] download(EmployeeSearchCondition condition) {
         List<Employee> employees = employeeRepository.search(condition);
@@ -145,8 +148,8 @@ public class EmployeeExcelService {
                 }
 
                 try {
-                    // EmployeeCreateRequest createRequest = toCreateRequest(row, departmentCodeMap);
-                    // employeeManager.create(createRequest);
+                    EmployeeCreateCommand command = toCreateCommand(row, departmentCodeMap);
+                    employeeManager.create(command);
                     successCount++;
                 } catch (Exception ex) {
                     excelFailures.add(new EmployeeExcelUploadResult.ExcelFailure(rowIndex + 1, resolveMessage(ex)));
@@ -174,6 +177,39 @@ public class EmployeeExcelService {
         } catch (IOException ex) {
             throw new EmployeeExcelException("엑셀 파일을 읽는 도중 오류가 발생했습니다.", ex);
         }
+    }
+
+    private EmployeeCreateCommand toCreateCommand(Row row, Map<String, UUID> departmentCodeMap) {
+            // 1. 엑셀 셀 데이터 추출 (String으로 우선 추출)
+            String teamCode = getCellValue(row, 0);
+            String email = getCellValue(row, 1);
+            String name = getCellValue(row, 2);
+            String joinedDate = getCellValue(row, 3);
+            String birthDate = getCellValue(row, 4);
+            String positionDesc = getCellValue(row, 5);
+            String typeDesc = getCellValue(row, 6);
+            String gradeDesc = getCellValue(row, 7);
+            String memo = getCellValue(row, 8);
+
+            // 2. 부서 UUID 조회
+            UUID departmentId = departmentCodeMap.get(teamCode);
+            if (departmentId == null) {
+                throw new IllegalArgumentException("존재하지 않는 부서 코드입니다: " + teamCode);
+            }
+
+            // 3. 빌더 또는 생성자를 사용하여 Command 객체 생성
+            return EmployeeCreateCommand.builder()
+                .departmentId(departmentId)
+                .email(email)
+                .name(name)
+                .joinDate(LocalDate.parse(joinedDate)) // yyyy-MM-dd 형식 가정
+                .birthDate(LocalDate.parse(birthDate))   // yyyy-MM-dd 형식 가정
+                .position(EmployeePosition.fromDescription(positionDesc)) // description으로 Enum 찾기
+                .type(EmployeeType.fromDescription(typeDesc))
+                .grade(EmployeeGrade.fromDescription(gradeDesc))
+                .avatar(EmployeeAvatar.AQUA_SPLASH)
+                .memo(memo)
+                .build();
     }
 
     private void createHeaderRow(Workbook workbook, Sheet sheet, List<String> headers) {
