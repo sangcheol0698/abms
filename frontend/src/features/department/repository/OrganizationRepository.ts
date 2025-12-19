@@ -29,7 +29,16 @@ export default class OrganizationRepository {
 
   async fetchDepartmentEmployees(
     departmentId: string,
-    params: { page: number; size: number; name?: string; sort?: string },
+    params: {
+      page: number;
+      size: number;
+      name?: string;
+      sort?: string;
+      statuses?: string[];
+      types?: string[];
+      grades?: string[];
+      positions?: string[];
+    },
   ): Promise<PageResponse<EmployeeListItem>> {
     const queryParams: Record<string, string> = {
       page: Math.max(params.page - 1, 0).toString(),
@@ -42,6 +51,23 @@ export default class OrganizationRepository {
 
     if (params.sort) {
       queryParams.sort = params.sort;
+    }
+
+    // Enum 필터 추가
+    if (params.statuses && params.statuses.length > 0) {
+      queryParams.statuses = params.statuses.join(',');
+    }
+
+    if (params.types && params.types.length > 0) {
+      queryParams.types = params.types.join(',');
+    }
+
+    if (params.grades && params.grades.length > 0) {
+      queryParams.grades = params.grades.join(',');
+    }
+
+    if (params.positions && params.positions.length > 0) {
+      queryParams.positions = params.positions.join(',');
     }
 
     const response = await this.httpRepository.get({

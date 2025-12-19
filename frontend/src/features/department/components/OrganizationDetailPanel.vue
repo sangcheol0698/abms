@@ -222,7 +222,7 @@ withDefaults(
   },
 );
 
-const emit = defineEmits<{
+defineEmits<{
   (event: 'refresh'): void;
 }>();
 

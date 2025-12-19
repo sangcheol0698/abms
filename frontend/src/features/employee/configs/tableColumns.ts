@@ -29,6 +29,16 @@ export interface EmployeeTableHandlers {
 }
 
 /**
+ * 컬럼 정의 옵션
+ */
+export interface EmployeeTableColumnsOptions {
+  /** 부서 컬럼 제외 여부 (부서 내부 직원 목록에서 사용) */
+  excludeDepartmentColumn?: boolean;
+  /** Row Selection (체크박스) 제외 여부 */
+  excludeSelection?: boolean;
+}
+
+/**
  * 날짜를 한국어 형식으로 포맷
  *
  * @param value - 날짜 문자열
@@ -48,10 +58,12 @@ function formatDisplayDate(value?: string | null): string {
  * 각 컬럼은 정렬, 필터링, 렌더링 로직을 포함합니다.
  *
  * @param handlers - 이벤트 핸들러 객체
+ * @param options - 컬럼 정의 옵션
  * @returns TanStack Table ColumnDef 배열
  *
  * @example
  * ```typescript
+ * // 전체 직원 목록
  * const columns = createEmployeeTableColumns({
  *   onViewEmployee: (emp) => router.push(`/employees/${emp.employeeId}`),
  *   onEditEmployee: (emp) => openEditDialog(emp),
@@ -59,14 +71,23 @@ function formatDisplayDate(value?: string | null): string {
  *   onDeleteEmployee: (emp) => confirmDelete(emp),
  *   onNavigateToDepartment: (id) => router.push(`/organization?dept=${id}`),
  * });
+ *
+ * // 부서 내부 직원 목록 (부서 컬럼 제외, 체크박스 제외)
+ * const columns = createEmployeeTableColumns(handlers, {
+ *   excludeDepartmentColumn: true,
+ *   excludeSelection: true,
+ * });
  * ```
  */
 export function createEmployeeTableColumns(
   handlers: EmployeeTableHandlers,
+  options?: EmployeeTableColumnsOptions,
 ): ColumnDef<EmployeeListItem>[] {
-  return [
-    // 체크박스 컬럼 (선택)
-    {
+  const columns: ColumnDef<EmployeeListItem>[] = [];
+
+  // 체크박스 컬럼 (선택) - 옵션에 따라 추가
+  if (!options?.excludeSelection) {
+    columns.push({
       id: 'select',
       header: ({ table }) =>
         h(Checkbox, {
@@ -87,49 +108,51 @@ export function createEmployeeTableColumns(
       enableSorting: false,
       enableHiding: false,
       size: 48,
-    },
+    });
+  }
 
-    // 이름 컬럼 (아바타 + 이름 + 이메일)
-    {
-      accessorKey: 'name',
-      header: ({ column }) => h(DataTableColumnHeader, { column, title: '이름', align: 'left' }),
-      cell: ({ row }) => {
-        const name = row.original.name ?? '';
-        const email = row.original.email ?? '';
-        const initials = name.trim().slice(0, 2).toUpperCase() || '??';
-        return h('div', { class: 'flex items-center gap-3' }, [
-          h(Avatar, { class: 'h-10 w-10 rounded-xl border border-border/60 bg-background' }, () => [
-            h(AvatarImage, {
-              src: row.original.avatarImageUrl,
-              alt: name,
-            }),
-            h(AvatarFallback, { class: 'rounded-xl text-sm font-semibold' }, () => initials),
-          ]),
-          h('div', { class: 'flex flex-col gap-0.5' }, [
-            h(
-              'button',
-              {
-                type: 'button',
-                class:
-                  'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-                onClick: (event: MouseEvent) => {
-                  event.stopPropagation();
-                  handlers.onViewEmployee(row.original);
-                },
+  // 이름 컬럼 (아바타 + 이름 + 이메일)
+  columns.push({
+    accessorKey: 'name',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '이름', align: 'left' }),
+    cell: ({ row }) => {
+      const name = row.original.name ?? '';
+      const email = row.original.email ?? '';
+      const initials = name.trim().slice(0, 2).toUpperCase() || '??';
+      return h('div', { class: 'flex items-center gap-3' }, [
+        h(Avatar, { class: 'h-10 w-10 rounded-xl border border-border/60 bg-background' }, () => [
+          h(AvatarImage, {
+            src: row.original.avatarImageUrl,
+            alt: name,
+          }),
+          h(AvatarFallback, { class: 'rounded-xl text-sm font-semibold' }, () => initials),
+        ]),
+        h('div', { class: 'flex flex-col gap-0.5' }, [
+          h(
+            'button',
+            {
+              type: 'button',
+              class:
+                'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+              onClick: (event: MouseEvent) => {
+                event.stopPropagation();
+                handlers.onViewEmployee(row.original);
               },
-              name,
-            ),
-            h('span', { class: 'text-xs text-muted-foreground' }, email),
-          ]),
-        ]);
-      },
-      enableSorting: true,
-      size: 260,
-      meta: { skeleton: 'title-subtitle' },
+            },
+            name,
+          ),
+          h('span', { class: 'text-xs text-muted-foreground' }, email),
+        ]),
+      ]);
     },
+    enableSorting: true,
+    size: 260,
+    meta: { skeleton: 'title-subtitle' },
+  });
 
-    // 부서 컬럼 (클릭 시 부서 페이지로 이동)
-    {
+  // 부서 컬럼 (클릭 시 부서 페이지로 이동) - 옵션에 따라 추가
+  if (!options?.excludeDepartmentColumn) {
+    columns.push({
       id: 'departmentName',
       accessorFn: (row) => row.departmentName,
       header: ({ column }) => h(DataTableColumnHeader, { column, title: '부서', align: 'left' }),
@@ -150,10 +173,10 @@ export function createEmployeeTableColumns(
       enableSorting: false,
       size: 160,
       meta: { skeleton: 'text-short' },
-    },
+    });
 
     // 부서 ID 컬럼 (필터 전용, 화면에 표시 안 됨)
-    {
+    columns.push({
       id: 'departmentId',
       accessorKey: 'departmentId',
       header: () => null,
@@ -166,118 +189,115 @@ export function createEmployeeTableColumns(
       enableHiding: false,
       size: 0,
       meta: { isFilterOnly: true },
-    },
+    });
+  }
 
-    // 직책 컬럼
-    {
-      id: 'position',
-      accessorFn: (row) => row.positionLabel,
-      header: ({ column }) => h(DataTableColumnHeader, { column, title: '직책', align: 'left' }),
-      cell: ({ row }) =>
-        h('span', { class: 'text-sm text-foreground' }, row.original.positionLabel ?? ''),
-      filterFn: (row, _columnId, filterValue) => {
-        const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-        return candidate.length === 0 || candidate.includes(row.original.positionCode);
-      },
-      enableSorting: true,
-      size: 120,
-      meta: { skeleton: 'text-short' },
+  // 직책 컬럼
+  columns.push({
+    id: 'position',
+    accessorFn: (row) => row.positionLabel,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '직책', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, row.original.positionLabel ?? ''),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.positionCode);
     },
+    enableSorting: true,
+    size: 120,
+    meta: { skeleton: 'text-short' },
+  });
 
-    // 등급 컬럼
-    {
-      id: 'grade',
-      accessorFn: (row) => row.gradeLabel,
-      header: ({ column }) => h(DataTableColumnHeader, { column, title: '등급', align: 'left' }),
-      cell: ({ row }) =>
-        h('span', { class: 'text-sm text-foreground' }, row.original.gradeLabel ?? ''),
-      filterFn: (row, _columnId, filterValue) => {
-        const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-        return candidate.length === 0 || candidate.includes(row.original.gradeCode);
-      },
-      enableSorting: true,
-      size: 80,
-      meta: { skeleton: 'text-short' },
+  // 등급 컬럼
+  columns.push({
+    id: 'grade',
+    accessorFn: (row) => row.gradeLabel,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '등급', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, row.original.gradeLabel ?? ''),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.gradeCode);
     },
+    enableSorting: true,
+    size: 80,
+    meta: { skeleton: 'text-short' },
+  });
 
-    // 유형 컬럼
-    {
-      id: 'type',
-      accessorFn: (row) => row.typeLabel,
-      header: ({ column }) => h(DataTableColumnHeader, { column, title: '유형', align: 'left' }),
-      cell: ({ row }) =>
-        h('span', { class: 'text-sm text-foreground' }, row.original.typeLabel ?? ''),
-      filterFn: (row, _columnId, filterValue) => {
-        const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-        return candidate.length === 0 || candidate.includes(row.original.typeCode);
-      },
-      enableSorting: false,
-      size: 80,
-      meta: { skeleton: 'text-short' },
+  // 유형 컬럼
+  columns.push({
+    id: 'type',
+    accessorFn: (row) => row.typeLabel,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '유형', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, row.original.typeLabel ?? ''),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.typeCode);
     },
+    enableSorting: false,
+    size: 80,
+    meta: { skeleton: 'text-short' },
+  });
 
-    // 상태 컬럼 (Badge로 표시)
-    {
-      id: 'status',
-      accessorFn: (row) => row.statusLabel,
-      header: ({ column }) => h(DataTableColumnHeader, { column, title: '상태', align: 'left' }),
-      cell: ({ row }) =>
-        h(
-          Badge,
-          { variant: 'outline', class: 'font-medium' },
-          () => row.original.statusLabel ?? '',
-        ),
-      filterFn: (row, _columnId, filterValue) => {
-        const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-        return candidate.length === 0 || candidate.includes(row.original.statusCode);
-      },
-      enableSorting: false,
-      size: 90,
-      meta: { skeleton: 'enum-badge' },
+  // 상태 컬럼 (Badge로 표시)
+  columns.push({
+    id: 'status',
+    accessorFn: (row) => row.statusLabel,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '상태', align: 'left' }),
+    cell: ({ row }) =>
+      h(Badge, { variant: 'outline', class: 'font-medium' }, () => row.original.statusLabel ?? ''),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.statusCode);
     },
+    enableSorting: false,
+    size: 90,
+    meta: { skeleton: 'enum-badge' },
+  });
 
-    // 생년월일 컬럼
-    {
-      id: 'birthDate',
-      accessorFn: (row) => row.birthDate ?? '',
-      header: ({ column }) =>
-        h(DataTableColumnHeader, { column, title: '생년월일', align: 'left' }),
-      cell: ({ row }) =>
-        h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.birthDate)),
-      enableSorting: true,
-      enableHiding: true,
-      size: 120,
-      meta: { skeleton: 'text-short' },
-    },
+  // 생년월일 컬럼
+  columns.push({
+    id: 'birthDate',
+    accessorFn: (row) => row.birthDate ?? '',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '생년월일', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.birthDate)),
+    enableSorting: true,
+    enableHiding: true,
+    size: 120,
+    meta: { skeleton: 'text-short' },
+  });
 
-    // 입사일 컬럼
-    {
-      id: 'joinDate',
-      accessorFn: (row) => row.joinDate ?? '',
-      header: ({ column }) => h(DataTableColumnHeader, { column, title: '입사일', align: 'left' }),
-      cell: ({ row }) =>
-        h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.joinDate)),
-      enableSorting: true,
-      enableHiding: true,
-      size: 120,
-      meta: { skeleton: 'text-short' },
-    },
+  // 입사일 컬럼
+  columns.push({
+    id: 'joinDate',
+    accessorFn: (row) => row.joinDate ?? '',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '입사일', align: 'left' }),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.joinDate)),
+    enableSorting: true,
+    enableHiding: true,
+    size: 120,
+    meta: { skeleton: 'text-short' },
+  });
 
-    // 액션 컬럼 (수정, 삭제 등)
-    {
-      id: 'actions',
-      header: () => null,
-      cell: ({ row }) =>
-        h(EmployeeRowActions, {
-          row: row.original,
-          onEdit: () => handlers.onEditEmployee(row.original),
-          onCopyEmail: () => handlers.onCopyEmail(row.original),
-          onDelete: () => handlers.onDeleteEmployee(row.original),
-        }),
-      enableSorting: false,
-      enableHiding: false,
-      size: 56,
-      meta: { skeleton: 'icon-button' },
-    },
-  ];
+  // 액션 컬럼 (수정, 삭제 등)
+  columns.push({
+    id: 'actions',
+    header: () => null,
+    cell: ({ row }) =>
+      h(EmployeeRowActions, {
+        row: row.original,
+        onEdit: () => handlers.onEditEmployee(row.original),
+        onCopyEmail: () => handlers.onCopyEmail(row.original),
+        onDelete: () => handlers.onDeleteEmployee(row.original),
+      }),
+    enableSorting: false,
+    enableHiding: false,
+    size: 56,
+    meta: { skeleton: 'icon-button' },
+  });
+
+  return columns;
 }
