@@ -8,16 +8,17 @@ import org.springframework.validation.annotation.Validated;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
-import kr.co.abacus.abms.application.department.provided.DepartmentManager;
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
+import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
+import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
+
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 
 @Validated
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 @Service
 public class DepartmentModifyService implements DepartmentManager {
 
@@ -26,16 +27,13 @@ public class DepartmentModifyService implements DepartmentManager {
     private final EmployeeFinder employeeFinder;
 
     @Override
-    @Transactional
-    public Department assignTeamLeader(UUID departmentId, UUID leaderEmployeeId) {
+    public UUID assignLeader(UUID departmentId, UUID leaderEmployeeId) {
         Department department = departmentFinder.find(departmentId);
         Employee employee = employeeFinder.find(leaderEmployeeId);
 
-        department.assignTeamLeader(employee.getId());
+        department.assignLeader(employee.getId());
 
-        departmentRepository.save(department);
-
-        return department;
+        return departmentRepository.save(department).getId();
     }
 
 }

@@ -33,30 +33,27 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.adapter.web.EnumResponse;
 import kr.co.abacus.abms.adapter.web.PageResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeAvatarResponse;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeDetailResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeExcelUploadResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeGradeResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeePositionResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeStatusResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeTypeResponse;
-import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeUpdateRequest;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeUpdateResponse;
 import kr.co.abacus.abms.application.employee.EmployeeExcelService;
+import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
-import kr.co.abacus.abms.application.employee.provided.EmployeeFinder;
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
-import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
-import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
-import kr.co.abacus.abms.domain.employee.EmployeeUpdateRequest;
 
 @RequiredArgsConstructor
 @RestController
@@ -66,14 +63,36 @@ public class EmployeeApi {
 
     private final EmployeeManager employeeManager;
     private final EmployeeFinder employeeFinder;
-    private final DepartmentFinder departmentFinder;
     private final EmployeeExcelService employeeExcelService;
 
     @PostMapping("/api/employees")
     public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request) {
-        Employee employee = employeeManager.create(request);
+        UUID employeeId = employeeManager.create(request.toCommand());
 
-        return EmployeeCreateResponse.of(employee);
+        return EmployeeCreateResponse.of(employeeId);
+    }
+
+    @GetMapping("/api/employees/{id}")
+    public EmployeeDetailResponse findEmployeeDetail(@PathVariable UUID id) {
+        EmployeeDetail detail = employeeFinder.findEmployeeDetail(id);
+
+        return EmployeeDetailResponse.of(detail);
+    }
+
+    @GetMapping("/api/employees")
+    public PageResponse<EmployeeSearchResponse> search(@Valid EmployeeSearchCondition condition, Pageable pageable) {
+        Page<EmployeeSummary> employeeSummaries = employeeFinder.search(condition, pageable);
+
+        Page<EmployeeSearchResponse> responses = employeeSummaries.map(EmployeeSearchResponse::of);
+
+        return PageResponse.of(responses);
+    }
+
+    @PutMapping("/api/employees/{id}")
+    public EmployeeUpdateResponse update(@PathVariable UUID id, @RequestBody @Valid EmployeeUpdateRequest request) {
+        UUID employeeId = employeeManager.updateInfo(id, request.toCommand());
+
+        return EmployeeUpdateResponse.of(employeeId);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -88,63 +107,67 @@ public class EmployeeApi {
         employeeManager.restore(id);
     }
 
-    @PutMapping("/api/employees/{id}")
-    public EmployeeResponse update(@PathVariable UUID id, @RequestBody @Valid EmployeeUpdateRequest request) {
-        Employee employee = employeeManager.updateInfo(id, request);
-        Department department = departmentFinder.find(employee.getDepartmentId());
-
-        return EmployeeResponse.of(employee, department);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/api/employees/{id}/resign")
+    public void resign(@PathVariable UUID id, @RequestParam LocalDate resignationDate) {
+        employeeManager.resign(id, resignationDate);
     }
 
-    @GetMapping("/api/employees/{id}")
-    public EmployeeResponse find(@PathVariable UUID id) {
-        return employeeFinder.findWithDepartment(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/api/employees/{id}/take-leave")
+    public void takeLeave(@PathVariable UUID id) {
+        employeeManager.takeLeave(id);
     }
 
-    @GetMapping("/api/employees")
-    public PageResponse<EmployeeResponse> search(@Valid EmployeeSearchRequest request, Pageable pageable) {
-        Page<EmployeeResponse> employeePage = employeeFinder.search(request, pageable);
-
-        return PageResponse.of(employeePage);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/api/employees/{id}/activate")
+    public void activate(@PathVariable UUID id) {
+        employeeManager.activate(id);
     }
 
-    @GetMapping("/api/employees/grades")
-    public List<EmployeeGradeResponse> getEmployeeGrades() {
-        return Arrays.stream(EmployeeGrade.values())
-            .map(EmployeeGradeResponse::of)
-            .toList();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/api/employees/{id}/promote")
+    public void promote(@PathVariable UUID id, @RequestParam EmployeePosition position) {
+        employeeManager.promote(id, position);
     }
 
     @GetMapping("/api/employees/positions")
-    public List<EmployeePositionResponse> getEmployeePositions() {
+    public List<EnumResponse> getEmployeePositions() {
         return Arrays.stream(EmployeePosition.values())
-            .map(EmployeePositionResponse::of)
+            .map(position -> new EnumResponse(position.name(), position.getDescription()))
+            .toList();
+    }
+
+    @GetMapping("/api/employees/grades")
+    public List<EnumResponse> getEmployeeGrades() {
+        return Arrays.stream(EmployeeGrade.values())
+            .map(grade -> new EnumResponse(grade.name(), grade.getDescription()))
             .toList();
     }
 
     @GetMapping("/api/employees/types")
-    public List<EmployeeTypeResponse> getEmployeeTypes() {
+    public List<EnumResponse> getEmployeeTypes() {
         return Arrays.stream(EmployeeType.values())
-            .map(EmployeeTypeResponse::of)
+            .map(type -> new EnumResponse(type.name(), type.getDescription()))
             .toList();
     }
 
     @GetMapping("/api/employees/statuses")
-    public List<EmployeeStatusResponse> getEmployeeStatuses() {
+    public List<EnumResponse> getEmployeeStatuses() {
         return Arrays.stream(EmployeeStatus.values())
-            .map(EmployeeStatusResponse::of)
+            .map(status -> new EnumResponse(status.name(), status.getDescription()))
             .toList();
     }
 
     @GetMapping("/api/employees/avatars")
-    public List<EmployeeAvatarResponse> getEmployeeAvatars() {
+    public List<EnumResponse> getEmployeeAvatars() {
         return Arrays.stream(EmployeeAvatar.values())
-            .map(EmployeeAvatarResponse::of)
+            .map(avatar -> new EnumResponse(avatar.name(), avatar.getDescription()))
             .toList();
     }
 
     @GetMapping("/api/employees/excel/download")
-    public ResponseEntity<Resource> downloadExcel(@Valid EmployeeSearchRequest request) {
+    public ResponseEntity<Resource> downloadExcel(@Valid EmployeeSearchCondition request) {
         byte[] content = employeeExcelService.download(request);
         String filename = buildFilename("employees");
         return ResponseEntity.ok()
@@ -174,26 +197,6 @@ public class EmployeeApi {
         } catch (IOException ex) {
             throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
         }
-    }
-
-    @PatchMapping("/api/employees/{id}/resign")
-    public void resign(@PathVariable UUID id, @RequestParam LocalDate resignationDate) {
-        employeeManager.resign(id, resignationDate);
-    }
-
-    @PatchMapping("/api/employees/{id}/take-leave")
-    public void takeLeave(@PathVariable UUID id) {
-        employeeManager.takeLeave(id);
-    }
-
-    @PatchMapping("/api/employees/{id}/activate")
-    public void activate(@PathVariable UUID id) {
-        employeeManager.activate(id);
-    }
-
-    @PatchMapping("/api/employees/{id}/promote")
-    public void promote(@PathVariable UUID id, @RequestParam EmployeePosition position) {
-        employeeManager.promote(id, position);
     }
 
     private String buildFilename(String prefix) {

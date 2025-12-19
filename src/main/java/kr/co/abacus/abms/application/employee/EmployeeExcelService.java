@@ -30,15 +30,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
-import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeExcelException;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
@@ -78,8 +78,8 @@ public class EmployeeExcelService {
     private final DepartmentRepository departmentRepository;
     private final EmployeeManager employeeManager;
 
-    public byte[] download(EmployeeSearchRequest request) {
-        List<Employee> employees = employeeRepository.search(request);
+    public byte[] download(EmployeeSearchCondition condition) {
+        List<Employee> employees = employeeRepository.search(condition);
         Map<UUID, String> departmentNames = loadDepartmentNameMap();
 
         try (Workbook workbook = new XSSFWorkbook();
@@ -148,8 +148,8 @@ public class EmployeeExcelService {
                 }
 
                 try {
-                    EmployeeCreateRequest createRequest = toCreateRequest(row, departmentCodeMap);
-                    employeeManager.create(createRequest);
+                    EmployeeCreateCommand command = toCreateCommand(row, departmentCodeMap);
+                    employeeManager.create(command);
                     successCount++;
                 } catch (Exception ex) {
                     excelFailures.add(new EmployeeExcelUploadResult.ExcelFailure(rowIndex + 1, resolveMessage(ex)));
@@ -177,6 +177,39 @@ public class EmployeeExcelService {
         } catch (IOException ex) {
             throw new EmployeeExcelException("엑셀 파일을 읽는 도중 오류가 발생했습니다.", ex);
         }
+    }
+
+    private EmployeeCreateCommand toCreateCommand(Row row, Map<String, UUID> departmentCodeMap) {
+            // 1. 엑셀 셀 데이터 추출 (String으로 우선 추출)
+            String teamCode = getCellValue(row, 0);
+            String email = getCellValue(row, 1);
+            String name = getCellValue(row, 2);
+            String joinedDate = getCellValue(row, 3);
+            String birthDate = getCellValue(row, 4);
+            String positionDesc = getCellValue(row, 5);
+            String typeDesc = getCellValue(row, 6);
+            String gradeDesc = getCellValue(row, 7);
+            String memo = getCellValue(row, 8);
+
+            // 2. 부서 UUID 조회
+            UUID departmentId = departmentCodeMap.get(teamCode);
+            if (departmentId == null) {
+                throw new IllegalArgumentException("존재하지 않는 부서 코드입니다: " + teamCode);
+            }
+
+            // 3. 빌더 또는 생성자를 사용하여 Command 객체 생성
+            return EmployeeCreateCommand.builder()
+                .departmentId(departmentId)
+                .email(email)
+                .name(name)
+                .joinDate(LocalDate.parse(joinedDate)) // yyyy-MM-dd 형식 가정
+                .birthDate(LocalDate.parse(birthDate))   // yyyy-MM-dd 형식 가정
+                .position(EmployeePosition.fromDescription(positionDesc)) // description으로 Enum 찾기
+                .type(EmployeeType.fromDescription(typeDesc))
+                .grade(EmployeeGrade.fromDescription(gradeDesc))
+                .avatar(EmployeeAvatar.AQUA_SPLASH)
+                .memo(memo)
+                .build();
     }
 
     private void createHeaderRow(Workbook workbook, Sheet sheet, List<String> headers) {
@@ -216,39 +249,6 @@ public class EmployeeExcelService {
             int width = sheet.getColumnWidth(i);
             sheet.setColumnWidth(i, Math.min(width + 1024, 10000));
         }
-    }
-
-    private EmployeeCreateRequest toCreateRequest(Row row, Map<String, UUID> departmentByCode) {
-        String departmentCodeRaw = getCellValue(row, 0);
-        String email = getCellValue(row, 1);
-        String name = getCellValue(row, 2);
-        String joinDateRaw = getCellValue(row, 3);
-        String birthDateRaw = getCellValue(row, 4);
-        String positionRaw = getCellValue(row, 5);
-        String typeRaw = getCellValue(row, 6);
-        String gradeRaw = getCellValue(row, 7);
-        String memo = getCellValue(row, 8);
-
-        UUID departmentId = resolveDepartmentId(departmentCodeRaw, departmentByCode);
-        LocalDate joinDate = parseDate(joinDateRaw, "입사일");
-        LocalDate birthDate = parseDate(birthDateRaw, "생년월일");
-        EmployeePosition position = parseEnum(positionRaw, EmployeePosition.class, "직책");
-        EmployeeType type = parseEnum(typeRaw, EmployeeType.class, "근무 유형");
-        EmployeeGrade grade = parseEnum(gradeRaw, EmployeeGrade.class, "등급");
-        EmployeeAvatar avatar = randomAvatar();
-
-        return new EmployeeCreateRequest(
-            departmentId,
-            email,
-            name,
-            joinDate,
-            birthDate,
-            position,
-            type,
-            grade,
-            avatar,
-            memo.isEmpty() ? null : memo
-        );
     }
 
     private boolean isRowEmpty(Row row) {

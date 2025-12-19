@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.adapter.web.department;
 
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -17,15 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.web.PageResponse;
-import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignTeamLeaderRequest;
+import kr.co.abacus.abms.adapter.web.department.dto.DepartmentAssignLeaderResponse;
+import kr.co.abacus.abms.adapter.web.department.dto.DepartmentDetailResponse;
+import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignLeaderRequest;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
-import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartWithEmployeesResponse;
-import kr.co.abacus.abms.application.department.dto.OrganizationChartModel;
-import kr.co.abacus.abms.application.department.dto.OrganizationChartWithEmployeesModel;
-import kr.co.abacus.abms.application.department.provided.DepartmentFinder;
-import kr.co.abacus.abms.application.department.provided.DepartmentManager;
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
-import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
+import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
+import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
+import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 
 @RequiredArgsConstructor
 @RestController
@@ -35,43 +37,39 @@ public class DepartmentApi {
     private final DepartmentManager departmentManager;
 
     @GetMapping("/api/departments/organization-chart")
-    public OrganizationChartResponse getOrganizationChart() {
-        OrganizationChartModel organizationChartModel = departmentFinder.getOrganizationChart();
+    public List<OrganizationChartResponse> getOrganizationChart() {
+        List<OrganizationChartDetail> organizationChartDetails = departmentFinder.getOrganizationChart();
 
-        return OrganizationChartResponse.of(organizationChartModel);
-    }
-
-    @GetMapping("/api/departments/organization-chart/employees")
-    public OrganizationChartWithEmployeesResponse getOrganizationChartWithEmployee() {
-        OrganizationChartWithEmployeesModel organizationChartWithEmployee = departmentFinder
-            .getOrganizationChartWithEmployees();
-
-        return OrganizationChartWithEmployeesResponse.of(organizationChartWithEmployee);
+        return organizationChartDetails.stream()
+            .map(OrganizationChartResponse::of)
+            .toList();
     }
 
     @GetMapping("/api/departments/{departmentId}")
-    public DepartmentResponse getDepartment(@PathVariable UUID departmentId) {
-        Department department = departmentFinder.find(departmentId);
+    public DepartmentDetailResponse getDepartment(@PathVariable UUID departmentId) {
+        DepartmentDetail detail = departmentFinder.findDetail(departmentId);
 
-        return DepartmentResponse.of(department);
+        return DepartmentDetailResponse.of(detail);
     }
 
     @GetMapping("/api/departments/{departmentId}/employees")
-    public PageResponse<EmployeeResponse> getDepartmentEmployees(
+    public PageResponse<EmployeeSearchResponse> getDepartmentEmployees(
         @PathVariable UUID departmentId,
         @RequestParam(required = false) String name,
         @PageableDefault(size = 20, sort = "name") Pageable pageable
     ) {
-        Page<EmployeeResponse> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
+        Page<EmployeeSummary> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
 
-        return PageResponse.of(employeesPage);
+        Page<EmployeeSearchResponse> responses = employeesPage.map(EmployeeSearchResponse::of);
+
+        return PageResponse.of(responses);
     }
 
     @PostMapping("/api/departments/{departmentId}/assign-team-leader")
-    public DepartmentResponse assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignTeamLeaderRequest request) {
-        Department department = departmentManager.assignTeamLeader(departmentId, request.leaderEmployeeId());
+    public DepartmentAssignLeaderResponse assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignLeaderRequest request) {
+        UUID id = departmentManager.assignLeader(departmentId, request.leaderEmployeeId());
 
-        return DepartmentResponse.of(department);
+        return DepartmentAssignLeaderResponse.of(id);
     }
 
 }

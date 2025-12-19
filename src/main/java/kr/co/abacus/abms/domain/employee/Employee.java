@@ -18,6 +18,7 @@ import jakarta.persistence.UniqueConstraint;
 import org.jspecify.annotations.Nullable;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,7 +28,9 @@ import kr.co.abacus.abms.domain.shared.Email;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "employee", uniqueConstraints = {@UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")})
+@Table(name = "employee", uniqueConstraints = {
+    @UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")
+})
 public class Employee extends AbstractEntity {
 
     @Column(name = "department_id", nullable = false)
@@ -74,23 +77,40 @@ public class Employee extends AbstractEntity {
     @Column(name = "memo", columnDefinition = "TEXT")
     private String memo;
 
-    public static Employee create(EmployeeCreateRequest request) {
-        Employee employee = new Employee();
+    @Builder(access = AccessLevel.PRIVATE)
+    private Employee(UUID departmentId, String name, String email, LocalDate joinDate, LocalDate birthDate,
+                     EmployeePosition position, EmployeeType type, EmployeeGrade grade, EmployeeAvatar avatar,
+                     @Nullable LocalDate resignationDate, @Nullable String memo) {
+        this.departmentId = requireNonNull(departmentId);
+        this.name = requireNonNull(name);
+        this.email = new Email(requireNonNull(email));
+        this.joinDate = requireNonNull(joinDate);
+        this.birthDate = requireNonNull(birthDate);
+        this.position = requireNonNull(position);
+        this.type = requireNonNull(type);
+        this.grade = requireNonNull(grade);
+        this.avatar = requireNonNull(avatar);
+        this.resignationDate = resignationDate;
+        this.memo = memo;
 
-        employee.departmentId = requireNonNull(request.departmentId());
-        employee.name = requireNonNull(request.name());
-        employee.email = new Email(requireNonNull(request.email()));
-        employee.joinDate = requireNonNull(request.joinDate());
-        employee.birthDate = requireNonNull(request.birthDate());
-        employee.position = requireNonNull(request.position());
-        employee.type = requireNonNull(request.type());
-        employee.grade = requireNonNull(request.grade());
-        employee.avatar = requireNonNull(request.avatar());
-        employee.memo = request.memo();
+        this.status = EmployeeStatus.ACTIVE;
+    }
 
-        employee.status = EmployeeStatus.ACTIVE;
-
-        return employee;
+    public static Employee create(UUID departmentId, String name, String email, LocalDate joinDate,
+                                  LocalDate birthDate, EmployeePosition position, EmployeeType type,
+                                  EmployeeGrade grade, EmployeeAvatar avatar, @Nullable String memo) {
+        return Employee.builder()
+            .departmentId(departmentId)
+            .name(name)
+            .email(email)
+            .joinDate(joinDate)
+            .birthDate(birthDate)
+            .position(position)
+            .type(type)
+            .grade(grade)
+            .avatar(avatar)
+            .memo(memo)
+            .build();
     }
 
     public void resign(LocalDate resignationDate) {
@@ -122,19 +142,21 @@ public class Employee extends AbstractEntity {
         this.resignationDate = null;
     }
 
-    public void updateInfo(EmployeeUpdateRequest request) {
+    public void updateInfo(UUID departmentId, String name, String email, LocalDate joinDate, LocalDate birthDate,
+                           EmployeePosition position, EmployeeType type, EmployeeGrade grade,
+                           EmployeeAvatar avatar, @Nullable String memo) {
         state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 정보를 수정할 수 없습니다.");
 
-        this.departmentId = requireNonNull(request.departmentId());
-        this.name = requireNonNull(request.name());
-        this.email = new Email(requireNonNull(request.email()));
-        this.joinDate = requireNonNull(request.joinDate());
-        this.birthDate = requireNonNull(request.birthDate());
-        this.position = requireNonNull(request.position());
-        this.type = requireNonNull(request.type());
-        this.grade = requireNonNull(request.grade());
-        this.avatar = requireNonNull(request.avatar());
-        this.memo = request.memo();
+        this.departmentId = requireNonNull(departmentId);
+        this.name = requireNonNull(name);
+        this.email = new Email(requireNonNull(email));
+        this.joinDate = requireNonNull(joinDate);
+        this.birthDate = requireNonNull(birthDate);
+        this.position = requireNonNull(position);
+        this.type = requireNonNull(type);
+        this.grade = requireNonNull(grade);
+        this.avatar = requireNonNull(avatar);
+        this.memo = memo;
     }
 
     public void promote(EmployeePosition newPosition) {
@@ -142,8 +164,8 @@ public class Employee extends AbstractEntity {
             throw new InvalidEmployeeStatusException("퇴사한 직원은 승진할 수 없습니다.");
         }
 
-        if (newPosition.getRank() < this.position.getRank()) {
-            throw new InvalidEmployeeStatusException("현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
+        if (newPosition.getRank() <= this.position.getRank()) {
+            throw new InvalidEmployeeStatusException("현재 직급보다 낮거나 같은 직급으로 변경할 수 없습니다.");
         }
 
         this.position = requireNonNull(newPosition);

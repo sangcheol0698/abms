@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.web.PageResponse;
 import kr.co.abacus.abms.adapter.web.party.dto.PartyResponse;
-import kr.co.abacus.abms.application.party.provided.PartyFinder;
+import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.domain.party.Party;
 
 @RequiredArgsConstructor

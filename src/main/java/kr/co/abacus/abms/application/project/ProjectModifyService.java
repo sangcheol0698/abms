@@ -7,9 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.project.provided.ProjectFinder;
-import kr.co.abacus.abms.application.project.provided.ProjectManager;
-import kr.co.abacus.abms.application.project.required.ProjectRepository;
+import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
+import kr.co.abacus.abms.application.project.inbound.ProjectManager;
+import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectCodeDuplicateException;
 import kr.co.abacus.abms.domain.project.ProjectCreateRequest;

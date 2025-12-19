@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.web.payroll.dto.PayrollCreateRequest;
-import kr.co.abacus.abms.application.payroll.provided.PayrollManager;
+import kr.co.abacus.abms.application.payroll.inbound.PayrollManager;
 import kr.co.abacus.abms.domain.shared.Money;
 
 @RequiredArgsConstructor

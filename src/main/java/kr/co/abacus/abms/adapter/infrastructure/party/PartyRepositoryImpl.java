@@ -4,6 +4,7 @@ import static kr.co.abacus.abms.domain.party.QParty.*;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -16,7 +17,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.party.required.CustomPartyRepository;
+import kr.co.abacus.abms.application.party.outbound.CustomPartyRepository;
 import kr.co.abacus.abms.domain.party.Party;
 
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class PartyRepositoryImpl implements CustomPartyRepository {
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
-    private BooleanExpression containsName(String name) {
+    private @Nullable BooleanExpression containsName(String name) {
         if (ObjectUtils.isEmpty(name)) {
             return null;
         }

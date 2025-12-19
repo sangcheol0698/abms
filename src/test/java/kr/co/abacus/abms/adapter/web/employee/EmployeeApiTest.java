@@ -1,6 +1,5 @@
 package kr.co.abacus.abms.adapter.web.employee;
 
-import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
@@ -13,6 +12,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -20,29 +20,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
+import kr.co.abacus.abms.adapter.web.EnumResponse;
 import kr.co.abacus.abms.adapter.web.PageResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeAvatarResponse;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeExcelUploadResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeGradeResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeePositionResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeStatusResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeTypeResponse;
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
-import kr.co.abacus.abms.application.employee.provided.EmployeeManager;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeUpdateRequest;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
-import kr.co.abacus.abms.domain.department.DepartmentFixture;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
-import kr.co.abacus.abms.domain.shared.Email;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 class EmployeeApiTest extends ApiIntegrationTestBase {
@@ -62,19 +58,15 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @BeforeEach
     void setUpDepartments() {
-        Department company = DepartmentFixture.createTestCompany();
+        Department company = createDepartment("CODE-COMPANY", "테스트회사", DepartmentType.COMPANY);
         departmentRepository.save(company);
-        Department division = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트본부", "TEST_DIV", DepartmentType.DIVISION, null),
-            company
-        );
+
+        Department division = createDepartment("CODE-DIVISION", "테스트사업부", DepartmentType.DIVISION);
         departmentRepository.save(division);
-        Department team = Department.create(
-            DepartmentFixture.createDepartmentCreateRequest("테스트팀", "TEST_TEAM", DepartmentType.TEAM, null),
-            division
-        );
+
+        Department team = createDepartment("CODE-TEAM", "테스트팀", DepartmentType.TEAM);
         departmentRepository.save(team);
-        flushAndClear();
+
         companyId = company.getId();
         divisionId = division.getId();
         teamId = team.getId();
@@ -82,22 +74,19 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void create() {
-        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId);
+        EmployeeCreateRequest request = createEmployeeCreateRequest(companyId, "test@email.com", "홍길동");
         String responseJson = objectMapper.writeValueAsString(request);
 
-        EmployeeCreateResponse response = restTestClient.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
+        EmployeeCreateResponse response = restTestClient.post()
+            .uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
             .body(responseJson)
             .exchange()
             .expectStatus().isOk()
             .expectBody(EmployeeCreateResponse.class)
-            .value(createResponse -> {
-                assertThat(createResponse.employeeId()).isNotNull();
-                assertThat(createResponse.email()).isEqualTo(request.email());
-            })
             .returnResult()
             .getResponseBody();
 
-        flushAndClear();
+        assertThat(response).isNotNull();
         Employee employee = employeeRepository.findById(response.employeeId()).orElseThrow();
 
         assertThat(employee.getName()).isEqualTo(request.name());
@@ -108,10 +97,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void create_invalidEmail() {
-        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId, "invalid-email");
+        EmployeeCreateRequest request = createEmployeeCreateRequest(companyId, "invalid-email", "홍길동");
         String responseJson = objectMapper.writeValueAsString(request);
 
-        restTestClient.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
+        restTestClient.post()
+            .uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
             .body(responseJson)
             .exchange()
             .expectStatus().isBadRequest();
@@ -119,9 +109,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void create_duplicateEmail() {
-        employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId));
-
-        EmployeeCreateRequest request = createEmployeeCreateRequestWithDepartment(companyId);
+        employeeRepository.save(createEmployee(teamId, "test@email.com", "기존직원"));
+        EmployeeCreateRequest request = createEmployeeCreateRequest(companyId, "test@email.com", "신규직원");
         String responseJson = objectMapper.writeValueAsString(request);
 
         restTestClient.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
@@ -132,127 +121,130 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void find() {
-        Employee savedEmployee = employeeManager.create(createEmployeeCreateRequestWithDepartment(companyId));
+        // given
+        Employee employee = createEmployee(teamId, "test@email.com", "테스트직원");
+        employeeRepository.save(employee);
+        flushAndClear();
 
-        restTestClient.get()
-            .uri("/api/employees/{id}", savedEmployee.getId())
+        // when & then
+        EmployeeSummary response = restTestClient.get()
+            .uri("/api/employees/{id}", employee.getId())
             .exchange()
             .expectStatus().isOk()
-            .expectBody(EmployeeResponse.class)
-            .value(findResponse -> {
-                assertThat(findResponse.employeeId()).isEqualTo(savedEmployee.getId());
-                assertThat(findResponse.departmentName()).isEqualTo("테스트회사");
-                assertThat(findResponse.name()).isEqualTo(savedEmployee.getName());
-                assertThat(findResponse.email()).isEqualTo(savedEmployee.getEmail());
-                assertThat(findResponse.status()).isEqualTo(savedEmployee.getStatus());
-            });
+            .expectBody(EmployeeSummary.class)
+            .returnResult()
+            .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.employeeId()).isEqualTo(employee.getId());
+        assertThat(response.name()).isEqualTo(employee.getName());
+        assertThat(response.email()).isEqualTo(employee.getEmail());
     }
 
     @Test
-    void search_sortByGradeLevel() throws Exception {
-        // given: 등급 레벨이 다른 직원 3명을 생성하여 정렬 결과를 확인한다.
-        employeeManager.create(createCustomEmployee(teamId, "grade-junior@abms.co", "주니어", EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE));
-        employeeManager.create(createCustomEmployee(teamId, "grade-expert@abms.co", "익스퍼트", EmployeeGrade.EXPERT, EmployeePosition.MANAGER));
-        employeeManager.create(createCustomEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeeGrade.SENIOR, EmployeePosition.LEADER));
+    void search_sortByGradeLevel() {
+        // given
+        employeeRepository.save(createEmployee(teamId, "grade-junior@abms.co", "주니어", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR));
+        employeeRepository.save(createEmployee(teamId, "grade-expert@abms.co", "익스퍼트", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT));
+        employeeRepository.save(createEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR));
         flushAndClear();
 
         // when: grade desc 정렬로 검색 시 레벨이 높은 순서(EXPERT > SENIOR > JUNIOR)로 정렬되어야 한다.
-        PageResponse<EmployeeResponse> responsePage = restTestClient.get()
+        PageResponse<EmployeeSearchResponse> responsePage = restTestClient.get()
             .uri("/api/employees?sort=grade,desc&size=10&page=0")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeResponse>>() {
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSearchResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
-        List<EmployeeResponse> contents = responsePage.content();
+        List<EmployeeSearchResponse> contents = responsePage.content();
 
         // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).grade()).isEqualTo(EmployeeGrade.EXPERT);
-        assertThat(contents.get(1).grade()).isEqualTo(EmployeeGrade.SENIOR);
-        assertThat(contents.get(2).grade()).isEqualTo(EmployeeGrade.JUNIOR);
+        assertThat(contents.get(0).grade()).isEqualTo(new EnumResponse(EmployeeGrade.EXPERT.name(), EmployeeGrade.EXPERT.getDescription()));
+        assertThat(contents.get(1).grade()).isEqualTo(new EnumResponse(EmployeeGrade.SENIOR.name(), EmployeeGrade.SENIOR.getDescription()));
+        assertThat(contents.get(2).grade()).isEqualTo(new EnumResponse(EmployeeGrade.JUNIOR.name(), EmployeeGrade.JUNIOR.getDescription()));
     }
 
     @Test
     void search_sortByPositionRank() {
         // given: 직위 rank가 다른 직원 3명을 생성하여 정렬 결과를 확인한다.
-        employeeManager.create(createCustomEmployee(teamId, "position-director@abms.co", "디렉터", EmployeeGrade.SENIOR, EmployeePosition.DIRECTOR));
-        employeeManager.create(createCustomEmployee(teamId, "position-associate@abms.co", "어소시에이트", EmployeeGrade.MID_LEVEL, EmployeePosition.ASSOCIATE));
-        employeeManager.create(createCustomEmployee(teamId, "position-vice@abms.co", "부사장", EmployeeGrade.EXPERT, EmployeePosition.VICE_PRESIDENT));
+        employeeRepository.save(createEmployee(teamId, "grade-junior@abms.co", "익스퍼트", EmployeePosition.DIRECTOR, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT));
+        employeeRepository.save(createEmployee(teamId, "grade-expert@abms.co", "주니어", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR));
+        employeeRepository.save(createEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeePosition.VICE_PRESIDENT, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR));
         flushAndClear();
 
-        PageResponse<EmployeeResponse> responsePage = restTestClient.get()
+        PageResponse<EmployeeSearchResponse> responsePage = restTestClient.get()
             .uri("/api/employees?sort=position,asc&size=10&page=0")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeResponse>>() {
+            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSearchResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
-        List<EmployeeResponse> contents = responsePage.content();
+        assertThat(responsePage).isNotNull();
+        List<EmployeeSearchResponse> contents = responsePage.content();
 
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).position()).isEqualTo(EmployeePosition.ASSOCIATE);
-        assertThat(contents.get(1).position()).isEqualTo(EmployeePosition.DIRECTOR);
-        assertThat(contents.get(2).position()).isEqualTo(EmployeePosition.VICE_PRESIDENT);
+        assertThat(contents.get(0).position()).isEqualTo(new EnumResponse(EmployeePosition.ASSOCIATE.name(), EmployeePosition.ASSOCIATE.getDescription()));
+        assertThat(contents.get(1).position()).isEqualTo(new EnumResponse(EmployeePosition.DIRECTOR.name(), EmployeePosition.DIRECTOR.getDescription()));
+        assertThat(contents.get(2).position()).isEqualTo(new EnumResponse(EmployeePosition.VICE_PRESIDENT.name(), EmployeePosition.VICE_PRESIDENT.getDescription()));
     }
 
     @Test
-    void getEmployeeGrades() throws Exception {
-        List<EmployeeGradeResponse> responses = restTestClient.get()
+    void getEmployeeGrades() {
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/grades")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeeGradeResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
         for (EmployeeGrade grade : EmployeeGrade.values()) {
-            EmployeeGradeResponse found = responses.stream()
-                .filter(r -> r.name().equals(grade.name()))
+            EnumResponse enumResponse = responses.stream()
+                .filter(r -> r.code().equals(grade.name()))
                 .findFirst()
                 .orElseThrow();
 
-            assertThat(found.name()).isEqualTo(grade.name());
-            assertThat(found.description()).isEqualTo(grade.getDescription());
-            assertThat(found.level()).isEqualTo(grade.getLevel());
+            assertThat(enumResponse.code()).isEqualTo(grade.name());
+            assertThat(enumResponse.description()).isEqualTo(grade.getDescription());
         }
     }
 
     @Test
-    void getEmployeePositions() throws Exception {
-        List<EmployeePositionResponse> responses = restTestClient.get()
+    void getEmployeePositions() {
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/positions")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeePositionResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
         for (EmployeePosition position : EmployeePosition.values()) {
-            EmployeePositionResponse found = responses.stream()
-                .filter(r -> r.name().equals(position.name()))
+            EnumResponse found = responses.stream()
+                .filter(r -> r.code().equals(position.name()))
                 .findFirst()
                 .orElseThrow();
 
-            assertThat(found.name()).isEqualTo(position.name());
+            assertThat(found.code()).isEqualTo(position.name());
             assertThat(found.description()).isEqualTo(position.getDescription());
-            assertThat(found.rank()).isEqualTo(position.getRank());
         }
     }
 
     @Test
     void getEmployeeTypes() {
-        List<EmployeeTypeResponse> responses = restTestClient.get()
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/types")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeeTypeResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
@@ -260,23 +252,23 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(responses).hasSize(EmployeeType.values().length);
 
         for (EmployeeType type : EmployeeType.values()) {
-            EmployeeTypeResponse found = responses.stream()
-                .filter(r -> r.name().equals(type.name()))
+            EnumResponse found = responses.stream()
+                .filter(r -> r.code().equals(type.name()))
                 .findFirst()
                 .orElseThrow();
 
-            assertThat(found.name()).isEqualTo(type.name());
+            assertThat(found.code()).isEqualTo(type.name());
             assertThat(found.description()).isEqualTo(type.getDescription());
         }
     }
 
     @Test
     void getEmployeeStatuses() {
-        List<EmployeeStatusResponse> responses = restTestClient.get()
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/statuses")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeeStatusResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
@@ -284,41 +276,41 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         assertThat(responses).hasSize(EmployeeStatus.values().length);
 
         for (EmployeeStatus status : EmployeeStatus.values()) {
-            EmployeeStatusResponse found = responses.stream()
-                .filter(r -> r.name().equals(status.name()))
+            EnumResponse found = responses.stream()
+                .filter(r -> r.code().equals(status.name()))
                 .findFirst()
                 .orElseThrow();
 
-            assertThat(found.name()).isEqualTo(status.name());
+            assertThat(found.code()).isEqualTo(status.name());
             assertThat(found.description()).isEqualTo(status.getDescription());
         }
     }
 
     @Test
-    void getEmployeeAvatars() throws Exception {
-        List<EmployeeAvatarResponse> responses = restTestClient.get()
+    void getEmployeeAvatars() {
+        List<EnumResponse> responses = restTestClient.get()
             .uri("/api/employees/avatars")
             .exchange()
             .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<EmployeeAvatarResponse>>() {
+            .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
             })
             .returnResult()
             .getResponseBody();
 
         for (EmployeeAvatar avatar : EmployeeAvatar.values()) {
-            EmployeeAvatarResponse found = responses.stream()
+            EnumResponse found = responses.stream()
                 .filter(r -> r.code().equals(avatar.name()))
                 .findFirst()
                 .orElseThrow();
 
             assertThat(found.code()).isEqualTo(avatar.name());
-            assertThat(found.displayName()).isEqualTo(avatar.getDisplayName());
+            assertThat(found.description()).isEqualTo(avatar.getDescription());
         }
     }
 
     @Test
     void downloadExcel() {
-        employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "excel-download@abms.co"));
+        employeeRepository.save(createEmployee(teamId, "test@email.com", "테스트직원"));
         flushAndClear();
 
         restTestClient.get()
@@ -333,7 +325,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void downloadExcelSample() throws Exception {
+    void downloadExcelSample() {
         restTestClient.get()
             .uri("/api/employees/excel/sample")
             .exchange()
@@ -413,33 +405,81 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             .anyMatch(candidate -> candidate.getEmail().address().equals("excel-upload@abms.co"));
     }
 
+    // @Test
+    // void uploadExcel() throws Exception {
+    //     // 1. 엑셀 워크북 생성 로직 (기존과 동일)
+    //     Workbook workbook = new XSSFWorkbook();
+    //     Sheet sheet = workbook.createSheet("Employees");
+    //     Row header = sheet.createRow(0);
+    //     String[] headers = {"부서 코드", "이메일", "이름", "입사일", "생년월일", "직책", "근무 유형", "등급", "메모"};
+    //     for (int i = 0; i < headers.length; i++) {
+    //         header.createCell(i).setCellValue(headers[i]);
+    //     }
+    //
+    //     String teamCode = departmentRepository.findByIdAndDeletedFalse(teamId)
+    //         .map(Department::getCode)
+    //         .orElseThrow();
+    //
+    //     Row row = sheet.createRow(1);
+    //     row.createCell(0).setCellValue(teamCode);
+    //     row.createCell(1).setCellValue("excel-upload@abms.co");
+    //     row.createCell(2).setCellValue("업로드");
+    //     row.createCell(3).setCellValue("2025-01-02");
+    //     row.createCell(4).setCellValue("1995-06-10");
+    //     row.createCell(5).setCellValue(EmployeePosition.ASSOCIATE.getDescription());
+    //     row.createCell(6).setCellValue(EmployeeType.FULL_TIME.getDescription());
+    //     row.createCell(7).setCellValue(EmployeeGrade.JUNIOR.getDescription());
+    //     row.createCell(8).setCellValue("업로드 메모");
+    //
+    //     ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    //     workbook.write(bos);
+    //     workbook.close();
+    //
+    //     // 2. MultipartBodyBuilder를 사용하여 요청 본문 구성
+    //     MultipartBodyBuilder builder = new MultipartBodyBuilder();
+    //     builder.part("file", bos.toByteArray())
+    //         .filename("employees.xlsx")
+    //         .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+    //
+    //     // 3. RestTestClient 실행 및 문서화
+    //     restTestClient.post()
+    //         .uri("/api/employees/excel/upload")
+    //         .body(builder.build())
+    //         .exchange()
+    //         .expectStatus().isOk()
+    //         .expectBody(EmployeeExcelUploadResponse.class)
+    //         .consumeWith(result -> {
+    //             // 4. 응답 본문 검증
+    //             EmployeeExcelUploadResponse response = result.getResponseBody();
+    //             assertThat(response).isNotNull();
+    //             assertThat(response.successCount()).isEqualTo(1);
+    //             assertThat(response.failures()).isEmpty();
+    //
+    //             flushAndClear();
+    //
+    //             // DB 검증
+    //             var employees = employeeRepository.findAllByDepartmentIdInAndDeletedFalse(List.of(teamId));
+    //             assertThat(employees).anyMatch(candidate -> candidate.getEmail().address().equals("excel-upload@abms.co"));
+    //         });
+    // }
+
     @Test
-    void update() throws Exception {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "update-target@email.com"));
+    void update() {
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "update-target@email.com", "업데이트 대상")).getId();
         flushAndClear();
 
-        var request = createEmployeeUpdateRequestWithDepartment(divisionId, "김수정", "updated@email.com");
+        EmployeeUpdateRequest request = createEmployeeUpdateRequest(divisionId, "updated@email.com", "김수정");
         String responseJson = objectMapper.writeValueAsString(request);
 
         restTestClient.put()
-            .uri("/api/employees/{id}", employee.getId())
+            .uri("/api/employees/{id}", employeeId)
             .contentType(MediaType.APPLICATION_JSON)
             .body(responseJson)
             .exchange()
-            .expectStatus().isOk()
-            .expectBody(EmployeeResponse.class)
-            .value(response -> {
-                assertThat(response.departmentId()).isEqualTo(divisionId);
-                assertThat(response.name()).isEqualTo(request.name());
-                assertThat(response.email()).isEqualTo(new Email(request.email()));
-                assertThat(response.joinDate()).isEqualTo(request.joinDate());
-                assertThat(response.birthDate()).isEqualTo(request.birthDate());
-                assertThat(response.avatar()).isEqualTo(request.avatar());
-                assertThat(response.memo()).isEqualTo(request.memo());
-            });
+            .expectStatus().isOk();
         flushAndClear();
 
-        Employee updatedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        Employee updatedEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(updatedEmployee.getDepartmentId()).isEqualTo(request.departmentId());
         assertThat(updatedEmployee.getName()).isEqualTo(request.name());
         assertThat(updatedEmployee.getEmail().address()).isEqualTo(request.email());
@@ -453,16 +493,17 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    void update_duplicateEmail() throws Exception {
-        Employee employee1 = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "dup1@email.com"));
-        Employee employee2 = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "dup2@email.com"));
+    void update_duplicateEmail() {
+        UUID employeeId1 = employeeRepository.save(createEmployee(teamId, "dup1@email.com", "직원1")).getId();
+        employeeRepository.save(createEmployee(teamId, "dup2@email.com", "직원2")).getId();
+
         flushAndClear();
 
-        var request = createEmployeeUpdateRequestWithDepartment(divisionId, employee1.getName(), employee2.getEmail().address());
+        var request = createEmployeeUpdateRequest(teamId, "dup2@email.com", "직원1-수정");
         String responseJson = objectMapper.writeValueAsString(request);
 
         restTestClient.put()
-            .uri("/api/employees/{id}", employee1.getId())
+            .uri("/api/employees/{id}", employeeId1)
             .contentType(MediaType.APPLICATION_JSON)
             .body(responseJson)
             .exchange()
@@ -471,16 +512,16 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void delete() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "delete-target@email.com"));
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
         flushAndClear();
 
         restTestClient.delete()
-            .uri("/api/employees/{id}", employee.getId())
+            .uri("/api/employees/{id}", employeeId)
             .exchange()
             .expectStatus().isNoContent();
         flushAndClear();
 
-        Employee deletedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        Employee deletedEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(deletedEmployee.isDeleted()).isTrue();
         assertThat(deletedEmployee.getDeletedBy()).isEqualTo("SYSTEM");
         assertThat(deletedEmployee.getDeletedAt()).isNotNull();
@@ -488,29 +529,31 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void delete_alreadyDeleted() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "already-deleted@email.com"));
-        employeeManager.delete(employee.getId(), "adminUser");
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
+
+        employeeManager.delete(employeeId, "adminUser");
         flushAndClear();
 
         restTestClient.delete()
-            .uri("/api/employees/{id}", employee.getId())
+            .uri("/api/employees/{id}", employeeId)
             .exchange()
             .expectStatus().isNotFound();
     }
 
     @Test
     void restore() {
-        Employee employee = employeeManager.create(createEmployeeCreateRequestWithDepartment(teamId, "restore@email.com"));
-        employeeManager.delete(employee.getId(), "adminUser");
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+
+        employeeManager.delete(employeeId, "adminUser");
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/restore", employee.getId())
+            .uri("/api/employees/{id}/restore", employeeId)
             .exchange()
             .expectStatus().isNoContent();
         flushAndClear();
 
-        Employee restoredEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        Employee restoredEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(restoredEmployee.isDeleted()).isFalse();
         assertThat(restoredEmployee.getDeletedAt()).isNull();
         assertThat(restoredEmployee.getDeletedBy()).isNull();
@@ -519,202 +562,240 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void promote() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
-        );
-        Employee employee = employeeManager.create(createRequest);
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "promote@email.com", "홍길동", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR)).getId();
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/promote?position=STAFF", employee.getId())
+            .uri("/api/employees/{id}/promote?position=STAFF", employeeId)
             .exchange()
-            .expectStatus().isOk();
-
+            .expectStatus().isNoContent();
         flushAndClear();
-        Employee promotedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+
+        Employee promotedEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(promotedEmployee.getPosition()).isEqualTo(EmployeePosition.STAFF);
     }
 
     @Test
+    @DisplayName("직원의 직급를 현재 직급보다 낮거나 같은 직급로 승진시키려 할 때 예외가 발생한다.")
     void promote_lowerPosition_throwsException() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.SENIOR, EmployeePosition.LEADER
-        );
-        Employee employee = employeeManager.create(createRequest);
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/promote?position=ASSOCIATE", employee.getId())
+            .uri("/api/employees/{id}/promote?position=ASSOCIATE", employeeId)
             .exchange()
             .expectStatus().isBadRequest();
     }
 
     @Test
+    @DisplayName("퇴사한 직원의 직급을 승진시키려 할 때 예외가 발생한다.")
     void promote_resignedEmployee_throwsException() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
-        );
-        Employee employee = employeeManager.create(createRequest);
-        employeeManager.resign(employee.getId(), LocalDate.now());
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        flushAndClear();
+
+        employeeManager.resign(employeeId, LocalDate.now());
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/promote?position=STAFF", employee.getId())
+            .uri("/api/employees/{id}/promote?position=STAFF", employeeId)
             .exchange()
             .expectStatus().isBadRequest();
     }
 
     @Test
     void resign() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
-        );
-        Employee employee = employeeManager.create(createRequest);
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         LocalDate resignationDate = LocalDate.now();
         restTestClient.patch()
-            .uri("/api/employees/{id}/resign?resignationDate={date}", employee.getId(), resignationDate)
+            .uri("/api/employees/{id}/resign?resignationDate={date}", employeeId, resignationDate)
             .exchange()
-            .expectStatus().isOk();
-
+            .expectStatus().isNoContent();
         flushAndClear();
-        Employee resignedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+
+        Employee resignedEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(resignedEmployee.getStatus()).isEqualTo(EmployeeStatus.RESIGNED);
         assertThat(resignedEmployee.getResignationDate()).isEqualTo(resignationDate);
     }
 
     @Test
+    @DisplayName("퇴사일이 입사일 이전일 경우 예외가 발생한다.")
     void resign_beforeJoinDate_throwsException() {
-        EmployeeCreateRequest createRequest = new EmployeeCreateRequest(
-            teamId, "test@example.com", "홍길동",
-            LocalDate.of(2024, 1, 1), LocalDate.of(1990, 1, 1),
-            EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME,
-            EmployeeGrade.JUNIOR, EmployeeAvatar.SKY_GLOW, null
-        );
-        Employee employee = employeeManager.create(createRequest);
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "test@example.com", "홍길동", LocalDate.of(2024, 1, 1))).getId();
         flushAndClear();
 
         restTestClient.patch()
             .uri("/api/employees/{id}/resign?resignationDate={date}",
-                employee.getId(), LocalDate.of(2023, 12, 31))
+                employeeId, LocalDate.of(2023, 12, 31))
             .exchange()
             .expectStatus().isBadRequest();
     }
 
     @Test
     void resign_alreadyResigned_throwsException() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
-        );
-        Employee employee = employeeManager.create(createRequest);
-        employeeManager.resign(employee.getId(), LocalDate.now());
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        flushAndClear();
+
+        employeeManager.resign(employeeId, LocalDate.now());
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/resign?resignationDate={date}",
-                employee.getId(), LocalDate.now())
+            .uri("/api/employees/{id}/resign?resignationDate={date}", employeeId, LocalDate.now())
             .exchange()
             .expectStatus().isBadRequest();
     }
 
     @Test
     void takeLeave() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
-        );
-        Employee employee = employeeManager.create(createRequest);
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/take-leave", employee.getId())
+            .uri("/api/employees/{id}/take-leave", employeeId)
             .exchange()
-            .expectStatus().isOk();
-
+            .expectStatus().isNoContent();
         flushAndClear();
-        Employee onLeaveEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+
+        Employee onLeaveEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(onLeaveEmployee.getStatus()).isEqualTo(EmployeeStatus.ON_LEAVE);
     }
 
     @Test
+    @DisplayName("재직중이 아닌 직원이 휴직처리 될 때 예외가 발생한다.")
     void takeLeave_notActive_throwsException() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
-        );
-        Employee employee = employeeManager.create(createRequest);
-        employeeManager.resign(employee.getId(), LocalDate.now());
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        flushAndClear();
+
+        employeeManager.resign(employeeId, LocalDate.now());
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/take-leave", employee.getId())
+            .uri("/api/employees/{id}/take-leave", employeeId)
             .exchange()
             .expectStatus().isBadRequest();
     }
 
     @Test
+    @DisplayName("직원을 휴직중에서 재직중으로 복직시킨다.")
     void activate() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
-        );
-        Employee employee = employeeManager.create(createRequest);
-        employeeManager.takeLeave(employee.getId());
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        employeeManager.takeLeave(employeeId);
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/activate", employee.getId())
+            .uri("/api/employees/{id}/activate", employeeId)
             .exchange()
-            .expectStatus().isOk();
+            .expectStatus().isNoContent();
 
         flushAndClear();
-        Employee activeEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        Employee activeEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(activeEmployee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
     }
 
     @Test
+    @DisplayName("이미 재직중인 직원이 재활성화 될 때 예외가 발생한다.")
     void activate_alreadyActive_throwsException() {
-        EmployeeCreateRequest createRequest = createCustomEmployee(
-            teamId, "test@example.com", "홍길동",
-            EmployeeGrade.JUNIOR, EmployeePosition.ASSOCIATE
-        );
-        Employee employee = employeeManager.create(createRequest);
+        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         restTestClient.patch()
-            .uri("/api/employees/{id}/activate", employee.getId())
+            .uri("/api/employees/{id}/activate", employeeId)
             .exchange()
             .expectStatus().isBadRequest();
     }
 
-    private EmployeeCreateRequest createCustomEmployee(
+    private EmployeeCreateRequest createEmployeeCreateRequest(
         UUID departmentId,
         String email,
-        String name,
-        EmployeeGrade grade,
-        EmployeePosition position
+        String name
     ) {
-        // 정렬 검증을 위해 입력값을 자유롭게 조합할 수 있는 테스트 전용 팩토리 메서드다.
         return new EmployeeCreateRequest(
             departmentId,
             email,
             name,
-            LocalDate.of(2024, 1, 1),
+            LocalDate.of(2025, 1, 1),
             LocalDate.of(1990, 1, 1),
-            position,
+            EmployeePosition.MANAGER,
             EmployeeType.FULL_TIME,
+            EmployeeGrade.SENIOR,
+            EmployeeAvatar.SKY_GLOW,
+            "This is a memo for the employee."
+        );
+    }
+
+    private EmployeeUpdateRequest createEmployeeUpdateRequest(
+        UUID departmentId,
+        String email,
+        String name
+    ) {
+        return new EmployeeUpdateRequest(
+            departmentId,
+            email,
+            name,
+            LocalDate.of(2025, 1, 1),
+            LocalDate.of(1990, 1, 1),
+            EmployeePosition.MANAGER,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.SENIOR,
+            EmployeeAvatar.SKY_GLOW,
+            "This is a updated memo for the employee."
+        );
+    }
+
+    private Employee createEmployee(UUID teamId, String email, String name) {
+        return Employee.create(
+            teamId,
+            name,
+            email,
+            LocalDate.of(2024, 1, 1),
+            LocalDate.of(1990, 5, 20),
+            EmployeePosition.STAFF,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.JUNIOR,
+            EmployeeAvatar.SKY_GLOW,
+            null
+        );
+    }
+
+    private Employee createEmployee(UUID teamId, String email, String name, LocalDate joinDate) {
+        return Employee.create(
+            teamId,
+            name,
+            email,
+            joinDate,
+            LocalDate.of(1990, 5, 20),
+            EmployeePosition.ASSOCIATE,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.JUNIOR,
+            EmployeeAvatar.SKY_GLOW,
+            null
+        );
+    }
+
+    private Employee createEmployee(UUID teamId, String email, String name, EmployeePosition position, EmployeeType type, EmployeeGrade grade) {
+        return Employee.create(
+            teamId,
+            name,
+            email,
+            LocalDate.of(2024, 1, 1),
+            LocalDate.of(1990, 5, 20),
+            position,
+            type,
             grade,
             EmployeeAvatar.SKY_GLOW,
             null
         );
     }
 
-
+    private Department createDepartment(String code, String name, DepartmentType departmentType) {
+        return Department.create(
+            code,
+            name,
+            departmentType,
+            null,
+            null
+        );
+    }
 
 }

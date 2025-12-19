@@ -27,9 +27,10 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.employee.dto.EmployeeResponse;
-import kr.co.abacus.abms.application.employee.provided.EmployeeSearchRequest;
-import kr.co.abacus.abms.application.employee.required.CustomEmployeeRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.employee.outbound.CustomEmployeeRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
@@ -43,11 +44,11 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<EmployeeResponse> search(EmployeeSearchRequest request, Pageable pageable) {
+    public Page<EmployeeSummary> search(EmployeeSearchCondition condition, Pageable pageable) {
         OrderSpecifier<?>[] orderSpecifiers = resolveSort(pageable);
 
-        List<EmployeeResponse> content = queryFactory
-            .select(Projections.constructor(EmployeeResponse.class,
+        List<EmployeeSummary> content = queryFactory
+            .select(Projections.constructor(EmployeeSummary.class,
                     department.id,
                     department.name,
                     employee.id,
@@ -66,12 +67,12 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
             .from(employee)
             .join(department).on(employee.departmentId.eq(department.id))
             .where(
-                containsName(request.name()),
-                inPositions(request.positions()),
-                inTypes(request.types()),
-                inGrades(request.grades()),
-                inDepartments(request.departmentIds()),
-                inStatuses(request.statuses()),
+                containsName(condition.name()),
+                inPositions(condition.positions()),
+                inTypes(condition.types()),
+                inGrades(condition.grades()),
+                inDepartments(condition.departmentIds()),
+                inStatuses(condition.statuses()),
                 employee.deleted.isFalse()
             )
             .orderBy(orderSpecifiers)
@@ -84,12 +85,12 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
             .from(employee)
             .join(department).on(employee.departmentId.eq(department.id))
             .where(
-                containsName(request.name()),
-                inPositions(request.positions()),
-                inTypes(request.types()),
-                inGrades(request.grades()),
-                inDepartments(request.departmentIds()),
-                inStatuses(request.statuses()),
+                containsName(condition.name()),
+                inPositions(condition.positions()),
+                inTypes(condition.types()),
+                inGrades(condition.grades()),
+                inDepartments(condition.departmentIds()),
+                inStatuses(condition.statuses()),
                 employee.deleted.isFalse()
             );
 
@@ -97,7 +98,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
     }
 
     @Override
-    public List<Employee> search(EmployeeSearchRequest request) {
+    public List<Employee> search(EmployeeSearchCondition request) {
         return queryFactory.select(employee)
             .from(employee)
             .where(
@@ -111,6 +112,34 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
             )
             .orderBy(defaultSort())
             .fetch();
+    }
+
+    @Override
+    public @Nullable EmployeeDetail findEmployeeDetail(UUID id) {
+        return queryFactory
+            .select(Projections.constructor(EmployeeDetail.class,
+                    department.id,
+                    department.name,
+                    employee.id,
+                    employee.name,
+                    employee.email,
+                    employee.joinDate,
+                    employee.birthDate,
+                    employee.position,
+                    employee.status,
+                    employee.grade,
+                    employee.type,
+                    employee.avatar,
+                    employee.memo
+                )
+            )
+            .from(employee)
+            .join(department).on(employee.departmentId.eq(department.id))
+            .where(
+                employee.id.eq(id),
+                employee.deleted.isFalse()
+            )
+            .fetchOne();
     }
 
     private @Nullable BooleanExpression containsName(@Nullable String name) {
@@ -145,7 +174,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
         return employee.departmentId.in(departmentIds);
     }
 
-    private @Nullable BooleanExpression inStatuses(List<EmployeeStatus> statuses) {
+    private @Nullable BooleanExpression inStatuses(@Nullable List<EmployeeStatus> statuses) {
         if (ObjectUtils.isEmpty(statuses)) {
             return null;
         }

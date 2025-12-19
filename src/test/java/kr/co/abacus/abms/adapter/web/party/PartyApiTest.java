@@ -9,7 +9,7 @@ import org.springframework.core.ParameterizedTypeReference;
 
 import kr.co.abacus.abms.adapter.web.PageResponse;
 import kr.co.abacus.abms.adapter.web.party.dto.PartyResponse;
-import kr.co.abacus.abms.application.party.required.PartyRepository;
+import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;

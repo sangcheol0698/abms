@@ -1,0 +1,338 @@
+package kr.co.abacus.abms.application.employee.inbound;
+
+import static org.assertj.core.api.Assertions.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
+import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.department.DepartmentType;
+import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeStatus;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
+import kr.co.abacus.abms.support.IntegrationTestBase;
+
+class EmployeeManagerTest extends IntegrationTestBase {
+
+    @Autowired
+    private EmployeeManager employeeManager;
+
+    @Autowired
+    private EmployeeFinder employeeFinder;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
+    private UUID companyId;
+    private UUID divisionId;
+
+    @BeforeEach
+    void setUpDepartments() {
+        Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
+        Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
+        Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
+        Department team2 = createDepartment("TEAM002", "ABC Corp", DepartmentType.TEAM, null, division);
+        departmentRepository.saveAll(List.of(company, division, team1, team2));
+
+        companyId = company.getId();
+        divisionId = division.getId();
+    }
+
+    @Test
+    void create() {
+        EmployeeCreateCommand command = EmployeeCreateCommand.builder()
+            .departmentId(divisionId)
+            .email("test@email.com")
+            .name("홍길동")
+            .joinDate(LocalDate.of(2025, 1, 1))
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .position(EmployeePosition.ASSOCIATE)
+            .type(EmployeeType.FULL_TIME)
+            .grade(EmployeeGrade.JUNIOR)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .build();
+
+        UUID employeeId = employeeManager.create(command);
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+
+        assertThat(employee.getId()).isNotNull();
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+        assertThat(employee.getDepartmentId()).isEqualTo(divisionId);
+    }
+
+    @Test
+    void duplicateEmail() {
+        employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        flushAndClear();
+
+        assertThatThrownBy(() -> employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")))
+            .isInstanceOf(DuplicateEmailException.class)
+            .hasMessageContaining("이미 존재하는 이메일입니다");
+    }
+
+    @Test
+    void updateInfo() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(divisionId, "updateUser@email.com"));
+        flushAndClear();
+
+        Employee updatedEmployee = employeeFinder.find(employee.getId());
+        assertThat(updatedEmployee.getDepartmentId()).isEqualTo(divisionId);
+        assertThat(updatedEmployee.getEmail().address()).isEqualTo("updateUser@email.com");
+        assertThat(updatedEmployee.getName()).isEqualTo("홍길동");
+        assertThat(updatedEmployee.getJoinDate()).isEqualTo(LocalDate.of(2025, 1, 1));
+        assertThat(updatedEmployee.getBirthDate()).isEqualTo(LocalDate.of(1990, 1, 1));
+        assertThat(updatedEmployee.getPosition()).isEqualTo(EmployeePosition.ASSOCIATE);
+        assertThat(updatedEmployee.getType()).isEqualTo(EmployeeType.FULL_TIME);
+        assertThat(updatedEmployee.getGrade()).isEqualTo(EmployeeGrade.JUNIOR);
+        assertThat(updatedEmployee.getMemo()).isEqualTo("Updated memo for the employee.");
+    }
+
+    @Test
+    void updateInfo_noChangeEmail() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        flushAndClear();
+
+        // 이메일이 변경되지 않은 경우, 이메일 중복 체크를 하지 않음
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(), employee.getName(), employee.getEmail().address()));
+        flushAndClear();
+
+        Employee updatedEmployee = employeeFinder.find(employee.getId());
+        assertThat(updatedEmployee.getEmail().address()).isEqualTo("testUser@email.com");
+    }
+
+    @Test
+    void updateInfoFail_duplicateEmail() {
+
+        UUID employeeId1 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        UUID employeeId2 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser2@email.com"));
+        flushAndClear();
+
+        Employee employee1 = employeeFinder.find(employeeId1);
+        Employee employee2 = employeeFinder.find(employeeId2);
+        assertThatThrownBy(() -> employeeManager.updateInfo(employee1.getId(), createEmployeeUpdateCommand(employee1.getDepartmentId(), employee2.getEmail().address())))
+            .isInstanceOf(DuplicateEmailException.class)
+            .hasMessageContaining("이미 존재하는 이메일입니다");
+    }
+
+    @Test
+    void resign() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+
+        employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
+        flushAndClear();
+
+        Employee resignedEmployee = employeeFinder.find(employee.getId());
+        assertThat(resignedEmployee.getStatus()).isEqualTo(EmployeeStatus.RESIGNED);
+        assertThat(resignedEmployee.getResignationDate()).isEqualTo(LocalDate.of(2025, 12, 31));
+    }
+
+    @Test
+    void resignFail_alreadyResigned() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
+        flushAndClear();
+
+        assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2026, 1, 1)))
+            .isInstanceOf(InvalidEmployeeStatusException.class)
+            .hasMessage("이미 퇴사한 직원입니다.");
+    }
+
+    @Test
+    void resignFail_beforeJoinDate() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2024, 12, 31)))
+            .isInstanceOf(InvalidEmployeeStatusException.class)
+            .hasMessage("퇴사일은 입사일 이후여야 합니다.");
+    }
+
+    @Test
+    void takeLeave() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+
+        employeeManager.takeLeave(employee.getId());
+        flushAndClear();
+
+        Employee onLeaveEmployee = employeeFinder.find(employee.getId());
+        assertThat(onLeaveEmployee.getStatus()).isEqualTo(EmployeeStatus.ON_LEAVE);
+    }
+
+    @Test
+    void takeLeaveFail_notActive() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
+        flushAndClear();
+
+        assertThatThrownBy(() -> employeeManager.takeLeave(employee.getId()))
+            .isInstanceOf(InvalidEmployeeStatusException.class)
+            .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
+    }
+
+    @Test
+    void activate() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31)); // 퇴사 처리
+        flushAndClear();
+
+        employeeManager.activate(employee.getId());
+        flushAndClear();
+
+        Employee activatedEmployee = employeeFinder.find(employee.getId());
+        assertThat(activatedEmployee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+        assertThat(activatedEmployee.getResignationDate()).isNull();
+    }
+
+    @Test
+    void activateFail_alreadyActive() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        assertThatThrownBy(() -> employeeManager.activate(employee.getId()))
+            .isInstanceOf(InvalidEmployeeStatusException.class)
+            .hasMessage("이미 재직 중인 직원입니다.");
+    }
+
+    @Test
+    void delete() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.delete(employee.getId(), "adminUser");
+        flushAndClear();
+
+        Employee deletedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
+        assertThat(deletedEmployee.isDeleted()).isTrue();
+        assertThat(deletedEmployee.getDeletedBy()).isEqualTo("adminUser");
+        assertThat(deletedEmployee.getEmail().address()).startsWith("deleted.");
+        assertThat(deletedEmployee.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void restore() {
+        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "restore@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.delete(employee.getId(), "adminUser");
+        flushAndClear();
+
+        employeeManager.restore(employee.getId());
+        flushAndClear();
+
+        Employee restoredEmployee = employeeFinder.find(employee.getId());
+        assertThat(restoredEmployee.isDeleted()).isFalse();
+        assertThat(restoredEmployee.getDeletedAt()).isNull();
+        assertThat(restoredEmployee.getDeletedBy()).isNull();
+    }
+
+    private Department createDepartment(String code, String name, DepartmentType type, UUID leaderId, Department parent) {
+        return Department.create(
+            code,
+            name,
+            type,
+            leaderId,
+            parent
+        );
+    }
+
+    private EmployeeCreateCommand createEmployeeCreateCommand(UUID teamId, String email) {
+        return EmployeeCreateCommand.builder()
+            .departmentId(teamId)
+            .email(email)
+            .name("홍길동")
+            .joinDate(LocalDate.now())
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .grade(EmployeeGrade.JUNIOR)
+            .position(EmployeePosition.ASSOCIATE)
+            .type(EmployeeType.FULL_TIME)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .build();
+    }
+
+    private EmployeeCreateCommand createEmployeeCreateCommand(UUID departmentId, String email, String name) {
+        return EmployeeCreateCommand.builder()
+            .departmentId(departmentId)
+            .email(email)
+            .name(name)
+            .joinDate(LocalDate.now())
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .grade(EmployeeGrade.JUNIOR)
+            .position(EmployeePosition.ASSOCIATE)
+            .type(EmployeeType.FULL_TIME)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .build();
+    }
+
+    private EmployeeUpdateCommand createEmployeeUpdateCommand(UUID teamId, String email) {
+        return EmployeeUpdateCommand.builder()
+            .departmentId(teamId)
+            .email(email)
+            .name("홍길동")
+            .joinDate(LocalDate.of(2025, 1, 1))
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .grade(EmployeeGrade.JUNIOR)
+            .position(EmployeePosition.ASSOCIATE)
+            .type(EmployeeType.FULL_TIME)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .memo("Updated memo for the employee.")
+            .build();
+    }
+
+    private EmployeeUpdateCommand createEmployeeUpdateCommand(UUID teamId, String name, String email) {
+        return EmployeeUpdateCommand.builder()
+            .departmentId(teamId)
+            .email(email)
+            .name(name)
+            .joinDate(LocalDate.now())
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .grade(EmployeeGrade.JUNIOR)
+            .position(EmployeePosition.ASSOCIATE)
+            .type(EmployeeType.FULL_TIME)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .build();
+    }
+
+}

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,6 +22,7 @@ import org.hibernate.annotations.NaturalIdCache;
 import org.jspecify.annotations.Nullable;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -57,52 +57,43 @@ public class Department extends AbstractEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Department parent;
 
-    @OneToMany(mappedBy = "parent", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "parent")
     private List<Department> children = new ArrayList<>();
 
-    public static Department createRoot(DepartmentCreateRequest request) {
-        Department department = new Department();
+    @Builder(access = AccessLevel.PRIVATE)
+    private Department(String code, String name, DepartmentType type, @Nullable UUID leaderEmployeeId,
+                       @Nullable Department parent) {
+        this.code = requireNonNull(code);
+        this.name = requireNonNull(name);
+        this.type = requireNonNull(type);
+        this.leaderEmployeeId = leaderEmployeeId;
 
-        department.code = requireNonNull(request.code());
-        department.name = requireNonNull(request.name());
-        department.type = requireNonNull(request.type());
-        department.leaderEmployeeId = request.leaderEmployeeId();
-        department.parent = null;
-
-        return department;
+        setParent(parent);
     }
 
-    public static Department create(DepartmentCreateRequest request, Department parent) {
-        requireNonNull(parent, "상위 부서는 필수입니다");
-
-        Department department = new Department();
-
-        department.code = requireNonNull(request.code());
-        department.name = requireNonNull(request.name());
-        department.type = requireNonNull(request.type());
-        department.leaderEmployeeId = request.leaderEmployeeId();
-
-        department.setParent(parent);
-
-        return department;
+    public static Department create(String code, String name, DepartmentType type, @Nullable UUID leaderEmployeeId,
+                                    @Nullable Department parent) {
+        return Department.builder()
+            .code(code)
+            .name(name)
+            .type(type)
+            .leaderEmployeeId(leaderEmployeeId)
+            .parent(parent)
+            .build();
     }
 
-    private void setParent(Department parent) {
+    private void setParent(@Nullable Department parent) {
         if (this.parent != null) {
             this.parent.children.remove(this);
         }
 
         this.parent = parent;
-        if (!parent.children.contains(this)) {
+        if (parent != null && !parent.children.contains(this)) {
             parent.children.add(this);
         }
     }
 
-    public boolean isRoot() {
-        return parent == null;
-    }
-
-    public void assignTeamLeader(UUID leaderEmployeeId) {
+    public void assignLeader(UUID leaderEmployeeId) {
         this.leaderEmployeeId = leaderEmployeeId;
     }
 

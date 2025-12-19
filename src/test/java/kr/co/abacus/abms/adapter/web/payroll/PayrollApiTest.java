@@ -1,6 +1,5 @@
 package kr.co.abacus.abms.adapter.web.payroll;
 
-import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
@@ -13,9 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
 import kr.co.abacus.abms.adapter.web.payroll.dto.PayrollCreateRequest;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
-import kr.co.abacus.abms.application.payroll.required.PayrollRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.payroll.outbound.PayrollRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.payroll.Payroll;
 import kr.co.abacus.abms.domain.shared.Money;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
@@ -32,7 +35,7 @@ class PayrollApiTest extends ApiIntegrationTestBase {
 
     @BeforeEach
     void setUp() {
-        employee = createEmployee();
+        employee = createEmployee(UUID.randomUUID(), "test@email.com", "테스트 직원");
 
         employeeRepository.save(employee);
     }
@@ -59,6 +62,21 @@ class PayrollApiTest extends ApiIntegrationTestBase {
 
     private PayrollCreateRequest createPayrollCreateRequest(UUID id) {
         return new PayrollCreateRequest(id, BigDecimal.valueOf(30_000_000), LocalDate.of(2025, 1, 1));
+    }
+
+    private Employee createEmployee(UUID teamId, String email, String name) {
+        return Employee.create(
+            teamId,
+            name,
+            email,
+            LocalDate.of(2024, 1, 1),
+            LocalDate.of(1990, 5, 20),
+            EmployeePosition.ASSOCIATE,
+            EmployeeType.FULL_TIME,
+            EmployeeGrade.JUNIOR,
+            EmployeeAvatar.SKY_GLOW,
+            null
+        );
     }
 
 }

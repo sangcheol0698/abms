@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.department.required.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.required.EmployeeRepository;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 
 @Component
 @RequiredArgsConstructor

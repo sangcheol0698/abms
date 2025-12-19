@@ -1,5 +1,7 @@
 package kr.co.abacus.abms.domain.employee;
 
+import java.util.Arrays;
+
 import lombok.Getter;
 
 @Getter
@@ -16,6 +18,13 @@ public enum EmployeeGrade {
     EmployeeGrade(String description, int level) {
         this.description = description;
         this.level = level;
+    }
+
+    public static EmployeeGrade fromDescription(String description) {
+        return Arrays.stream(values())
+            .filter(v -> v.description.equals(description))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("알 수 없는 직책: " + description));
     }
 
     public boolean isHigherThan(EmployeeGrade other) {

@@ -4,6 +4,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+    open-in-view: false
   docker:
     compose:
       lifecycle-management: start_only

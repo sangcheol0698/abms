@@ -20,6 +20,6 @@ public enum EmployeeAvatar {
     AQUA_SPLASH("Aqua Splash"),
     GOLDEN_RAY("Golden Ray");
 
-    private final String displayName;
+    private final String description;
 
 }
