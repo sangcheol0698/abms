@@ -24,11 +24,11 @@ import kr.co.abacus.abms.adapter.web.EnumResponse;
 import kr.co.abacus.abms.adapter.web.PageResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeDetailResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
@@ -127,11 +127,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // when & then
-        EmployeeSummary response = restTestClient.get()
+        EmployeeDetailResponse response = restTestClient.get()
             .uri("/api/employees/{id}", employee.getId())
             .exchange()
             .expectStatus().isOk()
-            .expectBody(EmployeeSummary.class)
+            .expectBody(EmployeeDetailResponse.class)
             .returnResult()
             .getResponseBody();
 

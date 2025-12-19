@@ -3,14 +3,12 @@ package kr.co.abacus.abms.adapter.web.employee.dto;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
+
 import lombok.Builder;
 
+import kr.co.abacus.abms.adapter.web.EnumResponse;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
-import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeGrade;
-import kr.co.abacus.abms.domain.employee.EmployeePosition;
-import kr.co.abacus.abms.domain.employee.EmployeeStatus;
-import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.shared.Email;
 
 @Builder
@@ -22,12 +20,12 @@ public record EmployeeDetailResponse(
     Email email,
     LocalDate joinDate,
     LocalDate birthDate,
-    EmployeePosition position,
-    EmployeeStatus status,
-    EmployeeGrade grade,
-    EmployeeType type,
-    EmployeeAvatar avatar,
-    String memo
+    EnumResponse position,
+    EnumResponse status,
+    EnumResponse grade,
+    EnumResponse type,
+    EnumResponse avatar,
+    @Nullable String memo
 ) {
 
     public static EmployeeDetailResponse of(EmployeeDetail detail) {
@@ -39,11 +37,11 @@ public record EmployeeDetailResponse(
             .email(detail.email())
             .joinDate(detail.joinDate())
             .birthDate(detail.birthDate())
-            .position(detail.position())
-            .status(detail.status())
-            .grade(detail.grade())
-            .type(detail.type())
-            .avatar(detail.avatar())
+            .position(new EnumResponse(detail.position().name(), detail.position().getDescription()))
+            .status(new EnumResponse(detail.status().name(), detail.status().getDescription()))
+            .grade(new EnumResponse(detail.grade().name(), detail.grade().getDescription()))
+            .type(new EnumResponse(detail.type().name(), detail.type().getDescription()))
+            .avatar(new EnumResponse(detail.avatar().name(), detail.avatar().getDescription()))
             .memo(detail.memo())
             .build();
     }
