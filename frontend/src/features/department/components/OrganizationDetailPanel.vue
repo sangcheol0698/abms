@@ -79,7 +79,7 @@
         >
           <TabsList class="rounded-lg bg-muted/30 p-1">
             <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
-            <TabsTrigger value="members" class="text-sm">직원</TabsTrigger>
+            <TabsTrigger value="employees" class="text-sm">직원</TabsTrigger>
             <TabsTrigger value="revenue" class="text-sm">매출</TabsTrigger>
           </TabsList>
 
@@ -147,7 +147,7 @@
               </div>
             </TabsContent>
 
-            <TabsContent value="members" class="flex flex-col">
+            <TabsContent value="employees" class="flex flex-col">
               <DepartmentEmployeeList
                 v-if="department.departmentId"
                 :department-id="department.departmentId"
@@ -197,8 +197,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useQuerySync } from '@/core/composables/useQuerySync';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -225,34 +226,36 @@ const emit = defineEmits<{
   (event: 'refresh'): void;
 }>();
 
-const route = useRoute();
 const router = useRouter();
 
 const isAssignDialogOpen = ref(false);
 
 // 탭 상태 관리
-const VALID_TABS = ['info', 'members', 'revenue'] as const;
+const VALID_TABS = ['info', 'employees', 'revenue'] as const;
 type TabValue = (typeof VALID_TABS)[number];
 
 const selectedTab = ref<TabValue>('info');
-let isUpdatingRoute = false;
-let isApplyingRoute = false;
 
-// URL에서 초기 탭 설정
-function extractTabFromQuery(value: unknown): TabValue {
-  if (typeof value === 'string' && VALID_TABS.includes(value as TabValue)) {
-    return value as TabValue;
-  }
-  if (Array.isArray(value)) {
-    const first = value.find((v) => typeof v === 'string' && VALID_TABS.includes(v as TabValue));
-    if (first) return first as TabValue;
-  }
-  return 'info';
-}
-
-// URL 쿼리에서 탭 값 읽어서 초기화
-const initialTab = extractTabFromQuery(route.query.tab);
-selectedTab.value = initialTab;
+// URL 쿼리와 탭 동기화
+useQuerySync({
+  state: selectedTab,
+  queryKey: 'tab',
+  serialize: (value) => {
+    // 기본 탭(info)인 경우 URL에서 제거
+    return value === 'info' ? undefined : value;
+  },
+  deserialize: (value) => {
+    if (Array.isArray(value)) {
+      const first = value.find((v) => typeof v === 'string' && VALID_TABS.includes(v as TabValue));
+      return (first as TabValue) ?? 'info';
+    }
+    if (typeof value === 'string' && VALID_TABS.includes(value as TabValue)) {
+      return value as TabValue;
+    }
+    return 'info';
+  },
+  defaultValue: 'info',
+});
 
 // 탭 변경 핸들러
 function handleTabChange(newTab: string | number) {
@@ -265,62 +268,7 @@ function handleTabChange(newTab: string | number) {
   }
 
   selectedTab.value = newTab as TabValue;
-
-  if (isApplyingRoute) {
-    return;
-  }
-
-  updateRouteQuery(newTab as TabValue);
 }
-
-// URL 쿼리 업데이트
-function updateRouteQuery(tab: TabValue) {
-  const currentTab = extractTabFromQuery(route.query.tab);
-
-  if (tab === currentTab) {
-    return;
-  }
-
-  isUpdatingRoute = true;
-
-  const query = { ...route.query };
-
-  // 기본 탭(info)인 경우 쿼리 파라미터 제거
-  if (tab === 'info') {
-    delete query.tab;
-  } else {
-    query.tab = tab;
-  }
-
-  router
-    .replace({ query })
-    .finally(() => {
-      isUpdatingRoute = false;
-    })
-    .catch((error) => {
-      console.warn('탭 정보를 URL에 반영하지 못했습니다.', error);
-    });
-}
-
-// URL 변경 감지하여 탭 업데이트
-watch(
-  () => route.query.tab,
-  (value) => {
-    if (isUpdatingRoute) {
-      return;
-    }
-
-    const newTab = extractTabFromQuery(value);
-
-    if (newTab === selectedTab.value) {
-      return;
-    }
-
-    isApplyingRoute = true;
-    selectedTab.value = newTab;
-    isApplyingRoute = false;
-  },
-);
 
 // 직원 상세 페이지로 이동
 function navigateToEmployee(employeeId?: string) {

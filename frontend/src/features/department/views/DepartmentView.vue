@@ -105,10 +105,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import type { LocationQueryRaw } from 'vue-router';
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
+import { useQuerySync } from '@/core/composables/useQuerySync';
 import { appContainer } from '@/core/di/container';
 import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
 import type {
@@ -139,6 +138,23 @@ const errorMessage = ref<string | null>(null);
 const selectedDepartmentId = ref<string | undefined>();
 const departmentDetail = ref<OrganizationDepartmentDetail | null>(null);
 const isDepartmentLoading = ref(false);
+
+// URL 쿼리와 부서 ID 동기화
+useQuerySync({
+  state: selectedDepartmentId,
+  queryKey: 'departmentId',
+  serialize: (value) => value,
+  deserialize: (value) => {
+    if (Array.isArray(value)) {
+      const first = value.find((v) => typeof v === 'string' && v.trim().length > 0);
+      return first ? first.trim() : undefined;
+    }
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value.trim();
+    }
+    return undefined;
+  },
+});
 
 const selectedBreadcrumb = computed(() =>
   buildDepartmentPath(chart.value, selectedDepartmentId.value).map((node) => ({
@@ -174,10 +190,6 @@ const headerBreadcrumbs = computed<HeaderBreadcrumb[]>(() => {
 });
 
 let detailRequestToken = 0;
-const route = useRoute();
-const router = useRouter();
-let isUpdatingRoute = false;
-let isApplyingRoute = false;
 
 const selectedDepartment = computed(() => {
   if (!selectedDepartmentId.value) {
@@ -254,10 +266,6 @@ async function loadDepartmentDetail(departmentId: string) {
 }
 
 onMounted(() => {
-  const initialDepartmentId = extractDepartmentId(route.query.departmentId);
-  if (initialDepartmentId) {
-    selectedDepartmentId.value = initialDepartmentId;
-  }
   void loadOrganizationChart();
 });
 
@@ -281,9 +289,6 @@ watch(chart, (nodes) => {
 watch(
   selectedDepartmentId,
   (next, previous) => {
-    if (!isApplyingRoute) {
-      updateRouteQuery(next);
-    }
     if (!next) {
       departmentDetail.value = null;
       return;
@@ -305,25 +310,6 @@ watch(
   { immediate: false },
 );
 
-watch(
-  () => route.query.departmentId,
-  (value) => {
-    if (isUpdatingRoute) {
-      return;
-    }
-
-    const nextId = extractDepartmentId(value);
-
-    if (nextId === selectedDepartmentId.value) {
-      return;
-    }
-
-    isApplyingRoute = true;
-    selectedDepartmentId.value = nextId;
-    isApplyingRoute = false;
-  },
-);
-
 function handleTreeSelection(departmentId: string, pane?: FeatureSplitPaneContext) {
   if (!departmentId) {
     return;
@@ -332,58 +318,6 @@ function handleTreeSelection(departmentId: string, pane?: FeatureSplitPaneContex
   if (pane && !pane.isLargeScreen.value) {
     pane.closeSidebar();
   }
-}
-
-function updateRouteQuery(departmentId?: string) {
-  const existing = extractDepartmentId(route.query.departmentId);
-
-  if (departmentId === existing) {
-    return;
-  }
-
-  const nextQuery: LocationQueryRaw = {};
-
-  Object.entries(route.query).forEach(([key, value]) => {
-    if (key === 'departmentId') {
-      return;
-    }
-    if (Array.isArray(value)) {
-      const filtered = value.filter((item): item is string => typeof item === 'string');
-      if (filtered.length > 0) {
-        nextQuery[key] = filtered;
-      }
-      return;
-    }
-    if (typeof value === 'string' && value.length > 0) {
-      nextQuery[key] = value;
-    }
-  });
-
-  if (departmentId) {
-    nextQuery.departmentId = departmentId;
-  }
-
-  isUpdatingRoute = true;
-  router
-    .replace({ query: nextQuery })
-    .finally(() => {
-      isUpdatingRoute = false;
-    })
-    .catch((error) => {
-      console.warn('부서 선택 정보를 URL에 반영하지 못했습니다.', error);
-    });
-}
-
-function extractDepartmentId(raw: unknown): string | undefined {
-  if (Array.isArray(raw)) {
-    const first = raw.find((value) => typeof value === 'string' && value.trim().length > 0);
-    return first ? first.trim() : undefined;
-  }
-  if (typeof raw === 'string') {
-    const trimmed = raw.trim();
-    return trimmed.length > 0 ? trimmed : undefined;
-  }
-  return undefined;
 }
 
 function ensureSelectedDepartmentExists() {
