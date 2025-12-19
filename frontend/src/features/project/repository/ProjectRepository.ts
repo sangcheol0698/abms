@@ -1,9 +1,13 @@
 import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
-import PageResponse from '@/core/common/PageResponse';
+import { PageResponse } from '@/core/api';
 import type { ProjectListItem } from '@/features/project/models/projectListItem';
 import { mapProjectListItem } from '@/features/project/models/projectListItem';
-import type { ProjectDetail, ProjectCreateData, ProjectUpdateData } from '@/features/project/models/projectDetail';
+import type {
+  ProjectDetail,
+  ProjectCreateData,
+  ProjectUpdateData,
+} from '@/features/project/models/projectDetail';
 import { mapProjectDetail } from '@/features/project/models/projectDetail';
 
 @singleton()
@@ -13,7 +17,9 @@ export default class ProjectRepository {
   /**
    * 프로젝트 목록 조회 (페이징)
    */
-  async list(params: { page: number; size: number; sort?: string } & Record<string, any>): Promise<PageResponse<ProjectListItem>> {
+  async list(
+    params: { page: number; size: number; sort?: string } & Record<string, any>,
+  ): Promise<PageResponse<ProjectListItem>> {
     const queryParams: Record<string, string> = {};
 
     // Copy all params to queryParams, converting non-string values to string

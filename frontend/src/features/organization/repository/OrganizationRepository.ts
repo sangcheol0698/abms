@@ -6,7 +6,7 @@ import {
   type OrganizationChartNode,
   type OrganizationDepartmentDetail,
 } from '@/features/organization/models/organization';
-import PageResponse from '@/core/common/PageResponse';
+import { PageResponse } from '@/core/api';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import { mapEmployeeListItem } from '@/features/employee/models/employeeListItem';
 

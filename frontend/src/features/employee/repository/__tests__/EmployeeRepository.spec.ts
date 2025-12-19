@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import PageResponse from '@/core/common/PageResponse';
+import { PageResponse } from '@/core/api';
 import type HttpRepository from '@/core/http/HttpRepository';
 import { EmployeeRepository } from '../EmployeeRepository';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';

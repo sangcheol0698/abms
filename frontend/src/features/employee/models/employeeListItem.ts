@@ -5,6 +5,7 @@ import {
   toStatusLabel,
   toTypeLabel,
 } from '@/features/employee/models/employeeFilters';
+import { extractEnumCode } from '@/core/api/enum';
 
 function toIsoDateString(value: unknown): string | undefined {
   if (!value) {
@@ -70,10 +71,11 @@ export interface EmployeeListItem {
 }
 
 export function mapEmployeeListItem(input: any): EmployeeListItem {
-  const statusCode = String(input?.status ?? '');
-  const gradeCode = String(input?.grade ?? '');
-  const typeCode = String(input?.type ?? '');
-  const positionCode = String(input?.position ?? '');
+  // 백엔드 EnumResponse에서 code 추출
+  const statusCode = extractEnumCode(input?.status);
+  const gradeCode = extractEnumCode(input?.grade);
+  const typeCode = extractEnumCode(input?.type);
+  const positionCode = extractEnumCode(input?.position);
   const joinDate = toIsoDateString(input?.joinDate);
   const birthDate = toIsoDateString(input?.birthDate);
 
@@ -85,10 +87,9 @@ export function mapEmployeeListItem(input: any): EmployeeListItem {
     email = input.email.address;
   }
 
-  // Avatar handling: input.avatar is now the enum name (code)
-  const rawAvatarCode = typeof input?.avatar === 'string' ? input.avatar : null;
-  const avatarOption = getEmployeeAvatarOption(rawAvatarCode);
-  // label is derived from the option, or falls back to code if not found (though option always returns something)
+  // Avatar handling: input.avatar는 EnumResponse 객체 또는 문자열
+  const avatarCode = extractEnumCode(input?.avatar);
+  const avatarOption = getEmployeeAvatarOption(avatarCode || null);
   const avatarLabel = avatarOption.label;
 
   return {

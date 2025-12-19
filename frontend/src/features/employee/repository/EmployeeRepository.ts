@@ -13,7 +13,6 @@ import {
   setEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
 import { mapEmployeeSummary } from '@/features/employee/models/employee';
-import PageResponse from '@/core/common/PageResponse';
 import {
   type EmployeeListItem,
   type EmployeeSearchParams,
@@ -31,40 +30,39 @@ import {
   extractFilenameFromResponse,
   generateExcelFilename,
 } from '@/core/utils/excel';
+import { type EnumResponse, PageResponse, toSelectOption } from '@/core/api';
+/**
+ * 상태(Status) API 응답 타입
+ * @see GET /api/employees/statuses
+ */
+type EmployeeStatusResponse = EnumResponse;
 
-interface EmployeeStatusResponse {
-  name: string;
-  description?: string;
-}
+/**
+ * 타입(Type) API 응답 타입
+ */
+type EmployeeTypeResponse = EnumResponse;
 
-interface EmployeeTypeResponse {
-  name: string;
-  description?: string;
-}
-
-interface EmployeeGradeResponse {
-  name: string;
-  description?: string;
+/**
+ * 등급(Grade) API 응답 타입
+ * level: 정렬을 위한 순서 값 (낮을수록 높은 등급)
+ */
+interface EmployeeGradeResponse extends EnumResponse {
   level?: number;
 }
 
-interface EmployeePositionResponse {
-  name: string;
-  description?: string;
+/**
+ * 직급(Position) API 응답 타입
+ * rank: 정렬을 위한 순서 값 (낮을수록 높은 직급)
+ */
+interface EmployeePositionResponse extends EnumResponse {
   rank?: number;
 }
 
-interface EmployeeAvatarResponse {
-  code: string;
-  displayName?: string;
-}
-
-function toFilterOption(response: { name: string; description?: string }): EmployeeFilterOption {
-  return {
-    value: response.name,
-    label: response.description ?? response.name,
-  };
-}
+/**
+ * 아바타 API 응답 타입
+ * @see GET /api/employees/avatars
+ */
+type EmployeeAvatarResponse = EnumResponse;
 
 function buildRequestParams(params: EmployeeSearchParams): Record<string, string> {
   const query: Record<string, string> = {
@@ -152,14 +150,14 @@ export class EmployeeRepository {
     const response = await this.httpRepository.get<EmployeeStatusResponse[]>({
       path: '/api/employees/statuses',
     });
-    return Array.isArray(response) ? response.map((item) => toFilterOption(item)) : [];
+    return Array.isArray(response) ? response.map(toSelectOption) : [];
   }
 
   private async requestTypeOptions(): Promise<EmployeeFilterOption[]> {
     const response = await this.httpRepository.get<EmployeeTypeResponse[]>({
       path: '/api/employees/types',
     });
-    return Array.isArray(response) ? response.map((item) => toFilterOption(item)) : [];
+    return Array.isArray(response) ? response.map(toSelectOption) : [];
   }
 
   private async requestGradeOptions(): Promise<EmployeeFilterOption[]> {
@@ -169,13 +167,11 @@ export class EmployeeRepository {
     if (!Array.isArray(response)) {
       return [];
     }
+    // level을 기준으로 정렬 후 SelectOption으로 변환
     return response
       .slice()
       .sort((a, b) => (a.level ?? Number.MAX_SAFE_INTEGER) - (b.level ?? Number.MAX_SAFE_INTEGER))
-      .map((item) => ({
-        label: item.description ?? item.name,
-        value: item.name,
-      }));
+      .map(toSelectOption);
   }
 
   private async requestPositionOptions(): Promise<EmployeeFilterOption[]> {
@@ -185,13 +181,11 @@ export class EmployeeRepository {
     if (!Array.isArray(response)) {
       return [];
     }
+    // rank를 기준으로 정렬 후 SelectOption으로 변환
     return response
       .slice()
       .sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER))
-      .map((item) => ({
-        label: item.description ?? item.name,
-        value: item.name,
-      }));
+      .map(toSelectOption);
   }
 
   async findById(employeeId: string): Promise<EmployeeSummary> {
@@ -298,7 +292,9 @@ export class EmployeeRepository {
           return null;
         }
         const option = getEmployeeAvatarOption(item.code);
-        const label = item.displayName && item.displayName.trim().length > 0 ? item.displayName : option.label;
+        // 백엔드에서 description이 있으면 사용, 없으면 기본 label 사용
+        const label =
+          item.description && item.description.trim().length > 0 ? item.description : option.label;
         return { ...option, label };
       })
       .filter((option): option is EmployeeAvatarOption => option !== null);

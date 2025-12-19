@@ -68,7 +68,12 @@
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="default" size="sm" class="h-8 px-2 sm:px-3 gap-1" @click="openCreateDialog">
+          <Button
+            variant="default"
+            size="sm"
+            class="h-8 px-2 sm:px-3 gap-1"
+            @click="openCreateDialog"
+          >
             <Plus class="h-4 w-4" />
             직원 추가
           </Button>
@@ -148,27 +153,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useDebounceFn } from '@vueuse/core';
 import {
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
-  type ColumnDef,
   type ColumnFiltersState,
   type RowSelectionState,
   type SortingState,
   type VisibilityState,
   useVueTable,
 } from '@tanstack/vue-table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DataTable,
-  DataTableColumnHeader,
   DataTableFacetedFilter,
   DataTablePagination,
   DataTableToolbar,
@@ -196,11 +195,8 @@ import { valueUpdater } from '@/components/ui/table/utils';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
-import type { OrganizationChartNode } from '@/features/organization/models/organization';
-import type {
-  EmployeeListItem,
-  EmployeeSearchParams,
-} from '@/features/employee/models/employeeListItem';
+import { createEmployeeTableColumns } from '@/features/employee/configs/tableColumns';
+import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 import {
   getEmployeeGradeOptions,
@@ -212,19 +208,14 @@ import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummary
 import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
-import {
-  ChevronDown,
-  Download,
-  FileSpreadsheet,
-  Plus,
-  Upload,
-} from 'lucide-vue-next';
+import { ChevronDown, Download, FileSpreadsheet, Plus, Upload } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
-import EmployeeRowActions from '@/features/employee/components/EmployeeRowActions.vue';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import HttpError from '@/core/http/HttpError';
 import { useEmployeeDeletion } from '@/features/employee/composables/useEmployeeDeletion';
 import { getExcelErrorMessage } from '@/core/utils/excel';
+import type { OrganizationChartNode } from '@/features/organization/models/organization.ts';
+import { useEmployeeQuerySync } from '@/features/employee/composables/useEmployeeQuerySync.ts';
 
 interface DepartmentOption {
   label: string;
@@ -235,9 +226,6 @@ const employeeRepository = appContainer.resolve(EmployeeRepository);
 const organizationRepository = appContainer.resolve(OrganizationRepository);
 const router = useRouter();
 const route = useRoute();
-
-let isApplyingRoute = false;
-let isUpdatingRoute = false;
 
 const employees = ref<EmployeeListItem[]>([]);
 const tableRenderKey = ref(0);
@@ -272,195 +260,14 @@ const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 
 const employeeSummary = useEmployeeSummary({ employees });
 
-const columns: ColumnDef<EmployeeListItem>[] = [
-  {
-    id: 'select',
-    header: ({ table }) =>
-      h(Checkbox, {
-        modelValue:
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate'),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(value === 'indeterminate' ? true : Boolean(value)),
-        ariaLabel: '모두 선택',
-      }),
-    cell: ({ row }) =>
-      h(Checkbox, {
-        modelValue: row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          row.toggleSelected(value === 'indeterminate' ? true : Boolean(value)),
-        ariaLabel: '행 선택',
-      }),
-    enableSorting: false,
-    enableHiding: false,
-    size: 48,
-  },
-  {
-    accessorKey: 'name',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '이름', align: 'left' }),
-    cell: ({ row }) => {
-      const name = row.original.name ?? '';
-      const email = row.original.email ?? '';
-      const initials = name.trim().slice(0, 2).toUpperCase() || '??';
-      return h('div', { class: 'flex items-center gap-3' }, [
-        h(Avatar, { class: 'h-10 w-10 rounded-xl border border-border/60 bg-background' }, () => [
-          h(AvatarImage, {
-            src: row.original.avatarImageUrl,
-            alt: name,
-          }),
-          h(AvatarFallback, { class: 'rounded-xl text-sm font-semibold' }, () => initials),
-        ]),
-        h('div', { class: 'flex flex-col gap-0.5' }, [
-          h(
-            'button',
-            {
-              type: 'button',
-              class:
-                'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-              onClick: (event: MouseEvent) => {
-                event.stopPropagation();
-                handleViewEmployee(row.original);
-              },
-            },
-            name,
-          ),
-          h('span', { class: 'text-xs text-muted-foreground' }, email),
-        ]),
-      ]);
-    },
-    enableSorting: true,
-    size: 260,
-    meta: { skeleton: 'title-subtitle' },
-  },
-  {
-    id: 'departmentName',
-    accessorFn: (row) => row.departmentName,
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '부서', align: 'left' }),
-    cell: ({ row }) =>
-      h(
-        'button',
-        {
-          type: 'button',
-          class:
-            'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-          onClick: (event: MouseEvent) => {
-            event.stopPropagation();
-            navigateToDepartment(row.original.departmentId);
-          },
-        },
-        row.original.departmentName ?? '',
-      ),
-    enableSorting: false,
-    size: 160,
-    meta: { skeleton: 'text-short' },
-  },
-  {
-    id: 'departmentId',
-    accessorKey: 'departmentId',
-    header: () => null,
-    cell: () => null,
-    filterFn: (row, _columnId, filterValue) => {
-      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-      return candidate.includes(row.original.departmentId);
-    },
-    enableSorting: false,
-    enableHiding: false,
-    size: 0,
-    meta: { isFilterOnly: true },
-  },
-  {
-    id: 'position',
-    accessorFn: (row) => row.positionLabel,
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '직책', align: 'left' }),
-    cell: ({ row }) =>
-      h('span', { class: 'text-sm text-foreground' }, row.original.positionLabel ?? ''),
-    filterFn: (row, _columnId, filterValue) => {
-      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-      return candidate.length === 0 || candidate.includes(row.original.positionCode);
-    },
-    enableSorting: true,
-    size: 120,
-    meta: { skeleton: 'text-short' },
-  },
-  {
-    id: 'grade',
-    accessorFn: (row) => row.gradeLabel,
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '등급', align: 'left' }),
-    cell: ({ row }) =>
-      h('span', { class: 'text-sm text-foreground' }, row.original.gradeLabel ?? ''),
-    filterFn: (row, _columnId, filterValue) => {
-      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-      return candidate.length === 0 || candidate.includes(row.original.gradeCode);
-    },
-    enableSorting: true,
-    size: 80,
-    meta: { skeleton: 'text-short' },
-  },
-  {
-    id: 'type',
-    accessorFn: (row) => row.typeLabel,
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '유형', align: 'left' }),
-    cell: ({ row }) =>
-      h('span', { class: 'text-sm text-foreground' }, row.original.typeLabel ?? ''),
-    filterFn: (row, _columnId, filterValue) => {
-      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-      return candidate.length === 0 || candidate.includes(row.original.typeCode);
-    },
-    enableSorting: false,
-    size: 80,
-    meta: { skeleton: 'text-short' },
-  },
-  {
-    id: 'status',
-    accessorFn: (row) => row.statusLabel,
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '상태', align: 'left' }),
-    cell: ({ row }) =>
-      h(Badge, { variant: 'outline', class: 'font-medium' }, () => row.original.statusLabel ?? ''),
-    filterFn: (row, _columnId, filterValue) => {
-      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
-      return candidate.length === 0 || candidate.includes(row.original.statusCode);
-    },
-    enableSorting: false,
-    size: 90,
-    meta: { skeleton: 'enum-badge' },
-  },
-  {
-    id: 'birthDate',
-    accessorFn: (row) => row.birthDate ?? '',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '생년월일', align: 'left' }),
-    cell: ({ row }) =>
-      h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.birthDate)),
-    enableSorting: true,
-    enableHiding: true,
-    size: 120,
-    meta: { skeleton: 'text-short' },
-  },
-  {
-    id: 'joinDate',
-    accessorFn: (row) => row.joinDate ?? '',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '입사일', align: 'left' }),
-    cell: ({ row }) =>
-      h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.joinDate)),
-    enableSorting: true,
-    enableHiding: true,
-    size: 120,
-    meta: { skeleton: 'text-short' },
-  },
-  {
-    id: 'actions',
-    header: () => null,
-    cell: ({ row }) =>
-      h(EmployeeRowActions, {
-        row: row.original,
-        onEdit: () => handleEditEmployee(row.original),
-        onCopyEmail: () => handleCopyEmail(row.original),
-        onDelete: () => handleDeleteEmployee(row.original),
-      }),
-    enableSorting: false,
-    enableHiding: false,
-    size: 56,
-  },
-];
+// 테이블 컬럼 정의 (EmployeeTableColumns.ts로 분리됨)
+const columns = createEmployeeTableColumns({
+  onViewEmployee: handleViewEmployee,
+  onEditEmployee: handleEditEmployee,
+  onCopyEmail: handleCopyEmail,
+  onDeleteEmployee: handleDeleteEmployee,
+  onNavigateToDepartment: navigateToDepartment,
+});
 
 const table = useVueTable({
   data: computed(() => employees.value),
@@ -609,243 +416,6 @@ function handleExcelSampleSuccess() {
   toast.success('샘플 파일을 다운로드했습니다.');
 }
 
-function toArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.map((item) => String(item));
-  }
-  if (value === undefined || value === null) {
-    return [];
-  }
-  return [String(value)];
-}
-
-function buildSearchParams(): EmployeeSearchParams {
-  const params: EmployeeSearchParams = {
-    page: page.value,
-    size: pageSize.value,
-  };
-
-  const filterMap = new Map<string, unknown>(
-    columnFilters.value.map((filter) => [filter.id, filter.value]),
-  );
-  const nameFilter = filterMap.get('name');
-
-  if (typeof nameFilter === 'string' && nameFilter.trim().length > 0) {
-    params.name = nameFilter.trim();
-  }
-
-  const statusFilter = toArray(filterMap.get('status'));
-  if (statusFilter.length > 0) {
-    params.statuses = statusFilter;
-  }
-
-  const typeFilter = toArray(filterMap.get('type'));
-  if (typeFilter.length > 0) {
-    params.types = typeFilter;
-  }
-
-  const gradeFilter = toArray(filterMap.get('grade'));
-  if (gradeFilter.length > 0) {
-    params.grades = gradeFilter;
-  }
-
-  const positionFilter = toArray(filterMap.get('position'));
-  if (positionFilter.length > 0) {
-    params.positions = positionFilter;
-  }
-
-  const departmentFilter = toArray(filterMap.get('departmentId'));
-  if (departmentFilter.length > 0) {
-    params.departmentIds = departmentFilter;
-  }
-
-  const sortState = sorting.value[0];
-  if (sortState && sortState.id) {
-    params.sort = `${sortState.id},${sortState.desc ? 'desc' : 'asc'}`;
-  }
-
-  return params;
-}
-
-function toSingleString(value: unknown): string | undefined {
-  if (Array.isArray(value)) {
-    const first = value.find((item) => item != null);
-    return first !== undefined ? String(first) : undefined;
-  }
-  if (typeof value === 'string') {
-    return value;
-  }
-  return undefined;
-}
-
-function parseQueryArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .flatMap((item) => String(item).split(','))
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-  }
-  if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-  }
-  return [];
-}
-
-function parsePositiveInt(value: unknown, fallback: number): number {
-  const source = Array.isArray(value) ? value[0] : value;
-  const parsed = Number(source);
-  if (Number.isFinite(parsed) && parsed > 0) {
-    return Math.floor(parsed);
-  }
-  return fallback;
-}
-
-function buildQueryFromState(): Record<string, string> {
-  const params = buildSearchParams();
-  const query: Record<string, string> = {
-    page: String(params.page),
-    size: String(params.size),
-  };
-
-  if (params.name) {
-    query.name = params.name;
-  }
-  if (params.statuses?.length) {
-    query.statuses = params.statuses.join(',');
-  }
-  if (params.types?.length) {
-    query.types = params.types.join(',');
-  }
-  if (params.grades?.length) {
-    query.grades = params.grades.join(',');
-  }
-  if (params.positions?.length) {
-    query.positions = params.positions.join(',');
-  }
-  if (params.departmentIds?.length) {
-    query.departmentIds = params.departmentIds.join(',');
-  }
-  if (params.sort) {
-    query.sort = params.sort;
-  }
-
-  return query;
-}
-
-function getRouteQueryRecord(): Record<string, string> {
-  const record: Record<string, string> = {};
-  Object.entries(route.query).forEach(([key, value]) => {
-    if (Array.isArray(value)) {
-      const joined = value.join(',');
-      if (joined) {
-        record[key] = joined;
-      }
-    } else if (value !== null && value !== undefined) {
-      const stringified = String(value);
-      if (stringified.length > 0) {
-        record[key] = stringified;
-      }
-    }
-  });
-  return record;
-}
-
-function queriesEqual(a: Record<string, string>, b: Record<string, string>): boolean {
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  for (const key of keys) {
-    if ((a[key] ?? '') !== (b[key] ?? '')) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function updateRouteFromState() {
-  if (isApplyingRoute) {
-    return;
-  }
-  const nextQuery = buildQueryFromState();
-  const currentQuery = getRouteQueryRecord();
-
-  if (queriesEqual(nextQuery, currentQuery)) {
-    return;
-  }
-
-  isUpdatingRoute = true;
-  router.replace({ query: nextQuery }).finally(() => {
-    isUpdatingRoute = false;
-  });
-}
-
-function applyRouteQuery(rawQuery: Record<string, unknown>) {
-  isApplyingRoute = true;
-
-  const nextPage = parsePositiveInt(rawQuery.page, page.value);
-  const nextPageSize = parsePositiveInt(rawQuery.size, pageSize.value);
-  const sortValue = toSingleString(rawQuery.sort);
-
-  pageSize.value = nextPageSize;
-  page.value = nextPage;
-
-  if (sortValue) {
-    const [columnId, direction = 'asc'] = sortValue.split(',');
-    if (columnId) {
-      sorting.value = [
-        {
-          id: columnId,
-          desc: direction.toLowerCase() === 'desc',
-        },
-      ];
-    } else {
-      sorting.value = [];
-    }
-  } else {
-    sorting.value = [];
-  }
-
-  const filters: ColumnFiltersState = [];
-  const name = toSingleString(rawQuery.name);
-  if (name) {
-    filters.push({ id: 'name', value: name });
-  }
-
-  const statuses = parseQueryArray(rawQuery.statuses);
-  if (statuses.length) {
-    filters.push({ id: 'status', value: statuses });
-  }
-
-  const types = parseQueryArray(rawQuery.types);
-  if (types.length) {
-    filters.push({ id: 'type', value: types });
-  }
-
-  const grades = parseQueryArray(rawQuery.grades);
-  if (grades.length) {
-    filters.push({ id: 'grade', value: grades });
-  }
-
-  const positions = parseQueryArray(rawQuery.positions);
-  if (positions.length) {
-    filters.push({ id: 'position', value: positions });
-  }
-
-  const departments = parseQueryArray(rawQuery.departmentIds);
-  if (departments.length) {
-    filters.push({ id: 'departmentId', value: departments });
-  }
-
-  columnFilters.value = filters;
-
-  nextTick(() => {
-    isApplyingRoute = false;
-    updateRouteFromState();
-    loadEmployees();
-  });
-}
-
 async function loadEmployees() {
   const token = ++requestToken;
   isLoading.value = true;
@@ -880,101 +450,14 @@ async function loadEmployees() {
   }
 }
 
-const triggerFilterFetch = useDebounceFn(() => {
-  loadEmployees();
-}, 300);
-
-watch(
-  columnFilters,
-  () => {
-    if (isApplyingRoute) {
-      return;
-    }
-    if (page.value !== 1) {
-      page.value = 1;
-    } else {
-      updateRouteFromState();
-      triggerFilterFetch();
-    }
-  },
-  { deep: true },
-);
-
-watch(
+// URL 쿼리 동기화 Composable 초기화
+const { buildSearchParams, applyRouteQuery } = useEmployeeQuerySync({
+  page,
+  pageSize,
   sorting,
-  () => {
-    if (isApplyingRoute) {
-      return;
-    }
-    if (page.value !== 1) {
-      page.value = 1;
-    } else {
-      updateRouteFromState();
-      loadEmployees();
-    }
-  },
-  { deep: true },
-);
-
-watch(page, (next, previous) => {
-  if (isApplyingRoute) {
-    return;
-  }
-  if (next === previous) {
-    return;
-  }
-  updateRouteFromState();
-  loadEmployees();
+  columnFilters,
+  onLoadEmployees: loadEmployees,
 });
-
-watch(pageSize, (next, previous) => {
-  if (isApplyingRoute) {
-    return;
-  }
-  if (next === previous) {
-    return;
-  }
-  if (page.value !== 1) {
-    page.value = 1;
-  } else {
-    updateRouteFromState();
-    loadEmployees();
-  }
-});
-
-watch(
-  () => route.query,
-  (newQuery) => {
-    if (isUpdatingRoute) {
-      return;
-    }
-    const currentStateQuery = buildQueryFromState();
-    const incomingQuery = Object.entries(newQuery).reduce<Record<string, string>>(
-      (accumulator, [key, value]) => {
-        if (Array.isArray(value)) {
-          const joined = value.join(',');
-          if (joined) {
-            accumulator[key] = joined;
-          }
-        } else if (value !== null && value !== undefined) {
-          const stringified = String(value);
-          if (stringified.length > 0) {
-            accumulator[key] = stringified;
-          }
-        }
-        return accumulator;
-      },
-      {},
-    );
-
-    if (queriesEqual(currentStateQuery, incomingQuery)) {
-      return;
-    }
-
-    applyRouteQuery({ ...newQuery });
-  },
-  { deep: true },
-);
 
 function handlePageChange(nextPage: number) {
   if (nextPage < 1) {
@@ -1002,10 +485,11 @@ function handleEmployeeCreated() {
   isEmployeeCreateDialogOpen.value = false;
   if (page.value !== 1) {
     page.value = 1;
-    return;
+    // page가 변경되면 Composable의 watch가 자동으로 loadEmployees 호출
+  } else {
+    // page가 1이면 직접 호출
+    loadEmployees();
   }
-  updateRouteFromState();
-  loadEmployees();
 }
 
 function handleEmployeeUpdated() {
@@ -1024,8 +508,7 @@ async function handleEditEmployee(row: EmployeeListItem) {
     toast.dismiss(loadingToast);
   } catch (error) {
     toast.dismiss(loadingToast);
-    const message =
-      error instanceof HttpError ? error.message : '직원 정보를 불러오지 못했습니다.';
+    const message = error instanceof HttpError ? error.message : '직원 정보를 불러오지 못했습니다.';
     toast.error('직원 정보를 불러오지 못했습니다.', {
       description: message,
     });
@@ -1078,17 +561,6 @@ function handleEmployeeUpdateDialogOpenChange(value: boolean) {
   }
 }
 
-function formatDisplayDate(value?: string | null) {
-  if (!value) {
-    return '-';
-  }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-  return parsed.toLocaleDateString('ko-KR');
-}
-
 const columnLabelMap: Record<string, string> = {
   select: '선택',
   name: '이름',
@@ -1113,7 +585,6 @@ onMounted(async () => {
   if (Object.keys(route.query).length > 0) {
     applyRouteQuery({ ...route.query });
   } else {
-    updateRouteFromState();
     await loadEmployees();
   }
 });

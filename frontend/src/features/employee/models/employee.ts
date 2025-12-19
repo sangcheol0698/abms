@@ -5,6 +5,7 @@ import {
   toStatusLabel,
   toTypeLabel,
 } from '@/features/employee/models/employeeFilters';
+import { extractEnumCode } from '@/core/api/enum';
 
 function toIsoDateString(value: unknown): string {
   if (!value) {
@@ -67,10 +68,11 @@ export interface EmployeeSummary {
 }
 
 export function mapEmployeeSummary(input: any): EmployeeSummary {
-  const positionCode = String(input?.position ?? '');
-  const statusCode = String(input?.status ?? '');
-  const gradeCode = String(input?.grade ?? '');
-  const typeCode = String(input?.type ?? '');
+  // 백엔드 EnumResponse에서 code 추출
+  const positionCode = extractEnumCode(input?.position);
+  const statusCode = extractEnumCode(input?.status);
+  const gradeCode = extractEnumCode(input?.grade);
+  const typeCode = extractEnumCode(input?.type);
   const joinDate = toIsoDateString(input?.joinDate);
   const birthDate = toIsoDateString(input?.birthDate);
 
@@ -82,9 +84,9 @@ export function mapEmployeeSummary(input: any): EmployeeSummary {
     email = input.email.address;
   }
 
-  // Avatar handling
-  const rawAvatarCode = typeof input?.avatar === 'string' ? input.avatar : null;
-  const avatarOption = getEmployeeAvatarOption(rawAvatarCode);
+  // Avatar handling: input.avatar는 EnumResponse 객체 또는 문자열
+  const avatarCode = extractEnumCode(input?.avatar);
+  const avatarOption = getEmployeeAvatarOption(avatarCode || null);
   const avatarLabel = avatarOption.label;
 
   return {
