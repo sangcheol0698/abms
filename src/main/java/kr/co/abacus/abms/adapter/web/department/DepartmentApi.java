@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.adapter.web.PageResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.DepartmentAssignLeaderResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.DepartmentDetailResponse;
-import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignTeamLeaderRequest;
+import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignLeaderRequest;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
@@ -66,8 +66,8 @@ public class DepartmentApi {
     }
 
     @PostMapping("/api/departments/{departmentId}/assign-team-leader")
-    public DepartmentAssignLeaderResponse assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignTeamLeaderRequest request) {
-        UUID id = departmentManager.assignTeamLeader(departmentId, request.leaderEmployeeId());
+    public DepartmentAssignLeaderResponse assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignLeaderRequest request) {
+        UUID id = departmentManager.assignLeader(departmentId, request.leaderEmployeeId());
 
         return DepartmentAssignLeaderResponse.of(id);
     }

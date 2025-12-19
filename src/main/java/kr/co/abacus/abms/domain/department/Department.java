@@ -93,7 +93,7 @@ public class Department extends AbstractEntity {
         }
     }
 
-    public void assignTeamLeader(UUID leaderEmployeeId) {
+    public void assignLeader(UUID leaderEmployeeId) {
         this.leaderEmployeeId = leaderEmployeeId;
     }
 

@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public interface DepartmentManager {
 
-    UUID assignTeamLeader(UUID departmentId, UUID leaderEmployeeId);
+    UUID assignLeader(UUID departmentId, UUID leaderEmployeeId);
 
 }

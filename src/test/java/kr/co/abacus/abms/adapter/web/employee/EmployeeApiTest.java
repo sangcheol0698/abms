@@ -163,9 +163,9 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
         // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).grade()).isEqualTo(EmployeeGrade.EXPERT.getDescription());
-        assertThat(contents.get(1).grade()).isEqualTo(EmployeeGrade.SENIOR.getDescription());
-        assertThat(contents.get(2).grade()).isEqualTo(EmployeeGrade.JUNIOR.getDescription());
+        assertThat(contents.get(0).grade()).isEqualTo(new EnumResponse(EmployeeGrade.EXPERT.name(), EmployeeGrade.EXPERT.getDescription()));
+        assertThat(contents.get(1).grade()).isEqualTo(new EnumResponse(EmployeeGrade.SENIOR.name(), EmployeeGrade.SENIOR.getDescription()));
+        assertThat(contents.get(2).grade()).isEqualTo(new EnumResponse(EmployeeGrade.JUNIOR.name(), EmployeeGrade.JUNIOR.getDescription()));
     }
 
     @Test
@@ -189,9 +189,9 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         List<EmployeeSearchResponse> contents = responsePage.content();
 
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).position()).isEqualTo(EmployeePosition.ASSOCIATE.getDescription());
-        assertThat(contents.get(1).position()).isEqualTo(EmployeePosition.DIRECTOR.getDescription());
-        assertThat(contents.get(2).position()).isEqualTo(EmployeePosition.VICE_PRESIDENT.getDescription());
+        assertThat(contents.get(0).position()).isEqualTo(new EnumResponse(EmployeePosition.ASSOCIATE.name(), EmployeePosition.ASSOCIATE.getDescription()));
+        assertThat(contents.get(1).position()).isEqualTo(new EnumResponse(EmployeePosition.DIRECTOR.name(), EmployeePosition.DIRECTOR.getDescription()));
+        assertThat(contents.get(2).position()).isEqualTo(new EnumResponse(EmployeePosition.VICE_PRESIDENT.name(), EmployeePosition.VICE_PRESIDENT.getDescription()));
     }
 
     @Test

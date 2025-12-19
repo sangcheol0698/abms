@@ -14,7 +14,7 @@ import org.springframework.core.ParameterizedTypeReference;
 
 import kr.co.abacus.abms.adapter.web.PageResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.DepartmentDetailResponse;
-import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignTeamLeaderRequest;
+import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignLeaderRequest;
 import kr.co.abacus.abms.adapter.web.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -158,7 +158,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
         restTestClient.post()
             .uri("/api/departments/{departmentId}/assign-team-leader", team1.getId())
-            .body(new EmployeeAssignTeamLeaderRequest(employee1.getId()))
+            .body(new EmployeeAssignLeaderRequest(employee1.getId()))
             .exchange()
             .expectStatus().isOk()
             .returnResult();

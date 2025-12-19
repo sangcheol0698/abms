@@ -34,7 +34,7 @@ class DepartmentManagerTest extends IntegrationTestBase {
 
     @Test
     @DisplayName("팀의 팀장을 지정한다.")
-    void assignTeamLeader() {
+    void assignLeader() {
         // given
         Department department1 = createDepartment("TEST-CODE", "테스트팀", DepartmentType.TEAM, null, null);
         departmentRepository.save(department1);
@@ -42,7 +42,7 @@ class DepartmentManagerTest extends IntegrationTestBase {
         Employee employee = createEmployee();
         employeeRepository.save(employee);
 
-        UUID departmentId = departmentManager.assignTeamLeader(department1.getId(), employee.getId());
+        UUID departmentId = departmentManager.assignLeader(department1.getId(), employee.getId());
         flushAndClear();
 
         Department department = departmentRepository.findByIdAndDeletedFalse(departmentId).orElseThrow();

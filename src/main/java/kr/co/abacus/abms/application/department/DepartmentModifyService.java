@@ -27,11 +27,11 @@ public class DepartmentModifyService implements DepartmentManager {
     private final EmployeeFinder employeeFinder;
 
     @Override
-    public UUID assignTeamLeader(UUID departmentId, UUID leaderEmployeeId) {
+    public UUID assignLeader(UUID departmentId, UUID leaderEmployeeId) {
         Department department = departmentFinder.find(departmentId);
         Employee employee = employeeFinder.find(leaderEmployeeId);
 
-        department.assignTeamLeader(employee.getId());
+        department.assignLeader(employee.getId());
 
         return departmentRepository.save(department).getId();
     }

@@ -19,10 +19,10 @@ public record EmployeeSearchResponse(
     String email,
     LocalDate joinDate,
     LocalDate birthDate,
-    String position,
-    String status,
-    String grade,
-    String type,
+    EnumResponse position,
+    EnumResponse status,
+    EnumResponse grade,
+    EnumResponse type,
     EnumResponse avatar,
     @Nullable String memo
 ) {
@@ -36,10 +36,10 @@ public record EmployeeSearchResponse(
             .email(summary.email().address())
             .joinDate(summary.joinDate())
             .birthDate(summary.birthDate())
-            .position(summary.position().getDescription())
-            .status(summary.status().getDescription())
-            .grade(summary.grade().getDescription())
-            .type(summary.type().getDescription())
+            .position(new EnumResponse(summary.position().name(), summary.position().getDescription()))
+            .status(new EnumResponse(summary.status().name(), summary.status().getDescription()))
+            .grade(new EnumResponse(summary.grade().name(), summary.grade().getDescription()))
+            .type(new EnumResponse(summary.type().name(), summary.type().getDescription()))
             .avatar(new EnumResponse(summary.avatar().name(), summary.avatar().getDescription()))
             .memo(summary.memo())
             .build();
