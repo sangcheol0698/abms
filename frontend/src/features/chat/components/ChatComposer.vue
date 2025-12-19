@@ -8,14 +8,16 @@
     <!-- Image Previews -->
     <div v-if="attachments.length > 0" class="flex gap-2 overflow-x-auto pb-2">
       <div v-for="(attachment, index) in attachments" :key="index" class="relative shrink-0">
-        <div class="relative h-20 w-20 overflow-hidden rounded-lg border border-border/50 shadow-sm">
+        <div
+          class="relative h-20 w-20 overflow-hidden rounded-lg border border-border/50 shadow-sm"
+        >
           <img
             :src="attachment.previewUrl"
             alt="Selected image"
             class="h-full w-full object-cover transition-opacity duration-200"
             :class="{ 'opacity-50': attachment.uploading }"
           />
-          
+
           <!-- Loading Spinner -->
           <div
             v-if="attachment.uploading"
@@ -45,14 +47,14 @@
       @change="handleFileSelect"
     />
 
-    <InputGroup class="rounded-[24px] border border-border/60 bg-background shadow-sm transition-shadow focus-within:shadow-md">
+    <InputGroup class="rounded-2xl border border-border/60 bg-background shadow-sm">
       <InputGroupTextarea
         ref="textareaRef"
         v-model="draft"
         :rows="1"
         :disabled="disabled"
         placeholder="메시지를 입력하세요..."
-        class="min-h-[48px] max-h-[200px] px-4 py-3 text-sm leading-relaxed resize-none"
+        class="min-h-[48px] max-h-[200px] px-4 py-3 text-sm leading-relaxed resize-none whitespace-pre-wrap"
         @keydown="handleKeydown"
         @compositionstart="isComposing = true"
         @compositionend="handleCompositionEnd"
@@ -109,7 +111,9 @@
           variant="default"
           size="icon-xs"
           class="rounded-full"
-          :disabled="disabled || (draft.trim().length === 0 && attachments.length === 0) || isUploading"
+          :disabled="
+            disabled || (draft.trim().length === 0 && attachments.length === 0) || isUploading
+          "
         >
           <ArrowUp class="h-4 w-4" />
           <span class="sr-only">전송</span>
@@ -264,9 +268,9 @@ async function submit() {
   if ((!content && attachments.value.length === 0) || props.disabled || isUploading.value) {
     return;
   }
-  
+
   emit('submit', content);
-  
+
   draft.value = '';
   clearFiles();
   await focusTextarea();
