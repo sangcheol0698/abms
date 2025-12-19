@@ -92,9 +92,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Pencil } from 'lucide-vue-next';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
+import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
-import type { OrganizationChartNode } from '@/features/organization/models/organization';
+import type { OrganizationChartNode } from '@/features/department/models/organization';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 
 import HttpError from '@/core/http/HttpError';

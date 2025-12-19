@@ -194,7 +194,7 @@ import {
 import { valueUpdater } from '@/components/ui/table/utils';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
+import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
 import { createEmployeeTableColumns } from '@/features/employee/configs/tableColumns';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
@@ -214,7 +214,7 @@ import type { EmployeeSummary } from '@/features/employee/models/employee';
 import HttpError from '@/core/http/HttpError';
 import { useEmployeeDeletion } from '@/features/employee/composables/useEmployeeDeletion';
 import { getExcelErrorMessage } from '@/core/utils/excel';
-import type { OrganizationChartNode } from '@/features/organization/models/organization.ts';
+import type { OrganizationChartNode } from '@/features/department/models/organization.ts';
 import { useEmployeeQuerySync } from '@/features/employee/composables/useEmployeeQuerySync.ts';
 
 interface DepartmentOption {

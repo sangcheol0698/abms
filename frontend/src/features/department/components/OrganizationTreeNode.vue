@@ -12,7 +12,11 @@
         v-if="showToggle"
         type="button"
         class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition"
-        :class="isSelected ? 'text-primary-foreground/90 hover:text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
+        :class="
+          isSelected
+            ? 'text-primary-foreground/90 hover:text-primary-foreground'
+            : 'text-muted-foreground hover:text-foreground'
+        "
         :aria-expanded="!isCollapsed"
         :aria-label="isCollapsed ? '하위 조직 펼치기' : '하위 조직 접기'"
         @click.stop="toggleNode(node.departmentId)"
@@ -26,18 +30,26 @@
         <component
           :is="departmentIcon"
           class="h-4 w-4 shrink-0 transition"
-          :class="isSelected ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'"
+          :class="
+            isSelected
+              ? 'text-primary-foreground'
+              : 'text-muted-foreground group-hover:text-foreground'
+          "
           aria-hidden="true"
         />
-        <span 
+        <span
           class="truncate text-[13px] font-medium"
           :class="isSelected ? 'text-primary-foreground' : 'text-foreground'"
         >
           <template v-for="(segment, index) in nameSegments" :key="index">
-            <mark 
-              v-if="segment.matched" 
+            <mark
+              v-if="segment.matched"
               class="rounded px-0.5"
-              :class="isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/20 text-primary'"
+              :class="
+                isSelected
+                  ? 'bg-primary-foreground/20 text-primary-foreground'
+                  : 'bg-primary/20 text-primary'
+              "
             >
               {{ segment.text }}
             </mark>
@@ -92,7 +104,7 @@ import {
   UserRound,
   UsersRound,
 } from 'lucide-vue-next';
-import type { OrganizationChartNode } from '@/features/organization/models/organization';
+import type { OrganizationChartNode } from '@/features/department/models/organization';
 
 interface Props {
   node: OrganizationChartNode;

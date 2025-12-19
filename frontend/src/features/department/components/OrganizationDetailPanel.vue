@@ -2,8 +2,6 @@
   <div class="min-h-full">
     <div v-if="department" class="flex flex-col gap-4 p-4">
       <div class="flex flex-col gap-3">
-
-
         <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Badge variant="outline" class="font-medium">
             {{ department.departmentCode }}
@@ -18,8 +16,12 @@
       </div>
 
       <div class="grid gap-2 sm:grid-cols-3">
-        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 relative group">
-          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <article
+          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 relative group"
+        >
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"
+          >
             <UserRound class="h-4 w-4" />
           </div>
           <div class="flex flex-col text-sm">
@@ -37,8 +39,12 @@
             <Pencil class="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         </article>
-        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <article
+          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3"
+        >
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"
+          >
             <Users class="h-4 w-4" />
           </div>
           <div class="flex flex-col text-sm">
@@ -46,8 +52,12 @@
             <span class="font-semibold text-foreground">{{ department.employeeCount }}명</span>
           </div>
         </article>
-        <article class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <article
+          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3"
+        >
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"
+          >
             <GitBranch class="h-4 w-4" />
           </div>
           <div class="flex flex-col text-sm">
@@ -62,7 +72,11 @@
       <Separator />
 
       <div class="flex flex-col">
-        <Tabs :model-value="selectedTab" @update:model-value="handleTabChange" class="flex flex-col">
+        <Tabs
+          :model-value="selectedTab"
+          @update:model-value="handleTabChange"
+          class="flex flex-col"
+        >
           <TabsList class="rounded-lg bg-muted/30 p-1">
             <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
             <TabsTrigger value="members" class="text-sm">직원</TabsTrigger>
@@ -106,7 +120,12 @@
                     <p v-else class="text-sm text-muted-foreground">
                       리더가 아직 지정되지 않은 부서입니다.
                     </p>
-                    <Button variant="outline" size="sm" class="h-7 text-xs" @click="isAssignDialogOpen = true">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      class="h-7 text-xs"
+                      @click="isAssignDialogOpen = true"
+                    >
                       변경
                     </Button>
                   </dd>
@@ -133,13 +152,18 @@
                 v-if="department.departmentId"
                 :department-id="department.departmentId"
               />
-              <div v-else class="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground">
+              <div
+                v-else
+                class="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 p-4 text-sm text-muted-foreground"
+              >
                 부서 정보가 올바르지 않습니다.
               </div>
             </TabsContent>
 
             <TabsContent value="revenue" class="flex flex-col">
-              <div class="flex flex-col gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
+              <div
+                class="flex flex-col gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm"
+              >
                 <p class="text-sm font-semibold text-foreground">매출 지표</p>
                 <p class="text-xs text-muted-foreground">
                   매출 데이터 연동을 준비 중입니다. 연결된 ERP 또는 회계 시스템 API가 마련되면 이
@@ -152,7 +176,10 @@
       </div>
     </div>
 
-    <div v-else class="flex h-full flex-col items-center justify-center rounded-lg bg-muted/10 p-6 text-center">
+    <div
+      v-else
+      class="flex h-full flex-col items-center justify-center rounded-lg bg-muted/10 p-6 text-center"
+    >
       <h3 class="text-base font-semibold text-foreground">부서를 선택해 주세요</h3>
       <p class="mt-2 text-sm text-muted-foreground">
         왼쪽 부서 목록에서 팀을 선택하면 이 영역에 상세 정보가 표시됩니다.
@@ -177,9 +204,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { GitBranch, UserRound, Users, Pencil } from 'lucide-vue-next';
-import type { OrganizationDepartmentSummary } from '@/features/organization/models/organization';
-import DepartmentEmployeeList from '@/features/organization/components/DepartmentEmployeeList.vue';
-import DepartmentLeaderAssignDialog from '@/features/organization/components/DepartmentLeaderAssignDialog.vue';
+import type { OrganizationDepartmentSummary } from '@/features/department/models/organization';
+import DepartmentEmployeeList from '@/features/department/components/DepartmentEmployeeList.vue';
+import DepartmentLeaderAssignDialog from '@/features/department/components/DepartmentLeaderAssignDialog.vue';
 
 defineOptions({ name: 'OrganizationDetailPanel' });
 
@@ -205,7 +232,7 @@ const isAssignDialogOpen = ref(false);
 
 // 탭 상태 관리
 const VALID_TABS = ['info', 'members', 'revenue'] as const;
-type TabValue = typeof VALID_TABS[number];
+type TabValue = (typeof VALID_TABS)[number];
 
 const selectedTab = ref<TabValue>('info');
 let isUpdatingRoute = false;
@@ -236,35 +263,35 @@ function handleTabChange(newTab: string | number) {
   if (!VALID_TABS.includes(newTab as TabValue)) {
     return;
   }
-  
+
   selectedTab.value = newTab as TabValue;
-  
+
   if (isApplyingRoute) {
     return;
   }
-  
+
   updateRouteQuery(newTab as TabValue);
 }
 
 // URL 쿼리 업데이트
 function updateRouteQuery(tab: TabValue) {
   const currentTab = extractTabFromQuery(route.query.tab);
-  
+
   if (tab === currentTab) {
     return;
   }
-  
+
   isUpdatingRoute = true;
-  
+
   const query = { ...route.query };
-  
+
   // 기본 탭(info)인 경우 쿼리 파라미터 제거
   if (tab === 'info') {
     delete query.tab;
   } else {
     query.tab = tab;
   }
-  
+
   router
     .replace({ query })
     .finally(() => {
@@ -282,13 +309,13 @@ watch(
     if (isUpdatingRoute) {
       return;
     }
-    
+
     const newTab = extractTabFromQuery(value);
-    
+
     if (newTab === selectedTab.value) {
       return;
     }
-    
+
     isApplyingRoute = true;
     selectedTab.value = newTab;
     isApplyingRoute = false;

@@ -22,7 +22,7 @@ const routes = [
       {
         path: 'organization',
         name: 'organization',
-        component: () => import('@/features/organization/views/OrganizationView.vue'),
+        component: () => import('@/features/department/views/DepartmentView.vue'),
         meta: {
           title: '부서',
           padding: 'flush',

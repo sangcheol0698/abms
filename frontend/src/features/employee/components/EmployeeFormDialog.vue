@@ -97,10 +97,7 @@
                     </FormItem>
                   </FormField>
 
-                  <FormField
-                    name="departmentId"
-                    v-slot="{ field, handleChange, handleBlur }"
-                  >
+                  <FormField name="departmentId" v-slot="{ field, handleChange, handleBlur }">
                     <FormItem>
                       <FormLabel>
                         소속 부서
@@ -134,11 +131,7 @@
                             class="h-9 gap-2 whitespace-nowrap px-3"
                             :disabled="isSubmitting"
                             @click="
-                              handleDepartmentSelectButton(
-                                field.value,
-                                handleChange,
-                                handleBlur,
-                              )
+                              handleDepartmentSelectButton(field.value, handleChange, handleBlur)
                             "
                           >
                             <Building2 class="h-4 w-4" />
@@ -466,9 +459,12 @@ import {
   getEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
 import { toast } from 'vue-sonner';
-import OrganizationSelectDialog from '@/features/organization/components/OrganizationSelectDialog.vue';
+import OrganizationSelectDialog from '@/features/department/components/OrganizationSelectDialog.vue';
 import EmployeeAvatarSelectDialog from '@/features/employee/components/EmployeeAvatarSelectDialog.vue';
-import type { EmployeeAvatarOption, EmployeeAvatarCode } from '@/features/employee/constants/avatars';
+import type {
+  EmployeeAvatarOption,
+  EmployeeAvatarCode,
+} from '@/features/employee/constants/avatars';
 import {
   defaultEmployeeAvatar,
   getEmployeeAvatarOptions,
@@ -527,9 +523,7 @@ const schema = z.object({
   position: z.string({ required_error: '직책을 선택하세요.' }).min(1, '직책을 선택하세요.'),
   grade: z.string({ required_error: '등급을 선택하세요.' }).min(1, '등급을 선택하세요.'),
   type: z.string({ required_error: '근무 유형을 선택하세요.' }).min(1, '근무 유형을 선택하세요.'),
-  avatar: z
-    .string({ required_error: '아바타를 선택하세요.' })
-    .min(1, '아바타를 선택하세요.'),
+  avatar: z.string({ required_error: '아바타를 선택하세요.' }).min(1, '아바타를 선택하세요.'),
   memo: z.string().max(500, '메모는 500자 이내로 입력하세요.').optional(),
 });
 
@@ -643,7 +637,11 @@ function resolveAvatarCode(candidate?: string | null): EmployeeAvatarCode {
       return candidate as EmployeeAvatarCode;
     }
   }
-  return (avatarOptions.value.length > 0 && avatarOptions.value[0] ? avatarOptions.value[0].code : defaultEmployeeAvatar) as EmployeeAvatarCode;
+  return (
+    avatarOptions.value.length > 0 && avatarOptions.value[0]
+      ? avatarOptions.value[0].code
+      : defaultEmployeeAvatar
+  ) as EmployeeAvatarCode;
 }
 
 function getAvatarOptionForDisplay(value: unknown): EmployeeAvatarOption | null {

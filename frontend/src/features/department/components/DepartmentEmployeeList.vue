@@ -54,7 +54,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, DataTableColumnHeader, DataTablePagination } from '@/components/business';
 import { appContainer } from '@/core/di/container';
-import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
+import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import { useRouter } from 'vue-router';
 import { valueUpdater } from '@/components/ui/table/utils';

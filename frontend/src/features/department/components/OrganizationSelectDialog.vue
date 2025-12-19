@@ -3,7 +3,9 @@
     <DialogContent class="w-full max-w-xl overflow-hidden">
       <DialogHeader>
         <DialogTitle>부서 선택</DialogTitle>
-        <DialogDescription>부서 목록에서 원하는 부서를 검색하거나 직접 선택하세요.</DialogDescription>
+        <DialogDescription
+          >부서 목록에서 원하는 부서를 검색하거나 직접 선택하세요.</DialogDescription
+        >
       </DialogHeader>
 
       <div class="max-h-[55vh] overflow-y-auto rounded-md border px-2 py-2">
@@ -47,10 +49,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import OrganizationTree from '@/features/organization/components/OrganizationTree.vue';
+import OrganizationTree from '@/features/department/components/OrganizationTree.vue';
 import { appContainer } from '@/core/di/container';
-import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
-import type { OrganizationChartNode } from '@/features/organization/models/organization';
+import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
+import type { OrganizationChartNode } from '@/features/department/models/organization';
 import { toast } from 'vue-sonner';
 
 interface Props {

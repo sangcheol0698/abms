@@ -4,7 +4,8 @@
       <DialogHeader class="px-6 pt-6 pb-4">
         <DialogTitle>부서 리더 임명</DialogTitle>
         <DialogDescription>
-          <span class="font-medium text-foreground">{{ departmentName }}</span>의 새로운 리더를 선택하세요.
+          <span class="font-medium text-foreground">{{ departmentName }}</span
+          >의 새로운 리더를 선택하세요.
         </DialogDescription>
       </DialogHeader>
 
@@ -22,10 +23,13 @@
           <CommandEmpty v-if="isLoading" class="py-6 text-center text-sm text-muted-foreground">
             검색 중...
           </CommandEmpty>
-          <CommandEmpty v-else-if="employees.length === 0" class="py-6 text-center text-sm text-muted-foreground">
+          <CommandEmpty
+            v-else-if="employees.length === 0"
+            class="py-6 text-center text-sm text-muted-foreground"
+          >
             검색 결과가 없습니다.
           </CommandEmpty>
-          
+
           <CommandGroup v-else heading="검색 결과">
             <CommandItem
               v-for="employee in employees"
@@ -38,21 +42,29 @@
                 <AvatarImage :src="employee.avatarImageUrl" :alt="employee.name" />
                 <AvatarFallback class="rounded-xl">{{ getInitials(employee.name) }}</AvatarFallback>
               </Avatar>
-              
+
               <div class="flex flex-col flex-1 min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="font-medium truncate">{{ employee.name }}</span>
-                  <Badge variant="outline" class="text-[10px] px-1 py-0 h-4 font-normal text-muted-foreground">
+                  <Badge
+                    variant="outline"
+                    class="text-[10px] px-1 py-0 h-4 font-normal text-muted-foreground"
+                  >
                     {{ employee.positionLabel }}
                   </Badge>
                 </div>
                 <div class="flex items-center gap-2 text-xs text-muted-foreground">
                   <span class="truncate">{{ employee.departmentName }}</span>
-                  <span v-if="employee.email" class="truncate opacity-70">· {{ employee.email }}</span>
+                  <span v-if="employee.email" class="truncate opacity-70"
+                    >· {{ employee.email }}</span
+                  >
                 </div>
               </div>
 
-              <Check v-if="selectedEmployee?.employeeId === employee.employeeId" class="h-4 w-4 text-primary" />
+              <Check
+                v-if="selectedEmployee?.employeeId === employee.employeeId"
+                class="h-4 w-4 text-primary"
+              />
             </CommandItem>
           </CommandGroup>
         </CommandList>
@@ -74,10 +86,23 @@ import { ref } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
+import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -122,7 +147,7 @@ const debouncedSearch = useDebounceFn(async (query: string) => {
       page: 1,
       size: 20,
       name: query,
-      sort: 'name,asc'
+      sort: 'name,asc',
     });
     employees.value = response.content;
   } catch (error) {
@@ -158,8 +183,11 @@ async function confirmAssignment() {
 
   isSubmitting.value = true;
   try {
-    await organizationRepository.assignTeamLeader(props.departmentId, selectedEmployee.value.employeeId);
-    
+    await organizationRepository.assignTeamLeader(
+      props.departmentId,
+      selectedEmployee.value.employeeId,
+    );
+
     toast.success(`${selectedEmployee.value.name}님이 리더로 임명되었습니다.`);
     emit('assigned');
     close();

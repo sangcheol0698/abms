@@ -1,8 +1,11 @@
 <template>
   <section class="flex h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden">
-    <div v-if="isLoading"
+    <div
+      v-if="isLoading"
       class="flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground"
-      role="status" aria-live="polite">
+      role="status"
+      aria-live="polite"
+    >
       부서 정보를 불러오는 중입니다...
     </div>
 
@@ -11,13 +14,21 @@
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <FeatureSplitLayout v-else :sidebar-default-size="20" :sidebar-min-size="14" :sidebar-max-size="32"
-      :content-min-size="52">
+    <FeatureSplitLayout
+      v-else
+      :sidebar-default-size="20"
+      :sidebar-min-size="14"
+      :sidebar-max-size="32"
+      :content-min-size="52"
+    >
       <template #sidebar="{ pane }">
         <div class="flex h-full min-h-0 flex-col shadow-sm">
-
-          <OrganizationTree class="flex-1" :nodes="chart" v-model:selectedNodeId="selectedDepartmentId"
-            @update:selectedNodeId="handleTreeSelection($event, pane)" />
+          <OrganizationTree
+            class="flex-1"
+            :nodes="chart"
+            v-model:selectedNodeId="selectedDepartmentId"
+            @update:selectedNodeId="handleTreeSelection($event, pane)"
+          />
         </div>
       </template>
 
@@ -25,10 +36,17 @@
         <div class="flex h-full min-h-0 flex-col">
           <header class="flex flex-col px-4 pt-4 pb-2 gap-4">
             <div class="flex items-center">
-              <Button variant="ghost" size="icon"
-                class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground" aria-label="부서 사이드바 토글"
-                @click="pane.toggleSidebar()">
-                <Menu class="h-4 w-4 transition" :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''" />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground"
+                aria-label="부서 사이드바 토글"
+                @click="pane.toggleSidebar()"
+              >
+                <Menu
+                  class="h-4 w-4 transition"
+                  :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''"
+                />
               </Button>
               <Breadcrumb class="flex flex-wrap text-sm text-muted-foreground">
                 <BreadcrumbList>
@@ -36,16 +54,26 @@
                     <BreadcrumbItem>
                       <template v-if="segment.clickable">
                         <BreadcrumbLink as-child>
-                          <router-link v-if="segment.to" :to="segment.to" class="transition hover:text-foreground">
+                          <router-link
+                            v-if="segment.to"
+                            :to="segment.to"
+                            class="transition hover:text-foreground"
+                          >
                             {{ segment.name }}
                           </router-link>
-                          <button v-else type="button" class="transition hover:text-foreground"
-                            @click="handleBreadcrumbSelect(segment.id)">
+                          <button
+                            v-else
+                            type="button"
+                            class="transition hover:text-foreground"
+                            @click="handleBreadcrumbSelect(segment.id)"
+                          >
                             {{ segment.name }}
                           </button>
                         </BreadcrumbLink>
                       </template>
-                      <BreadcrumbPage v-else class="font-semibold">{{ segment.name }}</BreadcrumbPage>
+                      <BreadcrumbPage v-else class="font-semibold">{{
+                        segment.name
+                      }}</BreadcrumbPage>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator v-if="index < headerBreadcrumbs.length - 1">
                       <Slash />
@@ -62,15 +90,16 @@
 
           <div class="flex h-full min-h-0 flex-col overflow-hidden">
             <div class="flex-1 min-h-0 overflow-y-auto pl-2">
-              <OrganizationDetailPanel :department="selectedDepartment" :isLoading="isDepartmentLoading"
-                @refresh="handleRefresh" />
+              <OrganizationDetailPanel
+                :department="selectedDepartment"
+                :isLoading="isDepartmentLoading"
+                @refresh="handleRefresh"
+              />
             </div>
           </div>
         </div>
       </template>
     </FeatureSplitLayout>
-
-
   </section>
 </template>
 
@@ -81,14 +110,14 @@ import type { LocationQueryRaw } from 'vue-router';
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
 import { appContainer } from '@/core/di/container';
-import OrganizationRepository from '@/features/organization/repository/OrganizationRepository';
+import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
 import type {
   OrganizationChartNode,
   OrganizationDepartmentDetail,
   OrganizationDepartmentSummary,
-} from '@/features/organization/models/organization';
-import OrganizationTree from '@/features/organization/components/OrganizationTree.vue';
-import OrganizationDetailPanel from '@/features/organization/components/OrganizationDetailPanel.vue';
+} from '@/features/department/models/organization';
+import OrganizationTree from '@/features/department/components/OrganizationTree.vue';
+import OrganizationDetailPanel from '@/features/department/components/OrganizationDetailPanel.vue';
 import HttpError from '@/core/http/HttpError';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
