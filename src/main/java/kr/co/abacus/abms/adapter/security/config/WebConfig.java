@@ -16,4 +16,5 @@ public class WebConfig implements WebMvcConfigurer {
             .allowCredentials(true) // 인증정보 허용 여부
             .maxAge(3600); // preflight 요청의 유효시간 설정
     }
+
 }

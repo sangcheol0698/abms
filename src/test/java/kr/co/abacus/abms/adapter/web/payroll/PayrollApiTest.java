@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,7 @@ class PayrollApiTest extends ApiIntegrationTestBase {
 
     @BeforeEach
     void setUp() {
-        employee = createEmployee(UUID.randomUUID(), "test@email.com", "테스트 직원");
+        employee = createEmployee(1L, "test@email.com", "테스트 직원");
 
         employeeRepository.save(employee);
     }
@@ -60,11 +59,11 @@ class PayrollApiTest extends ApiIntegrationTestBase {
         assertThat(currentPayroll.getPeriod().endDate()).isNull();
     }
 
-    private PayrollCreateRequest createPayrollCreateRequest(UUID id) {
+    private PayrollCreateRequest createPayrollCreateRequest(Long id) {
         return new PayrollCreateRequest(id, BigDecimal.valueOf(30_000_000), LocalDate.of(2025, 1, 1));
     }
 
-    private Employee createEmployee(UUID teamId, String email, String name) {
+    private Employee createEmployee(Long teamId, String email, String name) {
         return Employee.create(
             teamId,
             name,
@@ -75,8 +74,7 @@ class PayrollApiTest extends ApiIntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.JUNIOR,
             EmployeeAvatar.SKY_GLOW,
-            null
-        );
+            null);
     }
 
 }

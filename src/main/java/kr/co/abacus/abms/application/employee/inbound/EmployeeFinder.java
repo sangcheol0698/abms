@@ -1,7 +1,5 @@
 package kr.co.abacus.abms.application.employee.inbound;
 
-import java.util.UUID;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,9 +13,9 @@ import kr.co.abacus.abms.domain.employee.Employee;
  */
 public interface EmployeeFinder {
 
-    Employee find(UUID id);
+    Employee find(Long id);
 
-    EmployeeDetail findEmployeeDetail(UUID id);
+    EmployeeDetail findEmployeeDetail(Long id);
 
     Page<EmployeeSummary> search(EmployeeSearchCondition condition, Pageable pageable);
 

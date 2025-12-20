@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,8 +39,8 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Autowired
     private DepartmentRepository departmentRepository;
 
-    private UUID companyId;
-    private UUID divisionId;
+    private Long companyId;
+    private Long divisionId;
 
     @BeforeEach
     void setUpDepartments() {
@@ -69,7 +68,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
             .avatar(EmployeeAvatar.SKY_GLOW)
             .build();
 
-        UUID employeeId = employeeManager.create(command);
+        Long employeeId = employeeManager.create(command);
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -91,7 +90,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void updateInfo() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -112,12 +111,13 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void updateInfo_noChangeEmail() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
 
         // 이메일이 변경되지 않은 경우, 이메일 중복 체크를 하지 않음
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(), employee.getName(), employee.getEmail().address()));
+        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(),
+            employee.getName(), employee.getEmail().address()));
         flushAndClear();
 
         Employee updatedEmployee = employeeFinder.find(employee.getId());
@@ -127,20 +127,23 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     void updateInfoFail_duplicateEmail() {
 
-        UUID employeeId1 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
-        UUID employeeId2 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser2@email.com"));
+        Long employeeId1 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId2 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser2@email.com"));
         flushAndClear();
 
         Employee employee1 = employeeFinder.find(employeeId1);
         Employee employee2 = employeeFinder.find(employeeId2);
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee1.getId(), createEmployeeUpdateCommand(employee1.getDepartmentId(), employee2.getEmail().address())))
+        assertThatThrownBy(() -> employeeManager.updateInfo(employee1.getId(),
+            createEmployeeUpdateCommand(employee1.getDepartmentId(), employee2.getEmail().address())))
             .isInstanceOf(DuplicateEmailException.class)
             .hasMessageContaining("이미 존재하는 이메일입니다");
     }
 
     @Test
     void resign() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
+        // 2025,
+        // 1, 1
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -156,7 +159,9 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void resignFail_alreadyResigned() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
+        // 2025,
+        // 1, 1
 
         Employee employee = employeeFinder.find(employeeId);
         employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
@@ -169,7 +174,9 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void resignFail_beforeJoinDate() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일: 2025, 1, 1
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
+        // 2025,
+        // 1, 1
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -180,7 +187,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void takeLeave() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -195,7 +202,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void takeLeaveFail_notActive() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
 
         Employee employee = employeeFinder.find(employeeId);
         employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
@@ -208,7 +215,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void activate() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -225,7 +232,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void activateFail_alreadyActive() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -236,7 +243,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void delete() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -252,7 +259,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void restore() {
-        UUID employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "restore@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "restore@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -268,17 +275,17 @@ class EmployeeManagerTest extends IntegrationTestBase {
         assertThat(restoredEmployee.getDeletedBy()).isNull();
     }
 
-    private Department createDepartment(String code, String name, DepartmentType type, UUID leaderId, Department parent) {
+    private Department createDepartment(String code, String name, DepartmentType type, Long leaderId,
+                                        Department parent) {
         return Department.create(
             code,
             name,
             type,
             leaderId,
-            parent
-        );
+            parent);
     }
 
-    private EmployeeCreateCommand createEmployeeCreateCommand(UUID teamId, String email) {
+    private EmployeeCreateCommand createEmployeeCreateCommand(Long teamId, String email) {
         return EmployeeCreateCommand.builder()
             .departmentId(teamId)
             .email(email)
@@ -292,7 +299,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
             .build();
     }
 
-    private EmployeeCreateCommand createEmployeeCreateCommand(UUID departmentId, String email, String name) {
+    private EmployeeCreateCommand createEmployeeCreateCommand(Long departmentId, String email, String name) {
         return EmployeeCreateCommand.builder()
             .departmentId(departmentId)
             .email(email)
@@ -306,7 +313,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
             .build();
     }
 
-    private EmployeeUpdateCommand createEmployeeUpdateCommand(UUID teamId, String email) {
+    private EmployeeUpdateCommand createEmployeeUpdateCommand(Long teamId, String email) {
         return EmployeeUpdateCommand.builder()
             .departmentId(teamId)
             .email(email)
@@ -321,7 +328,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
             .build();
     }
 
-    private EmployeeUpdateCommand createEmployeeUpdateCommand(UUID teamId, String name, String email) {
+    private EmployeeUpdateCommand createEmployeeUpdateCommand(Long teamId, String name, String email) {
         return EmployeeUpdateCommand.builder()
             .departmentId(teamId)
             .email(email)

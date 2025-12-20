@@ -1,9 +1,7 @@
 package kr.co.abacus.abms.domain.projectassignment;
 
-import static java.util.Objects.*;
-
 import java.time.LocalDate;
-import java.util.UUID;
+import java.util.Objects;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -27,10 +25,10 @@ import kr.co.abacus.abms.domain.shared.Period;
 public class ProjectAssignment extends AbstractEntity {
 
     @Column(name = "contract_id", nullable = false)
-    private UUID contractId;
+    private Long contractId;
 
     @Column(name = "employee_id", nullable = false)
-    private UUID employeeId;
+    private Long employeeId;
 
     @Nullable
     @Column(name = "assignment_role", length = 50)
@@ -48,11 +46,11 @@ public class ProjectAssignment extends AbstractEntity {
     public static ProjectAssignment assign(ProjectAssignmentRequest request) {
         ProjectAssignment assignment = new ProjectAssignment();
 
-        assignment.contractId = requireNonNull(request.contractId());
-        assignment.employeeId = requireNonNull(request.employeeId());
+        assignment.contractId = Objects.requireNonNull(request.contractId());
+        assignment.employeeId = Objects.requireNonNull(request.employeeId());
         assignment.assignmentRole = request.assignmentRole();
         assignment.assignmentRate = request.assignmentRate();
-        assignment.period = new Period(requireNonNull(request.startDate()), request.endDate());
+        assignment.period = new Period(Objects.requireNonNull(request.startDate()), request.endDate());
 
         // 투입률 검증
         if (assignment.assignmentRate != null) {
@@ -65,7 +63,7 @@ public class ProjectAssignment extends AbstractEntity {
     }
 
     public void unassign(LocalDate endDate) {
-        requireNonNull(endDate, "종료일은 필수입니다");
+        Objects.requireNonNull(endDate, "종료일은 필수입니다");
         this.period = new Period(this.period.startDate(), endDate);
     }
 

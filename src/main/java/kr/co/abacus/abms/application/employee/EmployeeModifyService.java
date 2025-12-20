@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.employee;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +28,7 @@ public class EmployeeModifyService implements EmployeeManager {
     private final DepartmentRepository departmentRepository;
 
     @Override
-    public UUID create(EmployeeCreateCommand command) {
+    public Long create(EmployeeCreateCommand command) {
         validateDepartmentExists(command.departmentId());
         validateDuplicateEmail(command.email());
 
@@ -39,7 +38,7 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public UUID updateInfo(UUID id, EmployeeUpdateCommand command) {
+    public Long updateInfo(Long id, EmployeeUpdateCommand command) {
         Employee employee = find(id);
 
         validateDepartmentExistsForUpdate(employee.getDepartmentId(), command.departmentId());
@@ -55,14 +54,13 @@ public class EmployeeModifyService implements EmployeeManager {
             command.type(),
             command.grade(),
             command.avatar(),
-            command.memo()
-        );
+            command.memo());
 
         return employeeRepository.save(employee).getId();
     }
 
     @Override
-    public void resign(UUID id, LocalDate resignationDate) {
+    public void resign(Long id, LocalDate resignationDate) {
         Employee employee = find(id);
 
         employee.resign(resignationDate);
@@ -71,7 +69,7 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public void takeLeave(UUID id) {
+    public void takeLeave(Long id) {
         Employee employee = find(id);
 
         employee.takeLeave();
@@ -80,7 +78,7 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public void activate(UUID id) {
+    public void activate(Long id) {
         Employee employee = find(id);
 
         employee.activate();
@@ -89,7 +87,7 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public void promote(UUID id, EmployeePosition newPosition) {
+    public void promote(Long id, EmployeePosition newPosition) {
         Employee employee = find(id);
 
         employee.promote(newPosition);
@@ -98,7 +96,7 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public void delete(UUID id, String deleteBy) {
+    public void delete(Long id, String deleteBy) {
         Employee employee = find(id);
 
         employee.softDelete(deleteBy);
@@ -107,7 +105,7 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public void restore(UUID id) {
+    public void restore(Long id) {
         Employee employee = findIncludeDeleted(id);
 
         employee.restore();
@@ -115,23 +113,23 @@ public class EmployeeModifyService implements EmployeeManager {
         employeeRepository.save(employee);
     }
 
-    private Employee find(UUID id) {
+    private Employee find(Long id) {
         return employeeRepository.findByIdAndDeletedFalse(id)
             .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
     }
 
-    private Employee findIncludeDeleted(UUID id) {
+    private Employee findIncludeDeleted(Long id) {
         return employeeRepository.findById(id)
             .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
     }
 
-    private void validateDepartmentExistsForUpdate(UUID currentDepartmentId, UUID newDepartmentId) {
-        if (isDepartmentChanged(currentDepartmentId, currentDepartmentId)) {
+    private void validateDepartmentExistsForUpdate(Long currentDepartmentId, Long newDepartmentId) {
+        if (isDepartmentChanged(currentDepartmentId, newDepartmentId)) {
             validateDepartmentExists(newDepartmentId);
         }
     }
 
-    private void validateDepartmentExists(UUID departmentId) {
+    private void validateDepartmentExists(Long departmentId) {
         if (!departmentRepository.existsByIdAndDeletedFalse(departmentId)) {
             throw new DepartmentNotFoundException("존재하지 않는 부서입니다: " + departmentId);
         }
@@ -151,9 +149,8 @@ public class EmployeeModifyService implements EmployeeManager {
         }
     }
 
-    private boolean isDepartmentChanged(UUID currentDepartmentId, UUID newDepartmentId) {
+    private boolean isDepartmentChanged(Long currentDepartmentId, Long newDepartmentId) {
         return !currentDepartmentId.equals(newDepartmentId);
-
     }
 
     private boolean isEmailChanged(String currentEmail, String newEmail) {

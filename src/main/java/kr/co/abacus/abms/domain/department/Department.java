@@ -4,7 +4,6 @@ import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,7 +49,7 @@ public class Department extends AbstractEntity {
 
     @Nullable
     @Column(name = "leader_employee_id", length = 32)
-    private UUID leaderEmployeeId;
+    private Long leaderEmployeeId;
 
     @Nullable
     @JoinColumn(name = "department_parent_id")
@@ -61,7 +60,7 @@ public class Department extends AbstractEntity {
     private List<Department> children = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Department(String code, String name, DepartmentType type, @Nullable UUID leaderEmployeeId,
+    private Department(String code, String name, DepartmentType type, @Nullable Long leaderEmployeeId,
                        @Nullable Department parent) {
         this.code = requireNonNull(code);
         this.name = requireNonNull(name);
@@ -71,7 +70,7 @@ public class Department extends AbstractEntity {
         setParent(parent);
     }
 
-    public static Department create(String code, String name, DepartmentType type, @Nullable UUID leaderEmployeeId,
+    public static Department create(String code, String name, DepartmentType type, @Nullable Long leaderEmployeeId,
                                     @Nullable Department parent) {
         return Department.builder()
             .code(code)
@@ -93,7 +92,7 @@ public class Department extends AbstractEntity {
         }
     }
 
-    public void assignLeader(UUID leaderEmployeeId) {
+    public void assignLeader(Long leaderEmployeeId) {
         this.leaderEmployeeId = leaderEmployeeId;
     }
 

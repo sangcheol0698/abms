@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.employee.dto;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 
@@ -16,7 +15,6 @@ public record EmployeeSearchCondition(
     @Nullable List<EmployeeType> types,
     @Nullable List<EmployeeStatus> statuses,
     @Nullable List<EmployeeGrade> grades,
-    @Nullable List<UUID> departmentIds
-) {
+    @Nullable List<Long> departmentIds) {
 
 }

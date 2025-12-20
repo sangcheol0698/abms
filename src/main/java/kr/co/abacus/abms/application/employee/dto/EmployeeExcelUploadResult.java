@@ -7,5 +7,5 @@ public record EmployeeExcelUploadResult(int successCount, List<ExcelFailure> exc
     public record ExcelFailure(int rowNumber, String message) {
 
     }
-    
+
 }

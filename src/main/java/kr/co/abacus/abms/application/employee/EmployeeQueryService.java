@@ -1,7 +1,5 @@
 package kr.co.abacus.abms.application.employee;
 
-import java.util.UUID;
-
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,13 +24,13 @@ public class EmployeeQueryService implements EmployeeFinder {
     private final EmployeeRepository employeeRepository;
 
     @Override
-    public Employee find(UUID id) {
+    public Employee find(Long id) {
         return employeeRepository.findByIdAndDeletedFalse(id)
             .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
     }
 
     @Override
-    public @Nullable EmployeeDetail findEmployeeDetail(UUID id) {
+    public @Nullable EmployeeDetail findEmployeeDetail(Long id) {
         return employeeRepository.findEmployeeDetail(id);
     }
 

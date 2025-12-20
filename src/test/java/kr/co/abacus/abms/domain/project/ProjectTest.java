@@ -3,7 +3,6 @@ package kr.co.abacus.abms.domain.project;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,15 +14,14 @@ class ProjectTest {
     @Test
     void create() {
         Project project = Project.create(new ProjectCreateRequest(
-            UUID.randomUUID(),
+            1L,
             "PROJECT_123",
             "This is a test project",
             null,
             ProjectStatus.CANCELLED,
             32_000_000L,
             LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 12, 31)
-        ));
+            LocalDate.of(2024, 12, 31)));
 
         assertThat(project.getCode()).isEqualTo("PROJECT_123");
         assertThat(project.getName()).isEqualTo("This is a test project");
@@ -36,25 +34,23 @@ class ProjectTest {
     @Test
     void update() {
         Project project = Project.create(new ProjectCreateRequest(
-            UUID.randomUUID(),
+            1L,
             "PROJECT_123",
             "This is a test project",
             null,
             ProjectStatus.CANCELLED,
             32_000_000L,
             LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 12, 31)
-        ));
+            LocalDate.of(2024, 12, 31)));
 
         project.update(new ProjectUpdateRequest(
-            UUID.randomUUID(),
+            99L,
             "Updated Project Name",
             "Updated description",
             ProjectStatus.IN_PROGRESS,
             45_000_000L,
             LocalDate.of(2024, 2, 1),
-            LocalDate.of(2024, 12, 31)
-        ));
+            LocalDate.of(2024, 12, 31)));
 
         assertThat(project.getName()).isEqualTo("Updated Project Name");
         assertThat(project.getDescription()).isEqualTo("Updated description");
@@ -66,15 +62,14 @@ class ProjectTest {
     @Test
     void complete() {
         Project project = Project.create(new ProjectCreateRequest(
-            UUID.randomUUID(),
+            1L,
             "PROJECT_123",
             "Test Project",
             null,
             ProjectStatus.IN_PROGRESS,
             32_000_000L,
             LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 12, 31)
-        ));
+            LocalDate.of(2024, 12, 31)));
 
         project.complete();
 
@@ -84,15 +79,14 @@ class ProjectTest {
     @Test
     void cancel() {
         Project project = Project.create(new ProjectCreateRequest(
-            UUID.randomUUID(),
+            1L,
             "PROJECT_123",
             "Test Project",
             null,
             ProjectStatus.IN_PROGRESS,
             32_000_000L,
             LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 12, 31)
-        ));
+            LocalDate.of(2024, 12, 31)));
 
         project.cancel();
 

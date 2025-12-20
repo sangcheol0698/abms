@@ -1,7 +1,5 @@
 package kr.co.abacus.abms.application.department;
 
-import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -27,7 +25,7 @@ public class DepartmentModifyService implements DepartmentManager {
     private final EmployeeFinder employeeFinder;
 
     @Override
-    public UUID assignLeader(UUID departmentId, UUID leaderEmployeeId) {
+    public Long assignLeader(Long departmentId, Long leaderEmployeeId) {
         Department department = departmentFinder.find(departmentId);
         Employee employee = employeeFinder.find(leaderEmployeeId);
 

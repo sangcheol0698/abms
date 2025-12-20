@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -52,9 +51,9 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Autowired
     private DepartmentRepository departmentRepository;
 
-    private UUID companyId;
-    private UUID divisionId;
-    private UUID teamId;
+    private Long companyId;
+    private Long divisionId;
+    private Long teamId;
 
     @BeforeEach
     void setUpDepartments() {
@@ -144,9 +143,12 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Test
     void search_sortByGradeLevel() {
         // given
-        employeeRepository.save(createEmployee(teamId, "grade-junior@abms.co", "주니어", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR));
-        employeeRepository.save(createEmployee(teamId, "grade-expert@abms.co", "익스퍼트", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT));
-        employeeRepository.save(createEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR));
+        employeeRepository.save(createEmployee(teamId, "grade-junior@abms.co", "주니어", EmployeePosition.ASSOCIATE,
+            EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR));
+        employeeRepository.save(createEmployee(teamId, "grade-expert@abms.co", "익스퍼트", EmployeePosition.ASSOCIATE,
+            EmployeeType.FULL_TIME, EmployeeGrade.EXPERT));
+        employeeRepository.save(createEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeePosition.ASSOCIATE,
+            EmployeeType.FULL_TIME, EmployeeGrade.SENIOR));
         flushAndClear();
 
         // when: grade desc 정렬로 검색 시 레벨이 높은 순서(EXPERT > SENIOR > JUNIOR)로 정렬되어야 한다.
@@ -163,17 +165,23 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
         // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).grade()).isEqualTo(new EnumResponse(EmployeeGrade.EXPERT.name(), EmployeeGrade.EXPERT.getDescription()));
-        assertThat(contents.get(1).grade()).isEqualTo(new EnumResponse(EmployeeGrade.SENIOR.name(), EmployeeGrade.SENIOR.getDescription()));
-        assertThat(contents.get(2).grade()).isEqualTo(new EnumResponse(EmployeeGrade.JUNIOR.name(), EmployeeGrade.JUNIOR.getDescription()));
+        assertThat(contents.get(0).grade())
+            .isEqualTo(new EnumResponse(EmployeeGrade.EXPERT.name(), EmployeeGrade.EXPERT.getDescription()));
+        assertThat(contents.get(1).grade())
+            .isEqualTo(new EnumResponse(EmployeeGrade.SENIOR.name(), EmployeeGrade.SENIOR.getDescription()));
+        assertThat(contents.get(2).grade())
+            .isEqualTo(new EnumResponse(EmployeeGrade.JUNIOR.name(), EmployeeGrade.JUNIOR.getDescription()));
     }
 
     @Test
     void search_sortByPositionRank() {
         // given: 직위 rank가 다른 직원 3명을 생성하여 정렬 결과를 확인한다.
-        employeeRepository.save(createEmployee(teamId, "grade-junior@abms.co", "익스퍼트", EmployeePosition.DIRECTOR, EmployeeType.FULL_TIME, EmployeeGrade.EXPERT));
-        employeeRepository.save(createEmployee(teamId, "grade-expert@abms.co", "주니어", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR));
-        employeeRepository.save(createEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeePosition.VICE_PRESIDENT, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR));
+        employeeRepository.save(createEmployee(teamId, "grade-junior@abms.co", "익스퍼트", EmployeePosition.DIRECTOR,
+            EmployeeType.FULL_TIME, EmployeeGrade.EXPERT));
+        employeeRepository.save(createEmployee(teamId, "grade-expert@abms.co", "주니어", EmployeePosition.ASSOCIATE,
+            EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR));
+        employeeRepository.save(createEmployee(teamId, "grade-senior@abms.co", "시니어", EmployeePosition.VICE_PRESIDENT,
+            EmployeeType.FULL_TIME, EmployeeGrade.SENIOR));
         flushAndClear();
 
         PageResponse<EmployeeSearchResponse> responsePage = restTestClient.get()
@@ -189,9 +197,12 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         List<EmployeeSearchResponse> contents = responsePage.content();
 
         assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).position()).isEqualTo(new EnumResponse(EmployeePosition.ASSOCIATE.name(), EmployeePosition.ASSOCIATE.getDescription()));
-        assertThat(contents.get(1).position()).isEqualTo(new EnumResponse(EmployeePosition.DIRECTOR.name(), EmployeePosition.DIRECTOR.getDescription()));
-        assertThat(contents.get(2).position()).isEqualTo(new EnumResponse(EmployeePosition.VICE_PRESIDENT.name(), EmployeePosition.VICE_PRESIDENT.getDescription()));
+        assertThat(contents.get(0).position()).isEqualTo(
+            new EnumResponse(EmployeePosition.ASSOCIATE.name(), EmployeePosition.ASSOCIATE.getDescription()));
+        assertThat(contents.get(1).position()).isEqualTo(
+            new EnumResponse(EmployeePosition.DIRECTOR.name(), EmployeePosition.DIRECTOR.getDescription()));
+        assertThat(contents.get(2).position()).isEqualTo(new EnumResponse(EmployeePosition.VICE_PRESIDENT.name(),
+            EmployeePosition.VICE_PRESIDENT.getDescription()));
     }
 
     @Test
@@ -380,21 +391,18 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             "file",
             "employees.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            bos.toByteArray()
-        );
+            bos.toByteArray());
 
         var mvcResult = mockMvc.perform(
                 org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                     .multipart("/api/employees/excel/upload")
-                    .file(mockFile)
-            )
+                    .file(mockFile))
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
             .andReturn();
 
         EmployeeExcelUploadResponse response = objectMapper.readValue(
             mvcResult.getResponse().getContentAsByteArray(),
-            EmployeeExcelUploadResponse.class
-        );
+            EmployeeExcelUploadResponse.class);
         flushAndClear();
 
         assertThat(response.successCount()).isEqualTo(1);
@@ -407,65 +415,68 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     // @Test
     // void uploadExcel() throws Exception {
-    //     // 1. 엑셀 워크북 생성 로직 (기존과 동일)
-    //     Workbook workbook = new XSSFWorkbook();
-    //     Sheet sheet = workbook.createSheet("Employees");
-    //     Row header = sheet.createRow(0);
-    //     String[] headers = {"부서 코드", "이메일", "이름", "입사일", "생년월일", "직책", "근무 유형", "등급", "메모"};
-    //     for (int i = 0; i < headers.length; i++) {
-    //         header.createCell(i).setCellValue(headers[i]);
-    //     }
+    // // 1. 엑셀 워크북 생성 로직 (기존과 동일)
+    // Workbook workbook = new XSSFWorkbook();
+    // Sheet sheet = workbook.createSheet("Employees");
+    // Row header = sheet.createRow(0);
+    // String[] headers = {"부서 코드", "이메일", "이름", "입사일", "생년월일", "직책", "근무 유형", "등급",
+    // "메모"};
+    // for (int i = 0; i < headers.length; i++) {
+    // header.createCell(i).setCellValue(headers[i]);
+    // }
     //
-    //     String teamCode = departmentRepository.findByIdAndDeletedFalse(teamId)
-    //         .map(Department::getCode)
-    //         .orElseThrow();
+    // String teamCode = departmentRepository.findByIdAndDeletedFalse(teamId)
+    // .map(Department::getCode)
+    // .orElseThrow();
     //
-    //     Row row = sheet.createRow(1);
-    //     row.createCell(0).setCellValue(teamCode);
-    //     row.createCell(1).setCellValue("excel-upload@abms.co");
-    //     row.createCell(2).setCellValue("업로드");
-    //     row.createCell(3).setCellValue("2025-01-02");
-    //     row.createCell(4).setCellValue("1995-06-10");
-    //     row.createCell(5).setCellValue(EmployeePosition.ASSOCIATE.getDescription());
-    //     row.createCell(6).setCellValue(EmployeeType.FULL_TIME.getDescription());
-    //     row.createCell(7).setCellValue(EmployeeGrade.JUNIOR.getDescription());
-    //     row.createCell(8).setCellValue("업로드 메모");
+    // Row row = sheet.createRow(1);
+    // row.createCell(0).setCellValue(teamCode);
+    // row.createCell(1).setCellValue("excel-upload@abms.co");
+    // row.createCell(2).setCellValue("업로드");
+    // row.createCell(3).setCellValue("2025-01-02");
+    // row.createCell(4).setCellValue("1995-06-10");
+    // row.createCell(5).setCellValue(EmployeePosition.ASSOCIATE.getDescription());
+    // row.createCell(6).setCellValue(EmployeeType.FULL_TIME.getDescription());
+    // row.createCell(7).setCellValue(EmployeeGrade.JUNIOR.getDescription());
+    // row.createCell(8).setCellValue("업로드 메모");
     //
-    //     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    //     workbook.write(bos);
-    //     workbook.close();
+    // ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    // workbook.write(bos);
+    // workbook.close();
     //
-    //     // 2. MultipartBodyBuilder를 사용하여 요청 본문 구성
-    //     MultipartBodyBuilder builder = new MultipartBodyBuilder();
-    //     builder.part("file", bos.toByteArray())
-    //         .filename("employees.xlsx")
-    //         .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+    // // 2. MultipartBodyBuilder를 사용하여 요청 본문 구성
+    // MultipartBodyBuilder builder = new MultipartBodyBuilder();
+    // builder.part("file", bos.toByteArray())
+    // .filename("employees.xlsx")
+    // .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
     //
-    //     // 3. RestTestClient 실행 및 문서화
-    //     restTestClient.post()
-    //         .uri("/api/employees/excel/upload")
-    //         .body(builder.build())
-    //         .exchange()
-    //         .expectStatus().isOk()
-    //         .expectBody(EmployeeExcelUploadResponse.class)
-    //         .consumeWith(result -> {
-    //             // 4. 응답 본문 검증
-    //             EmployeeExcelUploadResponse response = result.getResponseBody();
-    //             assertThat(response).isNotNull();
-    //             assertThat(response.successCount()).isEqualTo(1);
-    //             assertThat(response.failures()).isEmpty();
+    // // 3. RestTestClient 실행 및 문서화
+    // restTestClient.post()
+    // .uri("/api/employees/excel/upload")
+    // .body(builder.build())
+    // .exchange()
+    // .expectStatus().isOk()
+    // .expectBody(EmployeeExcelUploadResponse.class)
+    // .consumeWith(result -> {
+    // // 4. 응답 본문 검증
+    // EmployeeExcelUploadResponse response = result.getResponseBody();
+    // assertThat(response).isNotNull();
+    // assertThat(response.successCount()).isEqualTo(1);
+    // assertThat(response.failures()).isEmpty();
     //
-    //             flushAndClear();
+    // flushAndClear();
     //
-    //             // DB 검증
-    //             var employees = employeeRepository.findAllByDepartmentIdInAndDeletedFalse(List.of(teamId));
-    //             assertThat(employees).anyMatch(candidate -> candidate.getEmail().address().equals("excel-upload@abms.co"));
-    //         });
+    // // DB 검증
+    // var employees =
+    // employeeRepository.findAllByDepartmentIdInAndDeletedFalse(List.of(teamId));
+    // assertThat(employees).anyMatch(candidate ->
+    // candidate.getEmail().address().equals("excel-upload@abms.co"));
+    // });
     // }
 
     @Test
     void update() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "update-target@email.com", "업데이트 대상")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "update-target@email.com", "업데이트 대상")).getId();
         flushAndClear();
 
         EmployeeUpdateRequest request = createEmployeeUpdateRequest(divisionId, "updated@email.com", "김수정");
@@ -494,7 +505,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void update_duplicateEmail() {
-        UUID employeeId1 = employeeRepository.save(createEmployee(teamId, "dup1@email.com", "직원1")).getId();
+        Long employeeId1 = employeeRepository.save(createEmployee(teamId, "dup1@email.com", "직원1")).getId();
         employeeRepository.save(createEmployee(teamId, "dup2@email.com", "직원2")).getId();
 
         flushAndClear();
@@ -512,7 +523,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void delete() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
         flushAndClear();
 
         restTestClient.delete()
@@ -529,7 +540,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void delete_alreadyDeleted() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
 
         employeeManager.delete(employeeId, "adminUser");
         flushAndClear();
@@ -542,7 +553,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void restore() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
 
         employeeManager.delete(employeeId, "adminUser");
         flushAndClear();
@@ -562,7 +573,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void promote() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "promote@email.com", "홍길동", EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR)).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "promote@email.com", "홍길동",
+            EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR)).getId();
         flushAndClear();
 
         restTestClient.patch()
@@ -578,7 +590,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("직원의 직급를 현재 직급보다 낮거나 같은 직급로 승진시키려 할 때 예외가 발생한다.")
     void promote_lowerPosition_throwsException() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         restTestClient.patch()
@@ -590,7 +602,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("퇴사한 직원의 직급을 승진시키려 할 때 예외가 발생한다.")
     void promote_resignedEmployee_throwsException() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         employeeManager.resign(employeeId, LocalDate.now());
@@ -604,7 +616,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void resign() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         LocalDate resignationDate = LocalDate.now();
@@ -622,7 +634,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("퇴사일이 입사일 이전일 경우 예외가 발생한다.")
     void resign_beforeJoinDate_throwsException() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "test@example.com", "홍길동", LocalDate.of(2024, 1, 1))).getId();
+        Long employeeId = employeeRepository
+            .save(createEmployee(teamId, "test@example.com", "홍길동", LocalDate.of(2024, 1, 1))).getId();
         flushAndClear();
 
         restTestClient.patch()
@@ -634,7 +647,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void resign_alreadyResigned_throwsException() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         employeeManager.resign(employeeId, LocalDate.now());
@@ -648,7 +661,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     void takeLeave() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         restTestClient.patch()
@@ -664,7 +677,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("재직중이 아닌 직원이 휴직처리 될 때 예외가 발생한다.")
     void takeLeave_notActive_throwsException() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         employeeManager.resign(employeeId, LocalDate.now());
@@ -679,7 +692,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("직원을 휴직중에서 재직중으로 복직시킨다.")
     void activate() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         employeeManager.takeLeave(employeeId);
         flushAndClear();
 
@@ -696,7 +709,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("이미 재직중인 직원이 재활성화 될 때 예외가 발생한다.")
     void activate_alreadyActive_throwsException() {
-        UUID employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         restTestClient.patch()
@@ -706,10 +719,9 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     private EmployeeCreateRequest createEmployeeCreateRequest(
-        UUID departmentId,
+        Long departmentId,
         String email,
-        String name
-    ) {
+        String name) {
         return new EmployeeCreateRequest(
             departmentId,
             email,
@@ -720,15 +732,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee."
-        );
+            "This is a memo for the employee.");
     }
 
     private EmployeeUpdateRequest createEmployeeUpdateRequest(
-        UUID departmentId,
+        Long departmentId,
         String email,
-        String name
-    ) {
+        String name) {
         return new EmployeeUpdateRequest(
             departmentId,
             email,
@@ -739,11 +749,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a updated memo for the employee."
-        );
+            "This is a updated memo for the employee.");
     }
 
-    private Employee createEmployee(UUID teamId, String email, String name) {
+    private Employee createEmployee(Long teamId, String email, String name) {
         return Employee.create(
             teamId,
             name,
@@ -754,11 +763,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.JUNIOR,
             EmployeeAvatar.SKY_GLOW,
-            null
-        );
+            null);
     }
 
-    private Employee createEmployee(UUID teamId, String email, String name, LocalDate joinDate) {
+    private Employee createEmployee(Long teamId, String email, String name, LocalDate joinDate) {
         return Employee.create(
             teamId,
             name,
@@ -769,11 +777,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.JUNIOR,
             EmployeeAvatar.SKY_GLOW,
-            null
-        );
+            null);
     }
 
-    private Employee createEmployee(UUID teamId, String email, String name, EmployeePosition position, EmployeeType type, EmployeeGrade grade) {
+    private Employee createEmployee(Long teamId, String email, String name, EmployeePosition position,
+                                    EmployeeType type, EmployeeGrade grade) {
         return Employee.create(
             teamId,
             name,
@@ -784,8 +792,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             type,
             grade,
             EmployeeAvatar.SKY_GLOW,
-            null
-        );
+            null);
     }
 
     private Department createDepartment(String code, String name, DepartmentType departmentType) {
@@ -794,8 +801,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
             name,
             departmentType,
             null,
-            null
-        );
+            null);
     }
 
 }

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -123,8 +122,8 @@ class ProjectRepositoryTest extends IntegrationTestBase {
     @Test
     @DisplayName("거래처 ID로 프로젝트 목록 조회")
     void findAllByPartyIdAndDeletedFalse() {
-        UUID partyId = UUID.randomUUID();
-        UUID otherPartyId = UUID.randomUUID();
+        Long partyId = 1L;
+        Long otherPartyId = 2L;
 
         projectRepository.save(Project.create(createProjectCreateRequest("PRJ-001", "프로젝트1", partyId)));
         projectRepository.save(Project.create(createProjectCreateRequest("PRJ-002", "프로젝트2", partyId)));

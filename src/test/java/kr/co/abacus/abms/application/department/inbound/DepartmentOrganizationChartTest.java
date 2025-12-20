@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -91,7 +90,7 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
         assertThat(employeeCount).isEqualTo(3);
     }
 
-    private Employee createEmployee(UUID departmentId, String email) {
+    private Employee createEmployee(Long departmentId, String email) {
         return Employee.create(
             departmentId,
             "홍길동",
@@ -102,19 +101,17 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee."
-        );
+            "This is a memo for the employee.");
     }
 
     private Department createDepartment(String code, String name, DepartmentType type,
-                                        @Nullable UUID leaderEmployeeId, @Nullable Department parent) {
+                                        @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
             code,
             name,
             type,
             leaderEmployeeId,
-            parent
-        );
+            parent);
     }
 
 }

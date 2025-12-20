@@ -3,7 +3,6 @@ package kr.co.abacus.abms.adapter.web.project;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,15 +28,14 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     void create() {
         // Given
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
-            UUID.randomUUID(),
+            1L,
             "PRJ-TEST-001",
             "테스트 프로젝트",
             "테스트 프로젝트 설명",
             ProjectStatus.SCHEDULED,
             100_000_000L,
             LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 12, 31)
-        );
+            LocalDate.of(2024, 12, 31));
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
@@ -70,15 +68,14 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
-            UUID.randomUUID(),
+            99L,
             "PRJ-DUP-001",
             "중복 프로젝트",
             null,
             ProjectStatus.SCHEDULED,
             50_000_000L,
             LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 6, 30)
-        );
+            LocalDate.of(2024, 6, 30));
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
@@ -143,7 +140,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @DisplayName("프로젝트 상세 조회 - 존재하지 않는 프로젝트")
     void find_notFound() {
         // Given
-        UUID nonExistentId = UUID.randomUUID();
+        Long nonExistentId = 9999L;
 
         // When & Then
         restTestClient.get()
@@ -161,14 +158,13 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         ProjectUpdateApiRequest request = new ProjectUpdateApiRequest(
-            UUID.randomUUID(),
+            99L,
             "수정된 프로젝트명",
             "수정된 설명",
             ProjectStatus.IN_PROGRESS.name(),
             150_000_000L,
             LocalDate.of(2024, 2, 1),
-            LocalDate.of(2024, 12, 31)
-        );
+            LocalDate.of(2024, 12, 31));
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
@@ -263,7 +259,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @DisplayName("프로젝트 삭제 - 존재하지 않는 프로젝트")
     void delete_notFound() {
         // Given
-        UUID nonExistentId = UUID.randomUUID();
+        Long nonExistentId = 9999L;
 
         // When & Then
         restTestClient.delete()

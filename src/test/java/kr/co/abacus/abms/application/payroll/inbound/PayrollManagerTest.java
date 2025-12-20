@@ -3,7 +3,6 @@ package kr.co.abacus.abms.application.payroll.inbound;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,7 +66,7 @@ class PayrollManagerTest extends IntegrationTestBase {
 
     private Employee createEmployee() {
         return Employee.create(
-            UUID.randomUUID(),
+            1L,
             "홍길동",
             "test@email.com",
             LocalDate.of(2020, 1, 1),
@@ -76,8 +75,7 @@ class PayrollManagerTest extends IntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee."
-        );
+            "This is a memo for the employee.");
     }
 
 }

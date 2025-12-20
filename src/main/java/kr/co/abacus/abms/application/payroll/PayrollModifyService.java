@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.payroll;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,19 +22,18 @@ public class PayrollModifyService implements PayrollManager {
     private final EmployeeFinder employeeFinder;
 
     @Override
-    public void changeSalary(UUID employeeId, Money annualSalary, LocalDate startDate) {
+    public void changeSalary(Long employeeId, Money annualSalary, LocalDate startDate) {
         checkEmployeeExists(employeeId);
 
         payrollRepository.findCurrentSalaryByEmployeeId(employeeId).ifPresent(
-            currentSalary -> closeCurrentSalaryBefore(startDate.minusDays(1), currentSalary)
-        );
+            currentSalary -> closeCurrentSalaryBefore(startDate.minusDays(1), currentSalary));
 
         Payroll payroll = Payroll.startWith(employeeId, annualSalary, startDate);
 
         payrollRepository.save(payroll);
     }
 
-    private void checkEmployeeExists(UUID employeeId) {
+    private void checkEmployeeExists(Long employeeId) {
         employeeFinder.find(employeeId);
     }
 

@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.employee.inbound;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
@@ -12,20 +11,20 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
  */
 public interface EmployeeManager {
 
-    UUID create(EmployeeCreateCommand command);
+    Long create(EmployeeCreateCommand command);
 
-    UUID updateInfo(UUID id, EmployeeUpdateCommand command);
+    Long updateInfo(Long id, EmployeeUpdateCommand command);
 
-    void resign(UUID id, LocalDate resignationDate);
+    void resign(Long id, LocalDate resignationDate);
 
-    void takeLeave(UUID id);
+    void takeLeave(Long id);
 
-    void activate(UUID id);
+    void activate(Long id);
 
-    void promote(UUID id, EmployeePosition newPosition);
+    void promote(Long id, EmployeePosition newPosition);
 
-    void delete(UUID id, String deleteBy);
+    void delete(Long id, String deleteBy);
 
-    void restore(UUID id);
+    void restore(Long id);
 
 }

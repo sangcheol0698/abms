@@ -2,7 +2,6 @@ package kr.co.abacus.abms.application.department.outbound;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
 import kr.co.abacus.abms.application.department.dto.DepartmentProjection;
@@ -14,6 +13,6 @@ public interface CustomDepartmentRepository {
 
     List<DepartmentProjection> findAllDepartmentProjections();
 
-    Optional<DepartmentDetail> findDetail(UUID departmentId);
+    Optional<DepartmentDetail> findDetail(Long departmentId);
 
 }

@@ -10,4 +10,5 @@ public record ContractUpdateRequest(
     LocalDate startDate,
     @Nullable LocalDate endDate
 ) {
+
 }

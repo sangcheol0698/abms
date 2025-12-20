@@ -1,12 +1,9 @@
 package kr.co.abacus.abms.adapter.web.department.dto;
 
-import java.util.UUID;
-
 public record DepartmentAssignLeaderResponse(
-    UUID departmentId
-) {
+    Long departmentId) {
 
-    public static DepartmentAssignLeaderResponse of(UUID departmentId) {
+    public static DepartmentAssignLeaderResponse of(Long departmentId) {
         return new DepartmentAssignLeaderResponse(departmentId);
     }
 

@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.employee.outbound;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
@@ -18,6 +17,7 @@ public interface CustomEmployeeRepository {
 
     List<Employee> search(EmployeeSearchCondition condition);
 
-    @Nullable EmployeeDetail findEmployeeDetail(UUID id);
+    @Nullable
+    EmployeeDetail findEmployeeDetail(Long id);
 
 }

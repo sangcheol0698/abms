@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter.web;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import jakarta.annotation.PostConstruct;
 
@@ -509,7 +508,7 @@ public class InitData {
             LocalDate.of(2025, 12, 31))));
     }
 
-    private Employee createEmployee(UUID departmentId, String email, String name, LocalDate joinDate,
+    private Employee createEmployee(Long departmentId, String email, String name, LocalDate joinDate,
                                     LocalDate birthDate, EmployeePosition position, EmployeeType type,
                                     EmployeeGrade grade, EmployeeAvatar avatar, String memo) {
         return Employee.create(
@@ -522,8 +521,7 @@ public class InitData {
             type,
             grade,
             avatar,
-            memo
-        );
+            memo);
     }
 
 }

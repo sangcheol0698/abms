@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.party.outbound;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.data.repository.Repository;
 
@@ -11,6 +10,6 @@ public interface PartyRepository extends Repository<Party, Long>, CustomPartyRep
 
     Party save(Party party);
 
-    Optional<Party> findById(UUID id);
+    Optional<Party> findById(Long id);
 
 }

@@ -58,12 +58,16 @@ public class OrganizationTools {
         String code,
         String type,
         String leader
-    ) {}
+    ) {
+
+    }
 
     public record SubDepartmentInfo(
         String name,
         String code,
         String type
-    ) {}
+    ) {
+
+    }
 
 }

@@ -1,12 +1,15 @@
 package kr.co.abacus.abms.adapter.web.chat;
 
 import kr.co.abacus.abms.application.chat.ChatService;
+
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import reactor.core.publisher.Flux;
+
 import java.util.Map;
 
 @RestController
@@ -29,4 +32,5 @@ public class ChatController {
         String content = chatService.sendMessage(request.content());
         return Map.of("content", content);
     }
+
 }

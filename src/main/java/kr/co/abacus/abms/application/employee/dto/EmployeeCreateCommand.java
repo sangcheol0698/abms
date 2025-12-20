@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.employee.dto;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 
@@ -15,7 +14,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 @Builder
 public record EmployeeCreateCommand(
-    UUID departmentId,
+    Long departmentId,
     String email,
     String name,
     LocalDate joinDate,
@@ -24,8 +23,7 @@ public record EmployeeCreateCommand(
     EmployeeType type,
     EmployeeGrade grade,
     EmployeeAvatar avatar,
-    @Nullable String memo
-) {
+    @Nullable String memo) {
 
     public Employee toEntity() {
         return Employee.create(
@@ -38,8 +36,7 @@ public record EmployeeCreateCommand(
             type,
             grade,
             avatar,
-            memo
-        );
+            memo);
     }
 
 }

@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.department.inbound;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,12 +12,12 @@ import kr.co.abacus.abms.domain.department.Department;
 
 public interface DepartmentFinder {
 
-    Department find(UUID id);
+    Department find(Long id);
 
     List<OrganizationChartDetail> getOrganizationChart();
 
-    Page<EmployeeSummary> getEmployees(UUID departmentId, String name, Pageable pageable);
+    Page<EmployeeSummary> getEmployees(Long departmentId, String name, Pageable pageable);
 
-    DepartmentDetail findDetail(UUID departmentId);
+    DepartmentDetail findDetail(Long departmentId);
 
 }

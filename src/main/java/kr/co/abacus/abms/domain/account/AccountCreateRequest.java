@@ -1,10 +1,8 @@
 package kr.co.abacus.abms.domain.account;
 
-import java.util.UUID;
-
 public record AccountCreateRequest(
-    UUID employeeId,
+    Long employeeId,
     String username,
-    String password
-) {
+    String password) {
+
 }

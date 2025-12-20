@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -51,7 +50,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
 
     @Test
     void findNotFound() {
-        assertThatThrownBy(() -> departmentFinder.find(UUID.randomUUID()))
+        assertThatThrownBy(() -> departmentFinder.find(9999L))
             .isInstanceOf(DepartmentNotFoundException.class);
     }
 
@@ -99,14 +98,14 @@ class DepartmentFinderTest extends IntegrationTestBase {
     @DisplayName("부서별 직원 조회 - 존재하지 않는 부서")
     void getEmployees_notFoundDepartment() {
         // Given: 존재하지 않는 부서 ID
-        UUID nonExistentId = UUID.randomUUID();
+        Long nonExistentId = 9999L;
 
         // When & Then: DepartmentNotFoundException 발생
         assertThatThrownBy(() -> departmentFinder.getEmployees(nonExistentId, null, PageRequest.of(0, 10)))
             .isInstanceOf(DepartmentNotFoundException.class);
     }
 
-    private Employee createEmployee(UUID departmentId, String email) {
+    private Employee createEmployee(Long departmentId, String email) {
         return Employee.create(
             departmentId,
             "홍길동",
@@ -117,19 +116,17 @@ class DepartmentFinderTest extends IntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee."
-        );
+            "This is a memo for the employee.");
     }
 
     private Department createDepartment(String code, String name, DepartmentType type,
-                                        @Nullable UUID leaderEmployeeId, @Nullable Department parent) {
+                                        @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
             code,
             name,
             type,
             leaderEmployeeId,
-            parent
-        );
+            parent);
     }
 
 }

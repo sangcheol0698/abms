@@ -2,7 +2,6 @@ package kr.co.abacus.abms.domain.payroll;
 
 import java.time.LocalDate;
 import java.util.Objects;
-import java.util.UUID;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -25,7 +24,7 @@ import kr.co.abacus.abms.domain.shared.Period;
 public class Payroll extends AbstractEntity {
 
     @Column(name = "employee_id", nullable = false)
-    private UUID employeeId;
+    private Long employeeId;
 
     @Embedded
     @AttributeOverride(name = "amount", column = @Column(name = "annual_salary", nullable = false))
@@ -36,7 +35,7 @@ public class Payroll extends AbstractEntity {
     @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
     private Period period;
 
-    public static Payroll startWith(UUID employeeId, Money annualSalary, LocalDate startDate) {
+    public static Payroll startWith(Long employeeId, Money annualSalary, LocalDate startDate) {
         Payroll payroll = new Payroll();
 
         payroll.employeeId = Objects.requireNonNull(employeeId);

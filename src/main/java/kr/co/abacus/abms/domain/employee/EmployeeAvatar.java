@@ -21,5 +21,4 @@ public enum EmployeeAvatar {
     GOLDEN_RAY("Golden Ray");
 
     private final String description;
-
 }

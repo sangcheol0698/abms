@@ -3,7 +3,6 @@ package kr.co.abacus.abms.domain.contract;
 import static java.util.Objects.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -30,7 +29,7 @@ import kr.co.abacus.abms.domain.shared.Period;
 public class Contract extends AbstractEntity {
 
     @Column(name = "project_id", nullable = false)
-    private UUID projectId;
+    private Long projectId;
 
     @Column(name = "version", nullable = false)
     private Integer version;

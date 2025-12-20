@@ -8,5 +8,7 @@ public record EmployeeExcelUploadResponse(
 ) {
 
     public record Failure(int rowNumber, String message) {
+
     }
+
 }

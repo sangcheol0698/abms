@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter.web.department.dto;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 
@@ -9,14 +8,13 @@ import kr.co.abacus.abms.application.department.dto.DepartmentLeaderDetail;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 
 public record OrganizationChartResponse(
-    UUID departmentId,
+    Long departmentId,
     String departmentName,
     String departmentCode,
     String departmentType,
     @Nullable LeaderResponse departmentLeader,
     int employeeCount,
-    List<OrganizationChartResponse> children
-) {
+    List<OrganizationChartResponse> children) {
 
     public static OrganizationChartResponse of(OrganizationChartDetail organizationChartDetail) {
         DepartmentLeaderDetail departmentLeaderDetail = organizationChartDetail.leader();
@@ -28,17 +26,17 @@ public record OrganizationChartResponse(
             organizationChartDetail.departmentType().getDescription(),
             getLeader(departmentLeaderDetail),
             organizationChartDetail.employeeCount(),
-            getOrganizationChartResponses(organizationChartDetail)
-        );
+            getOrganizationChartResponses(organizationChartDetail));
     }
 
     private static @Nullable LeaderResponse getLeader(@Nullable DepartmentLeaderDetail departmentLeaderDetail) {
         return departmentLeaderDetail != null ? LeaderResponse.of(
-            departmentLeaderDetail.leaderEmployeeId(), departmentLeaderDetail.leaderEmployeeName(), departmentLeaderDetail.leaderPosition()
-        ) : null;
+            departmentLeaderDetail.leaderEmployeeId(), departmentLeaderDetail.leaderEmployeeName(),
+            departmentLeaderDetail.leaderPosition()) : null;
     }
 
-    private static List<OrganizationChartResponse> getOrganizationChartResponses(OrganizationChartDetail organizationChartDetail) {
+    private static List<OrganizationChartResponse> getOrganizationChartResponses(
+        OrganizationChartDetail organizationChartDetail) {
         return organizationChartDetail.children().stream()
             .map(OrganizationChartResponse::of)
             .toList();

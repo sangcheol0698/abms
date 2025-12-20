@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter.web.department;
 
 import java.util.List;
-import java.util.UUID;
 
 import jakarta.validation.Valid;
 
@@ -46,7 +45,7 @@ public class DepartmentApi {
     }
 
     @GetMapping("/api/departments/{departmentId}")
-    public DepartmentDetailResponse getDepartment(@PathVariable UUID departmentId) {
+    public DepartmentDetailResponse getDepartment(@PathVariable Long departmentId) {
         DepartmentDetail detail = departmentFinder.findDetail(departmentId);
 
         return DepartmentDetailResponse.of(detail);
@@ -54,10 +53,9 @@ public class DepartmentApi {
 
     @GetMapping("/api/departments/{departmentId}/employees")
     public PageResponse<EmployeeSearchResponse> getDepartmentEmployees(
-        @PathVariable UUID departmentId,
+        @PathVariable Long departmentId,
         @RequestParam(required = false) String name,
-        @PageableDefault(size = 20, sort = "name") Pageable pageable
-    ) {
+        @PageableDefault(size = 20, sort = "name") Pageable pageable) {
         Page<EmployeeSummary> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
 
         Page<EmployeeSearchResponse> responses = employeesPage.map(EmployeeSearchResponse::of);
@@ -66,8 +64,9 @@ public class DepartmentApi {
     }
 
     @PostMapping("/api/departments/{departmentId}/assign-team-leader")
-    public DepartmentAssignLeaderResponse assignTeamLeader(@PathVariable UUID departmentId, @Valid @RequestBody EmployeeAssignLeaderRequest request) {
-        UUID id = departmentManager.assignLeader(departmentId, request.leaderEmployeeId());
+    public DepartmentAssignLeaderResponse assignTeamLeader(@PathVariable Long departmentId,
+                                                           @Valid @RequestBody EmployeeAssignLeaderRequest request) {
+        Long id = departmentManager.assignLeader(departmentId, request.leaderEmployeeId());
 
         return DepartmentAssignLeaderResponse.of(id);
     }

@@ -1,15 +1,14 @@
 package kr.co.abacus.abms.adapter.web.project.dto;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 
 import kr.co.abacus.abms.domain.project.Project;
 
 public record ProjectResponse(
-    UUID projectId,
-    UUID partyId,
+    Long projectId,
+    Long partyId,
     String partyName,
     String code,
     String name,

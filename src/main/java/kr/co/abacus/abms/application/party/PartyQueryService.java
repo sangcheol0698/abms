@@ -1,7 +1,5 @@
 package kr.co.abacus.abms.application.party;
 
-import java.util.UUID;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,7 +23,7 @@ public class PartyQueryService implements PartyFinder {
         return partyRepository.search(pageable, name);
     }
 
-    public String getPartyId(UUID partyId) {
+    public String getPartyId(Long partyId) {
         return partyRepository.findById(partyId).map(Party::getName).orElse(null);
     }
 

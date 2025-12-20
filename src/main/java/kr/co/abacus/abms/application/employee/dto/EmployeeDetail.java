@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.employee.dto;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
@@ -11,9 +10,9 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.shared.Email;
 
 public record EmployeeDetail(
-    UUID departmentId,
+    Long departmentId,
     String departmentName,
-    UUID employeeId,
+    Long employeeId,
     String name,
     Email email,
     LocalDate joinDate,
@@ -23,7 +22,6 @@ public record EmployeeDetail(
     EmployeeGrade grade,
     EmployeeType type,
     EmployeeAvatar avatar,
-    String memo
-) {
+    String memo) {
 
 }

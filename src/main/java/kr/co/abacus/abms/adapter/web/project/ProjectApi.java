@@ -2,7 +2,6 @@ package kr.co.abacus.abms.adapter.web.project;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -57,7 +56,7 @@ public class ProjectApi {
     }
 
     @GetMapping("/api/projects/{id}")
-    public ProjectResponse find(@PathVariable UUID id) {
+    public ProjectResponse find(@PathVariable Long id) {
         Project project = projectFinder.find(id);
         String partyName = partyQueryService.getPartyId(project.getPartyId());
 
@@ -65,7 +64,7 @@ public class ProjectApi {
     }
 
     @PutMapping("/api/projects/{id}")
-    public ProjectResponse update(@PathVariable UUID id, @RequestBody ProjectUpdateApiRequest request) {
+    public ProjectResponse update(@PathVariable Long id, @RequestBody ProjectUpdateApiRequest request) {
         Project project = projectManager.update(id, request.toDomainRequest());
         String partyName = partyQueryService.getPartyId(project.getPartyId());
 
@@ -73,7 +72,7 @@ public class ProjectApi {
     }
 
     @PatchMapping("/api/projects/{id}/complete")
-    public ProjectResponse complete(@PathVariable UUID id) {
+    public ProjectResponse complete(@PathVariable Long id) {
         Project project = projectManager.complete(id);
         String partyName = partyQueryService.getPartyId(project.getPartyId());
 
@@ -81,7 +80,7 @@ public class ProjectApi {
     }
 
     @PatchMapping("/api/projects/{id}/cancel")
-    public ProjectResponse cancel(@PathVariable UUID id) {
+    public ProjectResponse cancel(@PathVariable Long id) {
         Project project = projectManager.cancel(id);
         String partyName = partyQueryService.getPartyId(project.getPartyId());
 
@@ -90,15 +89,15 @@ public class ProjectApi {
 
     @DeleteMapping("/api/projects/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") UUID id) {
+    public void delete(@PathVariable("id") Long id) {
         projectManager.delete(id);
     }
 
     @GetMapping("/api/projects/statuses")
     public List<ProjectStatusResponse> getProjectStatuses() {
         return Arrays.stream(ProjectStatus.values())
-                .map(ProjectStatusResponse::of)
-                .toList();
+            .map(ProjectStatusResponse::of)
+            .toList();
     }
 
 }

@@ -6,7 +6,6 @@ import static org.springframework.util.StringUtils.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
@@ -49,21 +48,19 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
         List<EmployeeSummary> content = queryFactory
             .select(Projections.constructor(EmployeeSummary.class,
-                    department.id,
-                    department.name,
-                    employee.id,
-                    employee.name,
-                    employee.email,
-                    employee.joinDate,
-                    employee.birthDate,
-                    employee.position,
-                    employee.status,
-                    employee.grade,
-                    employee.type,
-                    employee.avatar,
-                    employee.memo
-                )
-            )
+                department.id,
+                department.name,
+                employee.id,
+                employee.name,
+                employee.email,
+                employee.joinDate,
+                employee.birthDate,
+                employee.position,
+                employee.status,
+                employee.grade,
+                employee.type,
+                employee.avatar,
+                employee.memo))
             .from(employee)
             .join(department).on(employee.departmentId.eq(department.id))
             .where(
@@ -73,8 +70,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 inGrades(condition.grades()),
                 inDepartments(condition.departmentIds()),
                 inStatuses(condition.statuses()),
-                employee.deleted.isFalse()
-            )
+                employee.deleted.isFalse())
             .orderBy(orderSpecifiers)
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
@@ -91,8 +87,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 inGrades(condition.grades()),
                 inDepartments(condition.departmentIds()),
                 inStatuses(condition.statuses()),
-                employee.deleted.isFalse()
-            );
+                employee.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
@@ -108,37 +103,33 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 inGrades(request.grades()),
                 inDepartments(request.departmentIds()),
                 inStatuses(request.statuses()),
-                employee.deleted.isFalse()
-            )
+                employee.deleted.isFalse())
             .orderBy(defaultSort())
             .fetch();
     }
 
     @Override
-    public @Nullable EmployeeDetail findEmployeeDetail(UUID id) {
+    public @Nullable EmployeeDetail findEmployeeDetail(Long id) {
         return queryFactory
             .select(Projections.constructor(EmployeeDetail.class,
-                    department.id,
-                    department.name,
-                    employee.id,
-                    employee.name,
-                    employee.email,
-                    employee.joinDate,
-                    employee.birthDate,
-                    employee.position,
-                    employee.status,
-                    employee.grade,
-                    employee.type,
-                    employee.avatar,
-                    employee.memo
-                )
-            )
+                department.id,
+                department.name,
+                employee.id,
+                employee.name,
+                employee.email,
+                employee.joinDate,
+                employee.birthDate,
+                employee.position,
+                employee.status,
+                employee.grade,
+                employee.type,
+                employee.avatar,
+                employee.memo))
             .from(employee)
             .join(department).on(employee.departmentId.eq(department.id))
             .where(
                 employee.id.eq(id),
-                employee.deleted.isFalse()
-            )
+                employee.deleted.isFalse())
             .fetchOne();
     }
 
@@ -167,7 +158,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
         return employee.grade.in(grades);
     }
 
-    private @Nullable BooleanExpression inDepartments(@Nullable List<UUID> departmentIds) {
+    private @Nullable BooleanExpression inDepartments(@Nullable List<Long> departmentIds) {
         if (ObjectUtils.isEmpty(departmentIds)) {
             return null;
         }
@@ -224,11 +215,15 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
             .when(employee.position.eq(EmployeePosition.STAFF)).then(EmployeePosition.STAFF.getRank())
             .when(employee.position.eq(EmployeePosition.LEADER)).then(EmployeePosition.LEADER.getRank())
             .when(employee.position.eq(EmployeePosition.MANAGER)).then(EmployeePosition.MANAGER.getRank())
-            .when(employee.position.eq(EmployeePosition.SENIOR_MANAGER)).then(EmployeePosition.SENIOR_MANAGER.getRank())
+            .when(employee.position.eq(EmployeePosition.SENIOR_MANAGER))
+            .then(EmployeePosition.SENIOR_MANAGER.getRank())
             .when(employee.position.eq(EmployeePosition.DIRECTOR)).then(EmployeePosition.DIRECTOR.getRank())
-            .when(employee.position.eq(EmployeePosition.TECHNICAL_DIRECTOR)).then(EmployeePosition.TECHNICAL_DIRECTOR.getRank())
-            .when(employee.position.eq(EmployeePosition.MANAGING_DIRECTOR)).then(EmployeePosition.MANAGING_DIRECTOR.getRank())
-            .when(employee.position.eq(EmployeePosition.VICE_PRESIDENT)).then(EmployeePosition.VICE_PRESIDENT.getRank())
+            .when(employee.position.eq(EmployeePosition.TECHNICAL_DIRECTOR))
+            .then(EmployeePosition.TECHNICAL_DIRECTOR.getRank())
+            .when(employee.position.eq(EmployeePosition.MANAGING_DIRECTOR))
+            .then(EmployeePosition.MANAGING_DIRECTOR.getRank())
+            .when(employee.position.eq(EmployeePosition.VICE_PRESIDENT))
+            .then(EmployeePosition.VICE_PRESIDENT.getRank())
             .when(employee.position.eq(EmployeePosition.PRESIDENT)).then(EmployeePosition.PRESIDENT.getRank())
             .otherwise(0);
 

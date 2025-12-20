@@ -11,7 +11,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
+
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -59,8 +59,7 @@ public class EmployeeExcelService {
         "직책",
         "근무 유형",
         "등급",
-        "메모"
-    );
+        "메모");
 
     private static final List<String> UPLOAD_HEADERS = List.of(
         "부서 코드",
@@ -71,8 +70,7 @@ public class EmployeeExcelService {
         "직책",
         "근무 유형",
         "등급",
-        "메모"
-    );
+        "메모");
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
@@ -80,7 +78,7 @@ public class EmployeeExcelService {
 
     public byte[] download(EmployeeSearchCondition condition) {
         List<Employee> employees = employeeRepository.search(condition);
-        Map<UUID, String> departmentNames = loadDepartmentNameMap();
+        Map<Long, String> departmentNames = loadDepartmentNameMap();
 
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
@@ -136,7 +134,7 @@ public class EmployeeExcelService {
                 throw new EmployeeExcelException("유효한 데이터가 포함된 시트를 찾을 수 없습니다.");
             }
 
-            Map<String, UUID> departmentCodeMap = loadDepartmentCodeMap();
+            Map<String, Long> departmentCodeMap = loadDepartmentCodeMap();
 
             List<EmployeeExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
             int successCount = 0;
@@ -167,8 +165,7 @@ public class EmployeeExcelService {
                 String message = String.format(
                     "엑셀 업로드 실패: 총 %d건의 오류가 있습니다.%n%s",
                     excelFailures.size(),
-                    detailLines
-                );
+                    detailLines);
 
                 throw new EmployeeExcelException(message);
             }
@@ -179,37 +176,37 @@ public class EmployeeExcelService {
         }
     }
 
-    private EmployeeCreateCommand toCreateCommand(Row row, Map<String, UUID> departmentCodeMap) {
-            // 1. 엑셀 셀 데이터 추출 (String으로 우선 추출)
-            String teamCode = getCellValue(row, 0);
-            String email = getCellValue(row, 1);
-            String name = getCellValue(row, 2);
-            String joinedDate = getCellValue(row, 3);
-            String birthDate = getCellValue(row, 4);
-            String positionDesc = getCellValue(row, 5);
-            String typeDesc = getCellValue(row, 6);
-            String gradeDesc = getCellValue(row, 7);
-            String memo = getCellValue(row, 8);
+    private EmployeeCreateCommand toCreateCommand(Row row, Map<String, Long> departmentCodeMap) {
+        // 1. 엑셀 셀 데이터 추출 (String으로 우선 추출)
+        String teamCode = getCellValue(row, 0);
+        String email = getCellValue(row, 1);
+        String name = getCellValue(row, 2);
+        String joinedDate = getCellValue(row, 3);
+        String birthDate = getCellValue(row, 4);
+        String positionDesc = getCellValue(row, 5);
+        String typeDesc = getCellValue(row, 6);
+        String gradeDesc = getCellValue(row, 7);
+        String memo = getCellValue(row, 8);
 
-            // 2. 부서 UUID 조회
-            UUID departmentId = departmentCodeMap.get(teamCode);
-            if (departmentId == null) {
-                throw new IllegalArgumentException("존재하지 않는 부서 코드입니다: " + teamCode);
-            }
+        // 2. 부서 UUID 조회
+        Long departmentId = departmentCodeMap.get(teamCode);
+        if (departmentId == null) {
+            throw new IllegalArgumentException("존재하지 않는 부서 코드입니다: " + teamCode);
+        }
 
-            // 3. 빌더 또는 생성자를 사용하여 Command 객체 생성
-            return EmployeeCreateCommand.builder()
-                .departmentId(departmentId)
-                .email(email)
-                .name(name)
-                .joinDate(LocalDate.parse(joinedDate)) // yyyy-MM-dd 형식 가정
-                .birthDate(LocalDate.parse(birthDate))   // yyyy-MM-dd 형식 가정
-                .position(EmployeePosition.fromDescription(positionDesc)) // description으로 Enum 찾기
-                .type(EmployeeType.fromDescription(typeDesc))
-                .grade(EmployeeGrade.fromDescription(gradeDesc))
-                .avatar(EmployeeAvatar.AQUA_SPLASH)
-                .memo(memo)
-                .build();
+        // 3. 빌더 또는 생성자를 사용하여 Command 객체 생성
+        return EmployeeCreateCommand.builder()
+            .departmentId(departmentId)
+            .email(email)
+            .name(name)
+            .joinDate(LocalDate.parse(joinedDate)) // yyyy-MM-dd 형식 가정
+            .birthDate(LocalDate.parse(birthDate)) // yyyy-MM-dd 형식 가정
+            .position(EmployeePosition.fromDescription(positionDesc)) // description으로 Enum 찾기
+            .type(EmployeeType.fromDescription(typeDesc))
+            .grade(EmployeeGrade.fromDescription(gradeDesc))
+            .avatar(EmployeeAvatar.AQUA_SPLASH)
+            .memo(memo)
+            .build();
     }
 
     private void createHeaderRow(Workbook workbook, Sheet sheet, List<String> headers) {
@@ -226,7 +223,7 @@ public class EmployeeExcelService {
         }
     }
 
-    private void writeEmployeeRow(Row row, Employee employee, Map<UUID, String> departmentNames) {
+    private void writeEmployeeRow(Row row, Employee employee, Map<Long, String> departmentNames) {
         int col = 0;
         String departmentName = Optional.of(employee.getDepartmentId())
             .map(id -> departmentNames.getOrDefault(id, id.toString()))
@@ -282,28 +279,16 @@ public class EmployeeExcelService {
         };
     }
 
-    private Map<UUID, String> loadDepartmentNameMap() {
+    private Map<Long, String> loadDepartmentNameMap() {
         return departmentRepository.findAllByDeletedFalse()
             .stream()
             .collect(Collectors.toMap(Department::getId, Department::getName));
     }
 
-    private Map<String, UUID> loadDepartmentCodeMap() {
+    private Map<String, Long> loadDepartmentCodeMap() {
         return departmentRepository.findAllByDeletedFalse()
             .stream()
             .collect(Collectors.toMap(Department::getCode, Department::getId));
-    }
-
-    private UUID resolveDepartmentId(String value, Map<String, UUID> departmentByCode) {
-        String normalized = value.trim();
-        if (normalized.isEmpty()) {
-            throw new IllegalArgumentException("부서 코드는 필수입니다.");
-        }
-        UUID departmentId = departmentByCode.get(normalized);
-        if (departmentId == null) {
-            throw new IllegalArgumentException("존재하지 않는 부서 코드입니다: " + normalized);
-        }
-        return departmentId;
     }
 
     private LocalDate parseDate(String value, String fieldName) {

@@ -1,8 +1,6 @@
 package kr.co.abacus.abms.domain.account;
 
-import static java.util.Objects.*;
-
-import java.util.UUID;
+import java.util.Objects;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -23,14 +21,11 @@ import kr.co.abacus.abms.domain.shared.Email;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(
-    name = "account",
-    uniqueConstraints = @UniqueConstraint(name = "UK_ACCOUNT_USERNAME", columnNames = "username")
-)
+@Table(name = "account", uniqueConstraints = @UniqueConstraint(name = "UK_ACCOUNT_USERNAME", columnNames = "username"))
 public class Account extends AbstractEntity {
 
     @Column(name = "employee_id", nullable = false)
-    private UUID employeeId;
+    private Long employeeId;
 
     @Embedded
     @AttributeOverride(name = "address", column = @Column(name = "username", nullable = false, length = 100))
@@ -52,9 +47,9 @@ public class Account extends AbstractEntity {
     public static Account create(AccountCreateRequest request) {
         Account account = new Account();
 
-        account.employeeId = requireNonNull(request.employeeId());
-        account.username = new Email(requireNonNull(request.username()));
-        account.password = requireNonNull(request.password()); // 비밀번호는 이미 암호화되어 들어온다고 가정
+        account.employeeId = Objects.requireNonNull(request.employeeId());
+        account.username = new Email(Objects.requireNonNull(request.username()));
+        account.password = Objects.requireNonNull(request.password()); // 비밀번호는 이미 암호화되어 들어온다고 가정
         account.isValid = true;
         account.loginFailCount = 0;
 
@@ -81,7 +76,7 @@ public class Account extends AbstractEntity {
     }
 
     public void resetPassword(String newPassword) {
-        this.password = requireNonNull(newPassword);
+        this.password = Objects.requireNonNull(newPassword);
         this.loginFailCount = 0;
     }
 

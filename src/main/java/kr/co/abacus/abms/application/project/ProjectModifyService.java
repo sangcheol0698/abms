@@ -1,7 +1,5 @@
 package kr.co.abacus.abms.application.project;
 
-import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +33,7 @@ public class ProjectModifyService implements ProjectManager {
     }
 
     @Override
-    public Project update(UUID id, ProjectUpdateRequest request) {
+    public Project update(Long id, ProjectUpdateRequest request) {
         Project project = projectFinder.find(id);
         project.update(request);
 
@@ -43,7 +41,7 @@ public class ProjectModifyService implements ProjectManager {
     }
 
     @Override
-    public Project complete(UUID id) {
+    public Project complete(Long id) {
         Project project = projectFinder.find(id);
         project.complete();
 
@@ -51,7 +49,7 @@ public class ProjectModifyService implements ProjectManager {
     }
 
     @Override
-    public Project cancel(UUID id) {
+    public Project cancel(Long id) {
         Project project = projectFinder.find(id);
         project.cancel();
 
@@ -59,7 +57,7 @@ public class ProjectModifyService implements ProjectManager {
     }
 
     @Override
-    public void delete(UUID id) {
+    public void delete(Long id) {
         Project project = projectFinder.find(id);
         project.softDelete("system");
 

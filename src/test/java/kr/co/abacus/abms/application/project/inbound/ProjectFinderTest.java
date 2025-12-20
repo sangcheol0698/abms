@@ -4,7 +4,6 @@ import static kr.co.abacus.abms.domain.project.ProjectFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +41,7 @@ class ProjectFinderTest extends IntegrationTestBase {
     @Test
     @DisplayName("존재하지 않는 프로젝트 조회 시 예외 발생")
     void find_notFound() {
-        UUID nonExistentId = UUID.randomUUID();
+        Long nonExistentId = 9999L;
 
         assertThatThrownBy(() -> projectFinder.find(nonExistentId))
             .isInstanceOf(ProjectNotFoundException.class);
@@ -78,8 +77,8 @@ class ProjectFinderTest extends IntegrationTestBase {
     @Test
     @DisplayName("거래처 ID로 프로젝트 조회")
     void findAllByPartyId() {
-        UUID partyId = UUID.randomUUID();
-        UUID otherPartyId = UUID.randomUUID();
+        Long partyId = 1L;
+        Long otherPartyId = 2L;
 
         projectRepository.save(Project.create(createProjectCreateRequest("PRJ-001", "프로젝트1", partyId)));
         projectRepository.save(Project.create(createProjectCreateRequest("PRJ-002", "프로젝트2", partyId)));

@@ -8,7 +8,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 import jakarta.validation.Valid;
 
@@ -67,13 +66,13 @@ public class EmployeeApi {
 
     @PostMapping("/api/employees")
     public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request) {
-        UUID employeeId = employeeManager.create(request.toCommand());
+        Long employeeId = employeeManager.create(request.toCommand());
 
         return EmployeeCreateResponse.of(employeeId);
     }
 
     @GetMapping("/api/employees/{id}")
-    public EmployeeDetailResponse findEmployeeDetail(@PathVariable UUID id) {
+    public EmployeeDetailResponse findEmployeeDetail(@PathVariable Long id) {
         EmployeeDetail detail = employeeFinder.findEmployeeDetail(id);
 
         return EmployeeDetailResponse.of(detail);
@@ -89,45 +88,45 @@ public class EmployeeApi {
     }
 
     @PutMapping("/api/employees/{id}")
-    public EmployeeUpdateResponse update(@PathVariable UUID id, @RequestBody @Valid EmployeeUpdateRequest request) {
-        UUID employeeId = employeeManager.updateInfo(id, request.toCommand());
+    public EmployeeUpdateResponse update(@PathVariable Long id, @RequestBody @Valid EmployeeUpdateRequest request) {
+        Long employeeId = employeeManager.updateInfo(id, request.toCommand());
 
         return EmployeeUpdateResponse.of(employeeId);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/api/employees/{id}")
-    public void delete(@PathVariable UUID id) {
+    public void delete(@PathVariable Long id) {
         employeeManager.delete(id, SYSTEM_DELETER);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/restore")
-    public void restore(@PathVariable UUID id) {
+    public void restore(@PathVariable Long id) {
         employeeManager.restore(id);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/resign")
-    public void resign(@PathVariable UUID id, @RequestParam LocalDate resignationDate) {
+    public void resign(@PathVariable Long id, @RequestParam LocalDate resignationDate) {
         employeeManager.resign(id, resignationDate);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/take-leave")
-    public void takeLeave(@PathVariable UUID id) {
+    public void takeLeave(@PathVariable Long id) {
         employeeManager.takeLeave(id);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/activate")
-    public void activate(@PathVariable UUID id) {
+    public void activate(@PathVariable Long id) {
         employeeManager.activate(id);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/promote")
-    public void promote(@PathVariable UUID id, @RequestParam EmployeePosition position) {
+    public void promote(@PathVariable Long id, @RequestParam EmployeePosition position) {
         employeeManager.promote(id, position);
     }
 
@@ -171,7 +170,8 @@ public class EmployeeApi {
         byte[] content = employeeExcelService.download(request);
         String filename = buildFilename("employees");
         return ResponseEntity.ok()
-            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .contentType(
+                MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
             .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
             .body(new ByteArrayResource(content));
     }
@@ -181,7 +181,8 @@ public class EmployeeApi {
         byte[] content = employeeExcelService.downloadSample();
         String filename = buildFilename("employees_sample");
         return ResponseEntity.ok()
-            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .contentType(
+                MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
             .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
             .body(new ByteArrayResource(content));
     }
@@ -200,7 +201,8 @@ public class EmployeeApi {
     }
 
     private String buildFilename(String prefix) {
-        String timestamp = LocalDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String timestamp = LocalDateTime.now(ZoneId.systemDefault())
+            .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         return prefix + "_" + timestamp + ".xlsx";
     }
 
@@ -210,6 +212,5 @@ public class EmployeeApi {
             .toList();
         return new EmployeeExcelUploadResponse(result.successCount(), failures);
     }
-
 
 }

@@ -1,19 +1,16 @@
 package kr.co.abacus.abms.application.department.dto;
 
-import java.util.UUID;
-
 import kr.co.abacus.abms.domain.department.DepartmentType;
 
 public record DepartmentDetail(
-    UUID id,
+    Long id,
     String code,
     String name,
     DepartmentType type,
-    UUID leaderEmployeeId,
+    Long leaderEmployeeId,
     String leaderEmployeeName,
-    UUID parentDepartmentId,
+    Long parentDepartmentId,
     String parentDepartmentName,
-    int employeeCount
-) {
+    int employeeCount) {
 
 }

@@ -23,7 +23,7 @@ public class EmployeeInfoTools {
                 String departmentName = departmentRepository.findByIdAndDeletedFalse(employee.getDepartmentId())
                     .map(dept -> dept.getName())
                     .orElse("부서 없음");
-                
+
                 return new EmployeeInfo(
                     employee.getName(),
                     departmentName,
@@ -47,6 +47,8 @@ public class EmployeeInfoTools {
         String status,
         String joinDate,
         String birthDate
-    ) {}
+    ) {
+
+    }
 
 }

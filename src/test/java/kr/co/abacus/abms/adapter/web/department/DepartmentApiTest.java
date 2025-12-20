@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -131,7 +130,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     @DisplayName("존재하지 않는 부서 ID로 직원 조회 시 404를 반환한다")
     void getDepartmentEmployees_notFoundDepartment() {
         // Given: 존재하지 않는 부서 ID
-        UUID nonExistentId = UUID.randomUUID();
+        Long nonExistentId = 9999L;
 
         // When & Then: 404 응답
         restTestClient.get()
@@ -179,7 +178,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
     private Employee createEmployee(String email) {
         return Employee.create(
-            UUID.randomUUID(),
+            1L,
             "홍길동",
             email,
             LocalDate.of(2020, 1,
@@ -189,11 +188,10 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee."
-        );
+            "This is a memo for the employee.");
     }
 
-    private Employee createEmployee(UUID departmentId, String email) {
+    private Employee createEmployee(Long departmentId, String email) {
         return Employee.create(
             departmentId,
             "홍길동",
@@ -204,19 +202,17 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee."
-        );
+            "This is a memo for the employee.");
     }
 
     private Department createDepartment(String code, String name, DepartmentType type,
-                                        @Nullable UUID leaderEmployeeId, @Nullable Department parent) {
+                                        @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
             code,
             name,
             type,
             leaderEmployeeId,
-            parent
-        );
+            parent);
     }
 
 }

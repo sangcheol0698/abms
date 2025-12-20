@@ -3,7 +3,6 @@ package kr.co.abacus.abms.application.department.inbound;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +41,7 @@ class DepartmentManagerTest extends IntegrationTestBase {
         Employee employee = createEmployee();
         employeeRepository.save(employee);
 
-        UUID departmentId = departmentManager.assignLeader(department1.getId(), employee.getId());
+        Long departmentId = departmentManager.assignLeader(department1.getId(), employee.getId());
         flushAndClear();
 
         Department department = departmentRepository.findByIdAndDeletedFalse(departmentId).orElseThrow();
@@ -50,19 +49,18 @@ class DepartmentManagerTest extends IntegrationTestBase {
     }
 
     private Department createDepartment(String code, String name, DepartmentType type,
-                                        @Nullable UUID leaderEmployeeId, @Nullable Department parent) {
+                                        @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
             code,
             name,
             type,
             leaderEmployeeId,
-            parent
-        );
+            parent);
     }
 
     private Employee createEmployee() {
         return Employee.create(
-            UUID.randomUUID(),
+            1L,
             "홍길동",
             "test@email.com",
             LocalDate.of(2020, 1, 1),
@@ -71,8 +69,7 @@ class DepartmentManagerTest extends IntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee."
-        );
+            "This is a memo for the employee.");
     }
 
 }

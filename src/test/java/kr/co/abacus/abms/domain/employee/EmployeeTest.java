@@ -3,7 +3,6 @@ package kr.co.abacus.abms.domain.employee;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -105,7 +104,7 @@ class EmployeeTest {
         Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
 
         // when
-        UUID updatedDepartmentId = UUID.randomUUID();
+        Long updatedDepartmentId = 9999L;
         employee.updateInfo(
             updatedDepartmentId,
             "김철수",
@@ -116,8 +115,7 @@ class EmployeeTest {
             EmployeeType.PART_TIME,
             EmployeeGrade.JUNIOR,
             EmployeeAvatar.CORAL_SPARK,
-            "Updated memo for the employee."
-        );
+            "Updated memo for the employee.");
 
         // then
         assertThat(employee.getDepartmentId()).isEqualTo(updatedDepartmentId);
@@ -143,7 +141,7 @@ class EmployeeTest {
 
         // then
         assertThatThrownBy(() -> employee.updateInfo(
-            UUID.randomUUID(),
+            9999L,
             "김철수",
             "updateUser@email.com",
             LocalDate.of(2025, 1, 1),
@@ -152,8 +150,7 @@ class EmployeeTest {
             EmployeeType.PART_TIME,
             EmployeeGrade.JUNIOR,
             EmployeeAvatar.CORAL_SPARK,
-            "Updated memo for the employee."
-        ))
+            "Updated memo for the employee."))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("퇴사한 직원은 정보를 수정할 수 없습니다.");
     }
@@ -256,7 +253,7 @@ class EmployeeTest {
 
     private Employee createEmployee(LocalDate joinDate) {
         return Employee.create(
-            UUID.randomUUID(),
+            1L,
             "홍길동",
             "testUser@email.com",
             joinDate,
@@ -265,8 +262,7 @@ class EmployeeTest {
             EmployeeType.FULL_TIME,
             EmployeeGrade.SENIOR,
             EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee."
-        );
+            "This is a memo for the employee.");
     }
 
 }

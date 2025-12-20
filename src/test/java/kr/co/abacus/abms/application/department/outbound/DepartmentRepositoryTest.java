@@ -3,7 +3,6 @@ package kr.co.abacus.abms.application.department.outbound;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -49,16 +48,14 @@ class DepartmentRepositoryTest extends IntegrationTestBase {
         assertThat(departmentDetail.name()).isEqualTo("ABC Corp");
     }
 
-
     private Department createDepartment(String code, String name, DepartmentType type,
-                                        @Nullable UUID leaderEmployeeId, @Nullable Department parent) {
+                                        @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
             code,
             name,
             type,
             leaderEmployeeId,
-            parent
-        );
+            parent);
     }
 
 }

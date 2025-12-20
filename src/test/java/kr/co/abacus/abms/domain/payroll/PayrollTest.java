@@ -3,7 +3,6 @@ package kr.co.abacus.abms.domain.payroll;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +12,7 @@ class PayrollTest {
 
     @Test
     void startWith() {
-        Payroll payroll = Payroll.startWith(UUID.randomUUID(), Money.wons(100_00L), LocalDate.of(2025, 1, 1));
+        Payroll payroll = Payroll.startWith(1L, Money.wons(100_00L), LocalDate.of(2025, 1, 1));
 
         assertThat(payroll.getEmployeeId()).isNotNull();
         assertThat(payroll.getAnnualSalary()).isEqualTo(Money.wons(100_00L));
@@ -23,7 +22,7 @@ class PayrollTest {
 
     @Test
     void close() {
-        Payroll payroll = Payroll.startWith(UUID.randomUUID(), Money.wons(100_00L), LocalDate.of(2025, 1, 1));
+        Payroll payroll = Payroll.startWith(1L, Money.wons(100_00L), LocalDate.of(2025, 1, 1));
         payroll.close(LocalDate.of(2025, 12, 31));
 
         assertThat(payroll.getPeriod().endDate()).isEqualTo(LocalDate.of(2025, 12, 31));

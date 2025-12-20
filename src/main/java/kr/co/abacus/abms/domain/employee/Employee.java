@@ -4,7 +4,6 @@ import static java.util.Objects.*;
 import static org.springframework.util.Assert.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -34,7 +33,7 @@ import kr.co.abacus.abms.domain.shared.Email;
 public class Employee extends AbstractEntity {
 
     @Column(name = "department_id", nullable = false)
-    private UUID departmentId;
+    private Long departmentId;
 
     @Column(name = "name", nullable = false, length = 10)
     private String name;
@@ -78,7 +77,7 @@ public class Employee extends AbstractEntity {
     private String memo;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Employee(UUID departmentId, String name, String email, LocalDate joinDate, LocalDate birthDate,
+    private Employee(Long departmentId, String name, String email, LocalDate joinDate, LocalDate birthDate,
                      EmployeePosition position, EmployeeType type, EmployeeGrade grade, EmployeeAvatar avatar,
                      @Nullable LocalDate resignationDate, @Nullable String memo) {
         this.departmentId = requireNonNull(departmentId);
@@ -96,7 +95,7 @@ public class Employee extends AbstractEntity {
         this.status = EmployeeStatus.ACTIVE;
     }
 
-    public static Employee create(UUID departmentId, String name, String email, LocalDate joinDate,
+    public static Employee create(Long departmentId, String name, String email, LocalDate joinDate,
                                   LocalDate birthDate, EmployeePosition position, EmployeeType type,
                                   EmployeeGrade grade, EmployeeAvatar avatar, @Nullable String memo) {
         return Employee.builder()
@@ -142,7 +141,7 @@ public class Employee extends AbstractEntity {
         this.resignationDate = null;
     }
 
-    public void updateInfo(UUID departmentId, String name, String email, LocalDate joinDate, LocalDate birthDate,
+    public void updateInfo(Long departmentId, String name, String email, LocalDate joinDate, LocalDate birthDate,
                            EmployeePosition position, EmployeeType type, EmployeeGrade grade,
                            EmployeeAvatar avatar, @Nullable String memo) {
         state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 정보를 수정할 수 없습니다.");

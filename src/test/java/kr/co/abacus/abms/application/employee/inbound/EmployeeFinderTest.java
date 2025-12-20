@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,12 +27,10 @@ class EmployeeFinderTest extends IntegrationTestBase {
     private EmployeeFinder employeeFinder;
 
     @Autowired
-    private EmployeeManager employeeManager;
 
-    @Autowired
     private DepartmentRepository departmentRepository;
 
-    private UUID companyId;
+    private Long companyId;
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -51,7 +48,7 @@ class EmployeeFinderTest extends IntegrationTestBase {
 
     @Test
     void find() {
-        UUID employeeId = employeeRepository.save(createEmployee(companyId, "test@email.com")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(companyId, "test@email.com")).getId();
         flushAndClear();
 
         Employee foundEmployee = employeeFinder.find(employeeId);
@@ -60,13 +57,13 @@ class EmployeeFinderTest extends IntegrationTestBase {
 
     @Test
     void findNotFound() {
-        assertThatThrownBy(() -> employeeFinder.find(UUID.randomUUID()))
+        assertThatThrownBy(() -> employeeFinder.find(9999L))
             .isInstanceOf(EmployeeNotFoundException.class);
     }
 
     @Test
     void findDeleted() {
-        UUID employeeId = employeeRepository.save(createEmployee(companyId, "testUser@email.com")).getId();
+        Long employeeId = employeeRepository.save(createEmployee(companyId, "testUser@email.com")).getId();
         flush();
 
         Employee savedEmployee = employeeFinder.find(employeeId);
@@ -77,17 +74,17 @@ class EmployeeFinderTest extends IntegrationTestBase {
             .isInstanceOf(EmployeeNotFoundException.class);
     }
 
-    private Department createDepartment(String code, String name, DepartmentType type, UUID leaderId, Department parent) {
+    private Department createDepartment(String code, String name, DepartmentType type, Long leaderId,
+                                        Department parent) {
         return Department.create(
             code,
             name,
             type,
             leaderId,
-            parent
-        );
+            parent);
     }
 
-    private Employee createEmployee(UUID teamId, String email) {
+    private Employee createEmployee(Long teamId, String email) {
         return Employee.create(
             teamId,
             "홍길동",
@@ -98,8 +95,7 @@ class EmployeeFinderTest extends IntegrationTestBase {
             EmployeeType.FULL_TIME,
             EmployeeGrade.JUNIOR,
             EmployeeAvatar.SKY_GLOW,
-            null
-        );
+            null);
     }
 
 }

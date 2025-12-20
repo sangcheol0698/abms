@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter.web.employee.dto;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 
@@ -13,9 +12,9 @@ import kr.co.abacus.abms.domain.shared.Email;
 
 @Builder
 public record EmployeeDetailResponse(
-    UUID departmentId,
+    Long departmentId,
     String departmentName,
-    UUID employeeId,
+    Long employeeId,
     String name,
     Email email,
     LocalDate joinDate,
@@ -25,8 +24,7 @@ public record EmployeeDetailResponse(
     EnumResponse grade,
     EnumResponse type,
     EnumResponse avatar,
-    @Nullable String memo
-) {
+    @Nullable String memo) {
 
     public static EmployeeDetailResponse of(EmployeeDetail detail) {
         return EmployeeDetailResponse.builder()

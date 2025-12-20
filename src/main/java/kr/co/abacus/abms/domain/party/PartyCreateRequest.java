@@ -9,4 +9,5 @@ public record PartyCreateRequest(
     @Nullable String salesRepPhone,
     @Nullable String salesRepEmail
 ) {
+
 }

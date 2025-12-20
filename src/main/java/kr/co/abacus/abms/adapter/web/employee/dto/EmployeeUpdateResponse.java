@@ -1,12 +1,9 @@
 package kr.co.abacus.abms.adapter.web.employee.dto;
 
-import java.util.UUID;
-
 public record EmployeeUpdateResponse(
-    UUID employeeId
-) {
+    Long employeeId) {
 
-    public static EmployeeUpdateResponse of(UUID employeeId) {
+    public static EmployeeUpdateResponse of(Long employeeId) {
         return new EmployeeUpdateResponse(employeeId);
     }
 

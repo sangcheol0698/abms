@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.project;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +23,7 @@ public class ProjectQueryService implements ProjectFinder {
     private final ProjectRepository projectRepository;
 
     @Override
-    public Project find(UUID id) {
+    public Project find(Long id) {
         return projectRepository.findByIdAndDeletedFalse(id)
             .orElseThrow(() -> new ProjectNotFoundException("존재하지 않는 프로젝트입니다: " + id));
     }
@@ -40,7 +39,7 @@ public class ProjectQueryService implements ProjectFinder {
     }
 
     @Override
-    public List<Project> findAllByPartyId(UUID partyId) {
+    public List<Project> findAllByPartyId(Long partyId) {
         return projectRepository.findAllByPartyIdAndDeletedFalse(partyId);
     }
 

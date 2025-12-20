@@ -1,7 +1,5 @@
 package kr.co.abacus.abms.adapter.web.department.dto;
 
-import java.util.UUID;
-
 import lombok.Builder;
 
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
@@ -9,16 +7,15 @@ import kr.co.abacus.abms.domain.department.DepartmentType;
 
 @Builder
 public record DepartmentDetailResponse(
-    UUID id,
+    Long id,
     String code,
     String name,
     DepartmentType type,
-    UUID leaderEmployeeId,
+    Long leaderEmployeeId,
     String leaderEmployeeName,
-    UUID parentDepartmentId,
+    Long parentDepartmentId,
     String parentDepartmentName,
-    int employeeCount
-) {
+    int employeeCount) {
 
     public static DepartmentDetailResponse of(DepartmentDetail detail) {
         return DepartmentDetailResponse.builder()
