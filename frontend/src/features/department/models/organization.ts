@@ -33,10 +33,13 @@ function mapLeader(input: any): OrganizationLeader | null {
   const rawAvatarCode = typeof input?.avatar === 'string' ? input.avatar : null;
   const avatarOption = getEmployeeAvatarOption(rawAvatarCode);
 
+  // position이 EnumResponse 객체면 description을, 문자열이면 그대로 사용
+  const position = input.position?.description || input.position || '';
+
   return {
-    employeeId: input.employeeId,
+    employeeId: String(input.employeeId),
     employeeName: input.employeeName,
-    position: input.position,
+    position,
     avatarCode: avatarOption.code,
     avatarLabel: avatarOption.label,
     avatarImageUrl: avatarOption.imageUrl,
@@ -49,7 +52,7 @@ function mapEmployees(input: any[] | undefined): OrganizationEmployee[] {
   }
 
   return input.map((employee) => ({
-    employeeId: employee.employeeId,
+    employeeId: String(employee.employeeId),
     employeeName: employee.employeeName,
     position: employee.position,
   }));
@@ -60,8 +63,8 @@ export function mapOrganizationChartNode(input: any): OrganizationChartNode {
   const computedEmployeeCount =
     typeof input?.employeeCount === 'number' ? Number(input.employeeCount) : employees.length;
 
-  const base: OrganizationChartNode = {
-    departmentId: input.departmentId,
+  return {
+    departmentId: String(input.departmentId),
     departmentName: input.departmentName,
     departmentCode: input.departmentCode,
     departmentType: input.departmentType,
@@ -71,8 +74,6 @@ export function mapOrganizationChartNode(input: any): OrganizationChartNode {
       : employees.length,
     children: Array.isArray(input.children) ? input.children.map(mapOrganizationChartNode) : [],
   };
-
-  return base;
 }
 
 export function normalizeOrganizationChartResponse(response: unknown): OrganizationChartNode[] {

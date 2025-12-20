@@ -276,14 +276,14 @@ watch(chart, (nodes) => {
     return;
   }
 
+  // ensureSelectedDepartmentExists()가 이미 처리하므로 여기서는 체크만
   if (selectedDepartmentId.value) {
     const exists = findDepartment(nodes, selectedDepartmentId.value);
-    if (exists) {
-      return;
+    if (!exists) {
+      // URL에 있는 부서 ID가 실제로 존재하지 않으면 undefined로 설정
+      selectedDepartmentId.value = undefined;
     }
   }
-
-  selectedDepartmentId.value = nodes[0]?.departmentId;
 });
 
 watch(

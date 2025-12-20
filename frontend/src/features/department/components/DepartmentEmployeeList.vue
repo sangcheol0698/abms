@@ -35,7 +35,6 @@
       v-model:open="isEmployeeUpdateDialogOpen"
       :employee="editingEmployee"
       :departmentOptions="departmentOptions"
-      :statusOptions="statusOptions"
       :typeOptions="typeOptions"
       :gradeOptions="gradeOptions"
       :positionOptions="positionOptions"
