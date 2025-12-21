@@ -133,36 +133,36 @@ public class EmployeeApi {
     @GetMapping("/api/employees/positions")
     public List<EnumResponse> getEmployeePositions() {
         return Arrays.stream(EmployeePosition.values())
-            .map(position -> new EnumResponse(position.name(), position.getDescription()))
-            .toList();
+                .map(position -> new EnumResponse(position.name(), position.getDescription()))
+                .toList();
     }
 
     @GetMapping("/api/employees/grades")
     public List<EnumResponse> getEmployeeGrades() {
         return Arrays.stream(EmployeeGrade.values())
-            .map(grade -> new EnumResponse(grade.name(), grade.getDescription()))
-            .toList();
+                .map(grade -> new EnumResponse(grade.name(), grade.getDescription()))
+                .toList();
     }
 
     @GetMapping("/api/employees/types")
     public List<EnumResponse> getEmployeeTypes() {
         return Arrays.stream(EmployeeType.values())
-            .map(type -> new EnumResponse(type.name(), type.getDescription()))
-            .toList();
+                .map(type -> new EnumResponse(type.name(), type.getDescription()))
+                .toList();
     }
 
     @GetMapping("/api/employees/statuses")
     public List<EnumResponse> getEmployeeStatuses() {
         return Arrays.stream(EmployeeStatus.values())
-            .map(status -> new EnumResponse(status.name(), status.getDescription()))
-            .toList();
+                .map(status -> new EnumResponse(status.name(), status.getDescription()))
+                .toList();
     }
 
     @GetMapping("/api/employees/avatars")
     public List<EnumResponse> getEmployeeAvatars() {
         return Arrays.stream(EmployeeAvatar.values())
-            .map(avatar -> new EnumResponse(avatar.name(), avatar.getDescription()))
-            .toList();
+                .map(avatar -> new EnumResponse(avatar.name(), avatar.getDescription()))
+                .toList();
     }
 
     @GetMapping("/api/employees/excel/download")
@@ -170,10 +170,10 @@ public class EmployeeApi {
         byte[] content = employeeExcelService.download(request);
         String filename = buildFilename("employees");
         return ResponseEntity.ok()
-            .contentType(
-                MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-            .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
-            .body(new ByteArrayResource(content));
+                .contentType(
+                        MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(new ByteArrayResource(content));
     }
 
     @GetMapping("/api/employees/excel/sample")
@@ -181,10 +181,10 @@ public class EmployeeApi {
         byte[] content = employeeExcelService.downloadSample();
         String filename = buildFilename("employees_sample");
         return ResponseEntity.ok()
-            .contentType(
-                MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-            .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
-            .body(new ByteArrayResource(content));
+                .contentType(
+                        MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(new ByteArrayResource(content));
     }
 
     @PostMapping(value = "/api/employees/excel/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -202,14 +202,14 @@ public class EmployeeApi {
 
     private String buildFilename(String prefix) {
         String timestamp = LocalDateTime.now(ZoneId.systemDefault())
-            .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         return prefix + "_" + timestamp + ".xlsx";
     }
 
     private EmployeeExcelUploadResponse toResponse(EmployeeExcelUploadResult result) {
         List<EmployeeExcelUploadResponse.Failure> failures = result.excelFailures().stream()
-            .map(failure -> new EmployeeExcelUploadResponse.Failure(failure.rowNumber(), failure.message()))
-            .toList();
+                .map(failure -> new EmployeeExcelUploadResponse.Failure(failure.rowNumber(), failure.message()))
+                .toList();
         return new EmployeeExcelUploadResponse(result.successCount(), failures);
     }
 

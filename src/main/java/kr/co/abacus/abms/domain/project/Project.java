@@ -25,7 +25,7 @@ import kr.co.abacus.abms.domain.shared.Period;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "project", uniqueConstraints = @UniqueConstraint(name = "UK_PROJECT_CODE", columnNames = {
-    "project_code"}))
+        "project_code"}))
 public class Project extends AbstractEntity {
 
     @Column(name = "party_id", nullable = false)
@@ -67,13 +67,13 @@ public class Project extends AbstractEntity {
 
     public static Project create(ProjectCreateRequest request) {
         return new Project(
-            requireNonNull(request.partyId()),
-            requireNonNull(request.code()),
-            requireNonNull(request.name()),
-            request.description(),
-            requireNonNull(request.status()),
-            Money.wons(requireNonNull(request.contractAmount())),
-            new Period(requireNonNull(request.startDate()), requireNonNull(request.endDate())));
+                requireNonNull(request.partyId()),
+                requireNonNull(request.code()),
+                requireNonNull(request.name()),
+                request.description(),
+                requireNonNull(request.status()),
+                Money.wons(requireNonNull(request.contractAmount())),
+                new Period(requireNonNull(request.startDate()), requireNonNull(request.endDate())));
     }
 
     public void update(ProjectUpdateRequest request) {

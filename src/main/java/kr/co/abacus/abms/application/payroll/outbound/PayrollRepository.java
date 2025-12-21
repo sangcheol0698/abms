@@ -16,10 +16,10 @@ public interface PayrollRepository extends Repository<Payroll, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT sh " +
-        "FROM Payroll sh " +
-        "WHERE sh.employeeId = :employeeId " +
-        "AND sh.period.endDate IS NULL " +
-        "AND sh.deleted = false")
+            "FROM Payroll sh " +
+            "WHERE sh.employeeId = :employeeId " +
+            "AND sh.period.endDate IS NULL " +
+            "AND sh.deleted = false")
     Optional<Payroll> findCurrentSalaryByEmployeeId(Long employeeId);
 
 }

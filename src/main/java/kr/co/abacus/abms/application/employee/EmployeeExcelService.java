@@ -51,26 +51,26 @@ public class EmployeeExcelService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final List<String> DOWNLOAD_HEADERS = List.of(
-        "부서 이름",
-        "이메일",
-        "이름",
-        "입사일",
-        "생년월일",
-        "직책",
-        "근무 유형",
-        "등급",
-        "메모");
+            "부서 이름",
+            "이메일",
+            "이름",
+            "입사일",
+            "생년월일",
+            "직책",
+            "근무 유형",
+            "등급",
+            "메모");
 
     private static final List<String> UPLOAD_HEADERS = List.of(
-        "부서 코드",
-        "이메일",
-        "이름",
-        "입사일",
-        "생년월일",
-        "직책",
-        "근무 유형",
-        "등급",
-        "메모");
+            "부서 코드",
+            "이메일",
+            "이름",
+            "입사일",
+            "생년월일",
+            "직책",
+            "근무 유형",
+            "등급",
+            "메모");
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
@@ -156,16 +156,16 @@ public class EmployeeExcelService {
 
             if (!excelFailures.isEmpty()) {
                 String detailLines = excelFailures.stream()
-                    .map(excelFailure -> {
-                        String prefix = excelFailure.rowNumber() > 0 ? excelFailure.rowNumber() + "행: " : "";
-                        return prefix + excelFailure.message();
-                    })
-                    .collect(Collectors.joining("\n"));
+                        .map(excelFailure -> {
+                            String prefix = excelFailure.rowNumber() > 0 ? excelFailure.rowNumber() + "행: " : "";
+                            return prefix + excelFailure.message();
+                        })
+                        .collect(Collectors.joining("\n"));
 
                 String message = String.format(
-                    "엑셀 업로드 실패: 총 %d건의 오류가 있습니다.%n%s",
-                    excelFailures.size(),
-                    detailLines);
+                        "엑셀 업로드 실패: 총 %d건의 오류가 있습니다.%n%s",
+                        excelFailures.size(),
+                        detailLines);
 
                 throw new EmployeeExcelException(message);
             }
@@ -196,17 +196,17 @@ public class EmployeeExcelService {
 
         // 3. 빌더 또는 생성자를 사용하여 Command 객체 생성
         return EmployeeCreateCommand.builder()
-            .departmentId(departmentId)
-            .email(email)
-            .name(name)
-            .joinDate(LocalDate.parse(joinedDate)) // yyyy-MM-dd 형식 가정
-            .birthDate(LocalDate.parse(birthDate)) // yyyy-MM-dd 형식 가정
-            .position(EmployeePosition.fromDescription(positionDesc)) // description으로 Enum 찾기
-            .type(EmployeeType.fromDescription(typeDesc))
-            .grade(EmployeeGrade.fromDescription(gradeDesc))
-            .avatar(EmployeeAvatar.AQUA_SPLASH)
-            .memo(memo)
-            .build();
+                .departmentId(departmentId)
+                .email(email)
+                .name(name)
+                .joinDate(LocalDate.parse(joinedDate)) // yyyy-MM-dd 형식 가정
+                .birthDate(LocalDate.parse(birthDate)) // yyyy-MM-dd 형식 가정
+                .position(EmployeePosition.fromDescription(positionDesc)) // description으로 Enum 찾기
+                .type(EmployeeType.fromDescription(typeDesc))
+                .grade(EmployeeGrade.fromDescription(gradeDesc))
+                .avatar(EmployeeAvatar.AQUA_SPLASH)
+                .memo(memo)
+                .build();
     }
 
     private void createHeaderRow(Workbook workbook, Sheet sheet, List<String> headers) {
@@ -226,8 +226,8 @@ public class EmployeeExcelService {
     private void writeEmployeeRow(Row row, Employee employee, Map<Long, String> departmentNames) {
         int col = 0;
         String departmentName = Optional.of(employee.getDepartmentId())
-            .map(id -> departmentNames.getOrDefault(id, id.toString()))
-            .orElse("");
+                .map(id -> departmentNames.getOrDefault(id, id.toString()))
+                .orElse("");
 
         row.createCell(col++).setCellValue(departmentName);
         row.createCell(col++).setCellValue(employee.getEmail().address());
@@ -281,14 +281,14 @@ public class EmployeeExcelService {
 
     private Map<Long, String> loadDepartmentNameMap() {
         return departmentRepository.findAllByDeletedFalse()
-            .stream()
-            .collect(Collectors.toMap(Department::getId, Department::getName));
+                .stream()
+                .collect(Collectors.toMap(Department::getId, Department::getName));
     }
 
     private Map<String, Long> loadDepartmentCodeMap() {
         return departmentRepository.findAllByDeletedFalse()
-            .stream()
-            .collect(Collectors.toMap(Department::getCode, Department::getId));
+                .stream()
+                .collect(Collectors.toMap(Department::getCode, Department::getId));
     }
 
     private LocalDate parseDate(String value, String fieldName) {
@@ -308,10 +308,10 @@ public class EmployeeExcelService {
         }
         String normalized = value.trim();
         return EnumSet.allOf(enumType)
-            .stream()
-            .filter(candidate -> matchesEnum(candidate, normalized))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(fieldName + " 값이 올바르지 않습니다: " + value));
+                .stream()
+                .filter(candidate -> matchesEnum(candidate, normalized))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(fieldName + " 값이 올바르지 않습니다: " + value));
     }
 
     private boolean matchesEnum(Enum<?> candidate, String value) {

@@ -5,10 +5,10 @@ import java.time.LocalDate;
 import org.jspecify.annotations.Nullable;
 
 public record ContractCreateRequest(
-    Long projectId,
-    @Nullable LocalDate contractDate,
-    Long contractAmount,
-    LocalDate startDate,
-    @Nullable LocalDate endDate) {
+        Long projectId,
+        @Nullable LocalDate contractDate,
+        Long contractAmount,
+        LocalDate startDate,
+        @Nullable LocalDate endDate) {
 
 }

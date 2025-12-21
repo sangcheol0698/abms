@@ -20,6 +20,7 @@ import kr.co.abacus.abms.domain.shared.Money;
 import kr.co.abacus.abms.domain.shared.Period;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
+@DisplayName("급여 관리 (PayrollManager)")
 class PayrollManagerTest extends IntegrationTestBase {
 
     @Autowired
@@ -32,7 +33,7 @@ class PayrollManagerTest extends IntegrationTestBase {
     private PayrollRepository payrollRepository;
 
     @Test
-    @DisplayName("첫 급여 등록")
+    @DisplayName("직원의 연봉을 변경한다 (첫 등록 포함)")
     void changeSalary() {
         Employee employee = createEmployee();
         employeeRepository.save(employee);
@@ -47,7 +48,7 @@ class PayrollManagerTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("급여 변경")
+    @DisplayName("이미 등록된 연봉을 새로운 기간으로 변경한다")
     void changeSalary_alreadyChanged() {
         Employee employee = createEmployee();
         employeeRepository.save(employee);
@@ -66,16 +67,16 @@ class PayrollManagerTest extends IntegrationTestBase {
 
     private Employee createEmployee() {
         return Employee.create(
-            1L,
-            "홍길동",
-            "test@email.com",
-            LocalDate.of(2020, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee.");
+                1L,
+                "홍길동",
+                "test@email.com",
+                LocalDate.of(2020, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                EmployeeAvatar.SKY_GLOW,
+                "This is a memo for the employee.");
     }
 
 }

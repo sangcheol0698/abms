@@ -53,8 +53,8 @@ class EmployeeTest {
 
         // then
         assertThatThrownBy(() -> employee.resign(LocalDate.of(2026, 1, 1)))
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("이미 퇴사한 직원입니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("이미 퇴사한 직원입니다.");
     }
 
     @Test
@@ -65,8 +65,8 @@ class EmployeeTest {
 
         // then
         assertThatThrownBy(() -> employee.resign(LocalDate.of(2024, 12, 31)))
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("퇴사일은 입사일 이후여야 합니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("퇴사일은 입사일 이후여야 합니다.");
     }
 
     @Test
@@ -93,8 +93,8 @@ class EmployeeTest {
 
         // then
         assertThatThrownBy(() -> employee.takeLeave())
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
     }
 
     @Test
@@ -106,16 +106,16 @@ class EmployeeTest {
         // when
         Long updatedDepartmentId = 9999L;
         employee.updateInfo(
-            updatedDepartmentId,
-            "김철수",
-            "updateUser@email.com",
-            LocalDate.of(2025, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.DIRECTOR,
-            EmployeeType.PART_TIME,
-            EmployeeGrade.JUNIOR,
-            EmployeeAvatar.CORAL_SPARK,
-            "Updated memo for the employee.");
+                updatedDepartmentId,
+                "김철수",
+                "updateUser@email.com",
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.DIRECTOR,
+                EmployeeType.PART_TIME,
+                EmployeeGrade.JUNIOR,
+                EmployeeAvatar.CORAL_SPARK,
+                "Updated memo for the employee.");
 
         // then
         assertThat(employee.getDepartmentId()).isEqualTo(updatedDepartmentId);
@@ -141,18 +141,18 @@ class EmployeeTest {
 
         // then
         assertThatThrownBy(() -> employee.updateInfo(
-            9999L,
-            "김철수",
-            "updateUser@email.com",
-            LocalDate.of(2025, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.DIRECTOR,
-            EmployeeType.PART_TIME,
-            EmployeeGrade.JUNIOR,
-            EmployeeAvatar.CORAL_SPARK,
-            "Updated memo for the employee."))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("퇴사한 직원은 정보를 수정할 수 없습니다.");
+                9999L,
+                "김철수",
+                "updateUser@email.com",
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.DIRECTOR,
+                EmployeeType.PART_TIME,
+                EmployeeGrade.JUNIOR,
+                EmployeeAvatar.CORAL_SPARK,
+                "Updated memo for the employee."))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("퇴사한 직원은 정보를 수정할 수 없습니다.");
     }
 
     @Test
@@ -178,8 +178,8 @@ class EmployeeTest {
 
         // then
         assertThatThrownBy(() -> employee.activate())
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("이미 재직 중인 직원입니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("이미 재직 중인 직원입니다.");
     }
 
     @Test
@@ -201,8 +201,8 @@ class EmployeeTest {
         Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
 
         assertThatThrownBy(() -> employee.promote(EmployeePosition.STAFF))
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("현재 직급보다 낮거나 같은 직급으로 변경할 수 없습니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("현재 직급보다 낮거나 같은 직급으로 변경할 수 없습니다.");
     }
 
     @Test
@@ -216,8 +216,8 @@ class EmployeeTest {
 
         // then
         assertThatThrownBy(() -> employee.promote(EmployeePosition.DIRECTOR))
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("퇴사한 직원은 승진할 수 없습니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("퇴사한 직원은 승진할 수 없습니다.");
     }
 
     @Test
@@ -247,22 +247,22 @@ class EmployeeTest {
 
         // then
         assertThatThrownBy(() -> employee.softDelete("anotherUser"))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("이미 삭제된 직원입니다.");
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("이미 삭제된 직원입니다.");
     }
 
     private Employee createEmployee(LocalDate joinDate) {
         return Employee.create(
-            1L,
-            "홍길동",
-            "testUser@email.com",
-            joinDate,
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee.");
+                1L,
+                "홍길동",
+                "testUser@email.com",
+                joinDate,
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                EmployeeAvatar.SKY_GLOW,
+                "This is a memo for the employee.");
     }
 
 }

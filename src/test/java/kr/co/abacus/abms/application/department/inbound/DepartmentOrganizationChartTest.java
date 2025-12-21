@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,6 +22,7 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
+@DisplayName("조직도 조회 (DepartmentOrganizationChart)")
 class DepartmentOrganizationChartTest extends IntegrationTestBase {
 
     @Autowired
@@ -33,6 +35,7 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
     private EmployeeRepository employeeRepository;
 
     @Test
+    @DisplayName("전체 부서의 조직도 트리 구조를 조회한다")
     void getOrganizationChart_returnsDefaultTree() {
         // given
         Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
@@ -72,6 +75,7 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("조직도 조회 시 부서별 소속 직원 수를 포함한다")
     void getOrganizationChard_employeeCount() {
         Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
         departmentRepository.save(company);
@@ -92,26 +96,26 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
 
     private Employee createEmployee(Long departmentId, String email) {
         return Employee.create(
-            departmentId,
-            "홍길동",
-            email,
-            LocalDate.of(2020, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee.");
+                departmentId,
+                "홍길동",
+                email,
+                LocalDate.of(2020, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                EmployeeAvatar.SKY_GLOW,
+                "This is a memo for the employee.");
     }
 
     private Department createDepartment(String code, String name, DepartmentType type,
                                         @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
-            code,
-            name,
-            type,
-            leaderEmployeeId,
-            parent);
+                code,
+                name,
+                type,
+                leaderEmployeeId,
+                parent);
     }
 
 }

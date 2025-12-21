@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,13 +22,13 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
+@DisplayName("직원 조회 (EmployeeFinder)")
 class EmployeeFinderTest extends IntegrationTestBase {
 
     @Autowired
     private EmployeeFinder employeeFinder;
 
     @Autowired
-
     private DepartmentRepository departmentRepository;
 
     private Long companyId;
@@ -47,6 +48,7 @@ class EmployeeFinderTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("직원 ID로 상세 정보를 조회한다")
     void find() {
         Long employeeId = employeeRepository.save(createEmployee(companyId, "test@email.com")).getId();
         flushAndClear();
@@ -56,12 +58,14 @@ class EmployeeFinderTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("존재하지 않는 직원 조회 시 예외가 발생한다")
     void findNotFound() {
         assertThatThrownBy(() -> employeeFinder.find(9999L))
-            .isInstanceOf(EmployeeNotFoundException.class);
+                .isInstanceOf(EmployeeNotFoundException.class);
     }
 
     @Test
+    @DisplayName("삭제된 직원은 조회되지 않아야 한다")
     void findDeleted() {
         Long employeeId = employeeRepository.save(createEmployee(companyId, "testUser@email.com")).getId();
         flush();
@@ -71,31 +75,31 @@ class EmployeeFinderTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> employeeFinder.find(employeeId))
-            .isInstanceOf(EmployeeNotFoundException.class);
+                .isInstanceOf(EmployeeNotFoundException.class);
     }
 
     private Department createDepartment(String code, String name, DepartmentType type, Long leaderId,
                                         Department parent) {
         return Department.create(
-            code,
-            name,
-            type,
-            leaderId,
-            parent);
+                code,
+                name,
+                type,
+                leaderId,
+                parent);
     }
 
     private Employee createEmployee(Long teamId, String email) {
         return Employee.create(
-            teamId,
-            "홍길동",
-            email,
-            LocalDate.of(2024, 1, 1),
-            LocalDate.of(1990, 5, 20),
-            EmployeePosition.ASSOCIATE,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.JUNIOR,
-            EmployeeAvatar.SKY_GLOW,
-            null);
+                teamId,
+                "홍길동",
+                email,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(1990, 5, 20),
+                EmployeePosition.ASSOCIATE,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.JUNIOR,
+                EmployeeAvatar.SKY_GLOW,
+                null);
     }
 
 }

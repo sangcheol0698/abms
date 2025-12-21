@@ -89,15 +89,15 @@ public class ProjectApi {
 
     @DeleteMapping("/api/projects/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") Long id) {
+    public void delete(@PathVariable Long id) {
         projectManager.delete(id);
     }
 
     @GetMapping("/api/projects/statuses")
     public List<ProjectStatusResponse> getProjectStatuses() {
         return Arrays.stream(ProjectStatus.values())
-            .map(ProjectStatusResponse::of)
-            .toList();
+                .map(ProjectStatusResponse::of)
+                .toList();
     }
 
 }

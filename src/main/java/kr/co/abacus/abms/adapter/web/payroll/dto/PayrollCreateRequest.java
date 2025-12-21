@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import jakarta.validation.constraints.NotNull;
 
 public record PayrollCreateRequest(
-    @NotNull Long employeeId,
-    @NotNull BigDecimal annualSalary,
-    @NotNull LocalDate startDate) {
+        @NotNull Long employeeId,
+        @NotNull BigDecimal annualSalary,
+        @NotNull LocalDate startDate) {
 
 }

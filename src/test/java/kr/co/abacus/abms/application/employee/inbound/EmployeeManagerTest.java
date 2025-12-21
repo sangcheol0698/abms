@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,6 +26,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
+@DisplayName("직원 관리 (EmployeeManager)")
 class EmployeeManagerTest extends IntegrationTestBase {
 
     @Autowired
@@ -55,18 +57,19 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("신규 직원을 등록한다")
     void create() {
         EmployeeCreateCommand command = EmployeeCreateCommand.builder()
-            .departmentId(divisionId)
-            .email("test@email.com")
-            .name("홍길동")
-            .joinDate(LocalDate.of(2025, 1, 1))
-            .birthDate(LocalDate.of(1990, 1, 1))
-            .position(EmployeePosition.ASSOCIATE)
-            .type(EmployeeType.FULL_TIME)
-            .grade(EmployeeGrade.JUNIOR)
-            .avatar(EmployeeAvatar.SKY_GLOW)
-            .build();
+                .departmentId(divisionId)
+                .email("test@email.com")
+                .name("홍길동")
+                .joinDate(LocalDate.of(2025, 1, 1))
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .position(EmployeePosition.ASSOCIATE)
+                .type(EmployeeType.FULL_TIME)
+                .grade(EmployeeGrade.JUNIOR)
+                .avatar(EmployeeAvatar.SKY_GLOW)
+                .build();
 
         Long employeeId = employeeManager.create(command);
         flushAndClear();
@@ -79,16 +82,18 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("중복된 이메일로 직원 생성 시 예외가 발생한다")
     void duplicateEmail() {
         employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
 
         assertThatThrownBy(() -> employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")))
-            .isInstanceOf(DuplicateEmailException.class)
-            .hasMessageContaining("이미 존재하는 이메일입니다");
+                .isInstanceOf(DuplicateEmailException.class)
+                .hasMessageContaining("이미 존재하는 이메일입니다");
     }
 
     @Test
+    @DisplayName("직원 정보를 수정한다")
     void updateInfo() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
@@ -110,6 +115,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("이메일 변경 없이 직원 정보 수정 시 중복 체크를 하지 않는다")
     void updateInfo_noChangeEmail() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
@@ -117,7 +123,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         // 이메일이 변경되지 않은 경우, 이메일 중복 체크를 하지 않음
         Employee employee = employeeFinder.find(employeeId);
         employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(),
-            employee.getName(), employee.getEmail().address()));
+                employee.getName(), employee.getEmail().address()));
         flushAndClear();
 
         Employee updatedEmployee = employeeFinder.find(employee.getId());
@@ -125,6 +131,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("이미 존재하는 이메일로 직원 정보 수정 시 예외가 발생한다")
     void updateInfoFail_duplicateEmail() {
 
         Long employeeId1 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
@@ -134,12 +141,13 @@ class EmployeeManagerTest extends IntegrationTestBase {
         Employee employee1 = employeeFinder.find(employeeId1);
         Employee employee2 = employeeFinder.find(employeeId2);
         assertThatThrownBy(() -> employeeManager.updateInfo(employee1.getId(),
-            createEmployeeUpdateCommand(employee1.getDepartmentId(), employee2.getEmail().address())))
-            .isInstanceOf(DuplicateEmailException.class)
-            .hasMessageContaining("이미 존재하는 이메일입니다");
+                createEmployeeUpdateCommand(employee1.getDepartmentId(), employee2.getEmail().address())))
+                .isInstanceOf(DuplicateEmailException.class)
+                .hasMessageContaining("이미 존재하는 이메일입니다");
     }
 
     @Test
+    @DisplayName("직원을 퇴사 처리한다")
     void resign() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
         // 2025,
@@ -158,6 +166,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("이미 퇴사한 직원을 다시 퇴사 처리할 수 없다")
     void resignFail_alreadyResigned() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
         // 2025,
@@ -168,11 +177,12 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2026, 1, 1)))
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("이미 퇴사한 직원입니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("이미 퇴사한 직원입니다.");
     }
 
     @Test
+    @DisplayName("입사일 이전 날짜로 퇴사 처리할 수 없다")
     void resignFail_beforeJoinDate() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
         // 2025,
@@ -181,11 +191,12 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
         Employee employee = employeeFinder.find(employeeId);
         assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2024, 12, 31)))
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("퇴사일은 입사일 이후여야 합니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("퇴사일은 입사일 이후여야 합니다.");
     }
 
     @Test
+    @DisplayName("직원을 휴직 처리한다")
     void takeLeave() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
@@ -201,6 +212,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("재직 중이 아닌 직원은 휴직 처리할 수 없다")
     void takeLeaveFail_notActive() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
 
@@ -209,11 +221,12 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         assertThatThrownBy(() -> employeeManager.takeLeave(employee.getId()))
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
     }
 
     @Test
+    @DisplayName("퇴사한 직원을 복직(재활성) 처리한다")
     void activate() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
@@ -231,17 +244,19 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("이미 재직 중인 직원은 복직 처리할 수 없다")
     void activateFail_alreadyActive() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
         assertThatThrownBy(() -> employeeManager.activate(employee.getId()))
-            .isInstanceOf(InvalidEmployeeStatusException.class)
-            .hasMessage("이미 재직 중인 직원입니다.");
+                .isInstanceOf(InvalidEmployeeStatusException.class)
+                .hasMessage("이미 재직 중인 직원입니다.");
     }
 
     @Test
+    @DisplayName("직원을 논리 삭제(soft delete)한다")
     void delete() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
@@ -278,68 +293,68 @@ class EmployeeManagerTest extends IntegrationTestBase {
     private Department createDepartment(String code, String name, DepartmentType type, Long leaderId,
                                         Department parent) {
         return Department.create(
-            code,
-            name,
-            type,
-            leaderId,
-            parent);
+                code,
+                name,
+                type,
+                leaderId,
+                parent);
     }
 
     private EmployeeCreateCommand createEmployeeCreateCommand(Long teamId, String email) {
         return EmployeeCreateCommand.builder()
-            .departmentId(teamId)
-            .email(email)
-            .name("홍길동")
-            .joinDate(LocalDate.now())
-            .birthDate(LocalDate.of(1990, 1, 1))
-            .grade(EmployeeGrade.JUNIOR)
-            .position(EmployeePosition.ASSOCIATE)
-            .type(EmployeeType.FULL_TIME)
-            .avatar(EmployeeAvatar.SKY_GLOW)
-            .build();
+                .departmentId(teamId)
+                .email(email)
+                .name("홍길동")
+                .joinDate(LocalDate.now())
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .grade(EmployeeGrade.JUNIOR)
+                .position(EmployeePosition.ASSOCIATE)
+                .type(EmployeeType.FULL_TIME)
+                .avatar(EmployeeAvatar.SKY_GLOW)
+                .build();
     }
 
     private EmployeeCreateCommand createEmployeeCreateCommand(Long departmentId, String email, String name) {
         return EmployeeCreateCommand.builder()
-            .departmentId(departmentId)
-            .email(email)
-            .name(name)
-            .joinDate(LocalDate.now())
-            .birthDate(LocalDate.of(1990, 1, 1))
-            .grade(EmployeeGrade.JUNIOR)
-            .position(EmployeePosition.ASSOCIATE)
-            .type(EmployeeType.FULL_TIME)
-            .avatar(EmployeeAvatar.SKY_GLOW)
-            .build();
+                .departmentId(departmentId)
+                .email(email)
+                .name(name)
+                .joinDate(LocalDate.now())
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .grade(EmployeeGrade.JUNIOR)
+                .position(EmployeePosition.ASSOCIATE)
+                .type(EmployeeType.FULL_TIME)
+                .avatar(EmployeeAvatar.SKY_GLOW)
+                .build();
     }
 
     private EmployeeUpdateCommand createEmployeeUpdateCommand(Long teamId, String email) {
         return EmployeeUpdateCommand.builder()
-            .departmentId(teamId)
-            .email(email)
-            .name("홍길동")
-            .joinDate(LocalDate.of(2025, 1, 1))
-            .birthDate(LocalDate.of(1990, 1, 1))
-            .grade(EmployeeGrade.JUNIOR)
-            .position(EmployeePosition.ASSOCIATE)
-            .type(EmployeeType.FULL_TIME)
-            .avatar(EmployeeAvatar.SKY_GLOW)
-            .memo("Updated memo for the employee.")
-            .build();
+                .departmentId(teamId)
+                .email(email)
+                .name("홍길동")
+                .joinDate(LocalDate.of(2025, 1, 1))
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .grade(EmployeeGrade.JUNIOR)
+                .position(EmployeePosition.ASSOCIATE)
+                .type(EmployeeType.FULL_TIME)
+                .avatar(EmployeeAvatar.SKY_GLOW)
+                .memo("Updated memo for the employee.")
+                .build();
     }
 
     private EmployeeUpdateCommand createEmployeeUpdateCommand(Long teamId, String name, String email) {
         return EmployeeUpdateCommand.builder()
-            .departmentId(teamId)
-            .email(email)
-            .name(name)
-            .joinDate(LocalDate.now())
-            .birthDate(LocalDate.of(1990, 1, 1))
-            .grade(EmployeeGrade.JUNIOR)
-            .position(EmployeePosition.ASSOCIATE)
-            .type(EmployeeType.FULL_TIME)
-            .avatar(EmployeeAvatar.SKY_GLOW)
-            .build();
+                .departmentId(teamId)
+                .email(email)
+                .name(name)
+                .joinDate(LocalDate.now())
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .grade(EmployeeGrade.JUNIOR)
+                .position(EmployeePosition.ASSOCIATE)
+                .type(EmployeeType.FULL_TIME)
+                .avatar(EmployeeAvatar.SKY_GLOW)
+                .build();
     }
 
 }

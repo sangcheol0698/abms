@@ -28,8 +28,8 @@ public enum EmployeePosition {
 
     public static EmployeePosition fromDescription(String description) {
         return Arrays.stream(values())
-            .filter(v -> v.description.equals(description))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("알 수 없는 직책: " + description));
+                .filter(v -> v.description.equals(description))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("알 수 없는 직책: " + description));
     }
 }

@@ -4,11 +4,14 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("금액 (Money)")
 class MoneyTest {
 
     @Test
+    @DisplayName("Long 타입으로 금액 생성")
     void createWithLong() {
         Money money = Money.wons(10000L);
 
@@ -16,6 +19,7 @@ class MoneyTest {
     }
 
     @Test
+    @DisplayName("금액 더하기")
     void add() {
         Money money1 = Money.wons(10000L);
         Money money2 = Money.wons(5000L);
@@ -26,6 +30,7 @@ class MoneyTest {
     }
 
     @Test
+    @DisplayName("금액 빼기")
     void subtract() {
         Money money1 = Money.wons(10000L);
         Money money2 = Money.wons(3000L);
@@ -36,16 +41,18 @@ class MoneyTest {
     }
 
     @Test
+    @DisplayName("음수가 되는 빼기 연산 시 예외 발생")
     void subtract_negativeResult_throwsException() {
         Money money1 = Money.wons(5000L);
         Money money2 = Money.wons(10000L);
 
         assertThatThrownBy(() -> money1.subtract(money2))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("금액은 음수일 수 없습니다");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("금액은 음수일 수 없습니다");
     }
 
     @Test
+    @DisplayName("금액 곱하기")
     void multiply() {
         Money money = Money.wons(10000L);
 
@@ -55,6 +62,7 @@ class MoneyTest {
     }
 
     @Test
+    @DisplayName("금액 나누기")
     void divide() {
         Money money = Money.wons(10000L);
 
@@ -64,6 +72,7 @@ class MoneyTest {
     }
 
     @Test
+    @DisplayName("금액 비교 (크다)")
     void isGreaterThan() {
         Money money1 = Money.wons(10000L);
         Money money2 = Money.wons(5000L);
@@ -73,10 +82,11 @@ class MoneyTest {
     }
 
     @Test
+    @DisplayName("음수 금액 생성 시 예외 발생")
     void createWithNegativeAmount_throwsException() {
         assertThatThrownBy(() -> Money.wons(-1000L))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("금액은 음수일 수 없습니다");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("금액은 음수일 수 없습니다");
     }
 
 }

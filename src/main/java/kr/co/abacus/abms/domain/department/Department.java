@@ -32,7 +32,7 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @NaturalIdCache
 @Entity
 @Table(name = "department", uniqueConstraints = {
-    @UniqueConstraint(name = "UK_DEPARTMENT_CODE", columnNames = {"department_code"})
+        @UniqueConstraint(name = "UK_DEPARTMENT_CODE", columnNames = {"department_code"})
 })
 public class Department extends AbstractEntity {
 
@@ -73,12 +73,12 @@ public class Department extends AbstractEntity {
     public static Department create(String code, String name, DepartmentType type, @Nullable Long leaderEmployeeId,
                                     @Nullable Department parent) {
         return Department.builder()
-            .code(code)
-            .name(name)
-            .type(type)
-            .leaderEmployeeId(leaderEmployeeId)
-            .parent(parent)
-            .build();
+                .code(code)
+                .name(name)
+                .type(type)
+                .leaderEmployeeId(leaderEmployeeId)
+                .parent(parent)
+                .build();
     }
 
     private void setParent(@Nullable Department parent) {

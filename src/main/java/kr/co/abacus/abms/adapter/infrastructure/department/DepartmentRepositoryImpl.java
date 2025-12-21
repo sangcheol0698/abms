@@ -29,11 +29,11 @@ public class DepartmentRepositoryImpl implements CustomDepartmentRepository {
     @Override
     public Optional<Department> findByName(String name) {
         Department result = queryFactory
-            .selectFrom(department)
-            .where(
-                department.name.eq(name),
-                department.deleted.isFalse())
-            .fetchOne();
+                .selectFrom(department)
+                .where(
+                        department.name.eq(name),
+                        department.deleted.isFalse())
+                .fetchOne();
 
         return Optional.ofNullable(result);
     }
@@ -43,24 +43,24 @@ public class DepartmentRepositoryImpl implements CustomDepartmentRepository {
         QEmployee subEmployee = new QEmployee("subEmployee");
 
         return queryFactory
-            .select(Projections.constructor(DepartmentProjection.class,
-                department.id,
-                department.parent.id,
-                department.name,
-                department.code,
-                department.type,
-                employee.id,
-                employee.name,
-                employee.position,
-                JPAExpressions.select(subEmployee.count().intValue())
-                    .from(subEmployee)
-                    .where(
-                        subEmployee.departmentId.eq(department.id),
-                        subEmployee.deleted.isFalse())))
-            .from(department)
-            .leftJoin(employee).on(department.leaderEmployeeId.eq(employee.id))
-            .where(department.deleted.isFalse())
-            .fetch();
+                .select(Projections.constructor(DepartmentProjection.class,
+                        department.id,
+                        department.parent.id,
+                        department.name,
+                        department.code,
+                        department.type,
+                        employee.id,
+                        employee.name,
+                        employee.position,
+                        JPAExpressions.select(subEmployee.count().intValue())
+                                .from(subEmployee)
+                                .where(
+                                        subEmployee.departmentId.eq(department.id),
+                                        subEmployee.deleted.isFalse())))
+                .from(department)
+                .leftJoin(employee).on(department.leaderEmployeeId.eq(employee.id))
+                .where(department.deleted.isFalse())
+                .fetch();
     }
 
     @Override
@@ -68,27 +68,27 @@ public class DepartmentRepositoryImpl implements CustomDepartmentRepository {
         QEmployee subEmployee = new QEmployee("subEmployee");
 
         DepartmentDetail detail = queryFactory
-            .select(Projections.constructor(DepartmentDetail.class,
-                department.id,
-                department.code,
-                department.name,
-                department.type,
-                employee.id,
-                employee.name,
-                department.parent.id,
-                department.parent.name,
-                JPAExpressions.select(subEmployee.count().intValue())
-                    .from(subEmployee)
-                    .where(
-                        subEmployee.departmentId.eq(department.id),
-                        subEmployee.deleted.isFalse())))
-            .from(department)
-            .leftJoin(employee).on(department.leaderEmployeeId.eq(employee.id), employee.deleted.isFalse())
-            .leftJoin(department.parent)
-            .where(
-                department.id.eq(departmentId),
-                department.deleted.isFalse())
-            .fetchOne();
+                .select(Projections.constructor(DepartmentDetail.class,
+                        department.id,
+                        department.code,
+                        department.name,
+                        department.type,
+                        employee.id,
+                        employee.name,
+                        department.parent.id,
+                        department.parent.name,
+                        JPAExpressions.select(subEmployee.count().intValue())
+                                .from(subEmployee)
+                                .where(
+                                        subEmployee.departmentId.eq(department.id),
+                                        subEmployee.deleted.isFalse())))
+                .from(department)
+                .leftJoin(employee).on(department.leaderEmployeeId.eq(employee.id), employee.deleted.isFalse())
+                .leftJoin(department.parent)
+                .where(
+                        department.id.eq(departmentId),
+                        department.deleted.isFalse())
+                .fetchOne();
 
         return Optional.ofNullable(detail);
     }

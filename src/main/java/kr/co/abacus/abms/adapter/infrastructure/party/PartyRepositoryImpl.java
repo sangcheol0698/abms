@@ -29,16 +29,16 @@ public class PartyRepositoryImpl implements CustomPartyRepository {
     @Override
     public Page<Party> search(Pageable pageable, String name) {
         List<Party> content = queryFactory
-            .selectFrom(party)
-            .where(containsName(name))
-            .offset(pageable.getOffset())
-            .limit(pageable.getPageSize())
-            .fetch();
+                .selectFrom(party)
+                .where(containsName(name))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
 
         JPAQuery<Long> countQuery = queryFactory
-            .select(party.count())
-            .from(party)
-            .where(containsName(name));
+                .select(party.count())
+                .from(party)
+                .where(containsName(name));
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }

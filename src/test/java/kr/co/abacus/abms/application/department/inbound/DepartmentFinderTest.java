@@ -25,6 +25,7 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
+@DisplayName("부서 조회 (DepartmentFinder)")
 class DepartmentFinderTest extends IntegrationTestBase {
 
     @Autowired
@@ -37,6 +38,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
     private EmployeeRepository employeeRepository;
 
     @Test
+    @DisplayName("부서 ID로 상세 정보를 조회한다")
     void find() {
         Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
         departmentRepository.saveAll(List.of(company));
@@ -49,9 +51,10 @@ class DepartmentFinderTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("존재하지 않는 부서 조회 시 예외가 발생한다")
     void findNotFound() {
         assertThatThrownBy(() -> departmentFinder.find(9999L))
-            .isInstanceOf(DepartmentNotFoundException.class);
+                .isInstanceOf(DepartmentNotFoundException.class);
     }
 
     @Test
@@ -102,31 +105,31 @@ class DepartmentFinderTest extends IntegrationTestBase {
 
         // When & Then: DepartmentNotFoundException 발생
         assertThatThrownBy(() -> departmentFinder.getEmployees(nonExistentId, null, PageRequest.of(0, 10)))
-            .isInstanceOf(DepartmentNotFoundException.class);
+                .isInstanceOf(DepartmentNotFoundException.class);
     }
 
     private Employee createEmployee(Long departmentId, String email) {
         return Employee.create(
-            departmentId,
-            "홍길동",
-            email,
-            LocalDate.of(2020, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee.");
+                departmentId,
+                "홍길동",
+                email,
+                LocalDate.of(2020, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                EmployeeAvatar.SKY_GLOW,
+                "This is a memo for the employee.");
     }
 
     private Department createDepartment(String code, String name, DepartmentType type,
                                         @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
-            code,
-            name,
-            type,
-            leaderEmployeeId,
-            parent);
+                code,
+                name,
+                type,
+                leaderEmployeeId,
+                parent);
     }
 
 }

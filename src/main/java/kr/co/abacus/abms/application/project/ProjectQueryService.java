@@ -25,7 +25,7 @@ public class ProjectQueryService implements ProjectFinder {
     @Override
     public Project find(Long id) {
         return projectRepository.findByIdAndDeletedFalse(id)
-            .orElseThrow(() -> new ProjectNotFoundException("존재하지 않는 프로젝트입니다: " + id));
+                .orElseThrow(() -> new ProjectNotFoundException("존재하지 않는 프로젝트입니다: " + id));
     }
 
     @Override

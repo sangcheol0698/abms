@@ -14,29 +14,29 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 @Builder
 public record EmployeeCreateCommand(
-    Long departmentId,
-    String email,
-    String name,
-    LocalDate joinDate,
-    LocalDate birthDate,
-    EmployeePosition position,
-    EmployeeType type,
-    EmployeeGrade grade,
-    EmployeeAvatar avatar,
-    @Nullable String memo) {
+        Long departmentId,
+        String email,
+        String name,
+        LocalDate joinDate,
+        LocalDate birthDate,
+        EmployeePosition position,
+        EmployeeType type,
+        EmployeeGrade grade,
+        EmployeeAvatar avatar,
+        @Nullable String memo) {
 
     public Employee toEntity() {
         return Employee.create(
-            departmentId,
-            name,
-            email,
-            joinDate,
-            birthDate,
-            position,
-            type,
-            grade,
-            avatar,
-            memo);
+                departmentId,
+                name,
+                email,
+                joinDate,
+                birthDate,
+                position,
+                type,
+                grade,
+                avatar,
+                memo);
     }
 
 }

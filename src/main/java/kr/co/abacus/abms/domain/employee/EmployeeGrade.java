@@ -22,9 +22,9 @@ public enum EmployeeGrade {
 
     public static EmployeeGrade fromDescription(String description) {
         return Arrays.stream(values())
-            .filter(v -> v.description.equals(description))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("알 수 없는 직책: " + description));
+                .filter(v -> v.description.equals(description))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("알 수 없는 직책: " + description));
     }
 
     public boolean isHigherThan(EmployeeGrade other) {

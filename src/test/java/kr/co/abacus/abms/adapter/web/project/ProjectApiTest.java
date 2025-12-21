@@ -18,6 +18,7 @@ import kr.co.abacus.abms.domain.project.ProjectFixture;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
+@DisplayName("프로젝트 API (ProjectApi)")
 class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Autowired
@@ -28,26 +29,26 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     void create() {
         // Given
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
-            1L,
-            "PRJ-TEST-001",
-            "테스트 프로젝트",
-            "테스트 프로젝트 설명",
-            ProjectStatus.SCHEDULED,
-            100_000_000L,
-            LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 12, 31));
+                1L,
+                "PRJ-TEST-001",
+                "테스트 프로젝트",
+                "테스트 프로젝트 설명",
+                ProjectStatus.SCHEDULED,
+                100_000_000L,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 12, 31));
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
         ProjectResponse response = restTestClient.post()
-            .uri("/api/projects")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(requestJson)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(ProjectResponse.class)
-            .returnResult()
-            .getResponseBody();
+                .uri("/api/projects")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestJson)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProjectResponse.class)
+                .returnResult()
+                .getResponseBody();
 
         assertThat(response).isNotNull();
         assertThat(response.projectId()).isNotNull();
@@ -68,23 +69,23 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
-            99L,
-            "PRJ-DUP-001",
-            "중복 프로젝트",
-            null,
-            ProjectStatus.SCHEDULED,
-            50_000_000L,
-            LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 6, 30));
+                99L,
+                "PRJ-DUP-001",
+                "중복 프로젝트",
+                null,
+                ProjectStatus.SCHEDULED,
+                50_000_000L,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 6, 30));
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
         restTestClient.post()
-            .uri("/api/projects")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(requestJson)
-            .exchange()
-            .expectStatus().isBadRequest();
+                .uri("/api/projects")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestJson)
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 
     @Test
@@ -99,18 +100,18 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
         // When & Then: 첫 번째 페이지 (size=10)
         restTestClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/api/projects")
-                .queryParam("page", 0)
-                .queryParam("size", 10)
-                .build())
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.content.length()").isEqualTo(10)
-            .jsonPath("$.totalElements").isEqualTo(15)
-            .jsonPath("$.totalPages").isEqualTo(2)
-            .jsonPath("$.last").isEqualTo(false);
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/projects")
+                        .queryParam("page", 0)
+                        .queryParam("size", 10)
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content.length()").isEqualTo(10)
+                .jsonPath("$.totalElements").isEqualTo(15)
+                .jsonPath("$.totalPages").isEqualTo(2)
+                .jsonPath("$.last").isEqualTo(false);
     }
 
     @Test
@@ -123,12 +124,12 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
         // When & Then
         ProjectResponse response = restTestClient.get()
-            .uri("/api/projects/{id}", project.getId())
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(ProjectResponse.class)
-            .returnResult()
-            .getResponseBody();
+                .uri("/api/projects/{id}", project.getId())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProjectResponse.class)
+                .returnResult()
+                .getResponseBody();
 
         assertThat(response).isNotNull();
         assertThat(response.projectId()).isEqualTo(project.getId());
@@ -144,9 +145,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
         // When & Then
         restTestClient.get()
-            .uri("/api/projects/{id}", nonExistentId)
-            .exchange()
-            .expectStatus().isNotFound();
+                .uri("/api/projects/{id}", nonExistentId)
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
@@ -158,25 +159,25 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         ProjectUpdateApiRequest request = new ProjectUpdateApiRequest(
-            99L,
-            "수정된 프로젝트명",
-            "수정된 설명",
-            ProjectStatus.IN_PROGRESS.name(),
-            150_000_000L,
-            LocalDate.of(2024, 2, 1),
-            LocalDate.of(2024, 12, 31));
+                99L,
+                "수정된 프로젝트명",
+                "수정된 설명",
+                ProjectStatus.IN_PROGRESS.name(),
+                150_000_000L,
+                LocalDate.of(2024, 2, 1),
+                LocalDate.of(2024, 12, 31));
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
         ProjectResponse response = restTestClient.put()
-            .uri("/api/projects/{id}", project.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(requestJson)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(ProjectResponse.class)
-            .returnResult()
-            .getResponseBody();
+                .uri("/api/projects/{id}", project.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestJson)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProjectResponse.class)
+                .returnResult()
+                .getResponseBody();
 
         assertThat(response).isNotNull();
         assertThat(response.name()).isEqualTo("수정된 프로젝트명");
@@ -197,12 +198,12 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
         // When & Then
         ProjectResponse response = restTestClient.patch()
-            .uri("/api/projects/{id}/complete", project.getId())
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(ProjectResponse.class)
-            .returnResult()
-            .getResponseBody();
+                .uri("/api/projects/{id}/complete", project.getId())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProjectResponse.class)
+                .returnResult()
+                .getResponseBody();
 
         assertThat(response).isNotNull();
         assertThat(response.statusDescription()).isEqualTo("완료");
@@ -222,12 +223,12 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
         // When & Then
         ProjectResponse response = restTestClient.patch()
-            .uri("/api/projects/{id}/cancel", project.getId())
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(ProjectResponse.class)
-            .returnResult()
-            .getResponseBody();
+                .uri("/api/projects/{id}/cancel", project.getId())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProjectResponse.class)
+                .returnResult()
+                .getResponseBody();
 
         assertThat(response).isNotNull();
         assertThat(response.statusDescription()).isEqualTo("취소");
@@ -247,9 +248,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
         // When & Then
         restTestClient.delete()
-            .uri("/api/projects/{id}", project.getId())
-            .exchange()
-            .expectStatus().isNoContent();
+                .uri("/api/projects/{id}", project.getId())
+                .exchange()
+                .expectStatus().isNoContent();
 
         flushAndClear();
         assertThat(projectRepository.findByIdAndDeletedFalse(project.getId())).isEmpty();
@@ -263,9 +264,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
         // When & Then
         restTestClient.delete()
-            .uri("/api/projects/{id}", nonExistentId)
-            .exchange()
-            .expectStatus().isNotFound();
+                .uri("/api/projects/{id}", nonExistentId)
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
 }

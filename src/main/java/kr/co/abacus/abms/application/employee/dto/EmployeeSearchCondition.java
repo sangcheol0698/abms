@@ -10,11 +10,11 @@ import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 public record EmployeeSearchCondition(
-    @Nullable String name,
-    @Nullable List<EmployeePosition> positions,
-    @Nullable List<EmployeeType> types,
-    @Nullable List<EmployeeStatus> statuses,
-    @Nullable List<EmployeeGrade> grades,
-    @Nullable List<Long> departmentIds) {
+        @Nullable String name,
+        @Nullable List<EmployeePosition> positions,
+        @Nullable List<EmployeeType> types,
+        @Nullable List<EmployeeStatus> statuses,
+        @Nullable List<EmployeeGrade> grades,
+        @Nullable List<Long> departmentIds) {
 
 }

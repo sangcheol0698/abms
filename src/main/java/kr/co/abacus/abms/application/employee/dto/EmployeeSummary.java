@@ -12,18 +12,18 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.shared.Email;
 
 public record EmployeeSummary(
-    Long departmentId,
-    String departmentName,
-    Long employeeId,
-    String name,
-    Email email,
-    LocalDate joinDate,
-    LocalDate birthDate,
-    EmployeePosition position,
-    EmployeeStatus status,
-    EmployeeGrade grade,
-    EmployeeType type,
-    EmployeeAvatar avatar,
-    @Nullable String memo) {
+        Long departmentId,
+        String departmentName,
+        Long employeeId,
+        String name,
+        Email email,
+        LocalDate joinDate,
+        LocalDate birthDate,
+        EmployeePosition position,
+        EmployeeStatus status,
+        EmployeeGrade grade,
+        EmployeeType type,
+        EmployeeAvatar avatar,
+        @Nullable String memo) {
 
 }

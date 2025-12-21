@@ -15,12 +15,14 @@ import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
+@DisplayName("부서 저장소 (DepartmentRepository)")
 class DepartmentRepositoryTest extends IntegrationTestBase {
 
     @Autowired
     private DepartmentRepository departmentRepository;
 
     @Test
+    @DisplayName("전체 부서의 상세 정보(프로젝션)를 조회한다")
     void find() {
         Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
         Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);
@@ -34,7 +36,7 @@ class DepartmentRepositoryTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("부서의 기본 정보를 조회한다.")
+    @DisplayName("부서 ID로 상세 정보(DTO)를 조회한다")
     void findDetail() {
         // given
         Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
@@ -51,11 +53,11 @@ class DepartmentRepositoryTest extends IntegrationTestBase {
     private Department createDepartment(String code, String name, DepartmentType type,
                                         @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
-            code,
-            name,
-            type,
-            leaderEmployeeId,
-            parent);
+                code,
+                name,
+                type,
+                leaderEmployeeId,
+                parent);
     }
 
 }

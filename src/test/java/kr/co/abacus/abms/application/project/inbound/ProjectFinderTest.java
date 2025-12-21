@@ -17,6 +17,7 @@ import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
+@DisplayName("프로젝트 조회 (ProjectFinder)")
 class ProjectFinderTest extends IntegrationTestBase {
 
     @Autowired
@@ -44,7 +45,7 @@ class ProjectFinderTest extends IntegrationTestBase {
         Long nonExistentId = 9999L;
 
         assertThatThrownBy(() -> projectFinder.find(nonExistentId))
-            .isInstanceOf(ProjectNotFoundException.class);
+                .isInstanceOf(ProjectNotFoundException.class);
     }
 
     @Test

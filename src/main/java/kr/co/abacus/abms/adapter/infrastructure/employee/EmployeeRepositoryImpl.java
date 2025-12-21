@@ -47,47 +47,47 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
         OrderSpecifier<?>[] orderSpecifiers = resolveSort(pageable);
 
         List<EmployeeSummary> content = queryFactory
-            .select(Projections.constructor(EmployeeSummary.class,
-                department.id,
-                department.name,
-                employee.id,
-                employee.name,
-                employee.email,
-                employee.joinDate,
-                employee.birthDate,
-                employee.position,
-                employee.status,
-                employee.grade,
-                employee.type,
-                employee.avatar,
-                employee.memo))
-            .from(employee)
-            .join(department).on(employee.departmentId.eq(department.id))
-            .where(
-                containsName(condition.name()),
-                inPositions(condition.positions()),
-                inTypes(condition.types()),
-                inGrades(condition.grades()),
-                inDepartments(condition.departmentIds()),
-                inStatuses(condition.statuses()),
-                employee.deleted.isFalse())
-            .orderBy(orderSpecifiers)
-            .offset(pageable.getOffset())
-            .limit(pageable.getPageSize())
-            .fetch();
+                .select(Projections.constructor(EmployeeSummary.class,
+                        department.id,
+                        department.name,
+                        employee.id,
+                        employee.name,
+                        employee.email,
+                        employee.joinDate,
+                        employee.birthDate,
+                        employee.position,
+                        employee.status,
+                        employee.grade,
+                        employee.type,
+                        employee.avatar,
+                        employee.memo))
+                .from(employee)
+                .join(department).on(employee.departmentId.eq(department.id))
+                .where(
+                        containsName(condition.name()),
+                        inPositions(condition.positions()),
+                        inTypes(condition.types()),
+                        inGrades(condition.grades()),
+                        inDepartments(condition.departmentIds()),
+                        inStatuses(condition.statuses()),
+                        employee.deleted.isFalse())
+                .orderBy(orderSpecifiers)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
 
         JPAQuery<Long> countQuery = queryFactory
-            .select(employee.count())
-            .from(employee)
-            .join(department).on(employee.departmentId.eq(department.id))
-            .where(
-                containsName(condition.name()),
-                inPositions(condition.positions()),
-                inTypes(condition.types()),
-                inGrades(condition.grades()),
-                inDepartments(condition.departmentIds()),
-                inStatuses(condition.statuses()),
-                employee.deleted.isFalse());
+                .select(employee.count())
+                .from(employee)
+                .join(department).on(employee.departmentId.eq(department.id))
+                .where(
+                        containsName(condition.name()),
+                        inPositions(condition.positions()),
+                        inTypes(condition.types()),
+                        inGrades(condition.grades()),
+                        inDepartments(condition.departmentIds()),
+                        inStatuses(condition.statuses()),
+                        employee.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
@@ -95,42 +95,42 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
     @Override
     public List<Employee> search(EmployeeSearchCondition request) {
         return queryFactory.select(employee)
-            .from(employee)
-            .where(
-                containsName(request.name()),
-                inPositions(request.positions()),
-                inTypes(request.types()),
-                inGrades(request.grades()),
-                inDepartments(request.departmentIds()),
-                inStatuses(request.statuses()),
-                employee.deleted.isFalse())
-            .orderBy(defaultSort())
-            .fetch();
+                .from(employee)
+                .where(
+                        containsName(request.name()),
+                        inPositions(request.positions()),
+                        inTypes(request.types()),
+                        inGrades(request.grades()),
+                        inDepartments(request.departmentIds()),
+                        inStatuses(request.statuses()),
+                        employee.deleted.isFalse())
+                .orderBy(defaultSort())
+                .fetch();
     }
 
     @Override
     public @Nullable EmployeeDetail findEmployeeDetail(Long id) {
         return queryFactory
-            .select(Projections.constructor(EmployeeDetail.class,
-                department.id,
-                department.name,
-                employee.id,
-                employee.name,
-                employee.email,
-                employee.joinDate,
-                employee.birthDate,
-                employee.position,
-                employee.status,
-                employee.grade,
-                employee.type,
-                employee.avatar,
-                employee.memo))
-            .from(employee)
-            .join(department).on(employee.departmentId.eq(department.id))
-            .where(
-                employee.id.eq(id),
-                employee.deleted.isFalse())
-            .fetchOne();
+                .select(Projections.constructor(EmployeeDetail.class,
+                        department.id,
+                        department.name,
+                        employee.id,
+                        employee.name,
+                        employee.email,
+                        employee.joinDate,
+                        employee.birthDate,
+                        employee.position,
+                        employee.status,
+                        employee.grade,
+                        employee.type,
+                        employee.avatar,
+                        employee.memo))
+                .from(employee)
+                .join(department).on(employee.departmentId.eq(department.id))
+                .where(
+                        employee.id.eq(id),
+                        employee.deleted.isFalse())
+                .fetchOne();
     }
 
     private @Nullable BooleanExpression containsName(@Nullable String name) {
@@ -200,32 +200,32 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
     private OrderSpecifier<Integer> gradeOrder(Order direction) {
         NumberExpression<Integer> gradeLevel = new CaseBuilder()
-            .when(employee.grade.eq(EmployeeGrade.JUNIOR)).then(EmployeeGrade.JUNIOR.getLevel())
-            .when(employee.grade.eq(EmployeeGrade.MID_LEVEL)).then(EmployeeGrade.MID_LEVEL.getLevel())
-            .when(employee.grade.eq(EmployeeGrade.SENIOR)).then(EmployeeGrade.SENIOR.getLevel())
-            .when(employee.grade.eq(EmployeeGrade.EXPERT)).then(EmployeeGrade.EXPERT.getLevel())
-            .otherwise(0);
+                .when(employee.grade.eq(EmployeeGrade.JUNIOR)).then(EmployeeGrade.JUNIOR.getLevel())
+                .when(employee.grade.eq(EmployeeGrade.MID_LEVEL)).then(EmployeeGrade.MID_LEVEL.getLevel())
+                .when(employee.grade.eq(EmployeeGrade.SENIOR)).then(EmployeeGrade.SENIOR.getLevel())
+                .when(employee.grade.eq(EmployeeGrade.EXPERT)).then(EmployeeGrade.EXPERT.getLevel())
+                .otherwise(0);
 
         return new OrderSpecifier<>(direction, gradeLevel);
     }
 
     private OrderSpecifier<?> positionOrder(Order direction) {
         NumberExpression<Integer> positionRank = new CaseBuilder()
-            .when(employee.position.eq(EmployeePosition.ASSOCIATE)).then(EmployeePosition.ASSOCIATE.getRank())
-            .when(employee.position.eq(EmployeePosition.STAFF)).then(EmployeePosition.STAFF.getRank())
-            .when(employee.position.eq(EmployeePosition.LEADER)).then(EmployeePosition.LEADER.getRank())
-            .when(employee.position.eq(EmployeePosition.MANAGER)).then(EmployeePosition.MANAGER.getRank())
-            .when(employee.position.eq(EmployeePosition.SENIOR_MANAGER))
-            .then(EmployeePosition.SENIOR_MANAGER.getRank())
-            .when(employee.position.eq(EmployeePosition.DIRECTOR)).then(EmployeePosition.DIRECTOR.getRank())
-            .when(employee.position.eq(EmployeePosition.TECHNICAL_DIRECTOR))
-            .then(EmployeePosition.TECHNICAL_DIRECTOR.getRank())
-            .when(employee.position.eq(EmployeePosition.MANAGING_DIRECTOR))
-            .then(EmployeePosition.MANAGING_DIRECTOR.getRank())
-            .when(employee.position.eq(EmployeePosition.VICE_PRESIDENT))
-            .then(EmployeePosition.VICE_PRESIDENT.getRank())
-            .when(employee.position.eq(EmployeePosition.PRESIDENT)).then(EmployeePosition.PRESIDENT.getRank())
-            .otherwise(0);
+                .when(employee.position.eq(EmployeePosition.ASSOCIATE)).then(EmployeePosition.ASSOCIATE.getRank())
+                .when(employee.position.eq(EmployeePosition.STAFF)).then(EmployeePosition.STAFF.getRank())
+                .when(employee.position.eq(EmployeePosition.LEADER)).then(EmployeePosition.LEADER.getRank())
+                .when(employee.position.eq(EmployeePosition.MANAGER)).then(EmployeePosition.MANAGER.getRank())
+                .when(employee.position.eq(EmployeePosition.SENIOR_MANAGER))
+                .then(EmployeePosition.SENIOR_MANAGER.getRank())
+                .when(employee.position.eq(EmployeePosition.DIRECTOR)).then(EmployeePosition.DIRECTOR.getRank())
+                .when(employee.position.eq(EmployeePosition.TECHNICAL_DIRECTOR))
+                .then(EmployeePosition.TECHNICAL_DIRECTOR.getRank())
+                .when(employee.position.eq(EmployeePosition.MANAGING_DIRECTOR))
+                .then(EmployeePosition.MANAGING_DIRECTOR.getRank())
+                .when(employee.position.eq(EmployeePosition.VICE_PRESIDENT))
+                .then(EmployeePosition.VICE_PRESIDENT.getRank())
+                .when(employee.position.eq(EmployeePosition.PRESIDENT)).then(EmployeePosition.PRESIDENT.getRank())
+                .otherwise(0);
 
         return new OrderSpecifier<>(direction, positionRank);
     }

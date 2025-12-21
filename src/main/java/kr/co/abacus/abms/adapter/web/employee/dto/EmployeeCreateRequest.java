@@ -16,30 +16,30 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 public record EmployeeCreateRequest(
-    @NotNull Long departmentId,
-    @NotBlank @Email String email,
-    @NotBlank @Size(min = 1, max = 10) String name,
-    @NotNull LocalDate joinDate,
-    @NotNull LocalDate birthDate,
-    @NotNull EmployeePosition position,
-    @NotNull EmployeeType type,
-    @NotNull EmployeeGrade grade,
-    @NotNull EmployeeAvatar avatar,
-    @Nullable String memo) {
+        @NotNull Long departmentId,
+        @NotBlank @Email String email,
+        @NotBlank @Size(min = 1, max = 10) String name,
+        @NotNull LocalDate joinDate,
+        @NotNull LocalDate birthDate,
+        @NotNull EmployeePosition position,
+        @NotNull EmployeeType type,
+        @NotNull EmployeeGrade grade,
+        @NotNull EmployeeAvatar avatar,
+        @Nullable String memo) {
 
     public EmployeeCreateCommand toCommand() {
         return EmployeeCreateCommand.builder()
-            .departmentId(departmentId)
-            .email(email)
-            .name(name)
-            .joinDate(joinDate)
-            .birthDate(birthDate)
-            .position(position)
-            .type(type)
-            .grade(grade)
-            .avatar(avatar)
-            .memo(memo)
-            .build();
+                .departmentId(departmentId)
+                .email(email)
+                .name(name)
+                .joinDate(joinDate)
+                .birthDate(birthDate)
+                .position(position)
+                .type(type)
+                .grade(grade)
+                .avatar(avatar)
+                .memo(memo)
+                .build();
     }
 
 }

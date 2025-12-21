@@ -28,7 +28,7 @@ import kr.co.abacus.abms.domain.shared.Email;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "employee", uniqueConstraints = {
-    @UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")
+        @UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")
 })
 public class Employee extends AbstractEntity {
 
@@ -99,17 +99,17 @@ public class Employee extends AbstractEntity {
                                   LocalDate birthDate, EmployeePosition position, EmployeeType type,
                                   EmployeeGrade grade, EmployeeAvatar avatar, @Nullable String memo) {
         return Employee.builder()
-            .departmentId(departmentId)
-            .name(name)
-            .email(email)
-            .joinDate(joinDate)
-            .birthDate(birthDate)
-            .position(position)
-            .type(type)
-            .grade(grade)
-            .avatar(avatar)
-            .memo(memo)
-            .build();
+                .departmentId(departmentId)
+                .name(name)
+                .email(email)
+                .joinDate(joinDate)
+                .birthDate(birthDate)
+                .position(position)
+                .type(type)
+                .grade(grade)
+                .avatar(avatar)
+                .memo(memo)
+                .build();
     }
 
     public void resign(LocalDate resignationDate) {

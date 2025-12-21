@@ -20,6 +20,7 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
+@DisplayName("부서 관리 (DepartmentManager)")
 class DepartmentManagerTest extends IntegrationTestBase {
 
     @Autowired
@@ -51,25 +52,25 @@ class DepartmentManagerTest extends IntegrationTestBase {
     private Department createDepartment(String code, String name, DepartmentType type,
                                         @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
-            code,
-            name,
-            type,
-            leaderEmployeeId,
-            parent);
+                code,
+                name,
+                type,
+                leaderEmployeeId,
+                parent);
     }
 
     private Employee createEmployee() {
         return Employee.create(
-            1L,
-            "홍길동",
-            "test@email.com",
-            LocalDate.of(2020, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee.");
+                1L,
+                "홍길동",
+                "test@email.com",
+                LocalDate.of(2020, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                EmployeeAvatar.SKY_GLOW,
+                "This is a memo for the employee.");
     }
 
 }

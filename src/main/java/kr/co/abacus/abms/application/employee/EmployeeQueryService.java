@@ -26,7 +26,7 @@ public class EmployeeQueryService implements EmployeeFinder {
     @Override
     public Employee find(Long id) {
         return employeeRepository.findByIdAndDeletedFalse(id)
-            .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
+                .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
     }
 
     @Override

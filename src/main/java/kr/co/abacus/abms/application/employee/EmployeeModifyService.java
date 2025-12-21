@@ -45,16 +45,16 @@ public class EmployeeModifyService implements EmployeeManager {
         validateDuplicateEmailForUpdate(employee.getEmail().address(), command.email());
 
         employee.updateInfo(
-            command.departmentId(),
-            command.name(),
-            command.email(),
-            command.joinDate(),
-            command.birthDate(),
-            command.position(),
-            command.type(),
-            command.grade(),
-            command.avatar(),
-            command.memo());
+                command.departmentId(),
+                command.name(),
+                command.email(),
+                command.joinDate(),
+                command.birthDate(),
+                command.position(),
+                command.type(),
+                command.grade(),
+                command.avatar(),
+                command.memo());
 
         return employeeRepository.save(employee).getId();
     }
@@ -115,12 +115,12 @@ public class EmployeeModifyService implements EmployeeManager {
 
     private Employee find(Long id) {
         return employeeRepository.findByIdAndDeletedFalse(id)
-            .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
+                .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
     }
 
     private Employee findIncludeDeleted(Long id) {
         return employeeRepository.findById(id)
-            .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
+                .orElseThrow(() -> new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id));
     }
 
     private void validateDepartmentExistsForUpdate(Long currentDepartmentId, Long newDepartmentId) {

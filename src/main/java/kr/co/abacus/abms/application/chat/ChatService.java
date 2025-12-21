@@ -13,9 +13,9 @@ public class ChatService {
     private final OrganizationTools organizationTools;
 
     public ChatService(
-        ChatClient.Builder chatClientBuilder,
-        EmployeeInfoTools employeeInfoTools,
-        OrganizationTools organizationTools
+            ChatClient.Builder chatClientBuilder,
+            EmployeeInfoTools employeeInfoTools,
+            OrganizationTools organizationTools
     ) {
         this.chatClient = chatClientBuilder.build();
         this.employeeInfoTools = employeeInfoTools;
@@ -24,17 +24,17 @@ public class ChatService {
 
     public Flux<String> streamMessage(String message) {
         return chatClient.prompt()
-            .user(message)
-            .stream()
-            .content();
+                .user(message)
+                .stream()
+                .content();
     }
 
     public String sendMessage(String message) {
         return chatClient.prompt()
-            .user(message)
-            // .tools(employeeInfoTools, organizationTools, employeeSearchTools)
-            .call()
-            .content();
+                .user(message)
+                // .tools(employeeInfoTools, organizationTools, employeeSearchTools)
+                .call()
+                .content();
     }
 
 }

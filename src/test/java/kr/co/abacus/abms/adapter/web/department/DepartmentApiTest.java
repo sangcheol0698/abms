@@ -27,6 +27,7 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
+@DisplayName("부서 API (DepartmentApi)")
 class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Autowired
@@ -49,13 +50,13 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         List<OrganizationChartResponse> responses = restTestClient.get()
-            .uri("/api/departments/organization-chart")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<List<OrganizationChartResponse>>() {
-            })
-            .returnResult()
-            .getResponseBody();
+                .uri("/api/departments/organization-chart")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<List<OrganizationChartResponse>>() {
+                })
+                .returnResult()
+                .getResponseBody();
 
         assertThat(responses).hasSize(1);
         OrganizationChartResponse response = responses.getFirst();
@@ -67,8 +68,8 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         assertDepartmentNode(divisionNode, division, 2);
 
         assertThat(divisionNode.children())
-            .extracting(OrganizationChartResponse::departmentName)
-            .containsExactlyInAnyOrder(team1.getName(), team2.getName());
+                .extracting(OrganizationChartResponse::departmentName)
+                .containsExactlyInAnyOrder(team1.getName(), team2.getName());
     }
 
     @Test
@@ -80,11 +81,11 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         departmentRepository.saveAll(List.of(company, division, team1));
 
         DepartmentDetailResponse response = restTestClient.get().uri("/api/departments/{id}", team1.getId())
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(DepartmentDetailResponse.class)
-            .returnResult()
-            .getResponseBody();
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(DepartmentDetailResponse.class)
+                .returnResult()
+                .getResponseBody();
 
         assertThat(response).isNotNull();
         assertThat(response.id()).isEqualTo(team1.getId());
@@ -111,13 +112,13 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
         // When: 첫 번째 페이지 조회 (size=10)
         PageResponse<EmployeeSearchResponse> response = restTestClient.get()
-            .uri("/api/departments/{departmentId}/employees?page={page}&size={size}", team1.getId(), 0, 10)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSearchResponse>>() {
-            })
-            .returnResult()
-            .getResponseBody();
+                .uri("/api/departments/{departmentId}/employees?page={page}&size={size}", team1.getId(), 0, 10)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSearchResponse>>() {
+                })
+                .returnResult()
+                .getResponseBody();
 
         // Then: 페이징 정보 검증
         assertThat(response.content()).hasSize(10);
@@ -134,13 +135,13 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
         // When & Then: 404 응답
         restTestClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/api/departments/{departmentId}/employees")
-                .queryParam("page", 0)
-                .queryParam("size", 10)
-                .build(nonExistentId))
-            .exchange()
-            .expectStatus().isNotFound();
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/departments/{departmentId}/employees")
+                        .queryParam("page", 0)
+                        .queryParam("size", 10)
+                        .build(nonExistentId))
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
@@ -156,11 +157,11 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         restTestClient.post()
-            .uri("/api/departments/{departmentId}/assign-team-leader", team1.getId())
-            .body(new EmployeeAssignLeaderRequest(employee1.getId()))
-            .exchange()
-            .expectStatus().isOk()
-            .returnResult();
+                .uri("/api/departments/{departmentId}/assign-team-leader", team1.getId())
+                .body(new EmployeeAssignLeaderRequest(employee1.getId()))
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult();
         flushAndClear();
 
         Department department = departmentRepository.findByIdAndDeletedFalse(team1.getId()).orElseThrow();
@@ -178,41 +179,41 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
     private Employee createEmployee(String email) {
         return Employee.create(
-            1L,
-            "홍길동",
-            email,
-            LocalDate.of(2020, 1,
-                1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee.");
+                1L,
+                "홍길동",
+                email,
+                LocalDate.of(2020, 1,
+                        1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                EmployeeAvatar.SKY_GLOW,
+                "This is a memo for the employee.");
     }
 
     private Employee createEmployee(Long departmentId, String email) {
         return Employee.create(
-            departmentId,
-            "홍길동",
-            email,
-            LocalDate.of(2020, 1, 1),
-            LocalDate.of(1990, 1, 1),
-            EmployeePosition.MANAGER,
-            EmployeeType.FULL_TIME,
-            EmployeeGrade.SENIOR,
-            EmployeeAvatar.SKY_GLOW,
-            "This is a memo for the employee.");
+                departmentId,
+                "홍길동",
+                email,
+                LocalDate.of(2020, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.MANAGER,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.SENIOR,
+                EmployeeAvatar.SKY_GLOW,
+                "This is a memo for the employee.");
     }
 
     private Department createDepartment(String code, String name, DepartmentType type,
                                         @Nullable Long leaderEmployeeId, @Nullable Department parent) {
         return Department.create(
-            code,
-            name,
-            type,
-            leaderEmployeeId,
-            parent);
+                code,
+                name,
+                type,
+                leaderEmployeeId,
+                parent);
     }
 
 }

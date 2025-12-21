@@ -134,7 +134,7 @@ class ProjectRepositoryTest extends IntegrationTestBase {
 
         assertThat(projects).hasSize(2);
         assertThat(projects).extracting(Project::getCode)
-            .containsExactlyInAnyOrder("PRJ-001", "PRJ-002");
+                .containsExactlyInAnyOrder("PRJ-001", "PRJ-002");
     }
 
     @Test

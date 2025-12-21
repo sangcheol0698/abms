@@ -40,8 +40,8 @@ public class DepartmentApi {
         List<OrganizationChartDetail> organizationChartDetails = departmentFinder.getOrganizationChart();
 
         return organizationChartDetails.stream()
-            .map(OrganizationChartResponse::of)
-            .toList();
+                .map(OrganizationChartResponse::of)
+                .toList();
     }
 
     @GetMapping("/api/departments/{departmentId}")
@@ -53,9 +53,9 @@ public class DepartmentApi {
 
     @GetMapping("/api/departments/{departmentId}/employees")
     public PageResponse<EmployeeSearchResponse> getDepartmentEmployees(
-        @PathVariable Long departmentId,
-        @RequestParam(required = false) String name,
-        @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+            @PathVariable Long departmentId,
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
         Page<EmployeeSummary> employeesPage = departmentFinder.getEmployees(departmentId, name, pageable);
 
         Page<EmployeeSearchResponse> responses = employeesPage.map(EmployeeSearchResponse::of);

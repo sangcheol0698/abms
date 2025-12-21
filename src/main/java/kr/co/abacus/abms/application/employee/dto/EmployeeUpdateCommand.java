@@ -11,15 +11,15 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 @Builder
 public record EmployeeUpdateCommand(
-    Long departmentId,
-    String email,
-    String name,
-    LocalDate joinDate,
-    LocalDate birthDate,
-    EmployeePosition position,
-    EmployeeType type,
-    EmployeeGrade grade,
-    EmployeeAvatar avatar,
-    String memo) {
+        Long departmentId,
+        String email,
+        String name,
+        LocalDate joinDate,
+        LocalDate birthDate,
+        EmployeePosition position,
+        EmployeeType type,
+        EmployeeGrade grade,
+        EmployeeAvatar avatar,
+        String memo) {
 
 }

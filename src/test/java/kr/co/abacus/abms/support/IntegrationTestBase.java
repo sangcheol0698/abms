@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 통합 테스트를 위한 베이스 클래스
- *
+ * <p>
  * 공통 설정:
  * - Spring Boot 테스트 컨텍스트
  * - 트랜잭션 관리

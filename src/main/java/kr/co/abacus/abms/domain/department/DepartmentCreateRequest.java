@@ -9,10 +9,10 @@ import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 
 public record DepartmentCreateRequest(
-    @NotBlank @Size(max = 32) String code,
-    @NotBlank @Size(max = 30) String name,
-    @NotNull DepartmentType type,
-    @Nullable UUID leaderEmployeeId
+        @NotBlank @Size(max = 32) String code,
+        @NotBlank @Size(max = 30) String name,
+        @NotNull DepartmentType type,
+        @Nullable UUID leaderEmployeeId
 ) {
 
 }

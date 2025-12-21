@@ -37,7 +37,7 @@ public class DepartmentQueryService implements DepartmentFinder {
     @Override
     public Department find(Long id) {
         return departmentRepository.findByIdAndDeletedFalse(id)
-            .orElseThrow(() -> new DepartmentNotFoundException("존재하지 않는 부서입니다: " + id));
+                .orElseThrow(() -> new DepartmentNotFoundException("존재하지 않는 부서입니다: " + id));
     }
 
     @Override
@@ -47,12 +47,12 @@ public class DepartmentQueryService implements DepartmentFinder {
 
         // EmployeeRepository의 검색 기능 재사용 (정렬 로직 포함)
         EmployeeSearchCondition searchRequest = new EmployeeSearchCondition(
-            name,
-            null, // positions
-            null, // types
-            null, // statuses
-            null, // grades
-            departmentId != null ? List.of(departmentId) : null);
+                name,
+                null, // positions
+                null, // types
+                null, // statuses
+                null, // grades
+                departmentId != null ? List.of(departmentId) : null);
 
         return employeeRepository.search(searchRequest, pageable);
     }
@@ -60,7 +60,7 @@ public class DepartmentQueryService implements DepartmentFinder {
     @Override
     public DepartmentDetail findDetail(Long departmentId) {
         return departmentRepository.findDetail(departmentId)
-            .orElseThrow(() -> new DepartmentNotFoundException("존재하지 않는 부서입니다: " + departmentId));
+                .orElseThrow(() -> new DepartmentNotFoundException("존재하지 않는 부서입니다: " + departmentId));
     }
 
     @Override
@@ -72,44 +72,44 @@ public class DepartmentQueryService implements DepartmentFinder {
         List<DepartmentProjection> rootDepartments = findRootDepartments(projections);
 
         return rootDepartments.stream()
-            .map(root -> mapToOrganizationChartInfo(root, childrenMap))
-            .toList();
+                .map(root -> mapToOrganizationChartInfo(root, childrenMap))
+                .toList();
     }
 
     private Map<Long, List<DepartmentProjection>> groupByParentId(List<DepartmentProjection> projections) {
         return projections.stream()
-            .filter(d -> d.parentId() != null)
-            .collect(Collectors.groupingBy(DepartmentProjection::parentId));
+                .filter(d -> d.parentId() != null)
+                .collect(Collectors.groupingBy(DepartmentProjection::parentId));
     }
 
     private List<DepartmentProjection> findRootDepartments(List<DepartmentProjection> projections) {
         return projections.stream()
-            .filter(d -> d.parentId() == null)
-            .toList();
+                .filter(d -> d.parentId() == null)
+                .toList();
     }
 
     private OrganizationChartDetail mapToOrganizationChartInfo(
-        DepartmentProjection current,
-        Map<Long, List<DepartmentProjection>> childrenMap) {
+            DepartmentProjection current,
+            Map<Long, List<DepartmentProjection>> childrenMap) {
         List<DepartmentProjection> childrenList = childrenMap.getOrDefault(current.departmentId(),
-            Collections.emptyList());
+                Collections.emptyList());
 
         List<OrganizationChartDetail> children = childrenList.stream()
-            .sorted(Comparator.comparing(DepartmentProjection::departmentName))
-            .map(child -> mapToOrganizationChartInfo(child, childrenMap))
-            .toList();
+                .sorted(Comparator.comparing(DepartmentProjection::departmentName))
+                .map(child -> mapToOrganizationChartInfo(child, childrenMap))
+                .toList();
 
         return new OrganizationChartDetail(
-            current.departmentId(),
-            current.departmentName(),
-            current.departmentCode(),
-            current.departmentType(),
-            current.leaderEmployeeId() != null ? new DepartmentLeaderDetail(
-                current.leaderEmployeeId(),
-                current.leaderEmployeeName(),
-                current.leaderEmployeePosition()) : null,
-            current.employeeCount(),
-            children);
+                current.departmentId(),
+                current.departmentName(),
+                current.departmentCode(),
+                current.departmentType(),
+                current.leaderEmployeeId() != null ? new DepartmentLeaderDetail(
+                        current.leaderEmployeeId(),
+                        current.leaderEmployeeName(),
+                        current.leaderEmployeePosition()) : null,
+                current.employeeCount(),
+                children);
     }
 
 }

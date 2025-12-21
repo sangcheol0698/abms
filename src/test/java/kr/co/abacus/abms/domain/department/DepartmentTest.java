@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("부서 (Department)")
 class DepartmentTest {
 
     @Test
+    @DisplayName("최상위 부서(루트)를 생성할 수 있다")
     void createRoot() {
         Department rootDepartment = createRootDepartment();
 
@@ -19,6 +21,7 @@ class DepartmentTest {
     }
 
     @Test
+    @DisplayName("하위 부서를 생성하여 상위 부서에 연결할 수 있다")
     void createSub() {
         Department parent = createRootDepartment();
         Department subDepartment = createSubDepartment(parent);
@@ -51,6 +54,7 @@ class DepartmentTest {
     }
 
     @Test
+    @DisplayName("하나의 상위 부서는 여러 하위 부서를 가질 수 있다")
     void multipleChildDepartments() {
         Department parent = createRootDepartment();
 
@@ -64,22 +68,20 @@ class DepartmentTest {
 
     private Department createRootDepartment() {
         return Department.create(
-            "CODE-TEST",
-            "테스트회사",
-            DepartmentType.COMPANY,
-            null,
-            null
-        );
+                "CODE-TEST",
+                "테스트회사",
+                DepartmentType.COMPANY,
+                null,
+                null);
     }
 
     private Department createSubDepartment(Department parent) {
         return Department.create(
-            "CODE-SUBTEST",
-            "테스트부서",
-            DepartmentType.DIVISION,
-            null,
-            parent
-        );
+                "CODE-SUBTEST",
+                "테스트부서",
+                DepartmentType.DIVISION,
+                null,
+                parent);
     }
 
 }
