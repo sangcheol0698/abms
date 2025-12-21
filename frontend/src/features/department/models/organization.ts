@@ -1,7 +1,7 @@
 import { getEmployeeAvatarOption } from '@/features/employee/constants/avatars';
 
 export interface OrganizationLeader {
-  employeeId: string;
+  employeeId: number;
   employeeName: string;
   position: string;
   avatarCode: string;
@@ -10,13 +10,13 @@ export interface OrganizationLeader {
 }
 
 export interface OrganizationEmployee {
-  employeeId: string;
+  employeeId: number;
   employeeName: string;
   position: string;
 }
 
 export interface OrganizationChartNode {
-  departmentId: string;
+  departmentId: number;
   departmentName: string;
   departmentCode: string;
   departmentType: string;
@@ -37,7 +37,7 @@ function mapLeader(input: any): OrganizationLeader | null {
   const position = input.position?.description || input.position || '';
 
   return {
-    employeeId: String(input.employeeId),
+    employeeId: Number(input.employeeId),
     employeeName: input.employeeName,
     position,
     avatarCode: avatarOption.code,
@@ -52,7 +52,7 @@ function mapEmployees(input: any[] | undefined): OrganizationEmployee[] {
   }
 
   return input.map((employee) => ({
-    employeeId: String(employee.employeeId),
+    employeeId: Number(employee.employeeId),
     employeeName: employee.employeeName,
     position: employee.position,
   }));
@@ -64,7 +64,7 @@ export function mapOrganizationChartNode(input: any): OrganizationChartNode {
     typeof input?.employeeCount === 'number' ? Number(input.employeeCount) : employees.length;
 
   return {
-    departmentId: String(input.departmentId),
+    departmentId: Number(input.departmentId),
     departmentName: input.departmentName,
     departmentCode: input.departmentCode,
     departmentType: input.departmentType,
@@ -89,7 +89,7 @@ export function normalizeOrganizationChartResponse(response: unknown): Organizat
 }
 
 export interface OrganizationDepartmentDetail {
-  departmentId: string;
+  departmentId: number;
   departmentName: string;
   departmentCode: string;
   departmentType: string;
@@ -99,7 +99,7 @@ export interface OrganizationDepartmentDetail {
 }
 
 export interface OrganizationDepartmentSummary {
-  departmentId: string;
+  departmentId: number;
   departmentName: string;
   departmentCode: string;
   departmentType: string;
@@ -113,7 +113,7 @@ export function mapOrganizationDepartmentDetail(input: any): OrganizationDepartm
   const employees = mapEmployees(input?.employees);
 
   return {
-    departmentId: String(input?.departmentId ?? ''),
+    departmentId: Number(input?.departmentId ?? 0),
     departmentName: String(input?.departmentName ?? ''),
     departmentCode: String(input?.departmentCode ?? ''),
     departmentType: String(input?.departmentType ?? ''),

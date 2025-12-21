@@ -188,7 +188,7 @@ export class EmployeeRepository {
       .map(toSelectOption);
   }
 
-  async findById(employeeId: string): Promise<EmployeeSummary> {
+  async findById(employeeId: number): Promise<EmployeeSummary> {
     await this.ensureFilterOptionsLoaded();
     const response = await this.httpRepository.get({ path: `/api/employees/${employeeId}` });
     return mapEmployeeSummary(response);
@@ -200,7 +200,7 @@ export class EmployeeRepository {
     return mapEmployeeSummary(response);
   }
 
-  async update(employeeId: string, payload: EmployeeCreatePayload): Promise<EmployeeSummary> {
+  async update(employeeId: number, payload: EmployeeCreatePayload): Promise<EmployeeSummary> {
     await this.ensureFilterOptionsLoaded();
     const response = await this.httpRepository.put({
       path: `/api/employees/${employeeId}`,
@@ -209,31 +209,31 @@ export class EmployeeRepository {
     return mapEmployeeSummary(response);
   }
 
-  async delete(employeeId: string): Promise<void> {
+  async delete(employeeId: number): Promise<void> {
     await this.httpRepository.delete({
       path: `/api/employees/${employeeId}`,
     });
   }
 
-  async restore(employeeId: string): Promise<void> {
+  async restore(employeeId: number): Promise<void> {
     await this.httpRepository.patch({
       path: `/api/employees/${employeeId}/restore`,
     });
   }
 
-  async takeLeave(employeeId: string): Promise<void> {
+  async takeLeave(employeeId: number): Promise<void> {
     await this.httpRepository.patch({
       path: `/api/employees/${employeeId}/take-leave`,
     });
   }
 
-  async activate(employeeId: string): Promise<void> {
+  async activate(employeeId: number): Promise<void> {
     await this.httpRepository.patch({
       path: `/api/employees/${employeeId}/activate`,
     });
   }
 
-  async resign(employeeId: string, resignationDate: string): Promise<void> {
+  async resign(employeeId: number, resignationDate: string): Promise<void> {
     await this.httpRepository.patch({
       path: `/api/employees/${employeeId}/resign`,
       params: { resignationDate },

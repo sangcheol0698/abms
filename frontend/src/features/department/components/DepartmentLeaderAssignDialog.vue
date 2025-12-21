@@ -111,7 +111,7 @@ import { toast } from 'vue-sonner';
 
 const props = defineProps<{
   open: boolean;
-  departmentId: string;
+  departmentId: number;
   departmentName: string;
 }>();
 

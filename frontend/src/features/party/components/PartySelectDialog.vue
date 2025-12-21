@@ -116,21 +116,21 @@ import { toast } from 'vue-sonner';
 
 interface Props {
   open: boolean;
-  selectedPartyId?: string;
+  selectedPartyId?: number;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void;
-  (event: 'select', payload: { partyId: string; partyName: string }): void;
+  (event: 'select', payload: { partyId: number; partyName: string }): void;
 }>();
 
 const repository = appContainer.resolve(PartyRepository);
 
 const loading = ref(false);
 const parties = ref<PartyListItem[]>([]);
-const selectedPartyId = ref('');
+const selectedPartyId = ref<number | undefined>();
 const searchQuery = ref('');
 const page = ref(1);
 const pageSize = ref(10);
@@ -149,12 +149,12 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      selectedPartyId.value = props.selectedPartyId ?? '';
+      selectedPartyId.value = props.selectedPartyId;
       searchQuery.value = '';
       page.value = 1;
       loadParties();
     } else {
-      selectedPartyId.value = '';
+      selectedPartyId.value = undefined;
       searchQuery.value = '';
       page.value = 1;
     }
@@ -165,7 +165,7 @@ watch(
   () => props.selectedPartyId,
   (next) => {
     if (props.open) {
-      selectedPartyId.value = next ?? '';
+      selectedPartyId.value = next;
     }
   },
 );
@@ -196,7 +196,7 @@ function handleSelect(party: PartyListItem) {
 }
 
 function clearSelection() {
-  selectedPartyId.value = '';
+  selectedPartyId.value = undefined;
 }
 
 function confirmSelection() {

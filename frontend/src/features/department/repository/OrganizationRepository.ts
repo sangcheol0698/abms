@@ -19,7 +19,7 @@ export default class OrganizationRepository {
     return normalizeOrganizationChartResponse(response);
   }
 
-  async fetchDepartmentDetail(departmentId: string): Promise<OrganizationDepartmentDetail> {
+  async fetchDepartmentDetail(departmentId: number): Promise<OrganizationDepartmentDetail> {
     // TODO: API 경로 및 응답 스키마 확정 후 수정이 필요합니다.
     const response = await this.httpRepository.get({
       path: `/api/departments/${departmentId}`,
@@ -28,7 +28,7 @@ export default class OrganizationRepository {
   }
 
   async fetchDepartmentEmployees(
-    departmentId: string,
+    departmentId: number,
     params: {
       page: number;
       size: number;
@@ -77,7 +77,7 @@ export default class OrganizationRepository {
     return PageResponse.fromPage(response, mapEmployeeListItem);
   }
 
-  async assignTeamLeader(departmentId: string, employeeId: string): Promise<void> {
+  async assignTeamLeader(departmentId: number, employeeId: number): Promise<void> {
     await this.httpRepository.post({
       path: `/api/departments/${departmentId}/assign-team-leader`,
       data: { leaderEmployeeId: employeeId },

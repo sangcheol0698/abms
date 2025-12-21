@@ -94,14 +94,14 @@ import { X, ChevronsUpDown, ChevronsDownUp } from 'lucide-vue-next';
 
 interface Props {
   nodes: OrganizationChartNode[];
-  selectedNodeId?: string;
+  selectedNodeId?: number;
   defaultExpandAll?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   defaultExpandAll: true,
 });
-const emit = defineEmits<{ (e: 'update:selectedNodeId', value: string): void }>();
+const emit = defineEmits<{ (e: 'update:selectedNodeId', value: number): void }>();
 
 const collapsedMap = ref<Record<string, boolean>>({});
 const depthMap = ref<Record<string, number>>({});
@@ -172,12 +172,12 @@ function rebuildIndexes(nodes: OrganizationChartNode[]) {
   const nextCollapsible: string[] = [];
 
   const traverse = (node: OrganizationChartNode, parentId: string | null, depth: number) => {
-    nextParent[node.departmentId] = parentId;
-    nextDepth[node.departmentId] = depth;
+    nextParent[String(node.departmentId)] = parentId;
+    nextDepth[String(node.departmentId)] = depth;
 
     if (node.children.length > 0) {
-      nextCollapsible.push(node.departmentId);
-      node.children.forEach((child) => traverse(child, node.departmentId, depth + 1));
+      nextCollapsible.push(String(node.departmentId));
+      node.children.forEach((child) => traverse(child, String(node.departmentId), depth + 1));
     }
   };
 
@@ -209,13 +209,13 @@ function rebuildIndexes(nodes: OrganizationChartNode[]) {
   collapsibleIds.value = nextCollapsible;
 }
 
-function expandAncestors(departmentId?: string) {
+function expandAncestors(departmentId?: number) {
   if (!departmentId) {
     return;
   }
 
   const ancestors = new Set<string>();
-  let current = parentMap.value[departmentId] ?? null;
+  let current = parentMap.value[String(departmentId)] ?? null;
 
   while (current) {
     ancestors.add(current);
@@ -241,21 +241,21 @@ function expandAncestors(departmentId?: string) {
   }
 }
 
-function handleToggle(departmentId: string) {
+function handleToggle(departmentId: number) {
   if (isSearching.value) {
     return;
   }
-  const isCollapsed = Boolean(collapsedMap.value[departmentId]);
+  const isCollapsed = Boolean(collapsedMap.value[String(departmentId)]);
   if (isCollapsed) {
     const nextState = { ...collapsedMap.value };
-    delete nextState[departmentId];
+    delete nextState[String(departmentId)];
     collapsedMap.value = nextState;
   } else {
-    collapsedMap.value = { ...collapsedMap.value, [departmentId]: true };
+    collapsedMap.value = { ...collapsedMap.value, [String(departmentId)]: true };
   }
 }
 
-function handleSelect(departmentId: string) {
+function handleSelect(departmentId: number) {
   expandAncestors(departmentId);
   emit('update:selectedNodeId', departmentId);
 }
@@ -278,12 +278,12 @@ function clearSearch() {
   searchTerm.value = '';
 }
 
-function scrollIntoView(departmentId?: string) {
+function scrollIntoView(departmentId?: number) {
   if (!departmentId) {
     return;
   }
 
-  const depth = depthMap.value[departmentId];
+  const depth = depthMap.value[String(departmentId)];
   if (depth === 0) {
     return;
   }
@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
 function filterNodes(
   nodes: OrganizationChartNode[],
   term: string,
-  selectedId?: string,
+  selectedId?: number,
 ): OrganizationChartNode[] {
   const result: OrganizationChartNode[] = [];
 

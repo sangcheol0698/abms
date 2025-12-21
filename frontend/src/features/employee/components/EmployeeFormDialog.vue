@@ -109,7 +109,7 @@
                             :model-value="field.value"
                             class="flex-1"
                             :disabled="departmentOptions.length === 0 || isSubmitting"
-                            @update:model-value="(value) => handleChange(value ?? '')"
+                            @update:model-value="(value) => handleChange(value ?? 0)"
                             @blur="handleBlur"
                           >
                             <SelectTrigger class="w-full">
@@ -472,7 +472,7 @@ import {
 
 interface DepartmentOption {
   label: string;
-  value: string;
+  value: number;
 }
 
 const props = withDefaults(
@@ -503,7 +503,9 @@ const emit = defineEmits<{
 const repository = appContainer.resolve(EmployeeRepository);
 
 const schema = z.object({
-  departmentId: z.string({ required_error: '부서를 선택하세요.' }).min(1, '부서를 선택하세요.'),
+  departmentId: z
+    .number({ required_error: '부서를 선택하세요.' })
+    .min(1, '부서를 선택하세요.'),
   name: z
     .string({ required_error: '이름을 입력하세요.' })
     .min(1, '이름을 입력하세요.')
@@ -529,7 +531,7 @@ const schema = z.object({
 
 const formSchema = toTypedSchema(schema);
 const initialValues = {
-  departmentId: '',
+  departmentId: 0,
   name: '',
   email: '',
   joinDate: null as Date | null,
@@ -546,8 +548,8 @@ const formInitialValues = ref({ ...initialValues });
 const errorMessage = ref<string | null>(null);
 const departmentOptions = computed(() => props.departmentOptions ?? []);
 const isDepartmentSelectOpen = ref(false);
-const selectedDepartmentIdForDialog = ref('');
-const applyDepartmentSelection = ref<((value: string) => void) | null>(null);
+const selectedDepartmentIdForDialog = ref<number | undefined>();
+const applyDepartmentSelection = ref<((value: number) => void) | null>(null);
 
 const gradeOptions = computed(() => props.gradeOptions ?? getEmployeeGradeOptions());
 const positionOptions = computed(() => props.positionOptions ?? getEmployeePositionOptions());
@@ -597,7 +599,7 @@ watch(
 watch(isDepartmentSelectOpen, (next) => {
   if (!next) {
     applyDepartmentSelection.value = null;
-    selectedDepartmentIdForDialog.value = '';
+    selectedDepartmentIdForDialog.value = undefined;
   }
 });
 
@@ -683,7 +685,7 @@ function resetForm() {
   errorMessage.value = null;
   setFormInitialValues(initialValues);
   isDepartmentSelectOpen.value = false;
-  selectedDepartmentIdForDialog.value = '';
+  selectedDepartmentIdForDialog.value = undefined;
   applyDepartmentSelection.value = null;
   isAvatarSelectOpen.value = false;
   avatarSelectionResolver.value = null;
@@ -704,20 +706,20 @@ function handleDepartmentSelectButton(
   onBlur?: () => void,
 ) {
   const currentId =
-    typeof currentValue === 'string' ? currentValue : currentValue ? String(currentValue) : '';
-  openDepartmentSelect(currentId, (value: string) => {
+    typeof currentValue === 'number' ? currentValue : Number(currentValue) || 0;
+  openDepartmentSelect(currentId, (value: number) => {
     onChange?.(value);
     onBlur?.();
   });
 }
 
-function openDepartmentSelect(currentDepartmentId: string, setter: (value: string) => void) {
-  selectedDepartmentIdForDialog.value = currentDepartmentId ?? '';
+function openDepartmentSelect(currentDepartmentId: number, setter: (value: number) => void) {
+  selectedDepartmentIdForDialog.value = currentDepartmentId || undefined;
   applyDepartmentSelection.value = setter;
   isDepartmentSelectOpen.value = true;
 }
 
-function handleDepartmentSelected({ departmentId }: { departmentId: string }) {
+function handleDepartmentSelected({ departmentId }: { departmentId: number }) {
   applyDepartmentSelection.value?.(departmentId);
   applyDepartmentSelection.value = null;
   isDepartmentSelectOpen.value = false;
@@ -796,7 +798,7 @@ function setFormInitialValues(values: typeof initialValues) {
 
 function mapEmployeeToFormValues(employee: EmployeeSummary): typeof initialValues {
   return {
-    departmentId: employee.departmentId ?? '',
+    departmentId: employee.departmentId ?? 0,
     name: employee.name ?? '',
     email: employee.email ?? '',
     joinDate: parseDate(employee.joinDate),

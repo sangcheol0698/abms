@@ -46,9 +46,9 @@ function toIsoDateString(value: unknown): string {
 }
 
 export interface EmployeeSummary {
-  departmentId: string;
+  departmentId: number;
   departmentName: string;
-  employeeId: string;
+  employeeId: number;
   name: string;
   email: string;
   position: string;
@@ -90,9 +90,9 @@ export function mapEmployeeSummary(input: any): EmployeeSummary {
   const avatarLabel = avatarOption.label;
 
   return {
-    departmentId: String(input?.departmentId ?? ''),
+    departmentId: Number(input?.departmentId ?? 0),
     departmentName: String(input?.departmentName ?? ''),
-    employeeId: String(input?.employeeId ?? ''),
+    employeeId: Number(input?.employeeId ?? 0),
     name: String(input?.name ?? ''),
     email,
     position: toPositionLabel(positionCode),
@@ -113,7 +113,7 @@ export function mapEmployeeSummary(input: any): EmployeeSummary {
 }
 
 export interface EmployeeCreatePayload {
-  departmentId: string;
+  departmentId: number;
   name: string;
   email: string;
   joinDate: string;

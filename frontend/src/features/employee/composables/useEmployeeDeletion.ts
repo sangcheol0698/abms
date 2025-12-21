@@ -8,7 +8,7 @@ export function useEmployeeDeletion(onDeleted: () => Promise<void> | void) {
   const employeeRepository = appContainer.resolve(EmployeeRepository);
 
   const isDialogOpen = ref(false);
-  const candidateId = ref<string | null>(null);
+  const candidateId = ref<number | null>(null);
   const candidateName = ref<string | null>(null);
   const isProcessing = ref(false);
 
@@ -19,7 +19,7 @@ export function useEmployeeDeletion(onDeleted: () => Promise<void> | void) {
       : '삭제 후에는 복구할 수 없습니다.';
   });
 
-  function open(id: string, name: string) {
+  function open(id: number, name: string) {
     candidateId.value = id;
     candidateName.value = name;
     isDialogOpen.value = true;

@@ -57,21 +57,21 @@ import { toast } from 'vue-sonner';
 
 interface Props {
   open: boolean;
-  selectedDepartmentId?: string;
+  selectedDepartmentId?: number;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void;
-  (event: 'select', payload: { departmentId: string; departmentName: string }): void;
+  (event: 'select', payload: { departmentId: number; departmentName: string }): void;
 }>();
 
 const repository = appContainer.resolve(OrganizationRepository);
 
 const loading = ref(false);
 const nodes = ref<OrganizationChartNode[]>([]);
-const selectedNodeId = ref('');
+const selectedNodeId = ref<number | undefined>();
 const treeRenderKey = ref(0);
 
 const selectedNodeSummary = computed(() => {
@@ -96,11 +96,11 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      selectedNodeId.value = props.selectedDepartmentId ?? '';
+      selectedNodeId.value = props.selectedDepartmentId;
       loadChart();
       treeRenderKey.value += 1;
     } else {
-      selectedNodeId.value = '';
+      selectedNodeId.value = undefined;
     }
   },
 );
@@ -109,7 +109,7 @@ watch(
   () => props.selectedDepartmentId,
   (next) => {
     if (props.open) {
-      selectedNodeId.value = next ?? '';
+      selectedNodeId.value = next;
     }
   },
 );
@@ -128,7 +128,7 @@ async function loadChart() {
   }
 }
 
-function handleTreeSelect(departmentId: string) {
+function handleTreeSelect(departmentId: number) {
   if (!departmentId) {
     return;
   }
@@ -136,7 +136,7 @@ function handleTreeSelect(departmentId: string) {
 }
 
 function clearSelection() {
-  selectedNodeId.value = '';
+  selectedNodeId.value = undefined;
 }
 
 function confirmSelection() {
@@ -155,7 +155,7 @@ function confirmSelection() {
 
 function findNode(
   target: OrganizationChartNode[],
-  departmentId: string,
+  departmentId: number,
 ): OrganizationChartNode | null {
   for (const node of target) {
     if (node.departmentId === departmentId) {

@@ -77,7 +77,7 @@ interface ProjectSummary {
 }
 
 interface Props {
-  employeeId: string;
+  employeeId: number;
 }
 
 defineProps<Props>();

@@ -271,10 +271,10 @@ function handleTabChange(newTab: string | number) {
 }
 
 // 직원 상세 페이지로 이동
-function navigateToEmployee(employeeId?: string) {
+function navigateToEmployee(employeeId?: number) {
   if (!employeeId) {
     return;
   }
-  router.push({ name: 'employee-detail', params: { employeeId } });
+  router.push({ name: 'employee-detail', params: { employeeId: String(employeeId) } });
 }
 </script>

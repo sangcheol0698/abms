@@ -2,8 +2,8 @@
  * 프로젝트 목록 아이템 인터페이스
  */
 export interface ProjectListItem {
-  projectId: string;
-  partyId: string;
+  projectId: number;
+  partyId: number;
   code: string;
   name: string;
   description: string | null;
@@ -19,8 +19,8 @@ export interface ProjectListItem {
  */
 export function mapProjectListItem(input: any): ProjectListItem {
   return {
-    projectId: String(input?.projectId ?? ''),
-    partyId: String(input?.partyId ?? ''),
+    projectId: Number(input?.projectId ?? 0),
+    partyId: Number(input?.partyId ?? 0),
     code: String(input?.code ?? ''),
     name: String(input?.name ?? ''),
     description: input?.description ?? null,

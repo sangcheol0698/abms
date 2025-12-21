@@ -49,8 +49,8 @@ function toIsoDateString(value: unknown): string | undefined {
 }
 
 export interface EmployeeListItem {
-  employeeId: string;
-  departmentId: string;
+  employeeId: number;
+  departmentId: number;
   departmentName: string;
   name: string;
   email: string;
@@ -93,8 +93,8 @@ export function mapEmployeeListItem(input: any): EmployeeListItem {
   const avatarLabel = avatarOption.label;
 
   return {
-    employeeId: String(input?.employeeId ?? ''),
-    departmentId: String(input?.departmentId ?? ''),
+    employeeId: Number(input?.employeeId ?? 0),
+    departmentId: Number(input?.departmentId ?? 0),
     departmentName: String(input?.departmentName ?? ''),
     name: String(input?.name ?? ''),
     email,
@@ -123,6 +123,6 @@ export interface EmployeeSearchParams {
   types?: string[];
   grades?: string[];
   positions?: string[];
-  departmentIds?: string[];
+  departmentIds?: number[];
   sort?: string;
 }

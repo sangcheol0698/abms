@@ -109,9 +109,9 @@ import type { OrganizationChartNode } from '@/features/department/models/organiz
 interface Props {
   node: OrganizationChartNode;
   collapsedMap: Record<string, boolean>;
-  selectedId?: string;
-  toggle: (departmentId: string) => void;
-  select: (departmentId: string) => void;
+  selectedId?: number;
+  toggle: (departmentId: number) => void;
+  select: (departmentId: number) => void;
   forceExpand: boolean;
   searchTerm?: string;
 }
@@ -130,7 +130,7 @@ const ICON_MATCHERS: Array<{ pattern: RegExp; icon: Component }> = [
 
 const hasChildren = computed(() => props.node.children.length > 0);
 const isCollapsed = computed(() =>
-  props.forceExpand ? false : Boolean(props.collapsedMap[props.node.departmentId]),
+  props.forceExpand ? false : Boolean(props.collapsedMap[String(props.node.departmentId)]),
 );
 const isSelected = computed(() => props.node.departmentId === props.selectedId);
 const showToggle = computed(() => hasChildren.value && !props.forceExpand);
@@ -187,11 +187,11 @@ const nameSegments = computed(() => {
   return segments.length > 0 ? segments : [{ text: name, matched: false }];
 });
 
-function toggleNode(departmentId: string) {
+function toggleNode(departmentId: number) {
   props.toggle(departmentId);
 }
 
-function selectNode(departmentId: string) {
+function selectNode(departmentId: number) {
   props.select(departmentId);
 }
 </script>

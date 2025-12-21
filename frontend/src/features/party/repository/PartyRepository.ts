@@ -32,4 +32,12 @@ export default class PartyRepository {
 
     return PageResponse.fromPage(response, mapPartyListItem);
   }
+
+  async fetchAll(): Promise<{ label: string; value: number }[]> {
+    const response = await this.list({ page: 1, size: 1000 });
+    return response.content.map((party) => ({
+      label: party.name,
+      value: party.partyId,
+    }));
+  }
 }

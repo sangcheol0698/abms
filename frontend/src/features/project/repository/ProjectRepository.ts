@@ -48,7 +48,7 @@ export default class ProjectRepository {
   /**
    * 프로젝트 상세 조회
    */
-  async find(projectId: string): Promise<ProjectDetail> {
+  async find(projectId: number): Promise<ProjectDetail> {
     const response = await this.httpRepository.get({
       path: `/api/projects/${projectId}`,
     });
@@ -80,7 +80,7 @@ export default class ProjectRepository {
   /**
    * 프로젝트 수정
    */
-  async update(projectId: string, data: ProjectUpdateData): Promise<ProjectDetail> {
+  async update(projectId: number, data: ProjectUpdateData): Promise<ProjectDetail> {
     const response = await this.httpRepository.put({
       path: `/api/projects/${projectId}`,
       data: {
@@ -100,7 +100,7 @@ export default class ProjectRepository {
   /**
    * 프로젝트 삭제
    */
-  async delete(projectId: string): Promise<void> {
+  async delete(projectId: number): Promise<void> {
     await this.httpRepository.delete({
       path: `/api/projects/${projectId}`,
     });
@@ -109,7 +109,7 @@ export default class ProjectRepository {
   /**
    * 프로젝트 완료 처리
    */
-  async complete(projectId: string): Promise<ProjectDetail> {
+  async complete(projectId: number): Promise<ProjectDetail> {
     const response = await this.httpRepository.patch({
       path: `/api/projects/${projectId}/complete`,
     });
@@ -120,7 +120,7 @@ export default class ProjectRepository {
   /**
    * 프로젝트 취소 처리
    */
-  async cancel(projectId: string): Promise<ProjectDetail> {
+  async cancel(projectId: number): Promise<ProjectDetail> {
     const response = await this.httpRepository.patch({
       path: `/api/projects/${projectId}/cancel`,
     });

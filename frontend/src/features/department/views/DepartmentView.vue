@@ -135,7 +135,7 @@ const repository = appContainer.resolve(OrganizationRepository);
 const chart = ref<OrganizationChartNode[]>([]);
 const isLoading = ref(true);
 const errorMessage = ref<string | null>(null);
-const selectedDepartmentId = ref<string | undefined>();
+const selectedDepartmentId = ref<number | undefined>();
 const departmentDetail = ref<OrganizationDepartmentDetail | null>(null);
 const isDepartmentLoading = ref(false);
 
@@ -143,14 +143,14 @@ const isDepartmentLoading = ref(false);
 useQuerySync({
   state: selectedDepartmentId,
   queryKey: 'departmentId',
-  serialize: (value) => value,
+  serialize: (value) => (value ? String(value) : undefined),
   deserialize: (value) => {
     if (Array.isArray(value)) {
       const first = value.find((v) => typeof v === 'string' && v.trim().length > 0);
-      return first ? first.trim() : undefined;
+      return first ? Number(first) : undefined;
     }
     if (typeof value === 'string' && value.trim().length > 0) {
-      return value.trim();
+      return Number(value);
     }
     return undefined;
   },
@@ -235,7 +235,7 @@ async function loadOrganizationChart() {
   }
 }
 
-async function loadDepartmentDetail(departmentId: string) {
+async function loadDepartmentDetail(departmentId: number) {
   const token = ++detailRequestToken;
   isDepartmentLoading.value = true;
 
@@ -310,7 +310,7 @@ watch(
   { immediate: false },
 );
 
-function handleTreeSelection(departmentId: string, pane?: FeatureSplitPaneContext) {
+function handleTreeSelection(departmentId: number, pane?: FeatureSplitPaneContext) {
   if (!departmentId) {
     return;
   }
@@ -332,7 +332,7 @@ function ensureSelectedDepartmentExists() {
   }
 }
 
-function handleBreadcrumbSelect(departmentId: string) {
+function handleBreadcrumbSelect(departmentId: number) {
   if (!departmentId || departmentId === selectedDepartmentId.value) {
     return;
   }
@@ -341,7 +341,7 @@ function handleBreadcrumbSelect(departmentId: string) {
 
 function findDepartment(
   nodes: OrganizationChartNode[],
-  targetId: string,
+  targetId: number,
 ): OrganizationChartNode | null {
   for (const node of nodes) {
     if (node.departmentId === targetId) {
@@ -357,7 +357,7 @@ function findDepartment(
 
 function buildDepartmentPath(
   nodes: OrganizationChartNode[],
-  targetId?: string,
+  targetId?: number,
   currentPath: OrganizationChartNode[] = [],
 ): OrganizationChartNode[] {
   if (!targetId) {

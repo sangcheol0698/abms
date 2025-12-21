@@ -1,15 +1,15 @@
 export interface PartyListItem {
-  partyId: string;
+  partyId: number;
   name: string;
   ceo: string;
   manager: string;
   contact: string;
   email: string;
-}
+  }
 
 export function mapPartyListItem(input: any): PartyListItem {
   return {
-    partyId: String(input?.partyId ?? ''),
+    partyId: Number(input?.partyId ?? 0),
     name: String(input?.name ?? ''),
     ceo: String(input?.ceo ?? ''),
     manager: String(input?.manager ?? ''),

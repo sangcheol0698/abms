@@ -22,7 +22,7 @@ const props = withDefaults(
   defineProps<{
     open: boolean;
     employee?: EmployeeSummary | null;
-    departmentOptions: { label: string; value: string }[];
+    departmentOptions: { label: string; value: number }[];
     gradeOptions?: EmployeeFilterOption[];
     positionOptions?: EmployeeFilterOption[];
     typeOptions?: EmployeeFilterOption[];

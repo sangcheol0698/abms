@@ -111,11 +111,11 @@ import type { OrganizationChartNode } from '@/features/department/models/organiz
 
 interface DepartmentOption {
   label: string;
-  value: string;
+  value: number;
 }
 
 const props = defineProps<{
-  departmentId: string;
+  departmentId: number;
 }>();
 
 const repository = appContainer.resolve(OrganizationRepository);
@@ -352,7 +352,7 @@ const table = useVueTable({
 async function loadDepartments() {
   try {
     const chart = await repository.fetchOrganizationChart();
-    const map = new Map<string, string>();
+    const map = new Map<number, string>();
 
     const traverse = (nodes: OrganizationChartNode[]) => {
       nodes.forEach((node) => {

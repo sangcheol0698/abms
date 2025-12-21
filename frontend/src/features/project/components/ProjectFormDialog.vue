@@ -77,13 +77,26 @@
                       </FormLabel>
                       <FormControl>
                         <div class="flex items-center gap-2">
-                          <Input
-                            :model-value="selectedPartyName || field.value"
-                            placeholder="협력사를 선택하세요"
-                            :disabled="true"
-                            readonly
+                          <Select
+                            :model-value="field.value"
                             class="flex-1"
-                          />
+                            :disabled="partyOptions.length === 0 || isSubmitting"
+                            @update:model-value="(value) => handleChange(value ?? 0)"
+                            @blur="handleBlur"
+                          >
+                            <SelectTrigger class="w-full">
+                              <SelectValue placeholder="협력사를 선택하세요" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem
+                                v-for="option in partyOptions"
+                                :key="option.value"
+                                :value="option.value"
+                              >
+                                {{ option.label }}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                           <Button
                             type="button"
                             variant="outline"
@@ -98,7 +111,7 @@
                             "
                           >
                             <Building class="h-4 w-4" />
-                            <span>협력사 선택</span>
+                            <span>협력사</span>
                           </Button>
                         </div>
                       </FormControl>
@@ -336,6 +349,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Separator } from '@/components/ui/separator';
 import { appContainer } from '@/core/di/container';
 import ProjectRepository from '@/features/project/repository/ProjectRepository';
+import PartyRepository from '@/features/party/repository/PartyRepository';
 import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
 import { Building } from 'lucide-vue-next';
 import HttpError from '@/core/http/HttpError';
@@ -361,9 +375,10 @@ const emit = defineEmits<{
 }>();
 
 const repository = appContainer.resolve(ProjectRepository);
+const partyRepository = appContainer.resolve(PartyRepository);
 
 const schema = z.object({
-  partyId: z.string({ required_error: '협력사 ID를 입력하세요.' }).uuid('유효한 UUID를 입력하세요.'),
+  partyId: z.number({ required_error: '협력사를 선택하세요.' }).min(1, '협력사를 선택하세요.'),
   code: z
     .string({ required_error: '프로젝트 코드를 입력하세요.' })
     .min(1, '프로젝트 코드를 입력하세요.')
@@ -389,7 +404,7 @@ const schema = z.object({
 
 const formSchema = toTypedSchema(schema);
 const initialValues = {
-  partyId: '',
+  partyId: 0,
   code: '',
   name: '',
   description: '',
@@ -403,10 +418,10 @@ const formKey = ref(0);
 const formInitialValues = ref({ ...initialValues });
 const errorMessage = ref<string | null>(null);
 const isPartySelectOpen = ref(false);
-const selectedPartyIdForDialog = ref('');
-const selectedPartyName = ref('');
-const applyPartySelection = ref<((value: string) => void) | null>(null);
+const selectedPartyIdForDialog = ref<number | undefined>();
+const applyPartySelection = ref<((value: number) => void) | null>(null);
 const statusOptions = ref<{ value: string; label: string }[]>([]);
+const partyOptions = ref<{ value: number; label: string }[]>([]);
 
 
 
@@ -446,26 +461,31 @@ watch(
 watch(isPartySelectOpen, (next) => {
   if (!next) {
     applyPartySelection.value = null;
-    selectedPartyIdForDialog.value = '';
+    selectedPartyIdForDialog.value = undefined;
   }
 });
 
 onMounted(async () => {
   try {
-    statusOptions.value = await repository.fetchStatuses();
+    const [statuses, parties] = await Promise.all([
+      repository.fetchStatuses(),
+      partyRepository.fetchAll()
+    ]);
+    statusOptions.value = statuses;
+    partyOptions.value = parties;
   } catch (error) {
-    console.error('Failed to fetch project statuses:', error);
+    console.error('Failed to fetch options:', error);
     // Fallback to empty array
     statusOptions.value = [];
+    partyOptions.value = [];
   }
 });
 
 function resetForm() {
   errorMessage.value = null;
   setFormInitialValues(initialValues);
-  selectedPartyName.value = '';
   isPartySelectOpen.value = false;
-  selectedPartyIdForDialog.value = '';
+  selectedPartyIdForDialog.value = undefined;
   applyPartySelection.value = null;
 }
 
@@ -483,7 +503,7 @@ async function onSubmit(rawValues: Record<string, unknown>) {
   const values = rawValues as typeof initialValues;
 
   const payload = {
-    partyId: values.partyId.trim(),
+    partyId: values.partyId,
     code: values.code.trim(),
     name: values.name.trim(),
     description: values.description?.trim() || '',
@@ -554,9 +574,6 @@ function setFormInitialValues(values: typeof initialValues) {
 }
 
 function mapProjectToFormValues(project: ProjectDetail): typeof initialValues {
-  // Set party name for display  
-  selectedPartyName.value = project.partyName;
-  
   return {
     partyId: project.partyId,
     code: project.code,
@@ -575,22 +592,20 @@ function handlePartySelectButton(
   onBlur?: () => void,
 ) {
   const currentId =
-    typeof currentValue === 'string' ? currentValue : currentValue ? String(currentValue) : '';
-  openPartySelect(currentId, (value: string, name: string) => {
+    typeof currentValue === 'number' ? currentValue : Number(currentValue) || 0;
+  openPartySelect(currentId, (value: number) => {
     onChange?.(value);
     onBlur?.();
-    selectedPartyName.value = name;
   });
 }
 
-function openPartySelect(currentPartyId: string, setter: (value: string, name: string) => void) {
-  selectedPartyIdForDialog.value = currentPartyId ?? '';
-  applyPartySelection.value = (value: string) => setter(value, selectedPartyName.value);
+function openPartySelect(currentPartyId: number, setter: (value: number) => void) {
+  selectedPartyIdForDialog.value = currentPartyId || undefined;
+  applyPartySelection.value = setter;
   isPartySelectOpen.value = true;
 }
 
-function handlePartySelected({ partyId, partyName }: { partyId: string; partyName: string }) {
-  selectedPartyName.value = partyName;
+function handlePartySelected({ partyId }: { partyId: number }) {
   applyPartySelection.value?.(partyId);
   applyPartySelection.value = null;
   isPartySelectOpen.value = false;

@@ -64,7 +64,7 @@
             <EmployeeSalaryPanel :employee="employee" />
           </TabsContent>
           <TabsContent value="projects" class="flex-1">
-            <EmployeeProjectsPanel :employee-id="employee?.employeeId ?? ''" />
+              <EmployeeProjectsPanel :employee-id="employee?.employeeId ?? 0" />
           </TabsContent>
         </div>
       </Tabs>
@@ -129,7 +129,7 @@ const employeeInitials = computed(() => {
 });
 
 const isEmployeeUpdateDialogOpen = ref(false);
-const departmentOptions = ref<{ label: string; value: string }[]>([]);
+const departmentOptions = ref<{ label: string; value: number }[]>([]);
 const statusOptions = ref<EmployeeFilterOption[]>([]);
 const typeOptions = ref<EmployeeFilterOption[]>([]);
 const gradeOptions = ref<EmployeeFilterOption[]>([]);
@@ -148,7 +148,10 @@ watch(
       isResigning.value = false;
       isTakingLeave.value = false;
       isActivating.value = false;
-      fetchEmployee(next);
+      const employeeId = Number(next);
+      if (!isNaN(employeeId)) {
+        fetchEmployee(employeeId);
+      }
     }
   },
   { immediate: true },
@@ -158,7 +161,7 @@ function resolveErrorMessage(error: unknown, fallback: string) {
   return error instanceof HttpError ? error.message : fallback;
 }
 
-async function fetchEmployee(employeeId: string, options: { showLoading?: boolean } = {}) {
+async function fetchEmployee(employeeId: number, options: { showLoading?: boolean } = {}) {
   const { showLoading = true } = options;
 
   if (showLoading) {
@@ -285,7 +288,7 @@ async function loadOptions() {
       repository.fetchPositions(),
     ]);
 
-    const map = new Map<string, string>();
+    const map = new Map<number, string>();
     const traverse = (nodes: OrganizationChartNode[]) => {
       nodes.forEach((node) => {
         if (!map.has(node.departmentId)) {
@@ -297,7 +300,10 @@ async function loadOptions() {
       });
     };
     traverse(chart);
-    departmentOptions.value = Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+    departmentOptions.value = Array.from(map.entries()).map(([id, name]) => ({
+      label: name,
+      value: id,
+    }));
 
     statusOptions.value = statuses;
     typeOptions.value = types;
