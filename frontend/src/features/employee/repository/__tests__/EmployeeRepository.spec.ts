@@ -76,7 +76,7 @@ describe('EmployeeRepository.search', () => {
       types: ['FULL_TIME', 'PART_TIME'],
       grades: ['JUNIOR'],
       positions: ['ASSOCIATE', 'MANAGER'],
-      departmentIds: ['D01', 'D02'],
+      departmentIds: [1, 2],
       sort: 'name,asc',
     };
 
@@ -92,7 +92,7 @@ describe('EmployeeRepository.search', () => {
         types: 'FULL_TIME,PART_TIME',
         grades: 'JUNIOR',
         positions: 'ASSOCIATE,MANAGER',
-        departmentIds: 'D01,D02',
+        departmentIds: '1,2',
         sort: 'name,asc',
       },
     });
@@ -103,8 +103,8 @@ describe('EmployeeRepository.search', () => {
     const apiResponse = {
       content: [
         {
-          employeeId: 'E-01',
-          departmentId: 'DEV',
+          employeeId: 1,
+          departmentId: 10,
           departmentName: '개발팀',
           name: '홍길동',
           email: 'hong@example.com',
@@ -141,8 +141,8 @@ describe('EmployeeRepository.search', () => {
       throw new Error('변환된 직원 항목이 존재해야 합니다.');
     }
 
-    expect(item.employeeId).toBe('E-01');
-    expect(item.departmentId).toBe('DEV');
+    expect(item.employeeId).toBe(1);
+    expect(item.departmentId).toBe(10);
     expect(item.departmentName).toBe('개발팀');
     expect(item.name).toBe('홍길동');
     expect(item.statusCode).toBe('ACTIVE');
@@ -160,8 +160,8 @@ describe('EmployeeRepository.search', () => {
     primeFilterOptions();
     httpGet.mockResolvedValueOnce(null);
     const httpPut = vi.fn().mockResolvedValue({
-      employeeId: 'E-01',
-      departmentId: 'DEV',
+      employeeId: 1,
+      departmentId: 10,
       departmentName: '개발팀',
       name: '홍길동',
       email: 'hong@example.com',
@@ -178,8 +178,8 @@ describe('EmployeeRepository.search', () => {
       put: httpPut,
     } as unknown as HttpRepository);
 
-    const result = await repository.update('E-01', {
-      departmentId: 'DEV',
+    const result = await repository.update(1, {
+      departmentId: 10,
       name: '홍길동',
       email: 'hong@example.com',
       joinDate: '2024-01-01',
@@ -192,9 +192,9 @@ describe('EmployeeRepository.search', () => {
     });
 
     expect(httpPut).toHaveBeenCalledWith({
-      path: '/api/employees/E-01',
+      path: '/api/employees/1',
       data: {
-        departmentId: 'DEV',
+        departmentId: 10,
         name: '홍길동',
         email: 'hong@example.com',
         joinDate: '2024-01-01',
@@ -206,7 +206,7 @@ describe('EmployeeRepository.search', () => {
         memo: '메모',
       },
     });
-    expect(result.employeeId).toBe('E-01');
+    expect(result.employeeId).toBe(1);
     expect(result.name).toBe('홍길동');
     expect(result.avatarCode).toBe('SKY_GLOW');
   });

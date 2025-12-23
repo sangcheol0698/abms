@@ -297,7 +297,7 @@ function handleDragEnter(event: DragEvent) {
   }
 }
 
-function handleDragLeave(event: DragEvent) {
+function handleDragLeave(_event: DragEvent) {
   dragCounter--;
   if (dragCounter === 0) {
     isDragging.value = false;

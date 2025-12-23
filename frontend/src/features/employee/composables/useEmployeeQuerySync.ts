@@ -112,7 +112,7 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
     // 부서 필터
     const departmentFilter = toArray(filterMap.get('departmentId'));
     if (departmentFilter.length > 0) {
-      params.departmentIds = departmentFilter;
+      params.departmentIds = departmentFilter.map(Number);
     }
 
     // 정렬
@@ -152,7 +152,7 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
       query.positions = serializeArrayFilter(params.positions);
     }
     if (params.departmentIds?.length) {
-      query.departmentIds = serializeArrayFilter(params.departmentIds);
+      query.departmentIds = serializeArrayFilter(params.departmentIds.map(String));
     }
 
     // 정렬

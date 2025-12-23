@@ -405,9 +405,9 @@ const deletion = {
   isDialogOpen: ref(false),
   isProcessing: ref(false),
   description: ref(''),
-  targetId: ref<string | null>(null),
+  targetId: ref<number | null>(null),
 
-  open(projectId: string, projectName: string) {
+  open(projectId: number, projectName: string) {
     this.targetId.value = projectId;
     this.description.value = `"${projectName}" 프로젝트를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`;
     this.isDialogOpen.value = true;
@@ -426,7 +426,9 @@ const deletion = {
 
     this.isProcessing.value = true;
     try {
-      await repository.delete(this.targetId.value);
+      if (this.targetId.value) {
+        await repository.delete(this.targetId.value);
+      }
       toast.success('프로젝트를 삭제했습니다.');
       this.isDialogOpen.value = false;
       loadProjects();

@@ -25,7 +25,7 @@ export interface EmployeeTableHandlers {
   /** 직원 삭제 */
   onDeleteEmployee: (employee: EmployeeListItem) => void;
   /** 부서로 이동 */
-  onNavigateToDepartment: (departmentId?: string) => void;
+  onNavigateToDepartment: (departmentId?: number) => void;
 }
 
 /**

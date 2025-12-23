@@ -39,7 +39,7 @@
             v-if="departmentOptions.length && table.getColumn('departmentId')"
             :column="table.getColumn('departmentId')"
             title="부서"
-            :options="departmentOptions"
+            :options="departmentFilterOptions"
           />
         </template>
 
@@ -219,7 +219,7 @@ import { useEmployeeQuerySync } from '@/features/employee/composables/useEmploye
 
 interface DepartmentOption {
   label: string;
-  value: string;
+  value: number;
 }
 
 const employeeRepository = appContainer.resolve(EmployeeRepository);
@@ -259,6 +259,13 @@ const deletion = useEmployeeDeletion(async () => {
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 
 const employeeSummary = useEmployeeSummary({ employees });
+
+const departmentFilterOptions = computed(() =>
+  departmentOptions.value.map((opt) => ({
+    label: opt.label,
+    value: String(opt.value),
+  })),
+);
 
 // 테이블 컬럼 정의 (EmployeeTableColumns.ts로 분리됨)
 const columns = createEmployeeTableColumns({
@@ -305,7 +312,7 @@ let requestToken = 0;
 async function loadDepartments() {
   try {
     const chart = await organizationRepository.fetchOrganizationChart();
-    const map = new Map<string, string>();
+    const map = new Map<number, string>();
 
     const traverse = (nodes: OrganizationChartNode[]) => {
       nodes.forEach((node) => {
@@ -541,7 +548,7 @@ function handleViewEmployee(row: EmployeeListItem) {
   });
 }
 
-function navigateToDepartment(departmentId?: string) {
+function navigateToDepartment(departmentId?: number) {
   if (!departmentId) {
     return;
   }

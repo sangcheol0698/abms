@@ -19,7 +19,7 @@ import type { EmployeeFilterOption } from '@/features/employee/models/employeeFi
 const props = withDefaults(
   defineProps<{
     open: boolean;
-    departmentOptions: { label: string; value: string }[];
+    departmentOptions: { label: string; value: number }[];
     gradeOptions?: EmployeeFilterOption[];
     positionOptions?: EmployeeFilterOption[];
     typeOptions?: EmployeeFilterOption[];

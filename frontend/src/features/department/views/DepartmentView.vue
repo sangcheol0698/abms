@@ -164,7 +164,7 @@ const selectedBreadcrumb = computed(() =>
 );
 
 interface HeaderBreadcrumb {
-  id: string;
+  id: number;
   name: string;
   clickable: boolean;
   to?: string;

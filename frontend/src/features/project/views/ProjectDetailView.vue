@@ -69,7 +69,7 @@ async function loadProject() {
 
   isLoading.value = true;
   try {
-    project.value = await repository.find(projectId);
+    project.value = await repository.find(Number(projectId));
   } catch (error) {
     console.error('프로젝트를 불러오지 못했습니다.', error);
     project.value = null;

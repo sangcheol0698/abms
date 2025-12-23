@@ -303,7 +303,7 @@ function handleEmployeeUpdated() {
   loadEmployees();
 }
 
-function handleNavigateToDepartment(departmentId?: string) {
+function handleNavigateToDepartment(departmentId?: number) {
   if (!departmentId) return;
   router.push({ name: 'organization', query: { departmentId } });
 }
@@ -436,7 +436,7 @@ function handlePageSizeChange(newSize: number) {
 }
 
 // 감시자 - 부서 변경 시
-let previousDepartmentId: string | undefined;
+let previousDepartmentId: number | undefined;
 
 watch(
   () => props.departmentId,
