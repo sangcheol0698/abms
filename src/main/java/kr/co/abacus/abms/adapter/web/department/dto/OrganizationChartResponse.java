@@ -13,8 +13,9 @@ public record OrganizationChartResponse(
         String departmentCode,
         String departmentType,
         @Nullable LeaderResponse departmentLeader,
-        int employeeCount,
-        List<OrganizationChartResponse> children) {
+        List<OrganizationChartResponse> children,
+        int employeeCount
+) {
 
     public static OrganizationChartResponse of(OrganizationChartDetail organizationChartDetail) {
         DepartmentLeaderDetail departmentLeaderDetail = organizationChartDetail.leader();
@@ -25,8 +26,9 @@ public record OrganizationChartResponse(
                 organizationChartDetail.departmentCode(),
                 organizationChartDetail.departmentType().getDescription(),
                 getLeader(departmentLeaderDetail),
-                organizationChartDetail.employeeCount(),
-                getOrganizationChartResponses(organizationChartDetail));
+                getOrganizationChartResponses(organizationChartDetail),
+                organizationChartDetail.employeeCount()
+        );
     }
 
     private static @Nullable LeaderResponse getLeader(@Nullable DepartmentLeaderDetail departmentLeaderDetail) {
@@ -36,7 +38,8 @@ public record OrganizationChartResponse(
     }
 
     private static List<OrganizationChartResponse> getOrganizationChartResponses(
-            OrganizationChartDetail organizationChartDetail) {
+            OrganizationChartDetail organizationChartDetail
+    ) {
         return organizationChartDetail.children().stream()
                 .map(OrganizationChartResponse::of)
                 .toList();

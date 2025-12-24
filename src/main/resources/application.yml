@@ -13,9 +13,8 @@ spring:
       enabled: true
 
   ai:
-    google:
-      genai:
-        api-key: ${AI_GOOGLE_GENAI_API_KEY}
+    openai:
+      api-key: ${AI_OPENAI_API_KEY}
   config:
     import: optional:file:.env[.properties]
 

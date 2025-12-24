@@ -1,10 +1,13 @@
 package kr.co.abacus.abms.application.chat;
 
+import java.util.function.Consumer;
+
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
@@ -16,11 +19,20 @@ public class EmployeeInfoTools {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
 
+    @Setter
+    private @Nullable Consumer<String> toolCallNotifier;
+
     @Tool(description = "부서(직원)의 정보를 이름으로 조회하는 도구입니다. 이름, 부서명, 이메일, 직급, 등급, 상태, 입사일, 생년월일을 반환합니다.")
     public @Nullable EmployeeInfo getEmployeeInfo(String name) {
+        // Notify tool call
+        if (toolCallNotifier != null) {
+            toolCallNotifier.accept("getEmployeeInfo");
+        }
+
         return employeeRepository.findByName(name)
                 .map(employee -> {
-                    String departmentName = departmentRepository.findByIdAndDeletedFalse(employee.getDepartmentId())
+                    String departmentName = departmentRepository
+                            .findByIdAndDeletedFalse(employee.getDepartmentId())
                             .map(dept -> dept.getName())
                             .orElse("부서 없음");
 
@@ -32,8 +44,7 @@ public class EmployeeInfoTools {
                             employee.getGrade().getDescription(),
                             employee.getStatus().getDescription(),
                             employee.getJoinDate().toString(),
-                            employee.getBirthDate().toString()
-                    );
+                            employee.getBirthDate().toString());
                 })
                 .orElse(null);
     }
@@ -46,8 +57,7 @@ public class EmployeeInfoTools {
             String grade,
             String status,
             String joinDate,
-            String birthDate
-    ) {
+            String birthDate) {
 
     }
 

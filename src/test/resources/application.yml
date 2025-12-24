@@ -3,6 +3,5 @@ spring:
     activate:
       on-profile: test
   ai:
-    google:
-      genai:
-        api-key: ${AI_GOOGLE_GENAI_API_KEY}
+    openai:
+      api-key: ${AI_OPENAI_API_KEY}
