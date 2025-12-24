@@ -35,7 +35,7 @@ public class Payroll extends AbstractEntity {
     @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
     private Period period;
 
-    public static Payroll startWith(Long employeeId, Money annualSalary, LocalDate startDate) {
+    public static Payroll create(Long employeeId, Money annualSalary, LocalDate startDate) {
         Payroll payroll = new Payroll();
 
         payroll.employeeId = Objects.requireNonNull(employeeId);

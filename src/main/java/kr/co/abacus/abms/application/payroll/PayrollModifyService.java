@@ -28,7 +28,7 @@ public class PayrollModifyService implements PayrollManager {
         payrollRepository.findCurrentSalaryByEmployeeId(employeeId).ifPresent(
                 currentSalary -> closeCurrentSalaryBefore(startDate.minusDays(1), currentSalary));
 
-        Payroll payroll = Payroll.startWith(employeeId, annualSalary, startDate);
+        Payroll payroll = Payroll.create(employeeId, annualSalary, startDate);
 
         payrollRepository.save(payroll);
     }

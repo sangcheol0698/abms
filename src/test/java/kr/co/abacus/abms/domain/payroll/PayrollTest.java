@@ -11,8 +11,8 @@ import kr.co.abacus.abms.domain.shared.Money;
 class PayrollTest {
 
     @Test
-    void startWith() {
-        Payroll payroll = Payroll.startWith(1L, Money.wons(100_00L), LocalDate.of(2025, 1, 1));
+    void create() {
+        Payroll payroll = Payroll.create(1L, Money.wons(100_00L), LocalDate.of(2025, 1, 1));
 
         assertThat(payroll.getEmployeeId()).isNotNull();
         assertThat(payroll.getAnnualSalary()).isEqualTo(Money.wons(100_00L));
@@ -22,7 +22,7 @@ class PayrollTest {
 
     @Test
     void close() {
-        Payroll payroll = Payroll.startWith(1L, Money.wons(100_00L), LocalDate.of(2025, 1, 1));
+        Payroll payroll = Payroll.create(1L, Money.wons(100_00L), LocalDate.of(2025, 1, 1));
         payroll.close(LocalDate.of(2025, 12, 31));
 
         assertThat(payroll.getPeriod().endDate()).isEqualTo(LocalDate.of(2025, 12, 31));
