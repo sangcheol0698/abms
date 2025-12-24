@@ -1,6 +1,6 @@
 package kr.co.abacus.abms.adapter.web.department.dto;
 
-import kr.co.abacus.abms.adapter.web.EnumResponse;
+import kr.co.abacus.abms.adapter.web.common.EnumResponse;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 
 public record LeaderResponse(

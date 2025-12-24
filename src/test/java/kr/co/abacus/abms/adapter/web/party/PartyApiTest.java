@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 
-import kr.co.abacus.abms.adapter.web.PageResponse;
+import kr.co.abacus.abms.adapter.web.common.PageResponse;
 import kr.co.abacus.abms.adapter.web.party.dto.PartyResponse;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.domain.party.Party;

@@ -3,9 +3,6 @@ package kr.co.abacus.abms.adapter.web.employee;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,8 +29,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.adapter.web.EnumResponse;
-import kr.co.abacus.abms.adapter.web.PageResponse;
+import kr.co.abacus.abms.adapter.web.common.EnumResponse;
+import kr.co.abacus.abms.adapter.web.common.FilenameBuilder;
+import kr.co.abacus.abms.adapter.web.common.PageResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeDetailResponse;
@@ -168,7 +166,7 @@ public class EmployeeApi {
     @GetMapping("/api/employees/excel/download")
     public ResponseEntity<Resource> downloadExcel(@Valid EmployeeSearchCondition request) {
         byte[] content = employeeExcelService.download(request);
-        String filename = buildFilename("employees");
+        String filename = FilenameBuilder.build("employees");
         return ResponseEntity.ok()
                 .contentType(
                         MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
@@ -179,7 +177,7 @@ public class EmployeeApi {
     @GetMapping("/api/employees/excel/sample")
     public ResponseEntity<Resource> downloadExcelSample() {
         byte[] content = employeeExcelService.downloadSample();
-        String filename = buildFilename("employees_sample");
+        String filename = FilenameBuilder.build("employees_sample");
         return ResponseEntity.ok()
                 .contentType(
                         MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
@@ -194,23 +192,10 @@ public class EmployeeApi {
         }
         try (InputStream inputStream = file.getInputStream()) {
             EmployeeExcelUploadResult result = employeeExcelService.upload(inputStream);
-            return toResponse(result);
+            return EmployeeExcelUploadResponse.of(result);
         } catch (IOException ex) {
             throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
         }
-    }
-
-    private String buildFilename(String prefix) {
-        String timestamp = LocalDateTime.now(ZoneId.systemDefault())
-                .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        return prefix + "_" + timestamp + ".xlsx";
-    }
-
-    private EmployeeExcelUploadResponse toResponse(EmployeeExcelUploadResult result) {
-        List<EmployeeExcelUploadResponse.Failure> failures = result.excelFailures().stream()
-                .map(failure -> new EmployeeExcelUploadResponse.Failure(failure.rowNumber(), failure.message()))
-                .toList();
-        return new EmployeeExcelUploadResponse(result.successCount(), failures);
     }
 
 }

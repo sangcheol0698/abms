@@ -6,7 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 import lombok.Builder;
 
-import kr.co.abacus.abms.adapter.web.EnumResponse;
+import kr.co.abacus.abms.adapter.web.common.EnumResponse;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.domain.shared.Email;
 

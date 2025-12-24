@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.adapter.web.PageResponse;
+import kr.co.abacus.abms.adapter.web.common.PageResponse;
 import kr.co.abacus.abms.adapter.web.project.dto.ProjectCreateApiRequest;
 import kr.co.abacus.abms.adapter.web.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.web.project.dto.ProjectStatusResponse;

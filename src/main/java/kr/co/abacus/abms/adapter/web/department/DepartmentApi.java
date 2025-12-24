@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.adapter.web.PageResponse;
+import kr.co.abacus.abms.adapter.web.common.PageResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.DepartmentAssignLeaderResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.DepartmentDetailResponse;
 import kr.co.abacus.abms.adapter.web.department.dto.EmployeeAssignLeaderRequest;

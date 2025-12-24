@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.adapter.web;
+package kr.co.abacus.abms.adapter.web.common;
 
 import java.util.List;
 

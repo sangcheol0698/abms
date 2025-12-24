@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.adapter.web.PageResponse;
+import kr.co.abacus.abms.adapter.web.common.PageResponse;
 import kr.co.abacus.abms.adapter.web.party.dto.PartyResponse;
 import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.domain.party.Party;
