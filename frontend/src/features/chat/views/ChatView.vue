@@ -19,57 +19,65 @@
         </div>
 
         <nav class="mt-5 flex-1 space-y-5 overflow-y-auto px-4 pb-5 text-sm">
-          <div>
+          <div v-if="filteredFavorites.length > 0">
             <div
               class="flex items-center justify-between px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               <span>즐겨찾기</span>
               <Sparkles class="h-3.5 w-3.5" />
             </div>
             <ul class="space-y-1">
-              <li v-for="item in filteredFavorites" :key="item.id">
+              <li v-for="item in filteredFavorites" :key="item.sessionId">
                 <button type="button"
                   class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors"
-                  :class="currentSessionId === item.id
+                  :class="currentSessionId === item.sessionId
                     ? 'bg-primary/10 text-primary'
                     : 'hover:bg-muted/60 text-foreground'
-                    " @click="handleSessionSelect(item.id, pane)">
+                    " @click="handleSessionSelect(item.sessionId, pane)">
                   <span class="truncate">{{ item.title }}</span>
-                  <Star class="h-3.5 w-3.5" />
+                  <Star class="h-3.5 w-3.5 fill-current" />
                 </button>
               </li>
             </ul>
           </div>
 
-          <div>
+          <div v-if="filteredRecent.length > 0">
             <div class="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               최근 항목
             </div>
             <ul class="space-y-1 text-xs">
-              <li v-for="item in filteredRecent" :key="item.id">
+              <li v-for="item in filteredRecent" :key="item.sessionId">
                 <button type="button"
                   class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors"
-                  :class="currentSessionId === item.id
+                  :class="currentSessionId === item.sessionId
                     ? 'bg-muted text-foreground'
                     : 'hover:bg-muted/50 text-foreground'
-                    " @click="handleSessionSelect(item.id, pane)">
+                    " @click="handleSessionSelect(item.sessionId, pane)">
                   <div class="min-w-0">
                     <p class="truncate font-medium">{{ item.title }}</p>
                     <p class="truncate text-[11px] text-muted-foreground">
-                      {{ item.description }}
+                      {{ formatRelativeTime(item.updatedAt) }}
                     </p>
                   </div>
-                  <span class="text-[10px] text-muted-foreground">{{ item.updated }}</span>
                 </button>
               </li>
             </ul>
+          </div>
+
+          <div v-if="isLoading" class="flex items-center justify-center py-4">
+            <Loader2 class="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+
+          <div v-if="!isLoading && filteredFavorites.length === 0 && filteredRecent.length === 0" 
+               class="text-center py-4 text-xs text-muted-foreground">
+            채팅 기록이 없습니다
           </div>
         </nav>
 
         <div class="border-t border-border/60 p-3 text-[11px] text-muted-foreground">
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-medium text-foreground">박상철</p>
-              <p>무료 플랜</p>
+              <p class="font-medium text-foreground">ABMS Assistant</p>
+              <p>AI 어시스턴트</p>
             </div>
             <Button variant="ghost" size="icon" class="h-7 w-7">
               <MoreHorizontal class="h-4 w-4" />
@@ -112,14 +120,21 @@
             </Button>
             <div class="flex flex-col">
               <h2 class="text-base font-semibold text-foreground">{{ currentSessionTitle }}</h2>
-              <Badge variant="outline" class="mt-1 w-fit gap-1 text-[11px]">
-                <History class="h-3 w-3" /> {{ sessionUpdatedAt }}
+              <Badge v-if="currentSession" variant="outline" class="mt-1 w-fit gap-1 text-[11px]">
+                <History class="h-3 w-3" /> {{ formatRelativeTime(currentSession.updatedAt) }}
               </Badge>
             </div>
           </div>
           <div class="flex items-center gap-1 text-xs text-muted-foreground">
-            <Button variant="ghost" size="sm" class="gap-1">
-              <Star class="h-3.5 w-3.5" /> 즐겨찾기
+            <Button 
+              v-if="currentSessionId" 
+              variant="ghost" 
+              size="sm" 
+              class="gap-1"
+              @click="handleToggleFavorite"
+            >
+              <Star class="h-3.5 w-3.5" :class="currentSession?.favorite ? 'fill-current text-yellow-500' : ''" /> 
+              즐겨찾기
             </Button>
             <Button variant="ghost" size="sm" class="gap-1">
               <Share class="h-3.5 w-3.5" /> 공유
@@ -154,6 +169,7 @@
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import {
   History,
+  Loader2,
   Menu,
   MoreHorizontal,
   SquarePen,
@@ -170,101 +186,121 @@ import ChatWidget from '@/features/chat/components/ChatWidget.vue';
 import {
   createChatMessage,
   type ChatMessage,
+  type ChatSession,
 } from '@/features/chat/entity/ChatMessage';
 import { useChatRepository } from '@/features/chat/repository/useChatRepository';
 import type { ChatRepository } from '@/features/chat/repository/ChatRepository';
 import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const repository: ChatRepository = useChatRepository();
+const route = useRoute();
+const router = useRouter();
 
-interface SessionItem {
-  id: string;
-  title: string;
-  description?: string;
-  updated: string;
-  favorite?: boolean;
-}
-
-const favorites = reactive<SessionItem[]>([
-  { id: 'design-review', title: 'ERD 설계 리뷰', updated: '방금 전', favorite: true },
-  { id: 'spec-update', title: 'Claude Sonnet 문서화', updated: '2시간 전', favorite: true },
-]);
-
-const recentSessions = reactive<SessionItem[]>([
-  {
-    id: 'erp-diagram',
-    title: 'ERP 시스템 ERD 점검',
-    description: '테이블 구조 확인',
-    updated: '5분 전',
-  },
-  { id: 'shadcn', title: 'shadcn-vue 설치', description: 'UI 컴포넌트 세팅', updated: '12분 전' },
-  {
-    id: 'rest-api',
-    title: 'RESTful OpenAPI 개선',
-    description: 'Swagger 문서 보완',
-    updated: '어제',
-  },
-  {
-    id: 'newsletter',
-    title: '뉴스 스프린트 정리',
-    description: '주간 하이라이트',
-    updated: '3일 전',
-  },
-]);
-
-const currentSessionId = ref<string>('design-review');
+// State
+const favorites = ref<ChatSession[]>([]);
+const recentSessions = ref<ChatSession[]>([]);
+const currentSessionId = ref<string | null>(null);
+const currentSession = ref<ChatSession | null>(null);
 const searchQuery = ref('');
-const sessionId = ref<string | null>(null);
-
 const messages = ref<ChatMessage[]>([]);
 const draft = ref('');
 const isResponding = ref(false);
+const isLoading = ref(false);
 const isDragging = ref(false);
 const chatWidgetRef = ref<any>(null);
 let dragCounter = 0;
 
+// Computed
 const infoText = computed(() =>
   isResponding.value ? '응답을 생성 중입니다...' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
 );
 
 const filteredFavorites = computed(() =>
-  favorites.filter((item) => item.title.toLowerCase().includes(searchQuery.value.toLowerCase())),
+  favorites.value.filter((item) => item.title.toLowerCase().includes(searchQuery.value.toLowerCase())),
 );
 
 const filteredRecent = computed(() =>
-  recentSessions.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchQuery.value.toLowerCase()),
-  ),
+  recentSessions.value
+    .filter((item) => !item.favorite)
+    .filter((item) => item.title.toLowerCase().includes(searchQuery.value.toLowerCase())),
 );
 
 const currentSessionTitle = computed(() => {
-  const target = [...favorites, ...recentSessions].find(
-    (item) => item.id === currentSessionId.value,
-  );
-  return target?.title ?? '새 채팅';
+  if (!currentSessionId.value) return '새 채팅';
+  return currentSession.value?.title ?? '채팅';
 });
 
-const sessionUpdatedAt = computed(() => {
-  const target = [...favorites, ...recentSessions].find(
-    (item) => item.id === currentSessionId.value,
-  );
-  return target?.updated ?? '방금 전';
-});
+// Helpers
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
 
-function createNewChat() {
-  const id = crypto.randomUUID();
-  recentSessions.unshift({ id, title: '새로운 대화', description: '초안', updated: '방금 전' });
-  selectSession(id);
+  if (minutes < 1) return '방금 전';
+  if (minutes < 60) return `${minutes}분 전`;
+  if (hours < 24) return `${hours}시간 전`;
+  if (days < 7) return `${days}일 전`;
+  return date.toLocaleDateString('ko-KR');
 }
 
-function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
-  createNewChat();
-  if (!pane) {
-    return;
+const TOOL_CONFIG: Record<string, { emoji: string; description: string }> = {
+  getEmployeeInfo: { emoji: '👤', description: '직원 정보 조회 중...' },
+  getDepartmentInfo: { emoji: '🏢', description: '부서 정보 조회 중...' },
+  getSubDepartments: { emoji: '📊', description: '하위 부서 조회 중...' },
+};
+
+function getToolEmoji(toolName: string): string {
+  return TOOL_CONFIG[toolName]?.emoji ?? '🔍';
+}
+
+function getToolDescription(toolName: string): string {
+  return TOOL_CONFIG[toolName]?.description ?? `${toolName} 실행 중...`;
+}
+
+// Data loading
+async function loadSessions() {
+  isLoading.value = true;
+  try {
+    const [favs, recent] = await Promise.all([
+      repository.getFavoriteSessions(),
+      repository.getRecentSessions(20),
+    ]);
+    favorites.value = favs;
+    recentSessions.value = recent;
+  } catch (error) {
+    console.error('Failed to load sessions:', error);
+  } finally {
+    isLoading.value = false;
   }
+}
+
+async function loadSessionDetail(sessionId: string) {
+  try {
+    const detail = await repository.getSessionDetail(sessionId);
+    currentSession.value = detail;
+    messages.value = detail.messages;
+  } catch {
+    // Session not found in backend - this is a new session, start fresh
+    currentSession.value = null;
+    messages.value = [];
+  }
+}
+
+// Actions
+function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
+  // Generate new sessionId and navigate to it
+  const newSessionId = crypto.randomUUID();
+  router.push({ name: 'assistant-session', params: { sessionId: newSessionId } });
+  currentSessionId.value = newSessionId;
+  currentSession.value = null;
+  messages.value = [];
+  draft.value = '';
+  
+  if (!pane) return;
   if (pane.isLargeScreen.value) {
     pane.expandSidebar();
   } else {
@@ -272,17 +308,30 @@ function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
   }
 }
 
-function selectSession(id: string) {
-  currentSessionId.value = id;
-  messages.value = [];
-  draft.value = '';
-  sessionId.value = null;
-}
-
-function handleSessionSelect(id: string, pane?: FeatureSplitPaneContext) {
-  selectSession(id);
+function handleSessionSelect(sessionId: string, pane?: FeatureSplitPaneContext) {
+  router.push({ name: 'assistant-session', params: { sessionId } });
+  
   if (pane && !pane.isLargeScreen.value) {
     pane.closeSidebar();
+  }
+}
+
+async function handleToggleFavorite() {
+  if (!currentSessionId.value) return;
+  
+  try {
+    await repository.toggleFavorite(currentSessionId.value);
+    // Reload sessions to reflect the change
+    await loadSessions();
+    // Update current session
+    if (currentSession.value) {
+      currentSession.value = {
+        ...currentSession.value,
+        favorite: !currentSession.value.favorite,
+      };
+    }
+  } catch (error) {
+    console.error('Failed to toggle favorite:', error);
   }
 }
 
@@ -329,23 +378,87 @@ async function handleSubmit(content: string) {
     // Get the index of the assistant message we just added
     const assistantMessageIndex = messages.value.length - 1;
 
-    const responseContent = await repository.sendMessage({
-      sessionId: sessionId.value ?? undefined,
-      content,
-    });
+    // Track tool call indicator separately
+    let toolIndicator: string | null = null;
 
-    const message = messages.value[assistantMessageIndex];
-    if (message) {
-      message.content = responseContent;
-    }
+    await repository.streamMessage(
+      {
+        sessionId: currentSessionId.value ?? undefined,
+        content,
+      },
+      (chunk: string) => {
+        // If there was a tool indicator, clear it when real content arrives
+        const message = messages.value[assistantMessageIndex];
+        if (message) {
+          if (toolIndicator && message.content === toolIndicator) {
+            message.content = '';
+          }
+          toolIndicator = null;
+          message.content += chunk;
+        }
+      },
+      (error: Error) => {
+        console.error('Streaming error:', error);
+        const message = messages.value[assistantMessageIndex];
+        if (message && !message.content) {
+          message.content = '응답을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.';
+        }
+      },
+      (toolName: string) => {
+        // Show tool call notification temporarily
+        const message = messages.value[assistantMessageIndex];
+        if (message && !message.content) {
+          const toolEmoji = getToolEmoji(toolName);
+          toolIndicator = `${toolEmoji} ${getToolDescription(toolName)}`;
+          message.content = toolIndicator;
+        }
+      }
+    );
+
+    // Reload sessions to get the new/updated session
+    await loadSessions();
+    
+    // Reload again after delay to get AI-generated title
+    setTimeout(() => loadSessions(), 2000);
   } catch (error) {
     const fallback =
       error instanceof Error
         ? error.message
         : '응답을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.';
-    messages.value.push(createChatMessage('assistant', fallback));
+    
+    // If the last message is empty assistant message, update it
+    const lastMessage = messages.value[messages.value.length - 1];
+    if (lastMessage && lastMessage.role === 'assistant' && !lastMessage.content) {
+      lastMessage.content = fallback;
+    } else {
+      messages.value.push(createChatMessage('assistant', fallback));
+    }
   } finally {
     isResponding.value = false;
   }
 }
+
+// Watch route changes
+watch(
+  () => route.params.sessionId,
+  async (newSessionId) => {
+    if (newSessionId && typeof newSessionId === 'string') {
+      currentSessionId.value = newSessionId;
+      await loadSessionDetail(newSessionId);
+    } else {
+      // No sessionId in URL - generate new one and redirect
+      const newId = crypto.randomUUID();
+      router.replace({ name: 'assistant-session', params: { sessionId: newId } });
+      currentSessionId.value = newId;
+      currentSession.value = null;
+      messages.value = [];
+    }
+  },
+  { immediate: true }
+);
+
+// Initial load
+onMounted(async () => {
+  await loadSessions();
+});
 </script>

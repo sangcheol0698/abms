@@ -137,6 +137,29 @@ const routes = [
           ],
         },
       },
+      {
+        path: 'assistant/:sessionId',
+        name: 'assistant-session',
+        component: () => import('@/features/chat/views/ChatView.vue'),
+        meta: {
+          title: 'AI Assistant',
+          padding: 'flush',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: 'AI Assistant',
+              to: '/assistant',
+            },
+            {
+              title: '채팅',
+              disabled: true,
+            },
+          ],
+        },
+      },
     ],
   },
 ];

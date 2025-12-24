@@ -24,6 +24,31 @@ export interface ChatResponse {
   messages: ChatMessagePayload[];
 }
 
+// Session types
+export interface ChatSession {
+  id: number;
+  sessionId: string;
+  title: string;
+  favorite: boolean;
+  updatedAt: Date;
+}
+
+export interface ChatSessionDetail extends ChatSession {
+  messages: ChatMessage[];
+  createdAt: Date;
+}
+
+// API Response types
+export interface ChatSessionResponse {
+  id: number;
+  sessionId: string;
+  title: string;
+  favorite: boolean;
+  messages: ChatMessagePayload[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function createChatMessage(role: ChatRole, content: string): ChatMessage {
   return {
     id: crypto.randomUUID(),
@@ -40,11 +65,33 @@ export function normalizeChatMessage(payload: ChatMessagePayload): ChatMessage {
       : new Date(payload.createdAt);
 
   return {
-    id: payload.id,
-    role: payload.role,
+    id: String(payload.id),
+    role: payload.role.toLowerCase() as ChatRole,
     content: payload.content,
     createdAt: createdAt instanceof Date && !Number.isNaN(createdAt.getTime())
       ? createdAt
       : new Date(),
+  };
+}
+
+export function normalizeChatSession(response: ChatSessionResponse): ChatSession {
+  return {
+    id: response.id,
+    sessionId: response.sessionId,
+    title: response.title,
+    favorite: response.favorite,
+    updatedAt: new Date(response.updatedAt),
+  };
+}
+
+export function normalizeChatSessionDetail(response: ChatSessionResponse): ChatSessionDetail {
+  return {
+    id: response.id,
+    sessionId: response.sessionId,
+    title: response.title,
+    favorite: response.favorite,
+    messages: response.messages.map(normalizeChatMessage),
+    createdAt: new Date(response.createdAt),
+    updatedAt: new Date(response.updatedAt),
   };
 }
