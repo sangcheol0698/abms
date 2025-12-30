@@ -22,7 +22,7 @@ public class EmployeeInfoTools {
     @Setter
     private @Nullable Consumer<String> toolCallNotifier;
 
-    @Tool(description = "부서(직원)의 정보를 이름으로 조회하는 도구입니다. 이름, 부서명, 이메일, 직급, 등급, 상태, 입사일, 생년월일을 반환합니다.")
+    @Tool(description = "직원의 정보를 이름으로 조회하는 도구입니다. 이름, 부서명, 이메일, 직급, 등급, 상태, 입사일, 생년월일, 그리고 상세 페이지 링크를 반환합니다.")
     public @Nullable EmployeeInfo getEmployeeInfo(String name) {
         // Notify tool call
         if (toolCallNotifier != null) {
@@ -37,6 +37,7 @@ public class EmployeeInfoTools {
                             .orElse("부서 없음");
 
                     return new EmployeeInfo(
+                            employee.getId(),
                             employee.getName(),
                             departmentName,
                             employee.getEmail().address(),
@@ -44,12 +45,15 @@ public class EmployeeInfoTools {
                             employee.getGrade().getDescription(),
                             employee.getStatus().getDescription(),
                             employee.getJoinDate().toString(),
-                            employee.getBirthDate().toString());
+                            employee.getBirthDate().toString(),
+                            "/employees/" + employee.getId()
+                    );
                 })
                 .orElse(null);
     }
 
     public record EmployeeInfo(
+            Long id,
             String name,
             String departmentName,
             String email,
@@ -57,7 +61,8 @@ public class EmployeeInfoTools {
             String grade,
             String status,
             String joinDate,
-            String birthDate) {
+            String birthDate,
+            String link) {
 
     }
 

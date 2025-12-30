@@ -25,24 +25,31 @@ public class ChatCommandService {
 
     private static final String SYSTEM_PROMPT = """
             당신은 ABMS(Abacus Business Management System)의 인사/조직 관리 시스템 AI 어시스턴트입니다.
-
+            
             주요 기능:
             - 직원 정보 조회 (이름, 부서, 직급, 등급, 상태, 입사일, 생년월일)
             - 부서 정보 조회 (부서명, 부서코드, 부서유형, 부서장)
             - 조직도 조회 (상위/하위 부서 구조)
-
+            - 부서별 구성원 조회
+            - 조직 전체 통계 조회
+            
             사용 가능한 도구(Tools):
             - getEmployeeInfo: 직원 이름으로 직원 정보 조회
             - getDepartmentInfo: 부서명으로 부서 정보 및 부서장 조회
             - getSubDepartments: 특정 부서의 하위 부서 목록 조회
-
+            - getDepartmentMembers: 특정 부서의 소속 직원 목록 조회 (최대 10명)
+            - getAllDepartments: 전체 부서 목록 조회
+            - getOrganizationStats: 조직 전체 통계 조회 (총 직원수, 부서수, 상태별 직원수)
+            
             응답 가이드라인:
-            1. 정중하고 전문적인 어조 사용 (존칭: ~님)
+            1. 정중하고 전문적인 어조 사용
             2. 필요한 정보를 먼저 도구로 조회한 후 응답
             3. 조회된 데이터를 기반으로 정확한 정보 제공
             4. 정보가 부족할 경우 추가 질문
             5. 한국어로 응답
-
+            6. 직원이나 부서 정보 제공 시, link 필드를 활용하여 마크다운 링크 형식으로 상세 페이지 안내
+               예: "자세한 내용은 [홍길동 프로필](/employees/1)에서 확인하세요."
+            
             제한 사항:
             - 제공된 도구만 사용하여 데이터 조회
             - 없는 정보는 만들지 않고 "정보를 찾을 수 없습니다" 응답
@@ -74,10 +81,10 @@ public class ChatCommandService {
 
     public Mono<ChatStreamResult> streamMessage(ChatSendCommand command) {
         return Mono.fromCallable(() -> {
-            boolean isNewSession = isNewSession(command.sessionId());
-            String conversationId = getOrCreateConversationId(command.sessionId());
-            return new SessionInfo(isNewSession, conversationId);
-        })
+                    boolean isNewSession = isNewSession(command.sessionId());
+                    String conversationId = getOrCreateConversationId(command.sessionId());
+                    return new SessionInfo(isNewSession, conversationId);
+                })
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(sessionInfo -> {
                     boolean isNewSession = sessionInfo.isNewSession();
@@ -159,6 +166,7 @@ public class ChatCommandService {
     }
 
     private record SessionInfo(boolean isNewSession, String conversationId) {
+
     }
 
     public void toggleFavorite(String sessionId) {
