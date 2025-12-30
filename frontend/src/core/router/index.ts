@@ -20,8 +20,8 @@ const routes = [
         },
       },
       {
-        path: 'organization',
-        name: 'organization',
+        path: 'departments',
+        name: 'departments',
         component: () => import('@/features/department/views/DepartmentView.vue'),
         meta: {
           title: '부서',
@@ -34,6 +34,32 @@ const routes = [
             {
               title: '부서',
               disabled: true,
+            },
+            {
+              title: '상세',
+              disabled: true,
+            },
+          ],
+        },
+      },
+      {
+        path: 'departments/:departmentId',
+        name: 'department',
+        component: () => import('@/features/department/views/DepartmentView.vue'),
+        meta: {
+          title: '부서',
+          padding: 'flush',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '부서',
+              disabled: true,
+            },
+            {
+              title: '상세',
             },
           ],
         },

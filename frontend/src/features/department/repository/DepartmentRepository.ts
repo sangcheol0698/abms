@@ -1,30 +1,30 @@
 import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
 import {
-  normalizeOrganizationChartResponse,
-  mapOrganizationDepartmentDetail,
-  type OrganizationChartNode,
-  type OrganizationDepartmentDetail,
-} from '@/features/department/models/organization';
+  normalizeDepartmentChartResponse,
+  mapDepartmentDetail,
+  type DepartmentChartNode,
+  type DepartmentDetail,
+} from '@/features/department/models/department';
 import { PageResponse } from '@/core/api';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import { mapEmployeeListItem } from '@/features/employee/models/employeeListItem';
 
 @singleton()
-export default class OrganizationRepository {
+export default class DepartmentRepository {
   constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 
-  async fetchOrganizationChart(): Promise<OrganizationChartNode[]> {
+  async fetchOrganizationChart(): Promise<DepartmentChartNode[]> {
     const response = await this.httpRepository.get({ path: '/api/departments/organization-chart' });
-    return normalizeOrganizationChartResponse(response);
+    return normalizeDepartmentChartResponse(response);
   }
 
-  async fetchDepartmentDetail(departmentId: number): Promise<OrganizationDepartmentDetail> {
+  async fetchDepartmentDetail(departmentId: number): Promise<DepartmentDetail> {
     // TODO: API 경로 및 응답 스키마 확정 후 수정이 필요합니다.
     const response = await this.httpRepository.get({
       path: `/api/departments/${departmentId}`,
     });
-    return mapOrganizationDepartmentDetail(response);
+    return mapDepartmentDetail(response);
   }
 
   async fetchDepartmentEmployees(

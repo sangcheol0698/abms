@@ -86,7 +86,7 @@ import { ref } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
+import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import {
   Dialog,
@@ -121,7 +121,7 @@ const emit = defineEmits<{
 }>();
 
 const employeeRepository = appContainer.resolve(EmployeeRepository);
-const organizationRepository = appContainer.resolve(OrganizationRepository);
+const organizationRepository = appContainer.resolve(DepartmentRepository);
 
 const searchQuery = ref('');
 const employees = ref<EmployeeListItem[]>([]);

@@ -194,7 +194,7 @@ import {
 import { valueUpdater } from '@/components/ui/table/utils';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
+import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import { createEmployeeTableColumns } from '@/features/employee/configs/tableColumns';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
@@ -214,7 +214,7 @@ import type { EmployeeSummary } from '@/features/employee/models/employee';
 import HttpError from '@/core/http/HttpError';
 import { useEmployeeDeletion } from '@/features/employee/composables/useEmployeeDeletion';
 import { getExcelErrorMessage } from '@/core/utils/excel';
-import type { OrganizationChartNode } from '@/features/department/models/organization.ts';
+import type { DepartmentChartNode } from '@/features/department/models/department';
 import { useEmployeeQuerySync } from '@/features/employee/composables/useEmployeeQuerySync.ts';
 
 interface DepartmentOption {
@@ -223,7 +223,7 @@ interface DepartmentOption {
 }
 
 const employeeRepository = appContainer.resolve(EmployeeRepository);
-const organizationRepository = appContainer.resolve(OrganizationRepository);
+const departmentRepository = appContainer.resolve(DepartmentRepository);
 const router = useRouter();
 const route = useRoute();
 
@@ -311,10 +311,10 @@ let requestToken = 0;
 
 async function loadDepartments() {
   try {
-    const chart = await organizationRepository.fetchOrganizationChart();
+    const chart = await departmentRepository.fetchOrganizationChart();
     const map = new Map<number, string>();
 
-    const traverse = (nodes: OrganizationChartNode[]) => {
+    const traverse = (nodes: DepartmentChartNode[]) => {
       nodes.forEach((node) => {
         if (!map.has(node.departmentId)) {
           map.set(node.departmentId, node.departmentName);
@@ -552,7 +552,7 @@ function navigateToDepartment(departmentId?: number) {
   if (!departmentId) {
     return;
   }
-  router.push({ name: 'organization', query: { departmentId } }).catch(() => {
+  router.push({ name: 'department', params: { departmentId } }).catch(() => {
     /* 라우팅 오류는 무시 */
   });
 }

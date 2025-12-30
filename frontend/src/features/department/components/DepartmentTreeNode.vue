@@ -73,7 +73,7 @@
         class="ml-4 border-l border-border/60 pl-2.5"
         role="group"
       >
-        <OrganizationTreeNode
+        <DepartmentTreeNode
           v-for="child in node.children"
           :key="child.departmentId"
           :node="child"
@@ -104,10 +104,10 @@ import {
   UserRound,
   UsersRound,
 } from 'lucide-vue-next';
-import type { OrganizationChartNode } from '@/features/department/models/organization';
+import type { DepartmentChartNode } from '@/features/department/models/department';
 
 interface Props {
-  node: OrganizationChartNode;
+  node: DepartmentChartNode;
   collapsedMap: Record<string, boolean>;
   selectedId?: number;
   toggle: (departmentId: number) => void;
@@ -116,7 +116,7 @@ interface Props {
   searchTerm?: string;
 }
 
-defineOptions({ name: 'OrganizationTreeNode' });
+defineOptions({ name: 'DepartmentTreeNode' });
 
 const props = defineProps<Props>();
 

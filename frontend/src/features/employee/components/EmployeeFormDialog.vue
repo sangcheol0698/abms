@@ -404,7 +404,7 @@
     @update:open="handleAvatarDialogOpenChange"
     @select="handleAvatarSelected"
   />
-  <OrganizationSelectDialog
+  <DepartmentSelectDialog
     :open="isDepartmentSelectOpen"
     :selected-department-id="selectedDepartmentIdForDialog"
     @update:open="isDepartmentSelectOpen = $event"
@@ -459,7 +459,7 @@ import {
   getEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
 import { toast } from 'vue-sonner';
-import OrganizationSelectDialog from '@/features/department/components/OrganizationSelectDialog.vue';
+import DepartmentSelectDialog from '@/features/department/components/DepartmentSelectDialog.vue';
 import EmployeeAvatarSelectDialog from '@/features/employee/components/EmployeeAvatarSelectDialog.vue';
 import type {
   EmployeeAvatarOption,

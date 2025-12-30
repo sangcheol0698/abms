@@ -205,15 +205,15 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { GitBranch, UserRound, Users, Pencil } from 'lucide-vue-next';
-import type { OrganizationDepartmentSummary } from '@/features/department/models/organization';
+import type { DepartmentSummary } from '@/features/department/models/department';
 import DepartmentEmployeeList from '@/features/department/components/DepartmentEmployeeList.vue';
 import DepartmentLeaderAssignDialog from '@/features/department/components/DepartmentLeaderAssignDialog.vue';
 
-defineOptions({ name: 'OrganizationDetailPanel' });
+defineOptions({ name: 'DepartmentDetailPanel' });
 
 withDefaults(
   defineProps<{
-    department: OrganizationDepartmentSummary | null;
+    department: DepartmentSummary | null;
     isLoading?: boolean;
   }>(),
   {

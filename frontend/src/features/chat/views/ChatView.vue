@@ -251,6 +251,9 @@ const TOOL_CONFIG: Record<string, { emoji: string; description: string }> = {
   getEmployeeInfo: { emoji: '👤', description: '직원 정보 조회 중...' },
   getDepartmentInfo: { emoji: '🏢', description: '부서 정보 조회 중...' },
   getSubDepartments: { emoji: '📊', description: '하위 부서 조회 중...' },
+  getDepartmentMembers: { emoji: '👥', description: '부서 구성원 조회 중...' },
+  getAllDepartments: { emoji: '🗂️', description: '전체 부서 목록 조회 중...' },
+  getOrganizationStats: { emoji: '📈', description: '조직 통계 조회 중...' },
 };
 
 function getToolEmoji(toolName: string): string {

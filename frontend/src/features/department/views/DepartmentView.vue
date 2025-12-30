@@ -23,7 +23,7 @@
     >
       <template #sidebar="{ pane }">
         <div class="flex h-full min-h-0 flex-col shadow-sm">
-          <OrganizationTree
+          <DepartmentTree
             class="flex-1"
             :nodes="chart"
             v-model:selectedNodeId="selectedDepartmentId"
@@ -90,7 +90,7 @@
 
           <div class="flex h-full min-h-0 flex-col overflow-hidden">
             <div class="flex-1 min-h-0 overflow-y-auto pl-2">
-              <OrganizationDetailPanel
+              <DepartmentDetailPanel
                 :department="selectedDepartment"
                 :isLoading="isDepartmentLoading"
                 @refresh="handleRefresh"
@@ -105,18 +105,18 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
-import { useQuerySync } from '@/core/composables/useQuerySync';
 import { appContainer } from '@/core/di/container';
-import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
+import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import type {
-  OrganizationChartNode,
-  OrganizationDepartmentDetail,
-  OrganizationDepartmentSummary,
-} from '@/features/department/models/organization';
-import OrganizationTree from '@/features/department/components/OrganizationTree.vue';
-import OrganizationDetailPanel from '@/features/department/components/OrganizationDetailPanel.vue';
+  DepartmentChartNode,
+  DepartmentDetail,
+  DepartmentSummary,
+} from '@/features/department/models/department';
+import DepartmentTree from '@/features/department/components/DepartmentTree.vue';
+import DepartmentDetailPanel from '@/features/department/components/DepartmentDetailPanel.vue';
 import HttpError from '@/core/http/HttpError';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -131,30 +131,29 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Menu, Slash } from 'lucide-vue-next';
 
-const repository = appContainer.resolve(OrganizationRepository);
-const chart = ref<OrganizationChartNode[]>([]);
+const repository = appContainer.resolve(DepartmentRepository);
+const chart = ref<DepartmentChartNode[]>([]);
 const isLoading = ref(true);
 const errorMessage = ref<string | null>(null);
 const selectedDepartmentId = ref<number | undefined>();
-const departmentDetail = ref<OrganizationDepartmentDetail | null>(null);
+const departmentDetail = ref<DepartmentDetail | null>(null);
 const isDepartmentLoading = ref(false);
 
-// URL 쿼리와 부서 ID 동기화
-useQuerySync({
-  state: selectedDepartmentId,
-  queryKey: 'departmentId',
-  serialize: (value) => (value ? String(value) : undefined),
-  deserialize: (value) => {
-    if (Array.isArray(value)) {
-      const first = value.find((v) => typeof v === 'string' && v.trim().length > 0);
-      return first ? Number(first) : undefined;
+const router = useRouter();
+const route = useRoute();
+
+// URL 파라미터와 부서 ID 동기화
+watch(
+  () => route.params.departmentId,
+  (newId) => {
+    if (newId) {
+      selectedDepartmentId.value = Number(newId);
+    } else {
+      selectedDepartmentId.value = undefined;
     }
-    if (typeof value === 'string' && value.trim().length > 0) {
-      return Number(value);
-    }
-    return undefined;
   },
-});
+  { immediate: true },
+);
 
 const selectedBreadcrumb = computed(() =>
   buildDepartmentPath(chart.value, selectedDepartmentId.value).map((node) => ({
@@ -214,7 +213,7 @@ const selectedDepartment = computed(() => {
     employees,
     employeeCount,
     childDepartmentCount: node.children.length,
-  } satisfies OrganizationDepartmentSummary;
+  } satisfies DepartmentSummary;
 });
 
 async function loadOrganizationChart() {
@@ -314,7 +313,9 @@ function handleTreeSelection(departmentId: number, pane?: FeatureSplitPaneContex
   if (!departmentId) {
     return;
   }
-  selectedDepartmentId.value = departmentId;
+  
+  router.push({ name: 'department', params: { departmentId } });
+  
   if (pane && !pane.isLargeScreen.value) {
     pane.closeSidebar();
   }
@@ -322,13 +323,18 @@ function handleTreeSelection(departmentId: number, pane?: FeatureSplitPaneContex
 
 function ensureSelectedDepartmentExists() {
   if (!selectedDepartmentId.value) {
-    selectedDepartmentId.value = chart.value[0]?.departmentId;
+    // URL에 파라미터가 없으면 첫 번째 부서 선택
+    if (chart.value[0]?.departmentId) {
+       router.replace({ name: 'department', params: { departmentId: chart.value[0].departmentId } });
+    }
     return;
   }
 
   const exists = findDepartment(chart.value, selectedDepartmentId.value);
   if (!exists) {
-    selectedDepartmentId.value = chart.value[0]?.departmentId;
+     if (chart.value[0]?.departmentId) {
+        router.replace({ name: 'department', params: { departmentId: chart.value[0].departmentId } });
+     }
   }
 }
 
@@ -336,13 +342,13 @@ function handleBreadcrumbSelect(departmentId: number) {
   if (!departmentId || departmentId === selectedDepartmentId.value) {
     return;
   }
-  selectedDepartmentId.value = departmentId;
+  router.push({ name: 'department', params: { departmentId } });
 }
 
 function findDepartment(
-  nodes: OrganizationChartNode[],
+  nodes: DepartmentChartNode[],
   targetId: number,
-): OrganizationChartNode | null {
+): DepartmentChartNode | null {
   for (const node of nodes) {
     if (node.departmentId === targetId) {
       return node;
@@ -356,10 +362,10 @@ function findDepartment(
 }
 
 function buildDepartmentPath(
-  nodes: OrganizationChartNode[],
+  nodes: DepartmentChartNode[],
   targetId?: number,
-  currentPath: OrganizationChartNode[] = [],
-): OrganizationChartNode[] {
+  currentPath: DepartmentChartNode[] = [],
+): DepartmentChartNode[] {
   if (!targetId) {
     return [];
   }

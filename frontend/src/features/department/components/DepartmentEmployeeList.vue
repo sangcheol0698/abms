@@ -92,7 +92,7 @@ import { appContainer } from '@/core/di/container';
 import { useQuerySync } from '@/core/composables/useQuerySync';
 import { toast } from 'vue-sonner';
 import HttpError from '@/core/http/HttpError';
-import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
+import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
@@ -107,7 +107,7 @@ import {
   getEmployeeStatusOptions,
   getEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
-import type { OrganizationChartNode } from '@/features/department/models/organization';
+import type { DepartmentChartNode } from '@/features/department/models/department';
 
 interface DepartmentOption {
   label: string;
@@ -118,7 +118,7 @@ const props = defineProps<{
   departmentId: number;
 }>();
 
-const repository = appContainer.resolve(OrganizationRepository);
+const repository = appContainer.resolve(DepartmentRepository);
 const employeeRepository = appContainer.resolve(EmployeeRepository);
 const router = useRouter();
 
@@ -305,7 +305,7 @@ function handleEmployeeUpdated() {
 
 function handleNavigateToDepartment(departmentId?: number) {
   if (!departmentId) return;
-  router.push({ name: 'organization', query: { departmentId } });
+  router.push({ name: 'department', params: { departmentId } });
 }
 
 // 컬럼 정의 (공통 함수 재사용, 부서 컬럼 제외, 체크박스 포함)
@@ -354,7 +354,7 @@ async function loadDepartments() {
     const chart = await repository.fetchOrganizationChart();
     const map = new Map<number, string>();
 
-    const traverse = (nodes: OrganizationChartNode[]) => {
+    const traverse = (nodes: DepartmentChartNode[]) => {
       nodes.forEach((node) => {
         if (!map.has(node.departmentId)) {
           map.set(node.departmentId, node.departmentName);

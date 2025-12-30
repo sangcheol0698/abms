@@ -14,7 +14,7 @@ const config = {
         mono: ['var(--font-mono)', 'monospace'],
       },
       boxShadow: {
-        card: '0 10px 20px -15px oklch(0 0 0 / 0.45)',
+        // card: '0 10px 20px -15px oklch(0 0 0 / 0.45)',
       },
     },
   },

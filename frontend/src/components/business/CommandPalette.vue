@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import {
-  Bot,
-  Briefcase,
-  FileText,
-  Network,
-  PieChart,
-  UserCircle,
-} from 'lucide-vue-next';
+import { Bot, Briefcase, FileText, Network, PieChart, UserCircle } from 'lucide-vue-next';
 import {
   CommandDialog,
   CommandEmpty,
@@ -43,7 +36,7 @@ const router = useRouter();
 
 const navigationCommands: NavigationCommand[] = [
   { label: '대시보드', to: '/', shortcut: '', icon: PieChart },
-  { label: '부서', to: '/organization', shortcut: '', icon: Network },
+  { label: '부서', to: '/departments', shortcut: '', icon: Network },
   { label: '직원', to: '/employees', shortcut: '', icon: UserCircle },
   { label: '프로젝트', to: '/projects', shortcut: '', icon: Briefcase },
   { label: 'AI Assistant', to: '/assistant', shortcut: '', icon: Bot },

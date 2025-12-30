@@ -68,7 +68,7 @@
         {{ emptyStateMessage }}
       </p>
       <ul v-else class="space-y-1.5" role="tree">
-        <OrganizationTreeNode
+        <DepartmentTreeNode
           v-for="node in filteredNodes"
           :key="node.departmentId"
           :node="node"
@@ -88,12 +88,12 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import OrganizationTreeNode from '@/features/department/components/OrganizationTreeNode.vue';
-import type { OrganizationChartNode } from '@/features/department/models/organization';
+import DepartmentTreeNode from '@/features/department/components/DepartmentTreeNode.vue';
+import type { DepartmentChartNode } from '@/features/department/models/department';
 import { X, ChevronsUpDown, ChevronsDownUp } from 'lucide-vue-next';
 
 interface Props {
-  nodes: OrganizationChartNode[];
+  nodes: DepartmentChartNode[];
   selectedNodeId?: number;
   defaultExpandAll?: boolean;
 }
@@ -132,7 +132,7 @@ const isFullyCollapsed = computed(
 const normalizedSearchTerm = computed(() => searchTerm.value.trim().toLowerCase());
 const isSearching = computed(() => normalizedSearchTerm.value.length > 0);
 
-const filteredNodes = computed<OrganizationChartNode[]>(() => {
+const filteredNodes = computed<DepartmentChartNode[]>(() => {
   if (!isSearching.value) {
     return props.nodes;
   }
@@ -166,12 +166,12 @@ watch(
   },
 );
 
-function rebuildIndexes(nodes: OrganizationChartNode[]) {
+function rebuildIndexes(nodes: DepartmentChartNode[]) {
   const nextParent: Record<string, string | null> = {};
   const nextDepth: Record<string, number> = {};
   const nextCollapsible: string[] = [];
 
-  const traverse = (node: OrganizationChartNode, parentId: string | null, depth: number) => {
+  const traverse = (node: DepartmentChartNode, parentId: string | null, depth: number) => {
     nextParent[String(node.departmentId)] = parentId;
     nextDepth[String(node.departmentId)] = depth;
 
@@ -319,11 +319,11 @@ onBeforeUnmount(() => {
 });
 
 function filterNodes(
-  nodes: OrganizationChartNode[],
+  nodes: DepartmentChartNode[],
   term: string,
   selectedId?: number,
-): OrganizationChartNode[] {
-  const result: OrganizationChartNode[] = [];
+): DepartmentChartNode[] {
+  const result: DepartmentChartNode[] = [];
 
   nodes.forEach((node) => {
     const childMatches = filterNodes(node.children ?? [], term, selectedId);
@@ -340,7 +340,7 @@ function filterNodes(
   return result;
 }
 
-function matchesNode(node: OrganizationChartNode, term: string): boolean {
+function matchesNode(node: DepartmentChartNode, term: string): boolean {
   const lowerTerm = term.toLowerCase();
   if (node.departmentName.toLowerCase().includes(lowerTerm)) {
     return true;
@@ -354,7 +354,7 @@ function matchesNode(node: OrganizationChartNode, term: string): boolean {
   return false;
 }
 
-function countDepartments(nodes: OrganizationChartNode[]): number {
+function countDepartments(nodes: DepartmentChartNode[]): number {
   let count = 0;
   nodes.forEach((node) => {
     count += 1;

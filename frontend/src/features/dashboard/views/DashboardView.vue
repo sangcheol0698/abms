@@ -5,7 +5,7 @@
         <CardHeader class="space-y-1">
           <CardTitle class="text-sm font-medium text-muted-foreground">{{
             metric.title
-            }}</CardTitle>
+          }}</CardTitle>
           <div class="flex items-baseline gap-2">
             <span class="text-2xl font-semibold text-foreground">{{ metric.value }}</span>
             <Badge :variant="metric.trend >= 0 ? 'secondary' : 'destructive'" class="text-xs">
@@ -26,15 +26,18 @@
           <CardDescription>시스템 전반에서 발생한 주요 이벤트입니다.</CardDescription>
         </CardHeader>
         <CardContent class="space-y-3">
-          <div v-for="notification in notifications" :key="notification.id"
-            class="flex items-start justify-between rounded-md border border-border/70 p-3 text-sm">
+          <div
+            v-for="notification in notifications"
+            :key="notification.id"
+            class="flex items-start justify-between rounded-md border border-border/70 p-3 text-sm"
+          >
             <div>
               <p class="font-medium text-foreground">{{ notification.title }}</p>
               <p class="text-xs text-muted-foreground">{{ notification.description }}</p>
             </div>
             <Badge variant="outline" class="text-[11px] uppercase tracking-tight">{{
               notification.time
-              }}</Badge>
+            }}</Badge>
           </div>
           <p v-if="!notifications.length" class="text-sm text-muted-foreground">
             최근 알림이 없습니다.
@@ -48,8 +51,12 @@
           <CardDescription>자주 사용하는 화면으로 바로 이동하세요.</CardDescription>
         </CardHeader>
         <CardContent class="space-y-3">
-          <router-link v-for="action in quickActions" :key="action.to" :to="action.to"
-            class="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm transition hover:bg-accent hover:text-accent-foreground">
+          <router-link
+            v-for="action in quickActions"
+            :key="action.to"
+            :to="action.to"
+            class="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm transition hover:bg-accent hover:text-accent-foreground"
+          >
             <span class="font-medium">{{ action.label }}</span>
             <Badge variant="outline" class="text-[11px] uppercase tracking-tight">바로가기</Badge>
           </router-link>
@@ -113,7 +120,7 @@ const notifications = computed(() => [
 ]);
 
 const quickActions = [
-  { label: '부서 확인', to: '/organization' },
+  { label: '부서 확인', to: '/departments' },
   { label: '직원 관리', to: '/employees' },
 ];
 </script>

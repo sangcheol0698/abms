@@ -1,6 +1,6 @@
 import { getEmployeeAvatarOption } from '@/features/employee/constants/avatars';
 
-export interface OrganizationLeader {
+export interface DepartmentLeader {
   employeeId: number;
   employeeName: string;
   position: string;
@@ -9,23 +9,23 @@ export interface OrganizationLeader {
   avatarImageUrl: string;
 }
 
-export interface OrganizationEmployee {
+export interface DepartmentEmployee {
   employeeId: number;
   employeeName: string;
   position: string;
 }
 
-export interface OrganizationChartNode {
+export interface DepartmentChartNode {
   departmentId: number;
   departmentName: string;
   departmentCode: string;
   departmentType: string;
-  departmentLeader: OrganizationLeader | null;
+  departmentLeader: DepartmentLeader | null;
   employeeCount: number;
-  children: OrganizationChartNode[];
+  children: DepartmentChartNode[];
 }
 
-function mapLeader(input: any): OrganizationLeader | null {
+function mapLeader(input: any): DepartmentLeader | null {
   if (!input) {
     return null;
   }
@@ -46,7 +46,7 @@ function mapLeader(input: any): OrganizationLeader | null {
   };
 }
 
-function mapEmployees(input: any[] | undefined): OrganizationEmployee[] {
+function mapEmployees(input: any[] | undefined): DepartmentEmployee[] {
   if (!Array.isArray(input)) {
     return [];
   }
@@ -58,7 +58,7 @@ function mapEmployees(input: any[] | undefined): OrganizationEmployee[] {
   }));
 }
 
-export function mapOrganizationChartNode(input: any): OrganizationChartNode {
+export function mapDepartmentChartNode(input: any): DepartmentChartNode {
   const employees = mapEmployees(input.employees);
   const computedEmployeeCount =
     typeof input?.employeeCount === 'number' ? Number(input.employeeCount) : employees.length;
@@ -72,44 +72,44 @@ export function mapOrganizationChartNode(input: any): OrganizationChartNode {
     employeeCount: Number.isFinite(computedEmployeeCount)
       ? computedEmployeeCount
       : employees.length,
-    children: Array.isArray(input.children) ? input.children.map(mapOrganizationChartNode) : [],
+    children: Array.isArray(input.children) ? input.children.map(mapDepartmentChartNode) : [],
   };
 }
 
-export function normalizeOrganizationChartResponse(response: unknown): OrganizationChartNode[] {
+export function normalizeDepartmentChartResponse(response: unknown): DepartmentChartNode[] {
   if (!response) {
     return [];
   }
 
   if (Array.isArray(response)) {
-    return response.map(mapOrganizationChartNode);
+    return response.map(mapDepartmentChartNode);
   }
 
-  return [mapOrganizationChartNode(response)];
+  return [mapDepartmentChartNode(response)];
 }
 
-export interface OrganizationDepartmentDetail {
+export interface DepartmentDetail {
   departmentId: number;
   departmentName: string;
   departmentCode: string;
   departmentType: string;
-  departmentLeader: OrganizationLeader | null;
-  employees: OrganizationEmployee[];
+  departmentLeader: DepartmentLeader | null;
+  employees: DepartmentEmployee[];
   employeeCount: number;
 }
 
-export interface OrganizationDepartmentSummary {
+export interface DepartmentSummary {
   departmentId: number;
   departmentName: string;
   departmentCode: string;
   departmentType: string;
-  departmentLeader: OrganizationLeader | null;
-  employees: OrganizationEmployee[];
+  departmentLeader: DepartmentLeader | null;
+  employees: DepartmentEmployee[];
   employeeCount: number;
   childDepartmentCount: number;
 }
 
-export function mapOrganizationDepartmentDetail(input: any): OrganizationDepartmentDetail {
+export function mapDepartmentDetail(input: any): DepartmentDetail {
   const employees = mapEmployees(input?.employees);
 
   return {

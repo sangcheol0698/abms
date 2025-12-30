@@ -92,9 +92,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Pencil } from 'lucide-vue-next';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
+import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
-import type { OrganizationChartNode } from '@/features/department/models/organization';
+import type { DepartmentChartNode } from '@/features/department/models/department';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 
 import HttpError from '@/core/http/HttpError';
@@ -109,7 +109,7 @@ const route = useRoute();
 const router = useRouter();
 
 const repository = appContainer.resolve(EmployeeRepository);
-const organizationRepository = appContainer.resolve(OrganizationRepository);
+const departmentRepository = appContainer.resolve(DepartmentRepository);
 
 const employee = ref<EmployeeSummary | null>(null);
 const isLoading = ref(true);
@@ -194,7 +194,7 @@ function goToDepartment() {
     return;
   }
   router
-    .push({ name: 'organization', query: { departmentId: employee.value.departmentId } })
+    .push({ name: 'departments', query: { departmentId: employee.value.departmentId } })
     .catch(() => {});
 }
 
@@ -281,7 +281,7 @@ function formatDate(value?: string | null) {
 async function loadOptions() {
   try {
     const [chart, statuses, types, grades, positions] = await Promise.all([
-      organizationRepository.fetchOrganizationChart(),
+      departmentRepository.fetchOrganizationChart(),
       repository.fetchStatuses(),
       repository.fetchTypes(),
       repository.fetchGrades(),
@@ -289,7 +289,7 @@ async function loadOptions() {
     ]);
 
     const map = new Map<number, string>();
-    const traverse = (nodes: OrganizationChartNode[]) => {
+    const traverse = (nodes: DepartmentChartNode[]) => {
       nodes.forEach((node) => {
         if (!map.has(node.departmentId)) {
           map.set(node.departmentId, node.departmentName);

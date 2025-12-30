@@ -124,7 +124,7 @@ const data = {
     },
     {
       title: '부서',
-      url: '/organization',
+      url: '/departments',
       icon: Network,
     },
     {

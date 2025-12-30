@@ -9,7 +9,7 @@
       </DialogHeader>
 
       <div class="max-h-[55vh] overflow-y-auto rounded-md border px-2 py-2">
-        <OrganizationTree
+        <DepartmentTree
           :key="treeRenderKey"
           :nodes="nodes"
           :selected-node-id="selectedNodeId"
@@ -49,10 +49,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import OrganizationTree from '@/features/department/components/OrganizationTree.vue';
+import DepartmentTree from '@/features/department/components/DepartmentTree.vue';
 import { appContainer } from '@/core/di/container';
-import OrganizationRepository from '@/features/department/repository/OrganizationRepository';
-import type { OrganizationChartNode } from '@/features/department/models/organization';
+import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
+import type { DepartmentChartNode } from '@/features/department/models/department';
 import { toast } from 'vue-sonner';
 
 interface Props {
@@ -67,10 +67,10 @@ const emit = defineEmits<{
   (event: 'select', payload: { departmentId: number; departmentName: string }): void;
 }>();
 
-const repository = appContainer.resolve(OrganizationRepository);
+const repository = appContainer.resolve(DepartmentRepository);
 
 const loading = ref(false);
-const nodes = ref<OrganizationChartNode[]>([]);
+const nodes = ref<DepartmentChartNode[]>([]);
 const selectedNodeId = ref<number | undefined>();
 const treeRenderKey = ref(0);
 
@@ -154,9 +154,9 @@ function confirmSelection() {
 }
 
 function findNode(
-  target: OrganizationChartNode[],
+  target: DepartmentChartNode[],
   departmentId: number,
-): OrganizationChartNode | null {
+): DepartmentChartNode | null {
   for (const node of target) {
     if (node.departmentId === departmentId) {
       return node;
