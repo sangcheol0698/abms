@@ -5,6 +5,10 @@ import java.time.LocalDate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
+import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
+import kr.co.abacus.abms.domain.shared.Period;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -26,6 +30,7 @@ public class EmployeeModifyService implements EmployeeManager {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
+    private final PositionHistoryRepository positionHistoryRepository;
 
     @Override
     public Long create(EmployeeCreateCommand command) {
@@ -34,7 +39,20 @@ public class EmployeeModifyService implements EmployeeManager {
 
         Employee employee = command.toEntity();
 
-        return employeeRepository.save(employee).getId();
+        Long id = employeeRepository.save(employee).getId();
+
+        /**
+         * 직급 이력 생성 추가
+         * 추후에 도메인 이벤트 방식으로 변경
+         */
+        PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
+            employee.getId(),
+            new Period(employee.getCreatedAt().toLocalDate(), null),
+            employee.getPosition()
+        ));
+        positionHistoryRepository.save(positionHistory);
+
+        return id;
     }
 
     @Override
