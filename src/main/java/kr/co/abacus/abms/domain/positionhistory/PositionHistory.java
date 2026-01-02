@@ -12,6 +12,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
+import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.domain.AbstractEntity;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.payroll.Payroll;
@@ -31,6 +32,8 @@ public class PositionHistory extends AbstractEntity {
     @Column(name = "employee_id", nullable = false)
     private Long employeeId;
 
+    // 이력 관리 테이블이라 수정을 못하게 할 필요가 있음
+    // period 대신 발생 타임스탬프만 넣게할 수도 있음
     @Embedded
     @AttributeOverride(name = "startDate", column = @Column(name = "start_date", nullable = false))
     @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
@@ -40,12 +43,12 @@ public class PositionHistory extends AbstractEntity {
     @Column(name = "position", nullable = false, length = 20)
     private EmployeePosition position;
 
-    public static PositionHistory create(Long employeeId, Period period, EmployeePosition position) {
+    public static PositionHistory create(PositionHistoryCreateRequest createRequest) {
         PositionHistory positionHistory = new PositionHistory();
 
-        positionHistory.employeeId = Objects.requireNonNull(employeeId);
-        positionHistory.period = new Period(Objects.requireNonNull(period.startDate()), period.endDate());
-        positionHistory.position = Objects.requireNonNull(position);
+        positionHistory.employeeId = Objects.requireNonNull(createRequest.employeeId());
+        positionHistory.period = new Period(Objects.requireNonNull(createRequest.period().startDate()), createRequest.period().endDate());
+        positionHistory.position = Objects.requireNonNull(createRequest.position());
 
         return positionHistory;
     }
