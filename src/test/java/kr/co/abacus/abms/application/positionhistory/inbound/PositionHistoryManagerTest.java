@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.application.positionhistory.outbound;
+package kr.co.abacus.abms.application.positionhistory.inbound;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
-import kr.co.abacus.abms.application.positionhistory.inbound.PositionHistoryManager;
+import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.shared.Period;

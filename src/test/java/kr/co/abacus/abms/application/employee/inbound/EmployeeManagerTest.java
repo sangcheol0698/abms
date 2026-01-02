@@ -14,6 +14,8 @@ import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.positionhistory.inbound.PositionHistoryManager;
+import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
@@ -24,6 +26,7 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
 @DisplayName("직원 관리 (EmployeeManager)")
@@ -40,6 +43,12 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Autowired
     private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private PositionHistoryManager positionHistoryManager;
+
+    @Autowired
+    private PositionHistoryRepository positionHistoryRepository;
 
     private Long companyId;
     private Long divisionId;
@@ -79,6 +88,39 @@ class EmployeeManagerTest extends IntegrationTestBase {
         assertThat(employee.getId()).isNotNull();
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
         assertThat(employee.getDepartmentId()).isEqualTo(divisionId);
+    }
+
+    @Test
+    @DisplayName("신규 직원을 등록 시, 직급 이력도 저장된다")
+    void createWithPositionHistory() {
+        EmployeeCreateCommand command = EmployeeCreateCommand.builder()
+            .departmentId(divisionId)
+            .email("test@email.com")
+            .name("홍길동")
+            .joinDate(LocalDate.of(2025, 1, 1))
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .position(EmployeePosition.ASSOCIATE)
+            .type(EmployeeType.FULL_TIME)
+            .grade(EmployeeGrade.JUNIOR)
+            .avatar(EmployeeAvatar.SKY_GLOW)
+            .build();
+
+        Long employeeId = employeeManager.create(command);
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+
+        assertThat(employee.getId()).isNotNull();
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
+        assertThat(employee.getDepartmentId()).isEqualTo(divisionId);
+
+        /**
+         * 직급 이력도 함께 저장됐는지 확인한다
+         */
+        PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(1L).getLast();
+
+        assertThat(employee.getId()).isEqualTo(foundPositionHistory.getEmployeeId());
+        assertThat(employee.getPosition()).isEqualTo(foundPositionHistory.getPosition());
     }
 
     @Test

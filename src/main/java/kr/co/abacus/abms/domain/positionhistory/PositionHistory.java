@@ -32,8 +32,6 @@ public class PositionHistory extends AbstractEntity {
     @Column(name = "employee_id", nullable = false)
     private Long employeeId;
 
-    // 이력 관리 테이블이라 수정을 못하게 할 필요가 있음
-    // period 대신 발생 타임스탬프만 넣게할 수도 있음
     @Embedded
     @AttributeOverride(name = "startDate", column = @Column(name = "start_date", nullable = false))
     @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
