@@ -7,6 +7,10 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
+import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
+import kr.co.abacus.abms.domain.shared.Period;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -36,6 +40,7 @@ public class InitData {
     private final DepartmentRepository departmentRepository;
     private final ProjectRepository projectRepository;
     private final PartyRepository partyRepository;
+    private final PositionHistoryRepository positionHistoryRepository;
 
     @PostConstruct
     public void init() {
@@ -506,6 +511,49 @@ public class InitData {
                 920000000L,
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(2025, 12, 31))));
+
+        // ===== 직급 이력 생성 =====
+        positionHistoryRepository.save(PositionHistory.create(
+            new PositionHistoryCreateRequest(1L,
+                new Period(LocalDate.of(2017, 7, 1), LocalDate.of(2020, 12, 31)),
+                EmployeePosition.VICE_PRESIDENT
+            )
+        ));
+
+        positionHistoryRepository.save(PositionHistory.create(
+            new PositionHistoryCreateRequest(1L,
+                new Period(LocalDate.of(2021, 1, 1), LocalDate.of(9999, 12, 31)),
+                EmployeePosition.PRESIDENT
+            )
+        ));
+
+        positionHistoryRepository.save(PositionHistory.create(
+            new PositionHistoryCreateRequest(45L,
+                new Period(LocalDate.of(2017, 1, 1), LocalDate.of(2019, 12, 31)),
+                EmployeePosition.LEADER
+            )
+        ));
+
+        positionHistoryRepository.save(PositionHistory.create(
+            new PositionHistoryCreateRequest(45L,
+                new Period(LocalDate.of(2020, 1, 1), LocalDate.of(2024, 12, 31)),
+                EmployeePosition.MANAGER
+            )
+        ));
+
+        positionHistoryRepository.save(PositionHistory.create(
+            new PositionHistoryCreateRequest(45L,
+                new Period(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)),
+                EmployeePosition.SENIOR_MANAGER
+            )
+        ));
+
+        positionHistoryRepository.save(PositionHistory.create(
+            new PositionHistoryCreateRequest(45L,
+                new Period(LocalDate.of(2026, 1, 1), LocalDate.of(9999, 12, 31)),
+                EmployeePosition.DIRECTOR
+            )
+        ));
     }
 
     private Employee createEmployee(Long departmentId, String email, String name, LocalDate joinDate,
