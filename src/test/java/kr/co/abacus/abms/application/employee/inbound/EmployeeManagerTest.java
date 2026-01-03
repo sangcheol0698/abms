@@ -286,6 +286,37 @@ class EmployeeManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("직원이 사원에서 선임으로 승진한다")
+    void promote() {
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+        employeeManager.promote(employee.getId(), EmployeePosition.STAFF); // 승진
+        flushAndClear();
+
+        assertThat(employee.getPosition()).isEqualTo(EmployeePosition.STAFF);
+    }
+
+    @Test
+    @DisplayName("직원 승진 시, 직급 이력도 생성된다")
+    void promoteWithPositionHistory() {
+        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+
+        /**
+         * 승진 시, 직급 이력 생성
+         */
+        employeeManager.promote(employee.getId(), EmployeePosition.STAFF); // 승진
+        flushAndClear();
+
+        PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(1L).getLast();
+        assertThat(employee.getPosition()).isEqualTo(foundPositionHistory.getPosition());
+    }
+
+    @Test
     @DisplayName("이미 재직 중인 직원은 복직 처리할 수 없다")
     void activateFail_alreadyActive() {
         Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
