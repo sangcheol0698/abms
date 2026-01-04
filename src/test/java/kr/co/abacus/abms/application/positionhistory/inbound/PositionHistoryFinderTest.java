@@ -54,4 +54,30 @@ class PositionHistoryFinderTest extends IntegrationTestBase {
         assertThat(foundPositionHistory.getPeriod().endDate()).isEqualTo(LocalDate.of(2026, 12, 31));
     }
 
+    @Test
+    @DisplayName("직원 ID로 모든 직급 이력을 조회한다")
+    void findAll() {
+        PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
+            1L,
+            new Period(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)),
+            EmployeePosition.ASSOCIATE)
+        );
+        positionHistoryRepository.save(positionHistory);
+
+        PositionHistory positionHistory2 = PositionHistory.create(new PositionHistoryCreateRequest(
+            1L,
+            new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)),
+            EmployeePosition.STAFF)
+        );
+        positionHistoryRepository.save(positionHistory2);
+
+        flush();
+
+        List<PositionHistory> foundPositionHistory = positionHistoryFinder.findAll(1L);
+
+        assertThat(foundPositionHistory.size()).isEqualTo(2);
+        assertThat(foundPositionHistory.getFirst().getPosition()).isEqualTo(EmployeePosition.ASSOCIATE);
+        assertThat(foundPositionHistory.getLast().getPosition()).isEqualTo(EmployeePosition.STAFF);
+    }
+
 }

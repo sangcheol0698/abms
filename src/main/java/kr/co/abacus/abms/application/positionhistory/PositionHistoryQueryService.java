@@ -1,5 +1,7 @@
 package kr.co.abacus.abms.application.positionhistory;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,8 +19,12 @@ public class PositionHistoryQueryService implements PositionHistoryFinder {
 
     @Override
     public PositionHistory findLast(Long employeeId) {
-        System.out.println("결과:" + positionHistoryRepository.findByEmployeeId(employeeId));
         return positionHistoryRepository.findByEmployeeId(employeeId).getLast();
+    }
+
+    @Override
+    public List<PositionHistory> findAll(Long employeeId) {
+        return positionHistoryRepository.findByEmployeeId(employeeId);
     }
 
 }
