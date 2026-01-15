@@ -92,6 +92,7 @@ const routes = [
         component: () => import('@/features/employee/views/EmployeeDetailView.vue'),
         meta: {
           title: '직원 상세',
+          layout: SidebarLayout,
           breadcrumbs: [
             {
               title: '대시보드',
@@ -133,6 +134,7 @@ const routes = [
         component: () => import('@/features/project/views/ProjectDetailView.vue'),
         meta: {
           title: '프로젝트 상세',
+          layout: SidebarLayout,
           breadcrumbs: [
             {
               title: '대시보드',
