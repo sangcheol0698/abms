@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import SidebarLayout from '@/core/layouts/SidebarLayout.vue';
 
 const routes = [
   {
     path: '/',
-    component: () => import('@/core/layouts/AppLayout.vue'),
     children: [
       {
         path: '',
@@ -11,6 +11,7 @@ const routes = [
         component: () => import('@/features/dashboard/views/DashboardView.vue'),
         meta: {
           title: '대시보드',
+          layout: SidebarLayout,
           breadcrumbs: [
             {
               title: '대시보드',
@@ -25,6 +26,7 @@ const routes = [
         component: () => import('@/features/department/views/DepartmentView.vue'),
         meta: {
           title: '부서',
+          layout: SidebarLayout,
           padding: 'flush',
           breadcrumbs: [
             {
@@ -48,6 +50,7 @@ const routes = [
         component: () => import('@/features/department/views/DepartmentView.vue'),
         meta: {
           title: '부서',
+          layout: SidebarLayout,
           padding: 'flush',
           breadcrumbs: [
             {
@@ -70,6 +73,7 @@ const routes = [
         component: () => import('@/features/employee/views/EmployeeListView.vue'),
         meta: {
           title: '직원',
+          layout: SidebarLayout,
           breadcrumbs: [
             {
               title: '대시보드',
@@ -110,6 +114,7 @@ const routes = [
         component: () => import('@/features/project/views/ProjectListView.vue'),
         meta: {
           title: '프로젝트',
+          layout: SidebarLayout,
           breadcrumbs: [
             {
               title: '대시보드',
@@ -150,6 +155,7 @@ const routes = [
         component: () => import('@/features/chat/views/ChatView.vue'),
         meta: {
           title: 'AI Assistant',
+          layout: SidebarLayout,
           padding: 'flush',
           breadcrumbs: [
             {
@@ -169,6 +175,7 @@ const routes = [
         component: () => import('@/features/chat/views/ChatView.vue'),
         meta: {
           title: 'AI Assistant',
+          layout: SidebarLayout,
           padding: 'flush',
           breadcrumbs: [
             {

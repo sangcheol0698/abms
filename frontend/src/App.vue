@@ -1,13 +1,14 @@
 <template>
-  <SidebarProvider>
+  <Component :is="route.meta.layout || 'AppLayout'">
     <RouterView />
-    <Toaster position="top-right" :rich-colors="true" />
-  </SidebarProvider>
+  </Component>
+  <Toaster position="top-center" :rich-colors="true" />
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { RouterView, useRoute } from 'vue-router';
 import { Toaster } from '@/components/ui/sonner';
 import 'vue-sonner/style.css';
+
+const route = useRoute();
 </script>
