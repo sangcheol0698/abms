@@ -4,7 +4,7 @@
       <AppSidebar :onOpenProfileDialog="openProfileDialog" />
       <SidebarInset>
         <header
-          class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur"
+          class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 md:px-8 lg:px-12 backdrop-blur"
         >
           <div class="flex flex-1 items-center gap-3">
             <SidebarTrigger class="-ml-1" />
@@ -179,15 +179,16 @@ const breadcrumbs = computed<BreadcrumbEntry[]>(() => {
 const paddingClass = computed(() => {
   const mode = route.meta?.padding as string | undefined;
   if (mode === 'compact') {
-    return 'p-4 sm:p-6';
+    return 'p-4 sm:p-6 md:px-8 lg:px-12';
   }
   if (mode === 'comfortable') {
-    return 'p-6 lg:p-8';
+    return 'p-6 lg:p-12';
   }
   if (mode === 'flush') {
     return 'p-0';
   }
-  return 'p-6';
+  // Default padding with horizontal container-like margins
+  return 'p-6 md:px-8 lg:px-12';
 });
 
 const isProfileDialogOpen = ref(false);
