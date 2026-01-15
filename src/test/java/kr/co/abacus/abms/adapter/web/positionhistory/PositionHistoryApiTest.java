@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter.web.positionhistory;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -11,9 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 
-import kr.co.abacus.abms.adapter.web.common.PageResponse;
-import kr.co.abacus.abms.adapter.web.employee.dto.EmployeeSearchResponse;
-import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.application.positionhistory.inbound.PositionHistoryManager;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;

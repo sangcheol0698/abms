@@ -1,7 +1,5 @@
 package kr.co.abacus.abms.domain.positionhistory;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 import jakarta.persistence.AttributeOverride;
@@ -12,16 +10,13 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
-import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
-import kr.co.abacus.abms.domain.AbstractEntity;
-import kr.co.abacus.abms.domain.employee.EmployeePosition;
-import kr.co.abacus.abms.domain.payroll.Payroll;
-import kr.co.abacus.abms.domain.shared.Money;
-import kr.co.abacus.abms.domain.shared.Period;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import kr.co.abacus.abms.domain.AbstractEntity;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.shared.Period;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

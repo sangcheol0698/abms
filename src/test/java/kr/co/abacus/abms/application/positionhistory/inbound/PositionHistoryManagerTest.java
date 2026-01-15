@@ -8,7 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;

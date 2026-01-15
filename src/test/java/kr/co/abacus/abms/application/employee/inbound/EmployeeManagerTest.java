@@ -117,7 +117,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         /**
          * 직급 이력도 함께 저장됐는지 확인한다
          */
-        PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(1L).getLast();
+        PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(employee.getId()).getLast();
 
         assertThat(employee.getId()).isEqualTo(foundPositionHistory.getEmployeeId());
         assertThat(employee.getPosition()).isEqualTo(foundPositionHistory.getPosition());
@@ -312,7 +312,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         employeeManager.promote(employee.getId(), EmployeePosition.STAFF); // 승진
         flushAndClear();
 
-        PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(1L).getLast();
+        PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(employee.getId()).getLast();
         assertThat(employee.getPosition()).isEqualTo(foundPositionHistory.getPosition());
     }
 
@@ -378,7 +378,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
                 .departmentId(teamId)
                 .email(email)
                 .name("홍길동")
-                .joinDate(LocalDate.now())
+                .joinDate(LocalDate.of(2025, 1, 30))
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .grade(EmployeeGrade.JUNIOR)
                 .position(EmployeePosition.ASSOCIATE)
@@ -392,7 +392,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
                 .departmentId(departmentId)
                 .email(email)
                 .name(name)
-                .joinDate(LocalDate.now())
+                .joinDate(LocalDate.of(2010, 1, 30))
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .grade(EmployeeGrade.JUNIOR)
                 .position(EmployeePosition.ASSOCIATE)
@@ -421,7 +421,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
                 .departmentId(teamId)
                 .email(email)
                 .name(name)
-                .joinDate(LocalDate.now())
+                .joinDate(LocalDate.of(2010, 1, 30))
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .grade(EmployeeGrade.JUNIOR)
                 .position(EmployeePosition.ASSOCIATE)

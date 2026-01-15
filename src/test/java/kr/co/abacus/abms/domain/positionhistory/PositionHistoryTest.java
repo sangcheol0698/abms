@@ -1,14 +1,12 @@
 package kr.co.abacus.abms.domain.positionhistory;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.shared.Period;
 

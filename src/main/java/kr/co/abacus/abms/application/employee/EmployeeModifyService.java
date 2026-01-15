@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.shared.Period;

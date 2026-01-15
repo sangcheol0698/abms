@@ -7,7 +7,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import kr.co.abacus.abms.application.positionhistory.dto.PositionHistoryCreateRequest;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.shared.Period;

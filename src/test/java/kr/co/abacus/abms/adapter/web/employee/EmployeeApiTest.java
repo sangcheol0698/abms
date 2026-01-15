@@ -626,7 +626,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        employeeManager.resign(employeeId, LocalDate.now());
+        employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
         restTestClient.patch()
@@ -641,7 +641,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        LocalDate resignationDate = LocalDate.now();
+        LocalDate resignationDate = LocalDate.of(2025, 6, 30);
         restTestClient.patch()
                 .uri("/api/employees/{id}/resign?resignationDate={date}", employeeId, resignationDate)
                 .exchange()
@@ -673,11 +673,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        employeeManager.resign(employeeId, LocalDate.now());
+        employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
         restTestClient.patch()
-                .uri("/api/employees/{id}/resign?resignationDate={date}", employeeId, LocalDate.now())
+                .uri("/api/employees/{id}/resign?resignationDate={date}", employeeId, LocalDate.of(2025, 1, 30))
                 .exchange()
                 .expectStatus().isBadRequest();
     }
@@ -704,7 +704,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        employeeManager.resign(employeeId, LocalDate.now());
+        employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
         restTestClient.patch()
