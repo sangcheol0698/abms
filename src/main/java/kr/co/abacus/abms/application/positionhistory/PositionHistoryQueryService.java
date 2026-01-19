@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.co.abacus.abms.application.positionhistory.inbound.PositionHistoryFinder;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
+
 import lombok.RequiredArgsConstructor;
 
 @Service

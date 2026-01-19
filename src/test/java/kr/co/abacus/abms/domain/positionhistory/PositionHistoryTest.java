@@ -22,4 +22,5 @@ class PositionHistoryTest {
         assertThat(positionHistory.getPeriod().endDate()).isEqualTo(LocalDate.of(2027, 1, 1));
         assertThat(positionHistory.getPosition()).isEqualTo(EmployeePosition.ASSOCIATE);
     }
+
 }

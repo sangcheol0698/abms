@@ -28,9 +28,9 @@ class PositionHistoryManagerTest extends IntegrationTestBase {
     @Test
     void create() {
         PositionHistory positionHistory = positionHistoryManager.create(new PositionHistoryCreateRequest(
-            1L,
-            new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2027, 1, 1)),
-            EmployeePosition.ASSOCIATE)
+                1L,
+                new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2027, 1, 1)),
+                EmployeePosition.ASSOCIATE)
         );
 
         flushAndClear();

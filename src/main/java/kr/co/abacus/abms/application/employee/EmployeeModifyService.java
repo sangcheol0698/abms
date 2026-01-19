@@ -9,6 +9,7 @@ import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.shared.Period;
+
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -46,9 +47,9 @@ public class EmployeeModifyService implements EmployeeManager {
          * 추후에 도메인 이벤트 방식으로 변경
          */
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
-            employee.getId(),
-            new Period(employee.getCreatedAt().toLocalDate(), null),
-            employee.getPosition()
+                employee.getId(),
+                new Period(employee.getCreatedAt().toLocalDate(), null),
+                employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);
 
@@ -117,9 +118,9 @@ public class EmployeeModifyService implements EmployeeManager {
          * 추후에 도메인 이벤트 방식으로 변경
          */
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
-            employee.getId(),
-            new Period(employee.getCreatedAt().toLocalDate(), null),
-            employee.getPosition()
+                employee.getId(),
+                new Period(employee.getCreatedAt().toLocalDate(), null),
+                employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);
     }

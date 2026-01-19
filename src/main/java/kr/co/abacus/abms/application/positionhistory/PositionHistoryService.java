@@ -7,6 +7,7 @@ import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.application.positionhistory.inbound.PositionHistoryManager;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
+
 import lombok.RequiredArgsConstructor;
 
 @Transactional

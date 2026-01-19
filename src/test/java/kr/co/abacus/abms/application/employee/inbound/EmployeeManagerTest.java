@@ -94,16 +94,16 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @DisplayName("신규 직원을 등록 시, 직급 이력도 저장된다")
     void createWithPositionHistory() {
         EmployeeCreateCommand command = EmployeeCreateCommand.builder()
-            .departmentId(divisionId)
-            .email("test@email.com")
-            .name("홍길동")
-            .joinDate(LocalDate.of(2025, 1, 1))
-            .birthDate(LocalDate.of(1990, 1, 1))
-            .position(EmployeePosition.ASSOCIATE)
-            .type(EmployeeType.FULL_TIME)
-            .grade(EmployeeGrade.JUNIOR)
-            .avatar(EmployeeAvatar.SKY_GLOW)
-            .build();
+                .departmentId(divisionId)
+                .email("test@email.com")
+                .name("홍길동")
+                .joinDate(LocalDate.of(2025, 1, 1))
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .position(EmployeePosition.ASSOCIATE)
+                .type(EmployeeType.FULL_TIME)
+                .grade(EmployeeGrade.JUNIOR)
+                .avatar(EmployeeAvatar.SKY_GLOW)
+                .build();
 
         Long employeeId = employeeManager.create(command);
         flushAndClear();

@@ -29,16 +29,16 @@ class PositionHistoryFinderTest extends IntegrationTestBase {
     @DisplayName("직원 ID로 가장 마지막 직급 이력을 조회한다")
     void findLast() {
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
-            1L,
-            new Period(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)),
-            EmployeePosition.ASSOCIATE)
+                1L,
+                new Period(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)),
+                EmployeePosition.ASSOCIATE)
         );
         positionHistoryRepository.save(positionHistory);
 
         PositionHistory positionHistory2 = PositionHistory.create(new PositionHistoryCreateRequest(
-            1L,
-            new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)),
-            EmployeePosition.ASSOCIATE)
+                1L,
+                new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)),
+                EmployeePosition.ASSOCIATE)
         );
         positionHistoryRepository.save(positionHistory2);
 
@@ -55,16 +55,16 @@ class PositionHistoryFinderTest extends IntegrationTestBase {
     @DisplayName("직원 ID로 모든 직급 이력을 조회한다")
     void findAll() {
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
-            1L,
-            new Period(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)),
-            EmployeePosition.ASSOCIATE)
+                1L,
+                new Period(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)),
+                EmployeePosition.ASSOCIATE)
         );
         positionHistoryRepository.save(positionHistory);
 
         PositionHistory positionHistory2 = PositionHistory.create(new PositionHistoryCreateRequest(
-            1L,
-            new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)),
-            EmployeePosition.STAFF)
+                1L,
+                new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)),
+                EmployeePosition.STAFF)
         );
         positionHistoryRepository.save(positionHistory2);
 

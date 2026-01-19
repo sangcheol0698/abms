@@ -12,4 +12,5 @@ public interface PositionHistoryFinder {
     PositionHistory findLast(Long employeeId);
 
     List<PositionHistory> findAll(Long employeeId);
+
 }

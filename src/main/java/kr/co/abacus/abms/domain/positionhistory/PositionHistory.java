@@ -45,4 +45,5 @@ public class PositionHistory extends AbstractEntity {
 
         return positionHistory;
     }
+
 }
