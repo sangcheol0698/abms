@@ -3,6 +3,8 @@ package kr.co.abacus.abms.adapter.api.project;
 import java.util.Arrays;
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,8 @@ import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectStatusResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
 import kr.co.abacus.abms.application.party.PartyQueryService;
+import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
+import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
 import kr.co.abacus.abms.application.project.inbound.ProjectManager;
 import kr.co.abacus.abms.domain.project.Project;
@@ -46,11 +50,11 @@ public class ProjectApi {
     }
 
     @GetMapping("/api/projects")
-    public PageResponse<ProjectResponse> list(Pageable pageable) {
-        Page<Project> projects = projectFinder.findAll(pageable);
+    public PageResponse<ProjectResponse> search(@Valid ProjectSearchCondition condition, Pageable pageable) {
+        Page<ProjectSummary> projects = projectFinder.search(condition, pageable);
 
         return PageResponse.of(projects.map(project -> {
-            String partyName = partyQueryService.getPartyId(project.getPartyId());
+            String partyName = partyQueryService.getPartyId(project.partyId());
             return ProjectResponse.from(project, partyName);
         }));
     }

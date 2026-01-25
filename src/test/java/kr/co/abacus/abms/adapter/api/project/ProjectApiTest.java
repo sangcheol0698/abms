@@ -7,13 +7,16 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 
+import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectCreateApiRequest;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.project.Project;
+import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectFixture;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
@@ -89,29 +92,37 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("프로젝트 목록 조회 - 페이징")
-    void list_withPaging() {
-        // Given: 15개의 프로젝트 생성
-        for (int i = 1; i <= 15; i++) {
-            Project project = ProjectFixture.createProject("PRJ-LIST-" + String.format("%03d", i));
-            projectRepository.save(project);
-        }
+    @DisplayName("프로젝트 검색 - 코드/이름, 상태, 기간 조건")
+    void search() {
+        projectRepository.save(createProject("PRJ-ALPHA-001", "알파 프로젝트", 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 1, 10)));
+        projectRepository.save(createProject("PRJ-ALPHA-002", "알파 보조", 1L, ProjectStatus.COMPLETED,
+                LocalDate.of(2024, 2, 5)));
+        projectRepository.save(createProject("PRJ-BETA-001", "베타 프로젝트", 2L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2023, 5, 1)));
         flushAndClear();
 
-        // When & Then: 첫 번째 페이지 (size=10)
-        restTestClient.get()
+        PageResponse<ProjectResponse> response = restTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/projects")
+                        .queryParam("name", "알파")
+                        .queryParam("statuses", ProjectStatus.IN_PROGRESS.name())
+                        .queryParam("startDate", "2024-01-01")
+                        .queryParam("endDate", "2024-12-31")
                         .queryParam("page", 0)
                         .queryParam("size", 10)
                         .build())
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.content.length()").isEqualTo(10)
-                .jsonPath("$.totalElements").isEqualTo(15)
-                .jsonPath("$.totalPages").isEqualTo(2)
-                .jsonPath("$.last").isEqualTo(false);
+                .expectBody(new ParameterizedTypeReference<PageResponse<ProjectResponse>>() {
+                })
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.content())
+                .extracting(ProjectResponse::code)
+                .containsExactly("PRJ-ALPHA-001");
     }
 
     @Test
@@ -267,6 +278,18 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                 .uri("/api/projects/{id}", nonExistentId)
                 .exchange()
                 .expectStatus().isNotFound();
+    }
+
+    private Project createProject(String code, String name, Long partyId, ProjectStatus status, LocalDate startDate) {
+        return Project.create(new ProjectCreateRequest(
+                partyId,
+                code,
+                name,
+                "테스트 프로젝트 설명",
+                status,
+                100_000_000L,
+                startDate,
+                startDate.plusMonths(6)));
     }
 
 }

@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
+import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.project.Project;
@@ -46,6 +48,11 @@ public class ProjectQueryService implements ProjectFinder {
     @Override
     public List<Project> findAllByStatus(ProjectStatus status) {
         return projectRepository.findAllByStatusAndDeletedFalse(status);
+    }
+
+    @Override
+    public Page<ProjectSummary> search(ProjectSearchCondition condition, Pageable pageable) {
+        return projectRepository.search(condition, pageable);
     }
 
 }

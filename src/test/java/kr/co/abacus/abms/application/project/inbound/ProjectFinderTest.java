@@ -3,6 +3,7 @@ package kr.co.abacus.abms.application.project.inbound;
 import static kr.co.abacus.abms.domain.project.ProjectFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -11,8 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
+import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.project.Project;
+import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.IntegrationTestBase;
@@ -107,6 +111,46 @@ class ProjectFinderTest extends IntegrationTestBase {
 
         assertThat(inProgressProjects).hasSize(2);
         assertThat(completedProjects).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("프로젝트 조건에 따른 검색")
+    void search() {
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-001", "알파 프로젝트", 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 1, 10)));
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-002", "알파 보조", 1L, ProjectStatus.COMPLETED,
+                LocalDate.of(2024, 2, 5)));
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-003", "알파 프로젝트", 2L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 3, 1)));
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-004", "알파 프로젝트", 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2023, 5, 1)));
+        flushAndClear();
+
+        ProjectSearchCondition condition = new ProjectSearchCondition(
+                "알파",
+                List.of(ProjectStatus.IN_PROGRESS),
+                List.of(1L),
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 12, 31));
+
+        Page<ProjectSummary> projects = projectFinder.search(condition, PageRequest.of(0, 10));
+
+        assertThat(projects).hasSize(1)
+                .extracting(ProjectSummary::code)
+                .containsExactly("PRJ-ALPHA-001");
+    }
+
+    private Project createProjectForSearch(String code, String name, Long partyId, ProjectStatus status,
+                                           LocalDate startDate) {
+        return Project.create(new ProjectCreateRequest(
+                partyId,
+                code,
+                name,
+                "테스트 프로젝트 설명",
+                status,
+                100_000_000L,
+                startDate,
+                startDate.plusMonths(6)));
     }
 
 }

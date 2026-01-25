@@ -10,7 +10,7 @@ import org.springframework.data.repository.Repository;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 
-public interface ProjectRepository extends Repository<Project, Long> {
+public interface ProjectRepository extends Repository<Project, Long>, CustomProjectRepository {
 
     Project save(Project project);
 
