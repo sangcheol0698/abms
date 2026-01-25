@@ -4,6 +4,7 @@
 export interface ProjectListItem {
   projectId: number;
   partyId: number;
+  partyName: string;
   code: string;
   name: string;
   description: string | null;
@@ -14,6 +15,17 @@ export interface ProjectListItem {
   endDate: string | null;
 }
 
+export interface ProjectSearchParams {
+  page: number;
+  size: number;
+  name?: string;
+  statuses?: string[];
+  partyIds?: number[];
+  startDate?: string;
+  endDate?: string;
+  sort?: string;
+}
+
 /**
  * 백엔드 API 응답을 프론트엔드 모델로 매핑
  */
@@ -21,6 +33,7 @@ export function mapProjectListItem(input: any): ProjectListItem {
   return {
     projectId: Number(input?.projectId ?? 0),
     partyId: Number(input?.partyId ?? 0),
+    partyName: String(input?.partyName ?? ''),
     code: String(input?.code ?? ''),
     name: String(input?.name ?? ''),
     description: input?.description ?? null,

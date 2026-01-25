@@ -13,6 +13,7 @@
         searchPlaceholder="프로젝트명 또는 코드를 입력하세요"
         searchColumnId="name"
         :getColumnLabel="getColumnLabel"
+        :applySearchOnEnter="true"
         :isExternalFiltered="isDateFiltered"
         @reset="handleResetFilters"
       >
@@ -21,6 +22,27 @@
           <!-- 날짜 범위 필터 -->
           <div class="flex items-center gap-2">
             <DateRangeFilter v-model="dateRange" placeholder="계약일 날짜 범위 선택" />
+          </div>
+
+          <div class="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              class="h-8 gap-2 border-dashed"
+              @click="openPartyDialog"
+            >
+              <Building class="h-4 w-4" />
+              <span>{{ selectedPartyName ?? '협력사 선택' }}</span>
+            </Button>
+            <Button
+              v-if="selectedPartyId"
+              variant="ghost"
+              size="sm"
+              class="h-8 px-2"
+              @click="clearPartyFilter"
+            >
+              <X class="h-4 w-4" />
+            </Button>
           </div>
 
           <DataTableFacetedFilter
@@ -96,21 +118,27 @@
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
+  <PartySelectDialog
+    :open="isPartySelectOpen"
+    :selected-party-id="selectedPartyId ?? undefined"
+    @update:open="isPartySelectOpen = $event"
+    @select="handlePartySelected"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { Plus } from 'lucide-vue-next';
+import { computed, h, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { Building, Plus, X } from 'lucide-vue-next';
 import {
+  type ColumnDef,
+  type ColumnFiltersState,
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
-  type ColumnDef,
-  type ColumnFiltersState,
-  type SortingState,
   type RowSelectionState,
+  type SortingState,
   useVueTable,
 } from '@tanstack/vue-table';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -119,9 +147,9 @@ import { Button } from '@/components/ui/button';
 import {
   DataTable,
   DataTableColumnHeader,
+  DataTableFacetedFilter,
   DataTablePagination,
   DataTableToolbar,
-  DataTableFacetedFilter,
   DateRangeFilter,
 } from '@/components/business';
 import { appContainer } from '@/core/di/container';
@@ -129,6 +157,8 @@ import ProjectRepository from '@/features/project/repository/ProjectRepository';
 import ProjectCreateDialog from '@/features/project/components/ProjectCreateDialog.vue';
 import ProjectUpdateDialog from '@/features/project/components/ProjectUpdateDialog.vue';
 import ProjectRowActions from '@/features/project/components/ProjectRowActions.vue';
+import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
+import PartyRepository from '@/features/party/repository/PartyRepository';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -144,11 +174,14 @@ import { formatCurrency, formatProjectPeriod } from '@/features/project/models/p
 import type { ProjectDetail } from '@/features/project/models/projectDetail';
 import { valueUpdater } from '@/components/ui/table/utils';
 import { toast } from 'vue-sonner';
+import { useProjectQuerySync } from '@/features/project/composables/useProjectQuerySync';
 
 defineOptions({ name: 'ProjectListView' });
 
 const router = useRouter();
+const route = useRoute();
 const repository = appContainer.resolve(ProjectRepository);
+const partyRepository = appContainer.resolve(PartyRepository);
 
 const projects = ref<ProjectListItem[]>([]);
 const isLoading = ref(false);
@@ -163,13 +196,26 @@ const rowSelection = ref<RowSelectionState>({});
 const isProjectCreateDialogOpen = ref(false);
 const isProjectUpdateDialogOpen = ref(false);
 const editingProject = ref<ProjectDetail | null>(null);
+const isPartySelectOpen = ref(false);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 const statusFilterOptions = ref<{ value: string; label: string; icon?: any }[]>([]);
+const partyOptions = ref<{ value: number; label: string }[]>([]);
+const selectedPartyId = computed(() => {
+  const filter = columnFilters.value.find((item) => item.id === 'partyId');
+  const value = Array.isArray(filter?.value) ? filter?.value[0] : filter?.value;
+  return value ? Number(value) : null;
+});
+const selectedPartyName = computed(() => {
+  if (!selectedPartyId.value) {
+    return null;
+  }
+  const match = partyOptions.value.find((option) => option.value === selectedPartyId.value);
+  return match?.label ?? `협력사 #${selectedPartyId.value}`;
+});
 
 // 날짜 필터 상태
-const searchType = ref('계약일자');
-const dateRange = ref<{ start?: Date; end?: Date } | null>(null);
+const dateRange = ref<{ start?: Date | string; end?: Date | string } | null>(null);
 
 const isDateFiltered = computed(() => !!dateRange.value?.start || !!dateRange.value?.end);
 
@@ -177,18 +223,10 @@ function handleResetFilters() {
   dateRange.value = null;
 }
 
-// API용 날짜 포맷팅 함수
-function formatDateForAPI(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 function getColumnLabel(columnId: string): string {
   const labels: Record<string, string> = {
     name: '프로젝트명',
+    partyName: '협력사',
     status: '상태',
     contractAmount: '계약금액',
     period: '기간',
@@ -245,6 +283,14 @@ const columns: ColumnDef<ProjectListItem>[] = [
     meta: { skeleton: 'title-subtitle' },
   },
   {
+    id: 'partyName',
+    accessorFn: (row) => row.partyName,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '협력사', align: 'left' }),
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.partyName || '-'),
+    enableSorting: false,
+    size: 180,
+  },
+  {
     id: 'status',
     accessorFn: (row) => row.statusLabel,
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '상태', align: 'left' }),
@@ -275,6 +321,20 @@ const columns: ColumnDef<ProjectListItem>[] = [
       ),
     enableSorting: true,
     size: 220,
+  },
+  {
+    id: 'partyId',
+    accessorKey: 'partyId',
+    header: () => null,
+    cell: () => null,
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.map(String).includes(String(row.original.partyId));
+    },
+    enableSorting: false,
+    enableHiding: false,
+    size: 0,
+    meta: { isFilterOnly: true },
   },
   {
     id: 'actions',
@@ -318,23 +378,19 @@ const table = useVueTable({
   getFacetedUniqueValues: getFacetedUniqueValues(),
 });
 
+const { buildSearchParams, applyRouteQuery } = useProjectQuerySync({
+  page,
+  pageSize,
+  sorting,
+  columnFilters,
+  dateRange,
+  onLoadProjects: loadProjects,
+});
+
 async function loadProjects() {
   isLoading.value = true;
   try {
-    const params: any = {
-      page: page.value,
-      size: pageSize.value,
-    };
-
-    if (dateRange.value && dateRange.value.start) {
-      params.searchType = searchType.value;
-      params.startDate = formatDateForAPI(dateRange.value.start);
-      if (dateRange.value.end) {
-        params.endDate = formatDateForAPI(dateRange.value.end);
-      }
-    }
-
-    const response = await repository.list(params);
+    const response = await repository.search(buildSearchParams());
 
     projects.value = response.content;
     totalPages.value = response.totalPages;
@@ -359,13 +415,11 @@ function handleViewProject(project: ProjectListItem) {
 
 function handlePageChange(newPage: number) {
   page.value = newPage;
-  loadProjects();
 }
 
 function handlePageSizeChange(newSize: number) {
   pageSize.value = newSize;
   page.value = 1;
-  loadProjects();
 }
 
 function handleCreateProject() {
@@ -399,6 +453,27 @@ function handleCopyCode(project: ProjectListItem) {
   toast.success('프로젝트 코드를 복사했습니다.', {
     description: project.code,
   });
+}
+
+function openPartyDialog() {
+  isPartySelectOpen.value = true;
+}
+
+function setPartyFilter(partyId: number | null) {
+  const nextFilters = columnFilters.value.filter((filter) => filter.id !== 'partyId');
+  if (partyId) {
+    nextFilters.push({ id: 'partyId', value: [String(partyId)] });
+  }
+  columnFilters.value = nextFilters;
+}
+
+function handlePartySelected(payload: { partyId: number; partyName: string }) {
+  setPartyFilter(payload.partyId);
+  isPartySelectOpen.value = false;
+}
+
+function clearPartyFilter() {
+  setPartyFilter(null);
 }
 
 const deletion = {
@@ -446,29 +521,21 @@ function handleDeleteProject(project: ProjectListItem) {
   deletion.open(project.projectId, project.name);
 }
 
-// Auto-load on mount
-watch(() => true, loadProjects, { immediate: true });
-
-// 날짜 범위 변경 감지하여 데이터 로드
-watch(dateRange, () => {
-  page.value = 1; // 검색 조건 변경 시 첫 페이지로 이동
-  loadProjects();
-});
-
-// 검색 유형 변경 감지하여 데이터 로드 (날짜 범위가 선택된 경우에만)
-watch(searchType, () => {
-  if (dateRange.value) {
-    page.value = 1;
-    loadProjects();
-  }
-});
-
 onMounted(async () => {
   try {
-    const statuses = await repository.fetchStatuses();
+    const [statuses, parties] = await Promise.all([
+      repository.fetchStatuses(),
+      partyRepository.fetchAll(),
+    ]);
     statusFilterOptions.value = statuses;
+    partyOptions.value = parties;
   } catch (error) {
-    console.error('Failed to fetch project statuses:', error);
+    console.error('Failed to fetch project filter options:', error);
+  }
+  if (Object.keys(route.query).length > 0) {
+    applyRouteQuery({ ...route.query });
+  } else {
+    await loadProjects();
   }
 });
 </script>

@@ -12,7 +12,7 @@
           v-model="searchQuery"
           placeholder="협력사명으로 검색..."
           class="h-9"
-          @input="handleSearch"
+          @keydown.enter.prevent="handleSearch"
         />
       </div>
 

@@ -1,7 +1,7 @@
 import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
 import { PageResponse } from '@/core/api';
-import type { ProjectListItem } from '@/features/project/models/projectListItem';
+import type { ProjectListItem, ProjectSearchParams } from '@/features/project/models/projectListItem';
 import { mapProjectListItem } from '@/features/project/models/projectListItem';
 import type {
   ProjectDetail,
@@ -15,34 +15,23 @@ export default class ProjectRepository {
   constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 
   /**
-   * 프로젝트 목록 조회 (페이징)
+   * 프로젝트 검색 (페이징)
    */
-  async list(
-    params: { page: number; size: number; sort?: string } & Record<string, any>,
-  ): Promise<PageResponse<ProjectListItem>> {
-    const queryParams: Record<string, string> = {};
-
-    // Copy all params to queryParams, converting non-string values to string
-    Object.keys(params).forEach((key) => {
-      if (params[key] !== undefined && params[key] !== null) {
-        queryParams[key] = String(params[key]);
-      }
-    });
-
-    // Override page and size with calculated values
-    queryParams.page = Math.max(params.page - 1, 0).toString();
-    queryParams.size = params.size.toString();
-
-    if (params.sort) {
-      queryParams.sort = params.sort;
-    }
-
+  async search(params: ProjectSearchParams): Promise<PageResponse<ProjectListItem>> {
+    const queryParams = buildRequestParams(params);
     const response = await this.httpRepository.get({
       path: '/api/projects',
       params: queryParams,
     });
 
     return PageResponse.fromPage(response, mapProjectListItem);
+  }
+
+  /**
+   * 프로젝트 목록 조회 (호환용)
+   */
+  async list(params: ProjectSearchParams): Promise<PageResponse<ProjectListItem>> {
+    return this.search(params);
   }
 
   /**
@@ -141,4 +130,37 @@ export default class ProjectRepository {
       label: item.description,
     }));
   }
+}
+
+function buildRequestParams(params: ProjectSearchParams): Record<string, string> {
+  const query: Record<string, string> = {
+    page: Math.max(params.page - 1, 0).toString(),
+    size: params.size.toString(),
+  };
+
+  if (params.name) {
+    query.name = params.name;
+  }
+
+  if (params.startDate) {
+    query.startDate = params.startDate;
+  }
+
+  if (params.endDate) {
+    query.endDate = params.endDate;
+  }
+
+  if (params.sort) {
+    query.sort = params.sort;
+  }
+
+  const arrayFields: (keyof ProjectSearchParams)[] = ['statuses', 'partyIds'];
+  arrayFields.forEach((field) => {
+    const value = params[field];
+    if (Array.isArray(value) && value.length > 0) {
+      query[field] = value.join(',');
+    }
+  });
+
+  return query;
 }
