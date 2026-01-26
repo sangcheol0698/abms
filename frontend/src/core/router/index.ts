@@ -37,10 +37,6 @@ const routes = [
               title: '부서',
               disabled: true,
             },
-            {
-              title: '상세',
-              disabled: true,
-            },
           ],
         },
       },
@@ -60,9 +56,6 @@ const routes = [
             {
               title: '부서',
               disabled: true,
-            },
-            {
-              title: '상세',
             },
           ],
         },
@@ -103,7 +96,7 @@ const routes = [
               to: '/employees',
             },
             {
-              title: '상세',
+              title: '직원 상세',
               disabled: true,
             },
           ],

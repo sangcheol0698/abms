@@ -50,11 +50,6 @@ async function navigate(path: string) {
   emit('update:open', false);
   await router.push(path);
 }
-
-function openDocs() {
-  emit('update:open', false);
-  window.open('/docs/도메인모델.md', '_blank');
-}
 </script>
 
 <template>
@@ -75,12 +70,6 @@ function openDocs() {
         </CommandItem>
       </CommandGroup>
       <CommandSeparator />
-      <CommandGroup heading="도움말">
-        <CommandItem value="docs" @select="openDocs">
-          <FileText class="mr-2 h-4 w-4" />
-          <span>문서 열기</span>
-        </CommandItem>
-      </CommandGroup>
     </CommandList>
   </CommandDialog>
 </template>
