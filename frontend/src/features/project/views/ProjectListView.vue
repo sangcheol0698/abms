@@ -1,11 +1,6 @@
 <template>
   <div class="flex h-full flex-col gap-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight">프로젝트</h1>
-        <p class="text-sm text-muted-foreground">프로젝트를 관리하고 진행 상황을 확인하세요</p>
-      </div>
-    </div>
+    <ProjectSummaryCards :cards="projectSummaryCards" />
 
     <div class="flex flex-1 flex-col gap-4">
       <DataTableToolbar
@@ -23,6 +18,13 @@
           <div class="flex items-center gap-2">
             <DateRangeFilter v-model="dateRange" placeholder="계약일 날짜 범위 선택" />
           </div>
+
+          <DataTableFacetedFilter
+            v-if="table.getColumn('status')"
+            :column="table.getColumn('status')"
+            title="상태"
+            :options="statusFilterOptions"
+          />
 
           <div class="flex items-center gap-1">
             <Button
@@ -44,13 +46,6 @@
               <X class="h-4 w-4" />
             </Button>
           </div>
-
-          <DataTableFacetedFilter
-            v-if="table.getColumn('status')"
-            :column="table.getColumn('status')"
-            title="상태"
-            :options="statusFilterOptions"
-          />
         </template>
 
         <template #actions>
@@ -157,6 +152,7 @@ import ProjectRepository from '@/features/project/repository/ProjectRepository';
 import ProjectCreateDialog from '@/features/project/components/ProjectCreateDialog.vue';
 import ProjectUpdateDialog from '@/features/project/components/ProjectUpdateDialog.vue';
 import ProjectRowActions from '@/features/project/components/ProjectRowActions.vue';
+import ProjectSummaryCards from '@/features/project/components/ProjectSummaryCards.vue';
 import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
 import PartyRepository from '@/features/party/repository/PartyRepository';
 import {
@@ -175,6 +171,7 @@ import type { ProjectDetail } from '@/features/project/models/projectDetail';
 import { valueUpdater } from '@/components/ui/table/utils';
 import { toast } from 'vue-sonner';
 import { useProjectQuerySync } from '@/features/project/composables/useProjectQuerySync';
+import { projectSummaryCards } from '@/features/project/data';
 
 defineOptions({ name: 'ProjectListView' });
 

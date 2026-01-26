@@ -35,12 +35,26 @@
             title="직책"
             :options="positionOptions"
           />
-          <DataTableFacetedFilter
-            v-if="departmentOptions.length && table.getColumn('departmentId')"
-            :column="table.getColumn('departmentId')"
-            title="부서"
-            :options="departmentFilterOptions"
-          />
+          <div class="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              class="h-8 gap-2 border-dashed"
+              @click="openDepartmentDialog"
+            >
+              <Building2 class="h-4 w-4" />
+              <span>{{ selectedDepartmentName ?? '부서 선택' }}</span>
+            </Button>
+            <Button
+              v-if="selectedDepartmentId"
+              variant="ghost"
+              size="sm"
+              class="h-8 px-2"
+              @click="clearDepartmentFilter"
+            >
+              <X class="h-4 w-4" />
+            </Button>
+          </div>
         </template>
 
         <template #actions>
@@ -130,6 +144,12 @@
     @update:open="handleEmployeeUpdateDialogOpenChange"
     @updated="handleEmployeeUpdated"
   />
+  <DepartmentSelectDialog
+    :open="isDepartmentSelectOpen"
+    :selected-department-id="selectedDepartmentId ?? undefined"
+    @update:open="isDepartmentSelectOpen = $event"
+    @select="handleDepartmentSelected"
+  />
   <AlertDialog :open="deletion.isDialogOpen.value">
     <AlertDialogContent>
       <AlertDialogHeader>
@@ -208,7 +228,8 @@ import EmployeeSummaryCards from '@/features/employee/components/EmployeeSummary
 import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
-import { ChevronDown, Download, FileSpreadsheet, Plus, Upload } from 'lucide-vue-next';
+import DepartmentSelectDialog from '@/features/department/components/DepartmentSelectDialog.vue';
+import { Building2, ChevronDown, Download, FileSpreadsheet, Plus, Upload, X } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import HttpError from '@/core/http/HttpError';
@@ -245,6 +266,7 @@ const statusOptions = ref<EmployeeFilterOption[]>(getEmployeeStatusOptions());
 const typeOptions = ref<EmployeeFilterOption[]>(getEmployeeTypeOptions());
 const gradeOptions = ref<EmployeeFilterOption[]>(getEmployeeGradeOptions());
 const positionOptions = ref<EmployeeFilterOption[]>(getEmployeePositionOptions());
+const isDepartmentSelectOpen = ref(false);
 const isEmployeeCreateDialogOpen = ref(false);
 const isEmployeeUpdateDialogOpen = ref(false);
 const editingEmployee = ref<EmployeeSummary | null>(null);
@@ -260,12 +282,19 @@ const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 
 const employeeSummary = useEmployeeSummary({ employees });
 
-const departmentFilterOptions = computed(() =>
-  departmentOptions.value.map((opt) => ({
-    label: opt.label,
-    value: String(opt.value),
-  })),
-);
+const selectedDepartmentId = computed(() => {
+  const filter = columnFilters.value.find((item) => item.id === 'departmentId');
+  const value = Array.isArray(filter?.value) ? filter?.value[0] : filter?.value;
+  return value ? Number(value) : null;
+});
+
+const selectedDepartmentName = computed(() => {
+  if (!selectedDepartmentId.value) {
+    return null;
+  }
+  const match = departmentOptions.value.find((option) => option.value === selectedDepartmentId.value);
+  return match?.label ?? `부서 #${selectedDepartmentId.value}`;
+});
 
 // 테이블 컬럼 정의 (EmployeeTableColumns.ts로 분리됨)
 const columns = createEmployeeTableColumns({
@@ -368,6 +397,27 @@ async function loadEmployeeOptions() {
 
 function openExcelUploadDialog() {
   isExcelUploadDialogOpen.value = true;
+}
+
+function openDepartmentDialog() {
+  isDepartmentSelectOpen.value = true;
+}
+
+function setDepartmentFilter(departmentId: number | null) {
+  const nextFilters = columnFilters.value.filter((filter) => filter.id !== 'departmentId');
+  if (departmentId) {
+    nextFilters.push({ id: 'departmentId', value: [String(departmentId)] });
+  }
+  columnFilters.value = nextFilters;
+}
+
+function handleDepartmentSelected(payload: { departmentId: number; departmentName: string }) {
+  setDepartmentFilter(payload.departmentId);
+  isDepartmentSelectOpen.value = false;
+}
+
+function clearDepartmentFilter() {
+  setDepartmentFilter(null);
 }
 
 async function handleExcelDownload() {
