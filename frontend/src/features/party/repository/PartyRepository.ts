@@ -3,6 +3,8 @@ import HttpRepository from '@/core/http/HttpRepository';
 import { PageResponse } from '@/core/api';
 import type { PartyListItem } from '@/features/party/models/partyListItem';
 import { mapPartyListItem } from '@/features/party/models/partyListItem';
+import type { PartyDetail, PartyCreateData, PartyUpdateData } from '@/features/party/models/partyDetail';
+import { mapPartyDetail } from '@/features/party/models/partyDetail';
 
 @singleton()
 export default class PartyRepository {
@@ -33,6 +35,65 @@ export default class PartyRepository {
     return PageResponse.fromPage(response, mapPartyListItem);
   }
 
+  /**
+   * 협력사 상세 조회
+   */
+  async find(partyId: number): Promise<PartyDetail> {
+    const response = await this.httpRepository.get({
+      path: `/api/parties/${partyId}`,
+    });
+
+    return mapPartyDetail(response);
+  }
+
+  /**
+   * 협력사 생성
+   */
+  async create(data: PartyCreateData): Promise<PartyDetail> {
+    const response = await this.httpRepository.post({
+      path: '/api/parties',
+      data: {
+        name: data.name,
+        ceoName: data.ceoName,
+        salesRepName: data.salesRepName,
+        salesRepPhone: data.salesRepPhone,
+        salesRepEmail: data.salesRepEmail,
+      },
+    });
+
+    return mapPartyDetail(response);
+  }
+
+  /**
+   * 협력사 수정
+   */
+  async update(partyId: number, data: PartyUpdateData): Promise<PartyDetail> {
+    const response = await this.httpRepository.put({
+      path: `/api/parties/${partyId}`,
+      data: {
+        name: data.name,
+        ceoName: data.ceoName,
+        salesRepName: data.salesRepName,
+        salesRepPhone: data.salesRepPhone,
+        salesRepEmail: data.salesRepEmail,
+      },
+    });
+
+    return mapPartyDetail(response);
+  }
+
+  /**
+   * 협력사 삭제
+   */
+  async delete(partyId: number): Promise<void> {
+    await this.httpRepository.delete({
+      path: `/api/parties/${partyId}`,
+    });
+  }
+
+  /**
+   * 전체 협력사 옵션 목록 조회
+   */
   async fetchAll(): Promise<{ label: string; value: number }[]> {
     const response = await this.list({ page: 1, size: 1000 });
     return response.content.map((party) => ({
