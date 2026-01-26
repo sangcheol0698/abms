@@ -19,6 +19,32 @@
         @department-click="goToDepartment"
       >
         <template #actions>
+          <AlertDialog>
+            <AlertDialogTrigger as-child>
+              <Button variant="outline" size="sm" class="text-destructive hover:text-destructive">
+                <Trash2 class="mr-2 h-4 w-4" />
+                삭제
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>직원을 삭제하시겠습니까?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {{ employee?.name }} 직원 정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  :disabled="isDeleting"
+                  @click="handleDelete"
+                >
+                  {{ isDeleting ? '삭제 중...' : '삭제' }}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button variant="outline" size="sm" @click="openEditDialog">
             <Pencil class="mr-2 h-4 w-4" />
             직원 편집
@@ -89,7 +115,18 @@ import { useRoute, useRouter } from 'vue-router';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pencil } from 'lucide-vue-next';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Pencil, Trash2 } from 'lucide-vue-next';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
@@ -123,6 +160,7 @@ const takeLeaveSuccess = ref<string | null>(null);
 const isActivating = ref(false);
 const activateError = ref<string | null>(null);
 const activateSuccess = ref<string | null>(null);
+const isDeleting = ref(false);
 const employeeInitials = computed(() => {
   const name = employee.value?.name ?? '';
   return name.trim().slice(0, 2).toUpperCase() || '??';
@@ -320,6 +358,21 @@ function handleEmployeeUpdated() {
   isEmployeeUpdateDialogOpen.value = false;
   if (employee.value?.employeeId) {
     fetchEmployee(employee.value.employeeId, { showLoading: false });
+  }
+}
+
+async function handleDelete() {
+  if (!employee.value?.employeeId) return;
+  
+  isDeleting.value = true;
+  try {
+    await repository.delete(employee.value.employeeId);
+    router.push('/employees');
+  } catch (error) {
+    const message = resolveErrorMessage(error, '직원 삭제 중 오류가 발생했습니다.');
+    errorMessage.value = message;
+  } finally {
+    isDeleting.value = false;
   }
 }
 
