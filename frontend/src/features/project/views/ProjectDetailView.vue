@@ -169,8 +169,7 @@ async function fetchProject(projectId: number, options: { showLoading?: boolean 
 function goToParty() {
   const id = project.value?.partyId;
   if (!id) return;
-  // 거래처 상세 페이지로 이동 (향후 구현)
-  console.log('Navigate to party:', id);
+  router.push({ name: 'party-detail', params: { partyId: id } });
 }
 
 function formatDate(value?: string | null) {

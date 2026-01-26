@@ -145,6 +145,48 @@ const routes = [
         },
       },
       {
+        path: 'parties',
+        name: 'parties',
+        component: () => import('@/features/party/views/PartyListView.vue'),
+        meta: {
+          title: '협력사',
+          layout: SidebarLayout,
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '협력사',
+              disabled: true,
+            },
+          ],
+        },
+      },
+      {
+        path: 'parties/:partyId',
+        name: 'party-detail',
+        component: () => import('@/features/party/views/PartyDetailView.vue'),
+        meta: {
+          title: '협력사 상세',
+          layout: SidebarLayout,
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '협력사',
+              to: '/parties',
+            },
+            {
+              title: '협력사 상세',
+              disabled: true,
+            },
+          ],
+        },
+      },
+      {
         path: 'assistant',
         name: 'assistant',
         component: () => import('@/features/chat/views/ChatView.vue'),
