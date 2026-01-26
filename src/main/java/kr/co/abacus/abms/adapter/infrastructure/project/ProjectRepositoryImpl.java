@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.outbound.CustomProjectRepository;
+import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 
 @RequiredArgsConstructor
@@ -75,6 +76,20 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         project.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public List<Project> search(ProjectSearchCondition condition) {
+        return queryFactory.selectFrom(project)
+                .where(
+                        containsNameOrCode(condition.name()),
+                        inStatuses(condition.statuses()),
+                        inPartyIds(condition.partyIds()),
+                        startDateFrom(condition.startDate()),
+                        startDateTo(condition.endDate()),
+                        project.deleted.isFalse())
+                .orderBy(defaultSort())
+                .fetch();
     }
 
     private @Nullable BooleanExpression containsNameOrCode(@Nullable String name) {

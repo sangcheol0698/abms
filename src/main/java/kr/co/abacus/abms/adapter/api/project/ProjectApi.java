@@ -1,37 +1,33 @@
 package kr.co.abacus.abms.adapter.api.project;
 
-import java.util.Arrays;
-import java.util.List;
-
 import jakarta.validation.Valid;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
-import lombok.RequiredArgsConstructor;
-
+import kr.co.abacus.abms.adapter.api.common.FilenameBuilder;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
-import kr.co.abacus.abms.adapter.api.project.dto.ProjectCreateApiRequest;
-import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
-import kr.co.abacus.abms.adapter.api.project.dto.ProjectStatusResponse;
-import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
+import kr.co.abacus.abms.adapter.api.project.dto.*;
 import kr.co.abacus.abms.application.party.PartyQueryService;
+import kr.co.abacus.abms.application.project.ProjectExcelService;
+import kr.co.abacus.abms.application.project.dto.ProjectExcelUploadResult;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
 import kr.co.abacus.abms.application.project.inbound.ProjectManager;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -40,6 +36,7 @@ public class ProjectApi {
     private final ProjectManager projectManager;
     private final ProjectFinder projectFinder;
     private final PartyQueryService partyQueryService;
+    private final ProjectExcelService projectExcelService;
 
     @PostMapping("/api/projects")
     public ProjectResponse create(@RequestBody ProjectCreateApiRequest request) {
@@ -102,6 +99,39 @@ public class ProjectApi {
         return Arrays.stream(ProjectStatus.values())
                 .map(ProjectStatusResponse::of)
                 .toList();
+    }
+
+    @GetMapping("/api/projects/excel/download")
+    public ResponseEntity<Resource> downloadExcel(@Valid ProjectSearchCondition condition) {
+        byte[] content = projectExcelService.download(condition);
+        String filename = FilenameBuilder.build("projects");
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(new ByteArrayResource(content));
+    }
+
+    @GetMapping("/api/projects/excel/sample")
+    public ResponseEntity<Resource> downloadExcelSample() {
+        byte[] content = projectExcelService.downloadSample();
+        String filename = FilenameBuilder.build("projects_sample");
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(new ByteArrayResource(content));
+    }
+
+    @PostMapping(value = "/api/projects/excel/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ProjectExcelUploadResponse uploadExcel(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("업로드할 파일을 선택하세요.");
+        }
+        try (InputStream inputStream = file.getInputStream()) {
+            ProjectExcelUploadResult result = projectExcelService.upload(inputStream);
+            return ProjectExcelUploadResponse.of(result);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
+        }
     }
 
 }

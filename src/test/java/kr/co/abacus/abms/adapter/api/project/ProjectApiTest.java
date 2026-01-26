@@ -1,31 +1,41 @@
 package kr.co.abacus.abms.adapter.api.project;
 
-import static org.assertj.core.api.Assertions.*;
-
-import java.time.LocalDate;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
-
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectCreateApiRequest;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
+import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectFixture;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("프로젝트 API (ProjectApi)")
 class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private PartyRepository partyRepository;
 
     @Test
     @DisplayName("프로젝트 생성")
@@ -278,6 +288,74 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                 .uri("/api/projects/{id}", nonExistentId)
                 .exchange()
                 .expectStatus().isNotFound();
+    }
+
+    @Test
+    @DisplayName("프로젝트 엑셀 다운로드")
+    void downloadExcel() {
+        restTestClient.get()
+                .uri("/api/projects/excel/download")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .expectHeader().valueMatches("Content-Disposition", "attachment; filename=\"projects_\\d{8}_\\d{6}\\.xlsx\"");
+    }
+
+    @Test
+    @DisplayName("프로젝트 엑셀 샘플 다운로드")
+    void downloadExcelSample() {
+        restTestClient.get()
+                .uri("/api/projects/excel/sample")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .expectHeader().valueMatches("Content-Disposition", "attachment; filename=\"projects_sample_\\d{8}_\\d{6}\\.xlsx\"");
+    }
+
+    @Test
+    @DisplayName("프로젝트 엑셀 업로드")
+    void uploadExcel() throws Exception {
+        // Given: 협력사 생성
+        String partyName = "네이버클라우드";
+        kr.co.abacus.abms.domain.party.Party party = kr.co.abacus.abms.domain.party.Party.create(
+                new kr.co.abacus.abms.domain.party.PartyCreateRequest(partyName, null, null, null, null));
+        partyRepository.save(party);
+        flushAndClear();
+
+        byte[] excelBytes;
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Projects");
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("협력사 이름");
+            header.createCell(1).setCellValue("프로젝트 코드");
+            header.createCell(2).setCellValue("프로젝트명");
+            header.createCell(3).setCellValue("상태");
+            header.createCell(4).setCellValue("계약금액");
+            header.createCell(5).setCellValue("시작일");
+            header.createCell(6).setCellValue("종료일");
+            header.createCell(7).setCellValue("설명");
+
+            Row data = sheet.createRow(1);
+            data.createCell(0).setCellValue(partyName);
+            data.createCell(1).setCellValue("PRJ-UPLOAD-001");
+            data.createCell(2).setCellValue("업로드 프로젝트");
+            data.createCell(3).setCellValue("진행 중");
+            data.createCell(4).setCellValue("50000000");
+            data.createCell(5).setCellValue("2024-01-01");
+            data.createCell(6).setCellValue("2024-12-31");
+            data.createCell(7).setCellValue("업로드 테스트 설명");
+
+            workbook.write(out);
+            excelBytes = out.toByteArray();
+        }
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                excelBytes);
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/projects/excel/upload").file(file))
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     private Project createProject(String code, String name, Long partyId, ProjectStatus status, LocalDate startDate) {

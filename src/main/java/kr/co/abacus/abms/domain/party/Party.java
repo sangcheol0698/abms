@@ -5,6 +5,7 @@ import static java.util.Objects.*;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import org.jspecify.annotations.Nullable;
 
@@ -17,7 +18,9 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "party")
+@Table(name = "party", uniqueConstraints = {
+        @UniqueConstraint(name = "UK_PARTY_NAME", columnNames = {"party_name"})
+})
 public class Party extends AbstractEntity {
 
     @Column(name = "party_name", nullable = false, length = 50)

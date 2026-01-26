@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.application.party.outbound;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.repository.Repository;
 
@@ -11,5 +12,9 @@ public interface PartyRepository extends Repository<Party, Long>, CustomPartyRep
     Party save(Party party);
 
     Optional<Party> findById(Long id);
+    
+    Optional<Party> findByNameAndDeletedFalse(String name);
+
+    List<Party> findAllByDeletedFalse();
 
 }

@@ -49,6 +49,30 @@
         </template>
 
         <template #actions>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="sm" class="h-8 px-2 sm:px-3 gap-1">
+                <FileSpreadsheet class="h-4 w-4" />
+                <span class="hidden sm:inline">엑셀</span>
+                <ChevronDown class="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-48">
+              <DropdownMenuItem :disabled="isDownloadingExcel" @click="handleExcelDownload">
+                <Download class="mr-2 h-4 w-4" />
+                <span>{{ isDownloadingExcel ? '다운로드 중...' : '현재 조건 다운로드' }}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleExcelSampleDownloadFromMenu">
+                <Download class="mr-2 h-4 w-4" />
+                <span>샘플 다운로드</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem @click="openExcelUploadDialog">
+                <Upload class="mr-2 h-4 w-4" />
+                <span>엑셀 업로드</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="default"
             size="sm"
@@ -119,12 +143,21 @@
     @update:open="isPartySelectOpen = $event"
     @select="handlePartySelected"
   />
+  <ExcelUploadDialog
+    :open="isExcelUploadDialogOpen"
+    title="프로젝트 일괄 업로드"
+    description="엑셀 파일을 업로드하여 프로젝트를 일괄 등록합니다."
+    :on-download-sample="handleExcelSampleDownload"
+    :on-upload="handleExcelUpload"
+    @update:open="isExcelUploadDialogOpen = $event"
+    @success="handleExcelUploadSuccess"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, h, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Building, Plus, X } from 'lucide-vue-next';
+import { Building, ChevronDown, Download, FileSpreadsheet, Plus, Upload, X } from 'lucide-vue-next';
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -140,12 +173,20 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   DataTable,
   DataTableColumnHeader,
   DataTableFacetedFilter,
   DataTablePagination,
   DataTableToolbar,
   DateRangeFilter,
+  ExcelUploadDialog,
 } from '@/components/business';
 import { appContainer } from '@/core/di/container';
 import ProjectRepository from '@/features/project/repository/ProjectRepository';
@@ -195,6 +236,9 @@ const isProjectCreateDialogOpen = ref(false);
 const isProjectUpdateDialogOpen = ref(false);
 const editingProject = ref<ProjectDetail | null>(null);
 const isPartySelectOpen = ref(false);
+
+const isDownloadingExcel = ref(false);
+const isExcelUploadDialogOpen = ref(false);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 const statusFilterOptions = ref<{ value: string; label: string; icon?: any }[]>([]);
@@ -376,7 +420,7 @@ const table = useVueTable({
   getFacetedUniqueValues: getFacetedUniqueValues(),
 });
 
-const { buildSearchParams, applyRouteQuery } = useProjectQuerySync({
+const { applyRouteQuery } = useProjectQuerySync({
   page,
   pageSize,
   sorting,
@@ -393,10 +437,52 @@ const deletion = useProjectDeletion(async () => {
   await loadProjects();
 });
 
+function getSearchParams(): ProjectSearchParams {
+  const params: ProjectSearchParams = {
+    page: page.value,
+    size: pageSize.value,
+  };
+
+  const nameFilter = columnFilters.value.find((f) => f.id === 'name');
+  if (nameFilter?.value) {
+    params.name = nameFilter.value as string;
+  }
+
+  const statusFilter = columnFilters.value.find((f) => f.id === 'status');
+  if (Array.isArray(statusFilter?.value) && statusFilter.value.length > 0) {
+    params.statuses = statusFilter.value as string[];
+  }
+
+  if (selectedPartyId.value) {
+    params.partyIds = [selectedPartyId.value];
+  }
+
+  if (dateRange.value?.start) {
+    params.startDate =
+      dateRange.value.start instanceof Date
+        ? dateRange.value.start.toISOString().split('T')[0]
+        : (dateRange.value.start as string);
+  }
+
+  if (dateRange.value?.end) {
+    params.endDate =
+      dateRange.value.end instanceof Date
+        ? dateRange.value.end.toISOString().split('T')[0]
+        : (dateRange.value.end as string);
+  }
+
+  if (sorting.value.length > 0) {
+    const s = sorting.value[0];
+    params.sort = `${s.id},${s.desc ? 'desc' : 'asc'}`;
+  }
+
+  return params;
+}
+
 async function loadProjects() {
   isLoading.value = true;
   try {
-    const response = await repository.search(buildSearchParams());
+    const response = await repository.search(getSearchParams());
 
     projects.value = response.content;
     totalPages.value = response.totalPages;
@@ -443,7 +529,7 @@ async function handleEditProject(project: ProjectListItem) {
     const projectDetail = await repository.find(project.projectId);
     editingProject.value = projectDetail;
     isProjectUpdateDialogOpen.value = true;
-  } catch (error) {
+  } catch {
     toast.error('프로젝트 정보를 불러오지 못했습니다.');
   }
 }
@@ -452,6 +538,47 @@ function handleProjectUpdated() {
   isProjectUpdateDialogOpen.value = false;
   editingProject.value = null;
   loadProjects();
+}
+
+async function handleExcelDownload() {
+  if (isDownloadingExcel.value) return;
+
+  try {
+    isDownloadingExcel.value = true;
+    const params = getSearchParams();
+    await repository.downloadExcel(params);
+    toast.success('엑셀 다운로드가 완료되었습니다.');
+  } catch {
+    toast.error('엑셀 다운로드 중 오류가 발생했습니다.');
+  } finally {
+    isDownloadingExcel.value = false;
+  }
+}
+
+async function handleExcelSampleDownload() {
+  await repository.downloadExcelSample();
+}
+
+async function handleExcelSampleDownloadFromMenu() {
+  try {
+    await handleExcelSampleDownload();
+    toast.success('샘플 파일 다운로드가 완료되었습니다.');
+  } catch {
+    toast.error('샘플 파일 다운로드 중 오류가 발생했습니다.');
+  }
+}
+
+function openExcelUploadDialog() {
+  isExcelUploadDialogOpen.value = true;
+}
+
+async function handleExcelUpload(file: File, onProgress: (percent: number) => void) {
+  await repository.uploadExcel(file, onProgress);
+  await loadProjects();
+}
+
+function handleExcelUploadSuccess() {
+  toast.success('프로젝트가 업로드되었습니다.');
 }
 
 function handleCopyCode(project: ProjectListItem) {

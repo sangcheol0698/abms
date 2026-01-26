@@ -1,13 +1,21 @@
 import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
 import { PageResponse } from '@/core/api';
-import type { ProjectListItem, ProjectSearchParams } from '@/features/project/models/projectListItem';
+import type {
+  ProjectListItem,
+  ProjectSearchParams,
+} from '@/features/project/models/projectListItem';
 import { mapProjectListItem } from '@/features/project/models/projectListItem';
 import type {
   ProjectDetail,
   ProjectCreateData,
   ProjectUpdateData,
 } from '@/features/project/models/projectDetail';
+import {
+  downloadBlob,
+  extractFilenameFromResponse,
+  generateExcelFilename,
+} from '@/core/utils/excel';
 import { mapProjectDetail } from '@/features/project/models/projectDetail';
 
 @singleton()
@@ -129,6 +137,59 @@ export default class ProjectRepository {
       value: item.name,
       label: item.description,
     }));
+  }
+
+  /**
+   * 엑셀 다운로드
+   */
+  async downloadExcel(params: ProjectSearchParams): Promise<void> {
+    const queryParams = buildRequestParams(params);
+    const response = await this.httpRepository.download({
+      path: '/api/projects/excel/download',
+      params: queryParams,
+    });
+
+    if (!response.ok) {
+      throw new Error(`엑셀 다운로드에 실패했습니다. (${response.status})`);
+    }
+
+    const filename = extractFilenameFromResponse(response, generateExcelFilename('projects'));
+    const blob = await response.blob();
+    downloadBlob(blob, filename);
+  }
+
+  /**
+   * 엑셀 샘플 다운로드
+   */
+  async downloadExcelSample(): Promise<void> {
+    const response = await this.httpRepository.download({
+      path: '/api/projects/excel/sample',
+    });
+
+    if (!response.ok) {
+      throw new Error(`샘플 파일 다운로드에 실패했습니다. (${response.status})`);
+    }
+
+    const filename = extractFilenameFromResponse(
+      response,
+      generateExcelFilename('projects_sample'),
+    );
+    const blob = await response.blob();
+    downloadBlob(blob, filename);
+  }
+
+  /**
+   * 엑셀 업로드
+   */
+  async uploadExcel(file: File, onProgress?: (progress: number) => void): Promise<void> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    await this.httpRepository.upload({
+      path: '/api/projects/excel/upload',
+      data: formData,
+      onProgress,
+    });
   }
 }
 
