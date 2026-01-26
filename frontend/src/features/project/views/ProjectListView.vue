@@ -172,6 +172,7 @@ import { valueUpdater } from '@/components/ui/table/utils';
 import { toast } from 'vue-sonner';
 import { useProjectQuerySync } from '@/features/project/composables/useProjectQuerySync';
 import { projectSummaryCards } from '@/features/project/data';
+import { useProjectDeletion } from '@/features/project/composables/useProjectDeletion';
 
 defineOptions({ name: 'ProjectListView' });
 
@@ -384,6 +385,14 @@ const { buildSearchParams, applyRouteQuery } = useProjectQuerySync({
   onLoadProjects: loadProjects,
 });
 
+const deletion = useProjectDeletion(async () => {
+  if (page.value !== 1) {
+    page.value = 1;
+    return;
+  }
+  await loadProjects();
+});
+
 async function loadProjects() {
   isLoading.value = true;
   try {
@@ -472,47 +481,6 @@ function handlePartySelected(payload: { partyId: number; partyName: string }) {
 function clearPartyFilter() {
   setPartyFilter(null);
 }
-
-const deletion = {
-  isDialogOpen: ref(false),
-  isProcessing: ref(false),
-  description: ref(''),
-  targetId: ref<number | null>(null),
-
-  open(projectId: number, projectName: string) {
-    this.targetId.value = projectId;
-    this.description.value = `"${projectName}" 프로젝트를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`;
-    this.isDialogOpen.value = true;
-  },
-
-  cancel() {
-    this.isDialogOpen.value = false;
-    this.targetId.value = null;
-    this.description.value = '';
-  },
-
-  async confirm() {
-    if (!this.targetId.value) {
-      return;
-    }
-
-    this.isProcessing.value = true;
-    try {
-      if (this.targetId.value) {
-        await repository.delete(this.targetId.value);
-      }
-      toast.success('프로젝트를 삭제했습니다.');
-      this.isDialogOpen.value = false;
-      loadProjects();
-    } catch (error) {
-      toast.error('프로젝트 삭제에 실패했습니다.');
-    } finally {
-      this.isProcessing.value = false;
-      this.targetId.value = null;
-      this.description.value = '';
-    }
-  },
-};
 
 function handleDeleteProject(project: ProjectListItem) {
   deletion.open(project.projectId, project.name);
