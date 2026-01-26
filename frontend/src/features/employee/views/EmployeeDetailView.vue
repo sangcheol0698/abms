@@ -64,7 +64,7 @@
             <EmployeeSalaryPanel :employee="employee" />
           </TabsContent>
           <TabsContent value="projects" class="flex-1">
-              <EmployeeProjectsPanel :employee-id="employee?.employeeId ?? 0" />
+            <EmployeeProjectsPanel :employee-id="employee?.employeeId ?? 0" />
           </TabsContent>
         </div>
       </Tabs>
@@ -190,12 +190,10 @@ async function fetchEmployee(employeeId: number, options: { showLoading?: boolea
 }
 
 function goToDepartment() {
-  if (!employee.value?.departmentId) {
-    return;
-  }
-  router
-    .push({ name: 'departments', query: { departmentId: employee.value.departmentId } })
-    .catch(() => {});
+  const id = employee.value?.departmentId;
+  if (!id) return;
+
+  router.push(`/departments/${id}`).catch(() => {});
 }
 
 async function handleResign(resignationDate: string) {
