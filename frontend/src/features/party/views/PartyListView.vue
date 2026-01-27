@@ -1,110 +1,43 @@
 <template>
-  <div class="flex h-full flex-col gap-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight">협력사 관리</h1>
-        <p class="text-sm text-muted-foreground">거래처 및 협력사 정보를 관리합니다.</p>
-      </div>
-      <Button size="sm" class="gap-1" @click="handleCreateParty">
-        <Plus class="h-4 w-4" />
-        협력사 추가
-      </Button>
-    </div>
+  <section class="flex h-full flex-col gap-6">
+    <PartySummaryCards :cards="partySummaryCards" />
 
-    <div class="flex flex-col gap-4">
-      <div class="flex items-center gap-2">
-        <div class="relative flex-1 max-w-sm">
-          <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="협력사명 검색"
-            class="pl-9"
-            @keydown.enter="handleSearch"
-          />
-        </div>
-        <Button variant="outline" size="sm" @click="handleSearch">검색</Button>
-      </div>
+    <div class="space-y-4">
+      <DataTableToolbar
+        :table="table"
+        searchPlaceholder="협력사명을 입력하세요"
+        searchColumnId="name"
+        :getColumnLabel="getColumnLabel"
+        :applySearchOnEnter="true"
+      >
+        <template #actions>
+          <Button size="sm" class="h-8 gap-1 px-2 sm:px-3" @click="handleCreateParty">
+            <Plus class="h-4 w-4" />
+            협력사 추가
+          </Button>
+        </template>
+      </DataTableToolbar>
 
-      <div v-if="isLoading" class="flex items-center justify-center py-12">
-        <p class="text-muted-foreground">로딩 중...</p>
-      </div>
+      <DataTable
+        :columns="columns"
+        :data="parties"
+        :tableInstance="table"
+        :loading="isLoading"
+        emptyMessage="협력사가 없습니다"
+        emptyDescription="새로운 협력사를 등록해보세요"
+        :pageSize="pageSize"
+      />
 
-      <div v-else-if="parties.length === 0" class="flex items-center justify-center py-12">
-        <p class="text-muted-foreground">협력사가 없습니다.</p>
-      </div>
-
-      <div v-else class="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-[200px]">협력사명</TableHead>
-              <TableHead>대표자</TableHead>
-              <TableHead>담당자</TableHead>
-              <TableHead>연락처</TableHead>
-              <TableHead>이메일</TableHead>
-              <TableHead class="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="party in parties" :key="party.partyId">
-              <TableCell>
-                <button
-                  type="button"
-                  class="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
-                  @click="handleViewParty(party)"
-                >
-                  {{ party.name }}
-                </button>
-              </TableCell>
-              <TableCell>{{ party.ceo || '—' }}</TableCell>
-              <TableCell>{{ party.manager || '—' }}</TableCell>
-              <TableCell>{{ party.contact || '—' }}</TableCell>
-              <TableCell>{{ party.email || '—' }}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger as-child>
-                    <Button variant="ghost" size="icon" class="h-8 w-8">
-                      <MoreHorizontal class="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem @click="handleViewParty(party)">
-                      상세 보기
-                    </DropdownMenuItem>
-                    <DropdownMenuItem @click="handleEditParty(party)">
-                      수정
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem class="text-destructive" @click="handleDeleteParty(party)">
-                      삭제
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
-
-      <div v-if="totalPages > 1" class="flex items-center justify-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="page === 1"
-          @click="page--"
-        >
-          이전
-        </Button>
-        <span class="text-sm text-muted-foreground">{{ page }} / {{ totalPages }}</span>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="page === totalPages"
-          @click="page++"
-        >
-          다음
-        </Button>
-      </div>
+      <DataTablePagination
+        :page="page"
+        :pageSize="pageSize"
+        :totalPages="totalPages"
+        :totalElements="totalElements"
+        :selectedRowCount="selectedRowCount"
+        :loading="isLoading"
+        @pageChange="handlePageChange"
+        @pageSizeChange="handlePageSizeChange"
+      />
     </div>
 
     <PartyFormDialog
@@ -136,23 +69,29 @@
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { MoreHorizontal, Plus, Search } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { computed, h, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import type {
+  ColumnDef,
+  ColumnFiltersState,
+  RowSelectionState,
+  SortingState,
+  VisibilityState,
+} from '@tanstack/vue-table';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  useVueTable,
+} from '@tanstack/vue-table';
+import { MoreHorizontal, Plus } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -170,24 +109,250 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DataTable,
+  DataTableColumnHeader,
+  DataTablePagination,
+  DataTableToolbar,
+} from '@/components/business';
+import { valueUpdater } from '@/components/ui/table/utils';
 import { appContainer } from '@/core/di/container';
-import PartyRepository from '@/features/party/repository/PartyRepository';
-import type { PartyListItem } from '@/features/party/models/partyListItem';
-import type { PartyDetail } from '@/features/party/models/partyDetail';
 import PartyFormDialog from '@/features/party/components/PartyFormDialog.vue';
+import PartySummaryCards from '@/features/party/components/PartySummaryCards.vue';
+import { partySummaryCards } from '@/features/party/data';
+import type { PartyDetail } from '@/features/party/models/partyDetail';
+import type { PartyListItem } from '@/features/party/models/partyListItem';
+import PartyRepository from '@/features/party/repository/PartyRepository';
+import { usePartyQuerySync } from '@/features/party/composables/usePartyQuerySync';
 import { toast } from 'vue-sonner';
 
 defineOptions({ name: 'PartyListView' });
 
+const route = useRoute();
 const router = useRouter();
 const repository = appContainer.resolve(PartyRepository);
 
 const parties = ref<PartyListItem[]>([]);
 const isLoading = ref(false);
 const page = ref(1);
-const pageSize = ref(20);
+const pageSize = ref(10);
 const totalPages = ref(1);
-const searchQuery = ref('');
+const totalElements = ref(0);
+
+const sorting = ref<SortingState>([]);
+const columnFilters = ref<ColumnFiltersState>([]);
+const columnVisibility = ref<VisibilityState>({});
+const rowSelection = ref<RowSelectionState>({});
+
+const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
+
+const columns: ColumnDef<PartyListItem>[] = [
+  {
+    id: 'select',
+    header: ({ table }) =>
+      h(Checkbox, {
+        modelValue:
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate'),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+          table.toggleAllPageRowsSelected(value === 'indeterminate' ? true : Boolean(value)),
+        ariaLabel: '모두 선택',
+      }),
+    cell: ({ row }) =>
+      h(Checkbox, {
+        modelValue: row.getIsSelected(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+          row.toggleSelected(value === 'indeterminate' ? true : Boolean(value)),
+        ariaLabel: '행 선택',
+      }),
+    enableSorting: false,
+    enableHiding: false,
+    size: 48,
+  },
+  {
+    accessorKey: 'name',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '협력사명', align: 'left' }),
+    cell: ({ row }) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class:
+            'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none',
+          onClick: () => handleViewParty(row.original),
+        },
+        row.original.name,
+      ),
+    enableSorting: true,
+    size: 220,
+  },
+  {
+    accessorKey: 'ceo',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '대표자', align: 'left' }),
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.ceo || '—'),
+    enableSorting: false,
+    size: 140,
+  },
+  {
+    accessorKey: 'manager',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '담당자', align: 'left' }),
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.manager || '—'),
+    enableSorting: false,
+    size: 140,
+  },
+  {
+    accessorKey: 'contact',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '연락처', align: 'left' }),
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.contact || '—'),
+    enableSorting: false,
+    size: 160,
+  },
+  {
+    accessorKey: 'email',
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '이메일', align: 'left' }),
+    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.email || '—'),
+    enableSorting: false,
+    size: 200,
+  },
+  {
+    id: 'actions',
+    header: () => h('span', { class: 'sr-only' }, '작업'),
+    cell: ({ row }) =>
+      h(
+        DropdownMenu,
+        {},
+        {
+          default: () =>
+            h(
+              DropdownMenuTrigger,
+              { asChild: true },
+              {
+                default: () =>
+                  h(
+                    Button,
+                    { variant: 'ghost', size: 'icon', class: 'h-8 w-8' },
+                    { default: () => h(MoreHorizontal, { class: 'h-4 w-4' }) },
+                  ),
+              },
+            ),
+          content: () =>
+            h(
+              DropdownMenuContent,
+              { align: 'end' },
+              {
+                default: () => [
+                  h(
+                    DropdownMenuItem,
+                    { onClick: () => handleViewParty(row.original) },
+                    { default: () => '상세 보기' },
+                  ),
+                  h(
+                    DropdownMenuItem,
+                    { onClick: () => handleEditParty(row.original) },
+                    { default: () => '수정' },
+                  ),
+                  h(DropdownMenuSeparator),
+                  h(
+                    DropdownMenuItem,
+                    {
+                      class: 'text-destructive',
+                      onClick: () => handleDeleteParty(row.original),
+                    },
+                    { default: () => '삭제' },
+                  ),
+                ],
+              },
+            ),
+        },
+      ),
+    enableSorting: false,
+    enableHiding: false,
+    size: 60,
+  },
+];
+
+const table = useVueTable({
+  data: computed(() => parties.value),
+  columns,
+  manualPagination: true,
+  manualFiltering: true,
+  manualSorting: true,
+  state: {
+    get sorting() {
+      return sorting.value;
+    },
+    get columnFilters() {
+      return columnFilters.value;
+    },
+    get columnVisibility() {
+      return columnVisibility.value;
+    },
+    get rowSelection() {
+      return rowSelection.value;
+    },
+  },
+  onSortingChange: (updater) => valueUpdater(updater, sorting),
+  onColumnFiltersChange: (updater) => valueUpdater(updater, columnFilters),
+  onColumnVisibilityChange: (updater) => valueUpdater(updater, columnVisibility),
+  onRowSelectionChange: (updater) => valueUpdater(updater, rowSelection),
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getFacetedRowModel: getFacetedRowModel(),
+  getFacetedUniqueValues: getFacetedUniqueValues(),
+});
+
+const { buildSearchParams, applyRouteQuery } = usePartyQuerySync({
+  page,
+  pageSize,
+  sorting,
+  columnFilters,
+  onLoadParties: loadParties,
+});
+
+async function loadParties() {
+  isLoading.value = true;
+  try {
+    const response = await repository.list(buildSearchParams());
+    parties.value = response.content;
+    totalPages.value = response.totalPages;
+    totalElements.value = response.totalElements;
+  } catch (error) {
+    console.error('협력사 목록을 불러오지 못했습니다.', error);
+    parties.value = [];
+    totalPages.value = 1;
+    totalElements.value = 0;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+function handlePageChange(nextPage: number) {
+  if (nextPage < 1) {
+    return;
+  }
+  if (nextPage === page.value) {
+    return;
+  }
+  page.value = nextPage;
+}
+
+function handlePageSizeChange(nextSize: number) {
+  if (nextSize === pageSize.value) {
+    return;
+  }
+  pageSize.value = nextSize;
+}
+
+function getColumnLabel(columnId: string): string {
+  const labels: Record<string, string> = {
+    name: '협력사명',
+    ceo: '대표자',
+    manager: '담당자',
+    contact: '연락처',
+    email: '이메일',
+  };
+  return labels[columnId] ?? columnId;
+}
 
 const isFormDialogOpen = ref(false);
 const formDialogMode = ref<'create' | 'edit'>('create');
@@ -196,31 +361,6 @@ const editingParty = ref<PartyDetail | null>(null);
 const isDeleteDialogOpen = ref(false);
 const deletingParty = ref<PartyListItem | null>(null);
 const isDeleting = ref(false);
-
-watch(page, () => loadParties());
-
-async function loadParties() {
-  isLoading.value = true;
-  try {
-    const response = await repository.list({
-      page: page.value,
-      size: pageSize.value,
-      name: searchQuery.value || undefined,
-    });
-    parties.value = response.content;
-    totalPages.value = response.totalPages;
-  } catch (error) {
-    console.error('협력사 목록을 불러오지 못했습니다.', error);
-    parties.value = [];
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-function handleSearch() {
-  page.value = 1;
-  loadParties();
-}
 
 function handleViewParty(party: PartyListItem) {
   router.push({ name: 'party-detail', params: { partyId: party.partyId } });
@@ -278,6 +418,10 @@ async function confirmDelete() {
 }
 
 onMounted(() => {
-  loadParties();
+  if (Object.keys(route.query).length > 0) {
+    applyRouteQuery({ ...route.query });
+  } else {
+    loadParties();
+  }
 });
 </script>

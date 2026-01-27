@@ -5,7 +5,14 @@ export interface PartyListItem {
   manager: string;
   contact: string;
   email: string;
-  }
+}
+
+export interface PartySearchParams {
+  page: number;
+  size: number;
+  name?: string;
+  sort?: string;
+}
 
 export function mapPartyListItem(input: any): PartyListItem {
   return {

@@ -1,9 +1,15 @@
 import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
 import { PageResponse } from '@/core/api';
-import type { PartyListItem } from '@/features/party/models/partyListItem';
+import type { PartyListItem, PartySearchParams } from '@/features/party/models/partyListItem';
 import { mapPartyListItem } from '@/features/party/models/partyListItem';
-import type { PartyDetail, PartyCreateData, PartyUpdateData } from '@/features/party/models/partyDetail';
+import type { ProjectListItem } from '@/features/project/models/projectListItem';
+import { mapProjectListItem } from '@/features/project/models/projectListItem';
+import type {
+  PartyDetail,
+  PartyCreateData,
+  PartyUpdateData,
+} from '@/features/party/models/partyDetail';
 import { mapPartyDetail } from '@/features/party/models/partyDetail';
 
 @singleton()
@@ -13,11 +19,7 @@ export default class PartyRepository {
   /**
    * 협력사 목록 조회 (페이징)
    */
-  async list(params: {
-    page: number;
-    size: number;
-    name?: string;
-  }): Promise<PageResponse<PartyListItem>> {
+  async list(params: PartySearchParams): Promise<PageResponse<PartyListItem>> {
     const queryParams: Record<string, string> = {
       page: Math.max(params.page - 1, 0).toString(),
       size: params.size.toString(),
@@ -25,6 +27,10 @@ export default class PartyRepository {
 
     if (params.name) {
       queryParams.name = params.name;
+    }
+
+    if (params.sort) {
+      queryParams.sort = params.sort;
     }
 
     const response = await this.httpRepository.get({
@@ -100,5 +106,20 @@ export default class PartyRepository {
       label: party.name,
       value: party.partyId,
     }));
+  }
+
+  /**
+   * 협력사 관련 프로젝트 조회
+   */
+  async fetchProjects(partyId: number): Promise<ProjectListItem[]> {
+    const response = await this.httpRepository.get({
+      path: `/api/parties/${partyId}/projects`,
+    });
+
+    if (!Array.isArray(response)) {
+      return [];
+    }
+
+    return response.map(mapProjectListItem);
   }
 }

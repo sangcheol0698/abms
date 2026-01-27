@@ -6,19 +6,32 @@
     협력사 정보를 찾을 수 없습니다.
   </div>
   <div v-else class="flex flex-col gap-4 rounded-lg md:flex-row md:items-center md:gap-6">
-    <div class="flex h-20 w-20 items-center justify-center rounded-2xl border border-border/60 bg-primary/10">
+    <div
+      class="flex h-20 w-20 items-center justify-center rounded-2xl border border-border/60 bg-primary/10"
+    >
       <Building class="h-10 w-10 text-primary" />
     </div>
     <div class="flex flex-1 flex-col gap-1">
       <h1 class="text-2xl font-semibold tracking-tight text-foreground">{{ party.name }}</h1>
+      <p class="text-sm text-muted-foreground">{{ party.email || '이메일 정보 없음' }}</p>
       <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground/80">
-        <span v-if="party.ceo">대표: {{ party.ceo }}</span>
-        <span v-if="party.ceo && party.manager" class="text-border/60">|</span>
-        <span v-if="party.manager">담당자: {{ party.manager }}</span>
+        <span>대표: {{ party.ceo || '—' }}</span>
+        <span class="text-border/60">|</span>
+        <span>담당자: {{ party.manager || '—' }}</span>
+        <span class="text-border/60">|</span>
+        <span class="inline-flex items-center gap-1">
+          <Phone class="h-3.5 w-3.5" />
+          {{ party.contact || '—' }}
+        </span>
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <Button variant="outline" size="sm" class="text-destructive hover:text-destructive" @click="emit('delete')">
+      <Button
+        variant="outline"
+        size="sm"
+        class="text-destructive hover:text-destructive"
+        @click="emit('delete')"
+      >
         <Trash2 class="mr-2 h-4 w-4" />
         삭제
       </Button>
@@ -31,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { Building, Pencil, Trash2 } from 'lucide-vue-next';
+import { Building, Pencil, Phone, Trash2 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import type { PartyDetail } from '@/features/party/models/partyDetail';
 
