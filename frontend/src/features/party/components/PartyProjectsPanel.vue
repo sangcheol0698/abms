@@ -7,96 +7,172 @@
       </p>
     </header>
 
-    <section class="space-y-3">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-muted-foreground">진행 중</h3>
-        <Badge variant="outline">샘플</Badge>
-      </div>
-      <div v-if="ongoingProjects.length === 0" class="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-        진행 중인 프로젝트가 없습니다.
-      </div>
-      <div v-else class="grid gap-4 md:grid-cols-2">
-        <Card
-          v-for="project in ongoingProjects"
-          :key="project.id"
-          class="border-border/60"
-        >
-          <CardHeader>
-            <CardTitle class="text-base font-semibold text-foreground">{{ project.name }}</CardTitle>
-            <CardDescription>{{ project.period }}</CardDescription>
-          </CardHeader>
-          <CardContent class="text-sm text-muted-foreground">
-            계약금액: {{ project.amount }}
-          </CardContent>
-        </Card>
-      </div>
-    </section>
+    <div
+      v-if="isLoading"
+      class="flex h-[180px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 text-sm text-muted-foreground"
+    >
+      프로젝트 정보를 불러오는 중입니다...
+    </div>
 
-    <section class="space-y-3">
-      <h3 class="text-sm font-semibold text-muted-foreground">완료</h3>
-      <div v-if="completedProjects.length === 0" class="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-        완료된 프로젝트가 없습니다.
-      </div>
-      <div v-else class="grid gap-4 md:grid-cols-2">
-        <Card
-          v-for="project in completedProjects"
-          :key="project.id"
-          class="border-border/60"
-        >
-          <CardHeader>
-            <CardTitle class="text-base font-semibold text-foreground">{{ project.name }}</CardTitle>
-            <CardDescription>{{ project.period }}</CardDescription>
-          </CardHeader>
-          <CardContent class="text-sm text-muted-foreground">
-            계약금액: {{ project.amount }}
-          </CardContent>
-        </Card>
-      </div>
-    </section>
+    <Alert v-else-if="errorMessage" variant="destructive">
+      <AlertTitle>프로젝트 정보를 불러오지 못했습니다.</AlertTitle>
+      <AlertDescription>{{ errorMessage }}</AlertDescription>
+    </Alert>
+
+    <template v-else>
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-muted-foreground">진행 중</h3>
+          <Badge variant="outline">{{ ongoingProjects.length }}</Badge>
+        </div>
+        <div v-if="ongoingProjects.length === 0" class="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
+          진행 중인 프로젝트가 없습니다.
+        </div>
+        <div v-else class="grid gap-4 md:grid-cols-2">
+          <Card
+            v-for="project in ongoingProjects"
+            :key="project.projectId"
+            class="border-border/60"
+          >
+            <CardHeader>
+              <div class="flex items-start justify-between gap-2">
+                <CardTitle class="text-base font-semibold text-foreground">{{ project.name }}</CardTitle>
+                <Badge variant="outline">{{ project.statusLabel }}</Badge>
+              </div>
+              <CardDescription>{{ toProjectPeriod(project) }}</CardDescription>
+            </CardHeader>
+            <CardContent class="text-sm text-muted-foreground">
+              계약금액: {{ toContractAmount(project) }}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-muted-foreground">완료</h3>
+          <Badge variant="outline">{{ completedProjects.length }}</Badge>
+        </div>
+        <div v-if="completedProjects.length === 0" class="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
+          완료된 프로젝트가 없습니다.
+        </div>
+        <div v-else class="grid gap-4 md:grid-cols-2">
+          <Card
+            v-for="project in completedProjects"
+            :key="project.projectId"
+            class="border-border/60"
+          >
+            <CardHeader>
+              <div class="flex items-start justify-between gap-2">
+                <CardTitle class="text-base font-semibold text-foreground">{{ project.name }}</CardTitle>
+                <Badge variant="outline">{{ project.statusLabel }}</Badge>
+              </div>
+              <CardDescription>{{ toProjectPeriod(project) }}</CardDescription>
+            </CardHeader>
+            <CardContent class="text-sm text-muted-foreground">
+              계약금액: {{ toContractAmount(project) }}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-
-interface ProjectSummary {
-  id: string;
-  name: string;
-  period: string;
-  amount: string;
-  status: 'ongoing' | 'completed';
-}
+import { appContainer } from '@/core/di/container';
+import HttpError from '@/core/http/HttpError';
+import PartyRepository from '@/features/party/repository/PartyRepository';
+import type { ProjectListItem } from '@/features/project/models/projectListItem';
+import { formatCurrency, formatProjectPeriod } from '@/features/project/models/projectListItem';
 
 interface Props {
   partyId: number;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
-const sampleProjects: ProjectSummary[] = [
-  {
-    id: 'sample-1',
-    name: 'ABMS 시스템 구축',
-    period: '2024.03 ~ 진행 중',
-    amount: '5억원',
-    status: 'ongoing',
-  },
-  {
-    id: 'sample-2',
-    name: '레거시 마이그레이션',
-    period: '2023.01 ~ 2023.12',
-    amount: '3억원',
-    status: 'completed',
-  },
-];
+const repository = appContainer.resolve(PartyRepository);
 
-const ongoingProjects = computed(() =>
-  sampleProjects.filter((p) => p.status === 'ongoing'),
+const projects = ref<ProjectListItem[]>([]);
+const isLoading = ref(false);
+const errorMessage = ref<string | null>(null);
+
+const ongoingStatuses = new Set(['SCHEDULED', 'IN_PROGRESS', 'ON_HOLD']);
+const completedStatuses = new Set(['COMPLETED', 'CANCELLED']);
+
+const ongoingProjects = computed(() => sortProjects(
+  projects.value.filter((project) => ongoingStatuses.has(project.status)),
+));
+
+const completedProjects = computed(() => sortProjects(
+  projects.value.filter((project) => completedStatuses.has(project.status)),
+));
+
+watch(
+  () => props.partyId,
+  (next) => {
+    if (Number.isFinite(next) && next > 0) {
+      loadProjects(next);
+      return;
+    }
+    projects.value = [];
+    errorMessage.value = null;
+    isLoading.value = false;
+  },
+  { immediate: true },
 );
 
-const completedProjects = computed(() =>
-  sampleProjects.filter((p) => p.status === 'completed'),
-);
+function sortProjects(items: ProjectListItem[]) {
+  return [...items].sort((a, b) => {
+    const left = Date.parse(a.startDate);
+    const right = Date.parse(b.startDate);
+    if (Number.isNaN(left) && Number.isNaN(right)) {
+      return 0;
+    }
+    if (Number.isNaN(left)) {
+      return 1;
+    }
+    if (Number.isNaN(right)) {
+      return -1;
+    }
+    return right - left;
+  });
+}
+
+function toProjectPeriod(project: ProjectListItem) {
+  if (!project.startDate) {
+    return '기간 정보 없음';
+  }
+  return formatProjectPeriod(project.startDate, project.endDate);
+}
+
+function toContractAmount(project: ProjectListItem) {
+  if (!project.contractAmount || project.contractAmount <= 0) {
+    return '—';
+  }
+  return formatCurrency(project.contractAmount);
+}
+
+function resolveErrorMessage(error: unknown, fallback: string) {
+  return error instanceof HttpError ? error.message : fallback;
+}
+
+async function loadProjects(partyId: number) {
+  isLoading.value = true;
+  errorMessage.value = null;
+
+  try {
+    projects.value = await repository.fetchProjects(partyId);
+  } catch (error) {
+    projects.value = [];
+    errorMessage.value = resolveErrorMessage(error, '프로젝트 정보를 불러오는 중 오류가 발생했습니다.');
+  } finally {
+    isLoading.value = false;
+  }
+}
 </script>
