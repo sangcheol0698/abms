@@ -24,7 +24,7 @@ public class PartyQueryService implements PartyFinder {
     }
 
     public String getPartyId(Long partyId) {
-        return partyRepository.findById(partyId).map(Party::getName).orElse(null);
+        return partyRepository.findByIdAndDeletedFalse(partyId).map(Party::getName).orElse(null);
     }
 
 }

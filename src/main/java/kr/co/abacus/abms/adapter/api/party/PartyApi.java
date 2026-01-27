@@ -19,9 +19,14 @@ import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyCreateApiRequest;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyResponse;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyUpdateApiRequest;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
 import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.application.party.inbound.PartyManager;
+import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
 import kr.co.abacus.abms.domain.party.Party;
+import kr.co.abacus.abms.domain.project.Project;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -29,6 +34,7 @@ public class PartyApi {
 
     private final PartyFinder partyFinder;
     private final PartyManager partyManager;
+    private final ProjectFinder projectFinder;
 
     @GetMapping("/api/parties")
     public PageResponse<PartyResponse> getParties(Pageable pageable, @RequestParam(required = false) String name) {
@@ -60,6 +66,16 @@ public class PartyApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         partyManager.delete(id);
+    }
+
+    @GetMapping("/api/parties/{id}/projects")
+    public List<ProjectResponse> getPartyProjects(@PathVariable Long id) {
+        Party party = partyManager.findById(id);
+        List<Project> projects = projectFinder.findAllByPartyId(id);
+
+        return projects.stream()
+                .map(project -> ProjectResponse.from(project, party.getName()))
+                .toList();
     }
 
 }

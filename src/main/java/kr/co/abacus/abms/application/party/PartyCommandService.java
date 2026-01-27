@@ -22,7 +22,7 @@ public class PartyCommandService implements PartyManager {
     @Override
     @Transactional(readOnly = true)
     public Party findById(Long partyId) {
-        return partyRepository.findById(partyId)
+        return partyRepository.findByIdAndDeletedFalse(partyId)
                 .orElseThrow(() -> new PartyNotFoundException("협력사를 찾을 수 없습니다: " + partyId));
     }
 

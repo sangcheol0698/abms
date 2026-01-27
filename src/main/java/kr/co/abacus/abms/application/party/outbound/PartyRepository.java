@@ -12,7 +12,9 @@ public interface PartyRepository extends Repository<Party, Long>, CustomPartyRep
     Party save(Party party);
 
     Optional<Party> findById(Long id);
-    
+
+    Optional<Party> findByIdAndDeletedFalse(Long id);
+
     Optional<Party> findByNameAndDeletedFalse(String name);
 
     List<Party> findAllByDeletedFalse();
