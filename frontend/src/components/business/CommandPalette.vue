@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { Bot, Briefcase, FileText, Handshake, Network, PieChart, UserCircle } from 'lucide-vue-next';
+import { Bot, Briefcase, Handshake, Network, PieChart, UserCircle } from 'lucide-vue-next';
 import {
   CommandDialog,
   CommandEmpty,
