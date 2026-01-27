@@ -9,7 +9,7 @@ ABMS is an enterprise-grade business management system that demonstrates hexagon
 - **Employee Management**: Complete employee lifecycle management with department organization
 - **Payroll Processing**: Automated payroll calculations and processing
 - **Project & Contract Management**: Project tracking with employee assignments
-- **AI Chat Assistant**: Integration with Google Gemini AI for natural language queries
+- **AI Chat Assistant**: Integration with OpenAI for natural language queries
 - **Excel Import/Export**: Bulk operations support via Excel files
 
 ### Technology Stack
@@ -20,7 +20,7 @@ ABMS is an enterprise-grade business management system that demonstrates hexagon
 - Spring Data JPA with QueryDSL 7.0
 - MySQL 8.x (via Docker Compose)
 - H2 Database (for testing)
-- Spring AI with Google Gemini integration
+- Spring AI with OpenAI integration
 - Error Prone with NullAway for null safety
 - P6Spy for SQL query logging
 
@@ -48,7 +48,7 @@ The project follows **Hexagonal Architecture** (Ports & Adapters) with three mai
 kr.co.abacus.abms/
 ├── domain/           # Core business logic, entities, value objects
 ├── application/      # Use cases, application services, port interfaces
-└── adapter/          # External interfaces (REST API, persistence, integrations)
+└── adapter/          # External interfaces (REST API, persistence, integrations, security)
 ```
 
 Layer rules are enforced by ArchUnit tests to maintain architectural integrity.
@@ -68,7 +68,7 @@ Layer rules are enforced by ArchUnit tests to maintain architectural integrity.
 Create a `.env` file in the project root:
 
 ```properties
-AI_GOOGLE_GENAI_API_KEY=your_gemini_api_key_here
+AI_OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 **Note:** The application will start without this key, but AI chat features will not be available.
@@ -86,7 +86,7 @@ cd abms
 
 ```bash
 # Create .env file
-echo "AI_GOOGLE_GENAI_API_KEY=your_gemini_api_key_here" > .env
+echo "AI_OPENAI_API_KEY=your_openai_api_key_here" > .env
 ```
 
 ### 3. Start Database
@@ -229,7 +229,7 @@ Tests follow the hexagonal architecture structure:
 src/test/java/kr/co/abacus/abms/
 ├── domain/                    # Domain model tests (unit tests)
 ├── application/              # Application service tests (integration)
-├── adapter/webapi/           # API tests (integration)
+├── adapter/api/              # API tests (integration)
 ├── support/                  # Test base classes and utilities
 └── HexagonalArchitectureTest.java  # ArchUnit tests
 ```
@@ -279,47 +279,43 @@ src/main/java/kr/co/abacus/abms/
 │   ├── contract/                  # Contract aggregate
 │   ├── account/                   # Account aggregate
 │   ├── party/                     # Party aggregate
+│   ├── positionhistory/           # Position history aggregate
 │   ├── projectassignment/         # Project assignment aggregate
+│   ├── chat/                      # Chat aggregate
 │   └── shared/                    # Shared value objects (Money, Period, etc.)
 ├── application/                   # Application layer (use cases)
 │   ├── employee/
-│   │   ├── provided/              # Services provided to other layers
-│   │   │   ├── EmployeeManager.java    # Write operations
-│   │   │   └── EmployeeFinder.java     # Read operations
-│   │   └── required/              # Ports (repository interfaces)
-│   │       └── EmployeeRepository.java
+│   │   ├── inbound/               # Use cases (Manager, Finder)
+│   │   ├── outbound/              # Ports (repository interfaces)
+│   │   └── dto/                   # Commands/queries
 │   ├── department/
 │   ├── payroll/
 │   ├── project/
+│   ├── positionhistory/
+│   ├── party/
 │   └── chat/                      # AI chat service
 └── adapter/                       # Adapter layer (external interfaces)
-    ├── InitData.java              # Sample data initialization
-    ├── webapi/                    # REST controllers and DTOs
-    │   ├── employee/
-    │   ├── department/
-    │   ├── payroll/
-    │   ├── project/
-    │   └── chat/
-    ├── persistence/               # JPA repository implementations
-    │   ├── employee/
-    │   ├── department/
-    │   ├── payroll/
-    │   └── project/
+    ├── api/                       # REST controllers and DTOs
+    │   └── common/InitData.java   # Sample data initialization
+    ├── infrastructure/            # JPA repository implementations
     ├── security/                  # Security configuration
     └── integration/               # External API clients
 
 src/main/resources/
-├── application.yml                # Application configuration
-└── application-test.yml           # Test profile configuration
+└── application.yml                # Application configuration
+
+src/test/resources/
+├── application.yml                # Test profile configuration
+└── junit-platform.properties      # JUnit platform settings
 
 src/test/java/kr/co/abacus/abms/
 ├── domain/                        # Domain tests
 ├── application/                   # Service tests
-├── adapter/webapi/               # API tests
+├── adapter/api/                  # API tests
 ├── support/                       # Test utilities
 │   ├── IntegrationTestBase.java
 │   ├── ApiIntegrationTestBase.java
-│   └── RestTestClient.java
+│   └── AssertThatUtils.java
 └── HexagonalArchitectureTest.java
 ```
 
@@ -352,7 +348,7 @@ frontend/
 - `.env`: Environment variables (API keys)
 - `spy.log`: P6Spy SQL query log (generated at runtime)
 - `HELP.md`: Spring Boot generated help documentation
-- `AGENTS.md`: TODO - Agent-related documentation
+- `AGENTS.md`: Agent-related documentation
 
 ## API Documentation
 
@@ -373,11 +369,10 @@ frontend/
 - `POST /api/employees/excel/upload` - Upload employees from Excel
 
 **Department Management:**
-- `GET /api/departments` - List all departments
-- `GET /api/departments/{id}` - Get department by ID
-- `POST /api/departments` - Create new department
-- `PUT /api/departments/{id}` - Update department
-- `DELETE /api/departments/{id}` - Delete department
+- `GET /api/departments/organization-chart` - Organization chart
+- `GET /api/departments/{departmentId}` - Get department details
+- `GET /api/departments/{departmentId}/employees` - List department employees
+- `POST /api/departments/{departmentId}/assign-team-leader` - Assign team leader
 
 **Payroll:**
 - TODO - Document payroll endpoints
@@ -386,8 +381,12 @@ frontend/
 - TODO - Document project endpoints
 
 **AI Chat:**
-- `POST /api/chat` - Send chat message to AI assistant
-- TODO - Document streaming endpoints
+- `POST /api/v1/chat/message` - Send chat message to AI assistant
+- `POST /api/v1/chat/stream` - Stream chat responses (SSE)
+- `GET /api/v1/chat/sessions` - List recent chat sessions
+- `GET /api/v1/chat/sessions/favorites` - List favorite chat sessions
+- `GET /api/v1/chat/sessions/{sessionId}` - Get chat session details
+- `POST /api/v1/chat/sessions/{sessionId}/favorite` - Toggle favorite
 
 **Actuator:**
 - `GET /actuator/health` - Health check endpoint
@@ -518,5 +517,5 @@ lsof -ti:8080 | xargs kill -9
 
 ---
 
-**Version:** 0.0.1-SNAPSHOT  
-**Last Updated:** 2025-11-30
+**Version:** 0.0.2-SNAPSHOT  
+**Last Updated:** 2026-01-27
