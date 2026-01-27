@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { Bot, Briefcase, FileText, Network, PieChart, UserCircle } from 'lucide-vue-next';
+import { Bot, Briefcase, FileText, Handshake, Network, PieChart, UserCircle } from 'lucide-vue-next';
 import {
   CommandDialog,
   CommandEmpty,
@@ -39,6 +39,7 @@ const navigationCommands: NavigationCommand[] = [
   { label: '부서', to: '/departments', shortcut: '', icon: Network },
   { label: '직원', to: '/employees', shortcut: '', icon: UserCircle },
   { label: '프로젝트', to: '/projects', shortcut: '', icon: Briefcase },
+  { label: '협력사', to: '/parties', shortcut: '', icon: Handshake },
   { label: 'AI Assistant', to: '/assistant', shortcut: '', icon: Bot },
 ];
 

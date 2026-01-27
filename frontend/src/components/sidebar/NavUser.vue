@@ -37,49 +37,15 @@
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-  <DropdownMenuGroup>
-    <DropdownMenuItem @click="openProfileDialog">
-      <BadgeCheck />
-      내 계정
-    </DropdownMenuItem>
-    <DropdownMenuItem>
-      <Bell />
-      내 알림
-    </DropdownMenuItem>
-    <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <Palette class="mr-2 h-4 w-4"/>
-        테마 설정
-      </DropdownMenuSubTrigger>
-      <DropdownMenuPortal>
-        <DropdownMenuSubContent>
-          <DropdownMenuItem
-            @click="setTheme('light')"
-            :class="{ 'bg-accent': theme === 'light' }"
-                  >
-                    <Sun class="mr-2 h-4 w-4" />
-                    <span>라이트 모드</span>
-                    <Check v-if="theme === 'light'" class="ml-auto h-2 w-2" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    @click="setTheme('dark')"
-                    :class="{ 'bg-accent': theme === 'dark' }"
-                  >
-                    <Moon class="mr-2 h-4 w-4" />
-                    <span>다크 모드</span>
-                    <Check v-if="theme === 'dark'" class="ml-auto h-4 w-4" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    @click="setTheme('system')"
-                    :class="{ 'bg-accent': theme === 'system' }"
-                  >
-                    <Monitor class="mr-2 h-4 w-4" />
-                    <span>시스템 설정</span>
-                    <Check v-if="theme === 'system'" class="ml-auto h-4 w-4" />
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
+          <DropdownMenuGroup>
+            <DropdownMenuItem @click="openProfileDialog">
+              <BadgeCheck />
+              내 계정
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Bell />
+              내 알림
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem @click="logout">
@@ -100,17 +66,12 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { BadgeCheck, Bell, Check, ChevronsUpDown, LogOut, Monitor, Moon, Palette, Sun } from 'lucide-vue-next';
+import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
-import { useTheme } from '@/core/composables';
 
 // Props
 interface Props {
@@ -127,7 +88,6 @@ const props = withDefaults(defineProps<Props>(), {
   },
 });
 
-const { theme, setTheme } = useTheme();
 const router = useRouter();
 
 function openProfileDialog() {

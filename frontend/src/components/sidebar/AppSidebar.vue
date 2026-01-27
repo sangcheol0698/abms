@@ -47,7 +47,7 @@ import {
   type SidebarProps,
   SidebarRail
 } from '@/components/ui/sidebar';
-import { Bot, Briefcase, Building, GalleryVerticalEnd, Network, PieChart, UserCircle } from 'lucide-vue-next';
+import { Bot, Briefcase, GalleryVerticalEnd, Handshake, Network, PieChart, UserCircle } from 'lucide-vue-next';
 import NavMain from './NavMain.vue';
 import NavUser from './NavUser.vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
@@ -140,7 +140,7 @@ const data = {
     {
       title: '협력사',
       url: '/parties',
-      icon: Building,
+      icon: Handshake,
     },
     {
       title: 'AI Assistant',
