@@ -3,5 +3,9 @@ spring:
     activate:
       on-profile: test
   ai:
-    openai:
-      api-key: ${AI_OPENAI_API_KEY}
+    vertex:
+      ai:
+        gemini:
+          project-id: nsales-pro
+          location: us-central1
+          model: gemini-2.0-flash-lite

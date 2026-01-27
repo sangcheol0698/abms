@@ -1,36 +1,27 @@
 package kr.co.abacus.abms.adapter.api.common;
 
-import java.time.LocalDate;
-
 import jakarta.annotation.PostConstruct;
-
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
-
-import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
-import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
-import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
-import kr.co.abacus.abms.domain.shared.Period;
-
-import lombok.RequiredArgsConstructor;
-
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
+import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.department.Department;
-
 import kr.co.abacus.abms.domain.department.DepartmentType;
-import kr.co.abacus.abms.domain.employee.Employee;
-import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
-import kr.co.abacus.abms.domain.employee.EmployeeGrade;
-import kr.co.abacus.abms.domain.employee.EmployeePosition;
-import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.employee.*;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
+import kr.co.abacus.abms.domain.shared.Period;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
 
 @RequiredArgsConstructor
 @Profile({"local", "default"})
@@ -47,7 +38,7 @@ public class InitData {
     public void init() {
         // 회사 루트
         Department company = departmentRepository.save(Department.create(
-                "ABMS", "아바쿠스", DepartmentType.COMPANY, null, null));
+                "ABMS", "애버커스", DepartmentType.COMPANY, null, null));
 
         // 본부 구성
         Department mgmtDivision = departmentRepository.save(Department.create(

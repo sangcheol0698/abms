@@ -9,7 +9,7 @@ ABMS is an enterprise-grade business management system that demonstrates hexagon
 - **Employee Management**: Complete employee lifecycle management with department organization
 - **Payroll Processing**: Automated payroll calculations and processing
 - **Project & Contract Management**: Project tracking with employee assignments
-- **AI Chat Assistant**: Integration with OpenAI for natural language queries
+- **AI Chat Assistant**: Integration with Google Vertex AI Gemini for natural language queries
 - **Excel Import/Export**: Bulk operations support via Excel files
 
 ### Technology Stack
@@ -20,7 +20,7 @@ ABMS is an enterprise-grade business management system that demonstrates hexagon
 - Spring Data JPA with QueryDSL 7.0
 - MySQL 8.x (via Docker Compose)
 - H2 Database (for testing)
-- Spring AI with OpenAI integration
+- Spring AI with Vertex AI Gemini integration
 - Error Prone with NullAway for null safety
 - P6Spy for SQL query logging
 
@@ -65,13 +65,15 @@ Layer rules are enforced by ArchUnit tests to maintain architectural integrity.
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+Configure Google Cloud credentials for Vertex AI. You can use Application Default Credentials or a service account JSON file.
+
+Create a `.env` file in the project root if you want to point to a local service account key:
 
 ```properties
-AI_OPENAI_API_KEY=your_openai_api_key_here
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/to/service-account.json
 ```
 
-**Note:** The application will start without this key, but AI chat features will not be available.
+**Note:** If credentials are missing or invalid, AI chat features will fail.
 
 ## Getting Started
 
@@ -86,7 +88,7 @@ cd abms
 
 ```bash
 # Create .env file
-echo "AI_OPENAI_API_KEY=your_openai_api_key_here" > .env
+echo "GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/to/service-account.json" > .env
 ```
 
 ### 3. Start Database
