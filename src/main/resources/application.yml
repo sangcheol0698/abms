@@ -18,7 +18,7 @@ spring:
         gemini:
           project-id: nsales-pro
           location: us-central1
-          model: gemini-2.0-flash-lite
+          model: gemini-2.5-flash-lite
   config:
     import: optional:file:.env[.properties]
 
