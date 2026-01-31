@@ -116,4 +116,5 @@ class CommonCodeServiceTest extends IntegrationTestBase {
 
         assertThat(commonCodeDetails).isEmpty();
     }
+
 }

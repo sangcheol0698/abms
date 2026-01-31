@@ -1,4 +1,5 @@
 package kr.co.abacus.abms.application.commoncode.dto;
+
 import kr.co.abacus.abms.domain.commoncode.CommonCodeDetail;
 
 public record CommonCodeInfo(
@@ -7,6 +8,7 @@ public record CommonCodeInfo(
         String name,
         int sortOrder
 ) {
+
     public static CommonCodeInfo from(CommonCodeDetail detail) {
         return new CommonCodeInfo(
                 detail.getId().getGroupCode(),
@@ -15,4 +17,5 @@ public record CommonCodeInfo(
                 detail.getSortOrder()
         );
     }
+
 }

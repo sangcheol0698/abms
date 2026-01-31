@@ -36,9 +36,9 @@ public class CommonCodeService {
         return detail != null ? CommonCodeInfo.from(detail) : null;
     }
 
-
     @CacheEvict(cacheNames = "commonCode", key = "#groupCode")
     public void clearCache(String groupCode) {
         log.info("[공통코드 캐시 초기화] groupCode: {}", groupCode);
     }
+
 }

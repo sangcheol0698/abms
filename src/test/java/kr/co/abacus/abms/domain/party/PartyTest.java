@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.domain.party;
 
 import kr.co.abacus.abms.support.IntegrationTestBase;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,4 +31,5 @@ class PartyTest extends IntegrationTestBase {
             flushAndClear();
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
+
 }

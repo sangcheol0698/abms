@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.adapter.integration.cache.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -25,4 +26,5 @@ public class CacheConfig {
 
         return cacheManager;
     }
+
 }

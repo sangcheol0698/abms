@@ -9,7 +9,7 @@ import kr.co.abacus.abms.domain.commoncode.CommonCodeDetail;
 import kr.co.abacus.abms.domain.commoncode.CommonCodeDetailId;
 
 public interface CommonCodeDetailRepository extends Repository<CommonCodeDetail, CommonCodeDetailId> {
-    
+
     @Query("SELECT cd " +
             "FROM CommonCodeDetail cd " +
             "WHERE cd.id.groupCode = :groupCode AND cd.deleted = false")
@@ -19,4 +19,5 @@ public interface CommonCodeDetailRepository extends Repository<CommonCodeDetail,
             "FROM CommonCodeDetail cd " +
             "WHERE cd.id.groupCode = :groupCode AND cd.id.code = :code AND cd.deleted = false")
     CommonCodeDetail findByCode(String groupCode, String code);
+
 }

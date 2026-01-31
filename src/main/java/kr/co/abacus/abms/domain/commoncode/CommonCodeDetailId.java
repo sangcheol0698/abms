@@ -30,4 +30,5 @@ public class CommonCodeDetailId implements Serializable {
     protected void updateGroupCode(String groupCode) {
         this.groupCode = groupCode;
     }
+
 }

@@ -82,4 +82,5 @@ class CommonCodeServiceIntegrationTest extends IntegrationTestBase {
         commonCodeService.findByGroupCode(groupCode);
         verify(commonCodeDetailRepository, times(2)).findByGroupCode(groupCode);
     }
+
 }

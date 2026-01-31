@@ -48,4 +48,5 @@ public class CommonCodeDetail extends BaseEntity {
             this.id.updateGroupCode(group.getGroupCode());
         }
     }
+
 }
