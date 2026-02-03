@@ -2,6 +2,7 @@ package kr.co.abacus.abms.adapter.infrastructure.chat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -63,7 +64,7 @@ public class JpaChatMemoryRepository implements ChatMemoryRepository {
                 entitiesToSave.add(new ChatMemoryMessage(
                         conversationId,
                         message.getMessageType(),
-                        message.getText()));
+                        Objects.requireNonNull(message.getText())));
             }
             jpaRepository.saveAll(entitiesToSave);
         }

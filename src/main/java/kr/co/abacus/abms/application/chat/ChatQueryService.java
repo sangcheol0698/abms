@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.application.chat;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
@@ -62,7 +63,7 @@ public class ChatQueryService {
 
     private ChatMessageDetail toMessageDetail(Message message) {
         String role = message.getMessageType() == MessageType.USER ? "USER" : "ASSISTANT";
-        return new ChatMessageDetail(null, role, message.getText(), null);
+        return new ChatMessageDetail(null, role, Objects.requireNonNull(message.getText()), null);
     }
 
 }

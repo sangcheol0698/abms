@@ -27,7 +27,7 @@ repositories {
 }
 
 extra["snippetsDir"] = file("build/generated-snippets")
-val springAiVersion by extra("2.0.0-M1")
+val springAiVersion by extra("2.0.0-M2")
 
 var mockitoAgent: Configuration = configurations.create("mockitoAgent")
 val p6spyVersion by extra("2.0.0")
@@ -37,8 +37,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-//    implementation("org.springframework.ai:spring-ai-starter-model-openai")
-    implementation("org.springframework.ai:spring-ai-starter-model-vertex-ai-gemini")
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
 
     runtimeOnly("com.h2database:h2")
     runtimeOnly("com.mysql:mysql-connector-j")

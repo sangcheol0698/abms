@@ -13,12 +13,12 @@ spring:
       enabled: true
 
   ai:
-    vertex:
-      ai:
-        gemini:
-          project-id: nsales-pro
-          location: us-central1
-          model: gemini-2.5-flash-lite
+    openai:
+      api-key: ${AI_OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+
   config:
     import: optional:file:.env[.properties]
 
