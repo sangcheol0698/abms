@@ -125,7 +125,6 @@ const processContent = async () => {
             <span class="code-language">${block.lang.toUpperCase()}</span>
             <button class="copy-code-btn" aria-label="복사">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span>복사</span>
             </button>
           </div>
           <div class="shiki-wrapper">${highlightedHtml}</div>
@@ -164,15 +163,14 @@ const handleCopy = async (event: MouseEvent) => {
 
     try {
         await navigator.clipboard.writeText(code);
-        
+
         // 복사 성공 피드백
         target.classList.add('복사성공');
         const originalHtml = target.innerHTML;
         target.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>복사됨!</span>
         `;
-        
+
         setTimeout(() => {
             target.classList.remove('복사성공');
             target.innerHTML = originalHtml;
@@ -393,15 +391,16 @@ const handleCopy = async (event: MouseEvent) => {
 /* 코드 블록 컨테이너 - 모던한 디자인과 복사 기능 */
 .markdown-content .code-block-container {
     position: relative;
-    margin: 1.5em 0;
+    margin: 1.2em 0;
     background: color-mix(in oklch, var(--background), var(--foreground) 3%);
     border: 1px solid color-mix(in oklch, var(--border), var(--foreground) 20%);
     border-radius: 0.75rem;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%);
+    /* box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%); */
     backdrop-filter: blur(8px);
     max-width: 100%;
-    display: grid; /* Grid layout helps contain overflow in nested flex containers */
+    display: grid;
+    /* Grid layout helps contain overflow in nested flex containers */
     min-width: 0;
 }
 
@@ -466,7 +465,7 @@ const handleCopy = async (event: MouseEvent) => {
 
 .markdown-content .code-block-container pre {
     margin: 0;
-    padding: 1.5rem;
+    padding: 1rem;
     background: transparent;
     border: none;
     border-radius: 0;
@@ -482,7 +481,7 @@ const handleCopy = async (event: MouseEvent) => {
     background: transparent;
     padding: 0;
     border: none;
-    font-size: 0.875rem;
+    font-size: 0.825rem;
     color: var(--foreground);
     box-shadow: none;
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
@@ -502,7 +501,7 @@ const handleCopy = async (event: MouseEvent) => {
 
 .markdown-content .shiki-wrapper pre {
     margin: 0 !important;
-    padding: 1.5rem !important;
+    padding: 1rem !important;
     background: transparent !important;
     border: none !important;
     border-radius: 0 !important;
@@ -600,13 +599,13 @@ const handleCopy = async (event: MouseEvent) => {
 /* 기존 pre 스타일은 코드 블록 컨테이너가 없는 경우를 위해 유지 */
 .markdown-content pre:not(.code-block-container pre) {
     position: relative;
-    margin: 1.5em 0;
-    padding: 1.5rem;
+    margin: 1.2em 0;
+    padding: 1rem;
     background: linear-gradient(135deg, var(--muted) 0%, color-mix(in oklch, var(--muted), transparent 10%) 100%);
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     overflow-x: auto;
-    box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%);
+    /* box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%); */
     backdrop-filter: blur(8px);
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
     tab-size: 4;
