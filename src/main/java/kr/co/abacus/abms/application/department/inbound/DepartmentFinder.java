@@ -20,4 +20,6 @@ public interface DepartmentFinder {
 
     DepartmentDetail findDetail(Long departmentId);
 
+    void clearOrganizationChartCache();
+
 }

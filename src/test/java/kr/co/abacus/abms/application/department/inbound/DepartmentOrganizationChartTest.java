@@ -9,6 +9,9 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.interceptor.SimpleKey;
 
 import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -34,6 +37,9 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     @Test
     @DisplayName("전체 부서의 조직도 트리 구조를 조회한다")
     void getOrganizationChart_returnsDefaultTree() {
@@ -43,6 +49,7 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
         Department team1 = createDepartment("TEAM001", "ABC Corp", DepartmentType.TEAM, null, division);
         Department team2 = createDepartment("TEAM002", "ABC Corp", DepartmentType.TEAM, null, division);
         departmentRepository.saveAll(List.of(company, division, team1, team2));
+        departmentFinder.clearOrganizationChartCache();
 
         // when
         List<OrganizationChartDetail> charts = departmentFinder.getOrganizationChart();
@@ -75,10 +82,41 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("조직도 조회 시 캐싱 확인")
+    void getOrganizationChart_testCache() {
+        departmentFinder.clearOrganizationChartCache();
+
+        Cache cache = cacheManager.getCache("organizationChart");
+        assertThat(cache.get(SimpleKey.EMPTY)).isNull();
+
+        departmentFinder.getOrganizationChart();
+
+        assertThat(cache.get(SimpleKey.EMPTY)).isNotNull();
+    }
+
+    @Test
+    @DisplayName("조직도 조회 성능 테스트 - 캐싱 확인")
+    void getOrganizationChart_testPerformance() {
+        departmentFinder.clearOrganizationChartCache();
+
+        long start1 = System.currentTimeMillis();
+        departmentFinder.getOrganizationChart();
+        long duration1 = System.currentTimeMillis() - start1;
+
+        long start2 = System.currentTimeMillis();
+        departmentFinder.getOrganizationChart();
+        long duration2 = System.currentTimeMillis() - start2;
+
+        // 두 번째 호출이 첫 번째보다 현저히 빨라야 함
+        assertThat(duration2).isLessThan(duration1);
+    }
+
+    @Test
     @DisplayName("조직도 조회 시 부서별 소속 직원 수를 포함한다")
     void getOrganizationChard_employeeCount() {
         Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
         departmentRepository.save(company);
+        departmentFinder.clearOrganizationChartCache();
 
         employeeRepository.save(createEmployee(company.getId(), "test1@email.com"));
         employeeRepository.save(createEmployee(company.getId(), "test2@email.com"));

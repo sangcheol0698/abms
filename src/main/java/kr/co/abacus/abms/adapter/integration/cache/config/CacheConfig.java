@@ -1,6 +1,6 @@
 package kr.co.abacus.abms.adapter.integration.cache.config;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
+import static java.util.concurrent.TimeUnit.*;
 
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -8,7 +8,7 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 @EnableCaching
 @Configuration
@@ -20,7 +20,7 @@ public class CacheConfig {
 
         cacheManager.registerCustomCache("commonCache",
                 Caffeine.newBuilder()
-                        .expireAfterWrite(10, MINUTES)
+                        .expireAfterWrite(1, HOURS)
                         .maximumSize(1000)
                         .build());
 

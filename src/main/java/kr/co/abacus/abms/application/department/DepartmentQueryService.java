@@ -4,15 +4,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
 import kr.co.abacus.abms.application.department.dto.DepartmentLeaderDetail;
@@ -26,6 +28,7 @@ import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -52,7 +55,8 @@ public class DepartmentQueryService implements DepartmentFinder {
                 null, // types
                 null, // statuses
                 null, // grades
-                departmentId != null ? List.of(departmentId) : null);
+                departmentId != null ? List.of(departmentId) : null
+        );
 
         return employeeRepository.search(searchRequest, pageable);
     }
@@ -63,6 +67,7 @@ public class DepartmentQueryService implements DepartmentFinder {
                 .orElseThrow(() -> new DepartmentNotFoundException("존재하지 않는 부서입니다: " + departmentId));
     }
 
+    @Cacheable("organizationChart")
     @Override
     public List<OrganizationChartDetail> getOrganizationChart() {
         List<DepartmentProjection> projections = departmentRepository.findAllDepartmentProjections();
@@ -74,6 +79,11 @@ public class DepartmentQueryService implements DepartmentFinder {
         return rootDepartments.stream()
                 .map(root -> mapToOrganizationChartInfo(root, childrenMap))
                 .toList();
+    }
+
+    @CacheEvict(value = "organizationChart", allEntries = true)
+    public void clearOrganizationChartCache() {
+        log.info("[부서 계층 구조 캐시 초기화]");
     }
 
     private Map<Long, List<DepartmentProjection>> groupByParentId(List<DepartmentProjection> projections) {
