@@ -6,9 +6,7 @@
           <div class="w-full max-w-3xl">
             <template v-if="messages.length === 0">
               <div class="mt-12 flex flex-col items-center justify-center gap-6 text-center">
-                <div
-                  class="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 shadow-sm"
-                >
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 shadow-sm">
                   <Bot class="h-8 w-8 text-primary" />
                 </div>
                 <div class="space-y-2">
@@ -20,13 +18,9 @@
                 </div>
 
                 <div class="mt-8 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
-                  <button
-                    v-for="suggestion in defaultSuggestions"
-                    :key="suggestion.label"
-                    type="button"
+                  <button v-for="suggestion in defaultSuggestions" :key="suggestion.label" type="button"
                     class="flex flex-col items-start gap-1 rounded-xl border border-border/40 bg-card p-4 text-left transition-all hover:bg-muted/50 hover:shadow-sm"
-                    @click="$emit('submit', suggestion.query)"
-                  >
+                    @click="$emit('submit', suggestion.query)">
                     <span class="text-sm font-medium text-foreground">{{ suggestion.label }}</span>
                     <span class="text-xs text-muted-foreground">{{ suggestion.description }}</span>
                   </button>
@@ -36,7 +30,7 @@
             <template v-else>
               <div class="flex flex-col gap-6">
                 <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
-                <ChatLoadingBubble v-if="isResponding" />
+                <ChatLoadingBubble v-if="shouldShowLoadingBubble" />
               </div>
             </template>
           </div>
@@ -46,14 +40,8 @@
 
     <div class="bg-background px-4 pb-6 pt-2">
       <div class="mx-auto w-full max-w-3xl">
-        <ChatComposer
-          ref="composerRef"
-          v-model="draftValue"
-          :disabled="isResponding"
-          :info-text="infoText"
-          @submit="$emit('submit', $event)"
-          @suggestion="$emit('suggestion', $event)"
-        />
+        <ChatComposer ref="composerRef" v-model="draftValue" :disabled="isResponding" :info-text="infoText"
+          @submit="$emit('submit', $event)" @suggestion="$emit('suggestion', $event)" />
       </div>
     </div>
   </div>
@@ -87,6 +75,18 @@ const scrollAreaRef = ref<ComponentPublicInstance | null>(null);
 const draftValue = computed({
   get: () => props.modelValue,
   set: (value: string) => emit('update:modelValue', value),
+});
+
+const shouldShowLoadingBubble = computed(() => {
+  if (!props.isResponding) return false;
+  const lastMessage = props.messages[props.messages.length - 1];
+
+  // If no message or last message is user, we are waiting for assistant message creation
+  if (!lastMessage || lastMessage.role === 'user') return true;
+
+  // If assistant message exists, show bubble only if it's completely empty (no content AND no tool status)
+  // Tool status acts as its own indicator ("Scanning..."), and content acts as streaming indicator.
+  return !lastMessage.content && !lastMessage.toolStatus;
 });
 
 function getViewport(): HTMLElement | null {

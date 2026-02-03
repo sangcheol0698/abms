@@ -4,6 +4,11 @@ export interface ChatMessage {
   id: string;
   role: ChatRole;
   content: string;
+  toolStatus?: {
+    name: string;
+    emoji: string;
+    description: string;
+  };
   createdAt: Date;
 }
 
@@ -11,6 +16,11 @@ export interface ChatMessagePayload {
   id: string;
   role: ChatRole;
   content: string;
+  toolStatus?: {
+    name: string;
+    emoji: string;
+    description: string;
+  };
   createdAt?: string | Date | null;
 }
 
@@ -54,6 +64,7 @@ export function createChatMessage(role: ChatRole, content: string): ChatMessage 
     id: crypto.randomUUID(),
     role,
     content,
+    toolStatus: undefined,
     createdAt: new Date(),
   };
 }
@@ -68,6 +79,7 @@ export function normalizeChatMessage(payload: ChatMessagePayload): ChatMessage {
     id: String(payload.id),
     role: payload.role.toLowerCase() as ChatRole,
     content: payload.content,
+    toolStatus: payload.toolStatus,
     createdAt: createdAt instanceof Date && !Number.isNaN(createdAt.getTime())
       ? createdAt
       : new Date(),

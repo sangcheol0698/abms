@@ -67,8 +67,8 @@
             <Loader2 class="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
 
-          <div v-if="!isLoading && filteredFavorites.length === 0 && filteredRecent.length === 0" 
-               class="text-center py-4 text-xs text-muted-foreground">
+          <div v-if="!isLoading && filteredFavorites.length === 0 && filteredRecent.length === 0"
+            class="text-center py-4 text-xs text-muted-foreground">
             채팅 기록이 없습니다
           </div>
         </nav>
@@ -88,20 +88,14 @@
     </template>
 
     <template #default="{ pane }">
-      <div
-        class="relative flex h-full min-h-0 flex-1 flex-col bg-background"
-        @dragenter.prevent="handleDragEnter"
-        @dragleave.prevent="handleDragLeave"
-        @dragover.prevent
-        @drop.prevent="handleDrop"
-      >
+      <div class="relative flex h-full min-h-0 flex-1 flex-col bg-background" @dragenter.prevent="handleDragEnter"
+        @dragleave.prevent="handleDragLeave" @dragover.prevent @drop.prevent="handleDrop">
         <!-- Drag & Drop Overlay -->
-        <div
-          v-if="isDragging"
-          class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm transition-all animate-in fade-in duration-200"
-        >
+        <div v-if="isDragging"
+          class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm transition-all animate-in fade-in duration-200">
           <div class="flex flex-col items-center gap-4 p-8">
-            <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 shadow-lg ring-1 ring-primary/20">
+            <div
+              class="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 shadow-lg ring-1 ring-primary/20">
               <FileUp class="h-10 w-10 text-primary animate-bounce" />
             </div>
             <div class="text-center space-y-1">
@@ -126,14 +120,8 @@
             </div>
           </div>
           <div class="flex items-center gap-1 text-xs text-muted-foreground">
-            <Button 
-              v-if="currentSessionId" 
-              variant="ghost" 
-              size="sm" 
-              class="gap-1"
-              @click="handleToggleFavorite"
-            >
-              <Star class="h-3.5 w-3.5" :class="currentSession?.favorite ? 'fill-current text-yellow-500' : ''" /> 
+            <Button v-if="currentSessionId" variant="ghost" size="sm" class="gap-1" @click="handleToggleFavorite">
+              <Star class="h-3.5 w-3.5" :class="currentSession?.favorite ? 'fill-current text-yellow-500' : ''" />
               즐겨찾기
             </Button>
             <Button variant="ghost" size="sm" class="gap-1">
@@ -148,17 +136,9 @@
 
         <div class="flex h-full min-h-0 flex-col items-center bg-background"
           :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'">
-          <ChatWidget
-            ref="chatWidgetRef"
-            class="flex w-full flex-1 min-h-0"
-            v-model="draft"
-            :messages="messages"
-            :is-responding="isResponding"
-            :suggestions="[]"
-            :info-text="infoText"
-            @submit="handleSubmit"
-            @suggestion="handleSuggestion"
-          />
+          <ChatWidget ref="chatWidgetRef" class="flex w-full flex-1 min-h-0" v-model="draft" :messages="messages"
+            :is-responding="isResponding" :suggestions="[]" :info-text="infoText" @submit="handleSubmit"
+            @suggestion="handleSuggestion" />
         </div>
       </div>
     </template>
@@ -302,7 +282,7 @@ function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
   currentSession.value = null;
   messages.value = [];
   draft.value = '';
-  
+
   if (!pane) return;
   if (pane.isLargeScreen.value) {
     pane.expandSidebar();
@@ -313,7 +293,7 @@ function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
 
 function handleSessionSelect(sessionId: string, pane?: FeatureSplitPaneContext) {
   router.push({ name: 'assistant-session', params: { sessionId } });
-  
+
   if (pane && !pane.isLargeScreen.value) {
     pane.closeSidebar();
   }
@@ -321,7 +301,7 @@ function handleSessionSelect(sessionId: string, pane?: FeatureSplitPaneContext) 
 
 async function handleToggleFavorite() {
   if (!currentSessionId.value) return;
-  
+
   try {
     await repository.toggleFavorite(currentSessionId.value);
     // Reload sessions to reflect the change
@@ -359,7 +339,7 @@ function handleDragLeave(_event: DragEvent) {
 function handleDrop(event: DragEvent) {
   isDragging.value = false;
   dragCounter = 0;
-  
+
   if (event.dataTransfer?.files) {
     const files = Array.from(event.dataTransfer.files);
     if (files.length > 0) {
@@ -390,13 +370,21 @@ async function handleSubmit(content: string) {
         content,
       },
       (chunk: string) => {
-        // If there was a tool indicator, clear it when real content arrives
+        // If there was a tool indicator, we don't need to clear content manually 
+        // because we are now using a separate field.
+        // But we should probably clear the toolStatus when real content arrives if we want it to disappear,
+        // OR keep it if we want to show "it was used". 
+        // For now, let's keep it until the message is done or maybe just leave it provided the backend sends chunks.
+        // Actually, the previous logic was: "If there was a tool indicator, clear it when real content arrives".
+        // Let's replicate this: Clear toolStatus when we receive the first chunk of content.
+
         const message = messages.value[assistantMessageIndex];
         if (message) {
-          if (toolIndicator && message.content === toolIndicator) {
-            message.content = '';
+          // First chunk arrival - clear tool status if we want to hide it
+          if (toolIndicator) {
+            message.toolStatus = undefined;
+            toolIndicator = null;
           }
-          toolIndicator = null;
           message.content += chunk;
         }
       },
@@ -408,19 +396,26 @@ async function handleSubmit(content: string) {
         }
       },
       (toolName: string) => {
-        // Show tool call notification temporarily
+        // Show tool call notification using the dedicated field
         const message = messages.value[assistantMessageIndex];
-        if (message && !message.content) {
+        if (message) {
           const toolEmoji = getToolEmoji(toolName);
-          toolIndicator = `${toolEmoji} ${getToolDescription(toolName)}`;
-          message.content = toolIndicator;
+          const toolDescription = getToolDescription(toolName);
+
+          toolIndicator = toolName; // Just mark that we are in tool mode
+          message.toolStatus = {
+            name: toolName,
+            emoji: toolEmoji,
+            description: toolDescription
+          };
+          // Do NOT touch message.content
         }
       }
     );
 
     // Reload sessions to get the new/updated session
     await loadSessions();
-    
+
     // Reload again after delay to get AI-generated title
     setTimeout(() => loadSessions(), 2000);
   } catch (error) {
@@ -428,7 +423,7 @@ async function handleSubmit(content: string) {
       error instanceof Error
         ? error.message
         : '응답을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.';
-    
+
     // If the last message is empty assistant message, update it
     const lastMessage = messages.value[messages.value.length - 1];
     if (lastMessage && lastMessage.role === 'assistant' && !lastMessage.content) {
