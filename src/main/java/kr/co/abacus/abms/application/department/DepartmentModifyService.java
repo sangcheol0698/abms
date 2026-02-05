@@ -31,7 +31,11 @@ public class DepartmentModifyService implements DepartmentManager {
 
         department.assignLeader(employee.getId());
 
-        return departmentRepository.save(department).getId();
+        Long id = departmentRepository.save(department).getId();
+
+        departmentFinder.clearOrganizationChartCache();
+
+        return id;
     }
 
 }
