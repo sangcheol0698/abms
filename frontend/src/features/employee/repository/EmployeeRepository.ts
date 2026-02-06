@@ -24,6 +24,7 @@ import {
   getEmployeeAvatarOptions,
   isEmployeeAvatarCode,
 } from '@/features/employee/constants/avatars';
+
 import {
   createExcelFormData,
   downloadBlob,
@@ -31,6 +32,10 @@ import {
   generateExcelFilename,
 } from '@/core/utils/excel';
 import { type EnumResponse, PageResponse, toSelectOption } from '@/core/api';
+
+// 기존 import 문 아래에 추가
+import type { PositionHistory } from '@/features/employee/models/positionHistory';
+
 /**
  * 상태(Status) API 응답 타입
  * @see GET /api/employees/statuses
@@ -351,6 +356,16 @@ export class EmployeeRepository {
       path: '/api/employees/excel/upload',
       data: formData,
       onProgress,
+    });
+  }
+
+  /**
+   * 직원의 직급 이력을 조회합니다.
+   * GET /api/positionHistory/{employeeId}
+   */
+  async fetchPositionHistory(employeeId: number): Promise<PositionHistory[]> {
+    return this.httpRepository.get({
+      path: `/api/positionHistory/${employeeId}`,
     });
   }
 }
