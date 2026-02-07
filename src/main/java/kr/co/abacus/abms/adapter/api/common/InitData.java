@@ -310,7 +310,7 @@ public class InitData {
         );
         employeeModifyService.create(
             createEmployeeCreateCommand(
-                ABC2205.getId(), "sogarib@abms.co", "봉팀장", LocalDate.of(2002, 3, 1),
+                ABC2205.getId(), "sogarib@abms.co", "봉팀장", LocalDate.of(2026, 2, 5),
                 LocalDate.of(1962, 7, 1),
                 EmployeePosition.TEAM_LEADER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
                 EmployeeAvatar.COBALT_WAVE,

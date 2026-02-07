@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.application.employee.outbound;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.shared.Email;
 
 public interface EmployeeRepository extends Repository<Employee, Long>, CustomEmployeeRepository {
@@ -28,4 +30,9 @@ public interface EmployeeRepository extends Repository<Employee, Long>, CustomEm
 
     Optional<Employee> findByName(String name);
 
+    int count();
+
+    int countByJoinDateBetween(LocalDate startDate, LocalDate endDate);
+
+    int countByStatus(EmployeeStatus status);
 }
