@@ -2,6 +2,8 @@ package kr.co.abacus.abms.application.employee.inbound;
 
 import java.time.LocalDate;
 
+import org.springframework.cglib.core.Local;
+
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
@@ -22,6 +24,8 @@ public interface EmployeeManager {
     void activate(Long id);
 
     void promote(Long id, EmployeePosition newPosition);
+
+    void promote(Long id, EmployeePosition newPosition, LocalDate promotedDate);
 
     void delete(Long id, String deleteBy);
 

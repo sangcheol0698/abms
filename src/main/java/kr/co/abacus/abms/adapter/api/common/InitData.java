@@ -166,7 +166,7 @@ public class InitData {
             createEmployeeCreateCommand(
                 company.getId(), "lyt@abms.co", "임회장", LocalDate.of(2001, 1, 30),
                 LocalDate.of(1960, 5, 12),
-                EmployeePosition.CHAIRMAN, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
+                EmployeePosition.PRESIDENT, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
                 EmployeeAvatar.SKY_GLOW,
                 "대표이사")
         );
@@ -174,7 +174,7 @@ public class InitData {
             createEmployeeCreateCommand(
                 company.getId(), "chaesungsoo@abms.co", "채사장", LocalDate.of(2002, 3, 1),
                 LocalDate.of(1962, 7, 1),
-                EmployeePosition.PRESIDENT, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
+                EmployeePosition.VICE_PRESIDENT, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
                 EmployeeAvatar.SUNSET_BREEZE,
                 "사업총괄")
         );
@@ -696,6 +696,13 @@ public class InitData {
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(2025, 12, 31)))
         );
+
+
+        // ---------------------------------------------------------
+        // 직급이력 구성
+        // ---------------------------------------------------------
+        employeeModifyService.promote(1L, EmployeePosition.CHAIRMAN, LocalDate.of(2026, 1, 30));
+        employeeModifyService.promote(2L, EmployeePosition.PRESIDENT, LocalDate.of(2026, 1, 30));
     }
 
     private Employee createEmployee(Long departmentId, String email, String name, LocalDate joinDate,

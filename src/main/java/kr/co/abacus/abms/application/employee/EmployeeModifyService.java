@@ -118,8 +118,28 @@ public class EmployeeModifyService implements EmployeeManager {
          * 추후에 도메인 이벤트 방식으로 변경
          */
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
+            employee.getId(),
+            new Period(LocalDate.now(), null),
+            employee.getPosition()
+        ));
+        positionHistoryRepository.save(positionHistory);
+    }
+
+    @Override
+    public void promote(Long id, EmployeePosition newPosition, LocalDate promotedDate) {
+        Employee employee = find(id);
+
+        employee.promote(newPosition);
+
+        employeeRepository.save(employee);
+
+        /**
+         * 직급 이력 생성 추가
+         * 추후에 도메인 이벤트 방식으로 변경
+         */
+        PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
                 employee.getId(),
-                new Period(employee.getCreatedAt().toLocalDate(), null),
+                new Period(promotedDate, null),
                 employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);
