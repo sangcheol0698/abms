@@ -229,7 +229,15 @@ import { useEmployeeSummary } from '@/features/employee/composables';
 import EmployeeCreateDialog from '@/features/employee/components/EmployeeCreateDialog.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
 import DepartmentSelectDialog from '@/features/department/components/DepartmentSelectDialog.vue';
-import { Building2, ChevronDown, Download, FileSpreadsheet, Plus, Upload, X } from 'lucide-vue-next';
+import {
+  Building2,
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  Plus,
+  Upload,
+  X,
+} from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import HttpError from '@/core/http/HttpError';
@@ -249,6 +257,7 @@ const router = useRouter();
 const route = useRoute();
 
 const employees = ref<EmployeeListItem[]>([]);
+const allEmployees = ref<EmployeeListItem[]>([]);
 const tableRenderKey = ref(0);
 const isLoading = ref(false);
 const page = ref(1);
@@ -280,7 +289,7 @@ const deletion = useEmployeeDeletion(async () => {
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 
-const employeeSummary = useEmployeeSummary({ employees });
+const employeeSummary = useEmployeeSummary({ employees: allEmployees });
 
 const selectedDepartmentId = computed(() => {
   const filter = columnFilters.value.find((item) => item.id === 'departmentId');
@@ -292,7 +301,9 @@ const selectedDepartmentName = computed(() => {
   if (!selectedDepartmentId.value) {
     return null;
   }
-  const match = departmentOptions.value.find((option) => option.value === selectedDepartmentId.value);
+  const match = departmentOptions.value.find(
+    (option) => option.value === selectedDepartmentId.value,
+  );
   return match?.label ?? `부서 #${selectedDepartmentId.value}`;
 });
 
@@ -479,7 +490,11 @@ async function loadEmployees() {
 
   try {
     const params = buildSearchParams();
-    const response = await employeeRepository.search(params);
+    // 현재 페이지 데이터(목록용)와 전체 데이터(통계용)를 병렬로 조회
+    const [response, allResponse] = await Promise.all([
+      employeeRepository.search(params),
+      employeeRepository.search({ ...params, page: 1, size: 10000 }),
+    ]);
 
     if (token !== requestToken) {
       return;
@@ -493,11 +508,13 @@ async function loadEmployees() {
     employees.value = response.content;
     totalElements.value = response.totalElements;
     totalPages.value = Math.max(response.totalPages, 1);
+    allEmployees.value = allResponse.content;
     rowSelection.value = {};
     tableRenderKey.value += 1;
   } catch (error) {
     console.error('직원 목록을 불러오지 못했습니다.', error);
     employees.value = [];
+    allEmployees.value = [];
     totalElements.value = 0;
     totalPages.value = 1;
   } finally {
