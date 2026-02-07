@@ -1,6 +1,15 @@
 <template>
   <section class="flex h-full flex-col gap-6">
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <!-- 로딩 상태 처리 -->
+    <div v-if="isLoading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div
+        v-for="i in 4"
+        :key="i"
+        class="h-[120px] rounded-xl border border-border/60 bg-muted/10 animate-pulse"
+      />
+    </div>
+
+    <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <Card v-for="metric in metrics" :key="metric.title" class="shadow-none">
         <CardHeader class="space-y-1">
           <CardTitle class="text-sm font-medium text-muted-foreground">{{
@@ -8,9 +17,6 @@
           }}</CardTitle>
           <div class="flex items-baseline gap-2">
             <span class="text-2xl font-semibold text-foreground">{{ metric.value }}</span>
-            <Badge :variant="metric.trend >= 0 ? 'secondary' : 'destructive'" class="text-xs">
-              {{ metric.trend >= 0 ? '+' : '' }}{{ metric.trend.toFixed(1) }}%
-            </Badge>
           </div>
         </CardHeader>
         <CardContent class="text-xs text-muted-foreground">
@@ -67,36 +73,49 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { appContainer } from '@/core/di/container';
+import {
+  DashboardRepository,
+  type DashboardSummary,
+} from '@/features/dashboard/repository/DashboardRepository';
 
-const metrics = computed(() => [
-  {
-    title: '총 직원',
-    value: '128명',
-    trend: 3.5,
-    description: '지난달 대비 3.5% 증가했습니다.',
-  },
-  {
-    title: '활성 프로젝트',
-    value: '12건',
-    trend: 1.2,
-    description: '최신 진행 기준 활성 상태 프로젝트 수입니다.',
-  },
-  {
-    title: '이번 달 신규 입사',
-    value: '4명',
-    trend: 0.0,
-    description: '이번 달 입사 완료된 직원 수입니다.',
-  },
-  {
-    title: '휴가 중 직원',
-    value: '3명',
-    trend: -1.5,
-    description: '현재 휴직 또는 장기 휴가 중인 인원입니다.',
-  },
-]);
+const repository = appContainer.resolve(DashboardRepository);
+
+const summary = ref<DashboardSummary | null>(null);
+const isLoading = ref(true);
+
+const metrics = computed(() => {
+  if (!summary.value) return [];
+
+  const { totalEmployeesCount, activeProjectsCount, newEmployeesCount, onLeaveEmployeesCount } =
+    summary.value;
+
+  return [
+    {
+      title: '총 직원',
+      value: `${totalEmployeesCount ?? 0}명`,
+      description: '현재 총 직원 수입니다.',
+    },
+    {
+      title: '활성 프로젝트',
+      value: `${activeProjectsCount ?? 0}건`,
+      description: '최신 진행 기준 활성 상태 프로젝트 수입니다.',
+    },
+    {
+      title: '이번 달 신규 입사',
+      value: `${newEmployeesCount ?? 0}명`,
+      description: '이번 달 입사 완료된 직원 수입니다.',
+    },
+    {
+      title: '휴가 중 직원',
+      value: `${onLeaveEmployeesCount ?? 0}명`,
+      description: '현재 휴직 또는 장기 휴가 중인 인원입니다.',
+    },
+  ];
+});
 
 const notifications = computed(() => [
   {
@@ -123,4 +142,17 @@ const quickActions = [
   { label: '부서 확인', to: '/departments' },
   { label: '직원 관리', to: '/employees' },
 ];
+
+async function fetchDashboardData() {
+  isLoading.value = true;
+  try {
+    summary.value = await repository.fetchSummary();
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchDashboardData();
+});
 </script>
