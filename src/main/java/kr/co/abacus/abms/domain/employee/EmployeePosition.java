@@ -7,23 +7,30 @@ import lombok.Getter;
 @Getter
 public enum EmployeePosition {
 
+    // 1. 실무진
     ASSOCIATE("사원", 1),
-    STAFF("선임", 2),
-    LEADER("책임", 3),
-    MANAGER("팀장", 4),
-    SENIOR_MANAGER("수석", 5),
+    SENIOR_ASSOCIATE("선임", 2),
+    PRINCIPAL("책임", 3),
+
+    // 2. 중간 관리자
+    TEAM_LEADER("팀장", 4),
+    CHIEF("수석", 5),
+
+    // 3. 임원진
     DIRECTOR("이사", 6),
     TECHNICAL_DIRECTOR("기술이사", 6),
-    MANAGING_DIRECTOR("상무", 7),
-    VICE_PRESIDENT("부사장", 8),
-    PRESIDENT("사장", 9);
+    MANAGING_DIRECTOR("상무", 6),
+    VICE_PRESIDENT("부사장", 7),
+    PRESIDENT("사장", 8),
+    CHAIRMAN("회장", 9);
+
 
     private final String description;
-    private final int rank;
+    private final int level;
 
-    EmployeePosition(String description, int rank) {
+    EmployeePosition(String description, int level) {
         this.description = description;
-        this.rank = rank;
+        this.level = level;
     }
 
     public static EmployeePosition fromDescription(String description) {

@@ -5,9 +5,9 @@ import lombok.Getter;
 @Getter
 public enum DepartmentType {
 
-    COMPANY("회사"),
+    COMPANY("전사"),
     DIVISION("본부"),
-    DEPARTMENT("담당"),
+    GROUP("담당"),
     TEAM("팀"),
     LAB("연구소"),
     TF("TF");

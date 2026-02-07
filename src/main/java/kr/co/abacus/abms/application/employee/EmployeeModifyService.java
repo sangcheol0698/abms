@@ -48,7 +48,7 @@ public class EmployeeModifyService implements EmployeeManager {
          */
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
                 employee.getId(),
-                new Period(employee.getCreatedAt().toLocalDate(), null),
+                new Period(employee.getJoinDate(), null),
                 employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);

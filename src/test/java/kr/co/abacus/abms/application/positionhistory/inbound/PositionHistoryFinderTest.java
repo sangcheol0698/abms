@@ -64,7 +64,7 @@ class PositionHistoryFinderTest extends IntegrationTestBase {
         PositionHistory positionHistory2 = PositionHistory.create(new PositionHistoryCreateRequest(
                 1L,
                 new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)),
-                EmployeePosition.STAFF)
+                EmployeePosition.SENIOR_ASSOCIATE)
         );
         positionHistoryRepository.save(positionHistory2);
 
@@ -74,7 +74,7 @@ class PositionHistoryFinderTest extends IntegrationTestBase {
 
         assertThat(foundPositionHistory.size()).isEqualTo(2);
         assertThat(foundPositionHistory.getFirst().getPosition()).isEqualTo(EmployeePosition.ASSOCIATE);
-        assertThat(foundPositionHistory.getLast().getPosition()).isEqualTo(EmployeePosition.STAFF);
+        assertThat(foundPositionHistory.getLast().getPosition()).isEqualTo(EmployeePosition.SENIOR_ASSOCIATE);
     }
 
 }

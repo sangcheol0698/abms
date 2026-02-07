@@ -40,7 +40,7 @@ class PositionHistoryApiTest extends ApiIntegrationTestBase {
         PositionHistory positionHistory2 = PositionHistory.create(new PositionHistoryCreateRequest(
                 1L,
                 new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)),
-                EmployeePosition.STAFF)
+                EmployeePosition.SENIOR_ASSOCIATE)
         );
         positionHistoryRepository.save(positionHistory2);
 
@@ -59,7 +59,7 @@ class PositionHistoryApiTest extends ApiIntegrationTestBase {
         assertThat(response).isNotNull();
         assertThat(response.size()).isEqualTo(2);
         assertThat(response.getFirst().getPosition()).isEqualTo(EmployeePosition.ASSOCIATE);
-        assertThat(response.getLast().getPosition()).isEqualTo(EmployeePosition.STAFF);
+        assertThat(response.getLast().getPosition()).isEqualTo(EmployeePosition.SENIOR_ASSOCIATE);
     }
 
 }

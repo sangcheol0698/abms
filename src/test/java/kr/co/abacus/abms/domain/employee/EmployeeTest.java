@@ -20,7 +20,7 @@ class EmployeeTest {
         assertThat(employee.getName()).isEqualTo("홍길동");
         assertThat(employee.getJoinDate()).isEqualTo(LocalDate.of(2025, 1, 1));
         assertThat(employee.getBirthDate()).isEqualTo(LocalDate.of(1990, 1, 1));
-        assertThat(employee.getPosition()).isEqualTo(EmployeePosition.MANAGER);
+        assertThat(employee.getPosition()).isEqualTo(EmployeePosition.TEAM_LEADER);
         assertThat(employee.getType()).isEqualTo(EmployeeType.FULL_TIME);
         assertThat(employee.getGrade()).isEqualTo(EmployeeGrade.SENIOR);
         assertThat(employee.getAvatar()).isEqualTo(EmployeeAvatar.SKY_GLOW);
@@ -200,7 +200,7 @@ class EmployeeTest {
     void promoteFail() {
         Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
 
-        assertThatThrownBy(() -> employee.promote(EmployeePosition.STAFF))
+        assertThatThrownBy(() -> employee.promote(EmployeePosition.SENIOR_ASSOCIATE))
                 .isInstanceOf(InvalidEmployeeStatusException.class)
                 .hasMessage("현재 직급보다 낮거나 같은 직급으로 변경할 수 없습니다.");
     }
@@ -258,7 +258,7 @@ class EmployeeTest {
                 "testUser@email.com",
                 joinDate,
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
+                EmployeePosition.TEAM_LEADER,
                 EmployeeType.FULL_TIME,
                 EmployeeGrade.SENIOR,
                 EmployeeAvatar.SKY_GLOW,

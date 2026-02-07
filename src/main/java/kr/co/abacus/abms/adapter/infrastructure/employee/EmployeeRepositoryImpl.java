@@ -211,21 +211,17 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
     private OrderSpecifier<?> positionOrder(Order direction) {
         NumberExpression<Integer> positionRank = new CaseBuilder()
-                .when(employee.position.eq(EmployeePosition.ASSOCIATE)).then(EmployeePosition.ASSOCIATE.getRank())
-                .when(employee.position.eq(EmployeePosition.STAFF)).then(EmployeePosition.STAFF.getRank())
-                .when(employee.position.eq(EmployeePosition.LEADER)).then(EmployeePosition.LEADER.getRank())
-                .when(employee.position.eq(EmployeePosition.MANAGER)).then(EmployeePosition.MANAGER.getRank())
-                .when(employee.position.eq(EmployeePosition.SENIOR_MANAGER))
-                .then(EmployeePosition.SENIOR_MANAGER.getRank())
-                .when(employee.position.eq(EmployeePosition.DIRECTOR)).then(EmployeePosition.DIRECTOR.getRank())
-                .when(employee.position.eq(EmployeePosition.TECHNICAL_DIRECTOR))
-                .then(EmployeePosition.TECHNICAL_DIRECTOR.getRank())
-                .when(employee.position.eq(EmployeePosition.MANAGING_DIRECTOR))
-                .then(EmployeePosition.MANAGING_DIRECTOR.getRank())
-                .when(employee.position.eq(EmployeePosition.VICE_PRESIDENT))
-                .then(EmployeePosition.VICE_PRESIDENT.getRank())
-                .when(employee.position.eq(EmployeePosition.PRESIDENT)).then(EmployeePosition.PRESIDENT.getRank())
-                .otherwise(0);
+            .when(employee.position.eq(EmployeePosition.ASSOCIATE)).then(EmployeePosition.ASSOCIATE.getLevel())
+            .when(employee.position.eq(EmployeePosition.SENIOR_ASSOCIATE)).then(EmployeePosition.SENIOR_ASSOCIATE.getLevel())
+            .when(employee.position.eq(EmployeePosition.PRINCIPAL)).then(EmployeePosition.PRINCIPAL.getLevel())
+            .when(employee.position.eq(EmployeePosition.TEAM_LEADER)).then(EmployeePosition.TEAM_LEADER.getLevel())
+            .when(employee.position.eq(EmployeePosition.CHIEF)).then(EmployeePosition.CHIEF.getLevel())
+            .when(employee.position.eq(EmployeePosition.DIRECTOR)).then(EmployeePosition.DIRECTOR.getLevel())
+            .when(employee.position.eq(EmployeePosition.TECHNICAL_DIRECTOR)).then(EmployeePosition.TECHNICAL_DIRECTOR.getLevel())
+            .when(employee.position.eq(EmployeePosition.VICE_PRESIDENT)).then(EmployeePosition.VICE_PRESIDENT.getLevel())
+            .when(employee.position.eq(EmployeePosition.PRESIDENT)).then(EmployeePosition.PRESIDENT.getLevel())
+            .when(employee.position.eq(EmployeePosition.CHAIRMAN)).then(EmployeePosition.CHAIRMAN.getLevel())
+            .otherwise(0);
 
         return new OrderSpecifier<>(direction, positionRank);
     }

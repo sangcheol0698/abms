@@ -115,7 +115,7 @@ class DepartmentFinderTest extends IntegrationTestBase {
                 email,
                 LocalDate.of(2020, 1, 1),
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
+                EmployeePosition.TEAM_LEADER,
                 EmployeeType.FULL_TIME,
                 EmployeeGrade.SENIOR,
                 EmployeeAvatar.SKY_GLOW,

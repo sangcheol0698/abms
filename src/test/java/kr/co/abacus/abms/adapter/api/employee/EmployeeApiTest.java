@@ -605,7 +605,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         Employee promotedEmployee = employeeRepository.findById(employeeId).orElseThrow();
-        assertThat(promotedEmployee.getPosition()).isEqualTo(EmployeePosition.STAFF);
+        assertThat(promotedEmployee.getPosition()).isEqualTo(EmployeePosition.SENIOR_ASSOCIATE);
     }
 
     @Test
@@ -752,7 +752,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 name,
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
+                EmployeePosition.TEAM_LEADER,
                 EmployeeType.FULL_TIME,
                 EmployeeGrade.SENIOR,
                 EmployeeAvatar.SKY_GLOW,
@@ -769,7 +769,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 name,
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
+                EmployeePosition.TEAM_LEADER,
                 EmployeeType.FULL_TIME,
                 EmployeeGrade.SENIOR,
                 EmployeeAvatar.SKY_GLOW,
@@ -783,7 +783,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 email,
                 LocalDate.of(2024, 1, 1),
                 LocalDate.of(1990, 5, 20),
-                EmployeePosition.STAFF,
+                EmployeePosition.SENIOR_ASSOCIATE,
                 EmployeeType.FULL_TIME,
                 EmployeeGrade.JUNIOR,
                 EmployeeAvatar.SKY_GLOW,

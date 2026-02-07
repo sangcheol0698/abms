@@ -117,7 +117,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
     void search() {
         Long departmentId = departmentRepository.save(createDepartment()).getId();
 
-        employeeRepository.save(createEmployee("test1@email.com", "홍길동", EmployeePosition.MANAGER,
+        employeeRepository.save(createEmployee("test1@email.com", "홍길동", EmployeePosition.TEAM_LEADER,
                 EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, departmentId));
         employeeRepository.save(createEmployee("test2@email.com", "김길동", EmployeePosition.ASSOCIATE,
                 EmployeeType.PART_TIME, EmployeeGrade.JUNIOR, departmentId));
@@ -125,7 +125,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
                 EmployeeType.FREELANCER, EmployeeGrade.MID_LEVEL, departmentId));
 
         EmployeeSearchCondition request = new EmployeeSearchCondition("길동",
-                List.of(EmployeePosition.MANAGER, EmployeePosition.ASSOCIATE), null, null, null, null);
+                List.of(EmployeePosition.TEAM_LEADER, EmployeePosition.ASSOCIATE), null, null, null, null);
         Page<EmployeeSummary> employees = employeeRepository.search(request, PageRequest.of(0, 10));
 
         assertThat(employees).hasSize(2)
@@ -141,13 +141,13 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         Long otherDepartmentId = 2L;
 
         Employee employee1 = createEmployee(departmentId, "emp1@test.com", "직원1", LocalDate.of(2025, 1, 1),
-                LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
+                LocalDate.of(1990, 1, 1), EmployeePosition.TEAM_LEADER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
                 EmployeeAvatar.FOREST_MINT, "memo");
         Employee employee2 = createEmployee(departmentId, "emp2@test.com", "직원2", LocalDate.of(2025, 1, 1),
-                LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
+                LocalDate.of(1990, 1, 1), EmployeePosition.TEAM_LEADER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
                 EmployeeAvatar.FOREST_MINT, "memo");
         Employee employee3 = createEmployee(otherDepartmentId, "emp3@test.com", "직원3", LocalDate.of(2025, 1, 1),
-                LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
+                LocalDate.of(1990, 1, 1), EmployeePosition.TEAM_LEADER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
                 EmployeeAvatar.FOREST_MINT, "memo");
 
         employeeRepository.save(employee1);
@@ -174,10 +174,10 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         Long departmentId = 1L;
 
         Employee activeEmployee = createEmployee(departmentId, "active@test.com", "활성직원", LocalDate.of(2025, 1, 1),
-                LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
+                LocalDate.of(1990, 1, 1), EmployeePosition.TEAM_LEADER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
                 EmployeeAvatar.FOREST_MINT, "memo");
         Employee deletedEmployee = createEmployee(departmentId, "deleted@test.com", "삭제직원", LocalDate.of(2025, 1, 1),
-                LocalDate.of(1990, 1, 1), EmployeePosition.MANAGER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
+                LocalDate.of(1990, 1, 1), EmployeePosition.TEAM_LEADER, EmployeeType.FULL_TIME, EmployeeGrade.SENIOR,
                 EmployeeAvatar.FOREST_MINT, "memo");
 
         employeeRepository.save(activeEmployee);
@@ -219,7 +219,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         return Department.create(
                 "TEST-CODE",
                 "테스트 부서",
-                DepartmentType.DEPARTMENT,
+                DepartmentType.GROUP,
                 null,
                 null);
     }
@@ -247,7 +247,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
                 "홍길동",
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
+                EmployeePosition.TEAM_LEADER,
                 EmployeeType.FULL_TIME,
                 EmployeeGrade.SENIOR,
                 EmployeeAvatar.SKY_GLOW,
@@ -261,7 +261,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
                 "홍길동",
                 LocalDate.of(2025, 1, 1),
                 LocalDate.of(1990, 1, 1),
-                EmployeePosition.MANAGER,
+                EmployeePosition.TEAM_LEADER,
                 EmployeeType.FULL_TIME,
                 EmployeeGrade.SENIOR,
                 EmployeeAvatar.SKY_GLOW,
