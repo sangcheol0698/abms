@@ -26,9 +26,7 @@
               <section class="space-y-4">
                 <div class="space-y-1">
                   <h3 class="text-lg font-semibold text-foreground">기본 정보</h3>
-                  <p class="text-sm text-muted-foreground">
-                    프로젝트의 기본 정보를 입력하세요.
-                  </p>
+                  <p class="text-sm text-muted-foreground">프로젝트의 기본 정보를 입력하세요.</p>
                 </div>
                 <div class="grid gap-4 md:grid-cols-2">
                   <FormField name="code" v-slot="{ field, handleChange, handleBlur }">
@@ -102,13 +100,7 @@
                             variant="outline"
                             class="h-9 gap-2 whitespace-nowrap px-3"
                             :disabled="isSubmitting"
-                            @click="
-                              handlePartySelectButton(
-                                field.value,
-                                handleChange,
-                                handleBlur,
-                              )
-                            "
+                            @click="handlePartySelectButton(field.value, handleChange, handleBlur)"
                           >
                             <Building class="h-4 w-4" />
                             <span>협력사</span>
@@ -210,9 +202,7 @@
               <section class="space-y-4">
                 <div class="space-y-1">
                   <h3 class="text-lg font-semibold text-foreground">프로젝트 기간</h3>
-                  <p class="text-sm text-muted-foreground">
-                    시작일과 종료일을 정확히 입력하세요.
-                  </p>
+                  <p class="text-sm text-muted-foreground">시작일과 종료일을 정확히 입력하세요.</p>
                 </div>
                 <div class="grid gap-4 md:grid-cols-2">
                   <FormField name="startDate" v-slot="{ field, handleChange, handleBlur }">
@@ -423,8 +413,6 @@ const applyPartySelection = ref<((value: number) => void) | null>(null);
 const statusOptions = ref<{ value: string; label: string }[]>([]);
 const partyOptions = ref<{ value: number; label: string }[]>([]);
 
-
-
 const isEditMode = computed(() => props.mode === 'edit');
 const dialogTitle = computed(() => (isEditMode.value ? '프로젝트 편집' : '프로젝트 추가'));
 const dialogDescription = computed(() =>
@@ -469,7 +457,7 @@ onMounted(async () => {
   try {
     const [statuses, parties] = await Promise.all([
       repository.fetchStatuses(),
-      partyRepository.fetchAll()
+      partyRepository.fetchAll(),
     ]);
     statusOptions.value = statuses;
     partyOptions.value = parties;
@@ -532,9 +520,12 @@ async function onSubmit(rawValues: Record<string, unknown>) {
           ? '프로젝트 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
           : '프로젝트 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
     errorMessage.value = message;
-    toast.error(isEditMode.value ? '프로젝트 수정에 실패했습니다.' : '프로젝트 등록에 실패했습니다.', {
-      description: message,
-    });
+    toast.error(
+      isEditMode.value ? '프로젝트 수정에 실패했습니다.' : '프로젝트 등록에 실패했습니다.',
+      {
+        description: message,
+      },
+    );
   }
 }
 
@@ -591,8 +582,7 @@ function handlePartySelectButton(
   onChange?: (value: unknown) => void,
   onBlur?: () => void,
 ) {
-  const currentId =
-    typeof currentValue === 'number' ? currentValue : Number(currentValue) || 0;
+  const currentId = typeof currentValue === 'number' ? currentValue : Number(currentValue) || 0;
   openPartySelect(currentId, (value: number) => {
     onChange?.(value);
     onBlur?.();

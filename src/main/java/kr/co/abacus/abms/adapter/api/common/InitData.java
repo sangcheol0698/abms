@@ -611,7 +611,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partyNaverCloud.getId(),
-                1L,
+                10L,
                 "PROJ-2024-001",
                 "네이버클라우드 ERP 시스템 구축",
                 "네이버클라우드 기반 전사 ERP 시스템 개발 및 구축 프로젝트",

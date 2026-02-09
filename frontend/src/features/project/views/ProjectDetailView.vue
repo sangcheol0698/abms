@@ -13,10 +13,7 @@
     </Alert>
 
     <template v-else>
-      <ProjectDetailHeader
-        :project="project"
-        @party-click="goToParty"
-      >
+      <ProjectDetailHeader :project="project" @party-click="goToParty">
         <template #actions>
           <AlertDialog>
             <AlertDialogTrigger as-child>
@@ -63,6 +60,7 @@
               :project="project"
               :format-date="formatDate"
               @party-click="goToParty"
+              @department-click="goToDepartment"
             />
           </TabsContent>
           <TabsContent value="assignments" class="flex-1">
@@ -172,6 +170,12 @@ function goToParty() {
   router.push({ name: 'party-detail', params: { partyId: id } });
 }
 
+function goToDepartment() {
+  const id = project.value?.leadDepartmentId;
+  if (!id) return;
+  router.push({ name: 'department', params: { departmentId: id } });
+}
+
 function formatDate(value?: string | null) {
   if (!value) {
     return '—';
@@ -196,7 +200,7 @@ function handleProjectUpdated() {
 
 async function handleDelete() {
   if (!project.value?.projectId) return;
-  
+
   isDeleting.value = true;
   try {
     await repository.delete(project.value.projectId);

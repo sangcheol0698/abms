@@ -6,7 +6,9 @@
     프로젝트 정보를 찾을 수 없습니다.
   </div>
   <div v-else class="flex flex-col gap-4 rounded-lg md:flex-row md:items-center md:gap-6">
-    <div class="flex h-20 w-20 items-center justify-center rounded-2xl border border-border/60 bg-primary/10">
+    <div
+      class="flex h-20 w-20 items-center justify-center rounded-2xl border border-border/60 bg-primary/10"
+    >
       <FolderKanban class="h-10 w-10 text-primary" />
     </div>
     <div class="flex flex-1 flex-col gap-1">
