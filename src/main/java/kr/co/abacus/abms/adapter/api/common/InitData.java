@@ -611,7 +611,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partyNaverCloud.getId(),
-                10L,
+                22L,
                 "PROJ-2024-001",
                 "네이버클라우드 ERP 시스템 구축",
                 "네이버클라우드 기반 전사 ERP 시스템 개발 및 구축 프로젝트",
@@ -620,90 +620,90 @@ public class InitData {
                 LocalDate.of(2024, 1, 15),
                 LocalDate.of(2024, 12, 31)))
         );
-        projectRepository.save(
-            Project.create(new ProjectCreateRequest(
-                partySamsungSDS.getId(),
-                1L,
-                "PROJ-2024-002",
-                "삼성전자 협력사 포털 개발",
-                "삼성전자向 협력사 통합 관리 포털 시스템 구축",
-                ProjectStatus.IN_PROGRESS,
-                420000000L,
-                LocalDate.of(2024, 3, 1),
-                LocalDate.of(2024, 10, 31)))
-        );
-        projectRepository.save(
-            Project.create(new ProjectCreateRequest(
-                partyKakao.getId(),
-                1L,
-                "PROJ-2024-003",
-                "카카오 AI 챗봇 플랫폼",
-                "LLM 기반 고객지원 챗봇 플랫폼 개발",
-                ProjectStatus.COMPLETED,
-                350000000L,
-                LocalDate.of(2023, 9, 1),
-                LocalDate.of(2024, 2, 29)))
-        );
-        projectRepository.save(
-            Project.create(new ProjectCreateRequest(
-                partyLGCNS.getId(),
-                1L,
-                "PROJ-2024-004",
-                "LG화학 데이터 웨어하우스",
-                "빅데이터 기반 통합 데이터 웨어하우스 구축",
-                ProjectStatus.ON_HOLD,
-                820000000L,
-                LocalDate.of(2024, 7, 1),
-                LocalDate.of(2025, 6, 30)))
-        );
-        projectRepository.save(
-            Project.create(new ProjectCreateRequest(
-                partySkTelecom.getId(),
-                1L,
-                "PROJ-2024-005",
-                "5G IoT 플랫폼 고도화",
-                "5G 기반 IoT 디바이스 통합 관리 플랫폼 고도화",
-                ProjectStatus.IN_PROGRESS,
-                670000000L,
-                LocalDate.of(2024, 4, 1),
-                LocalDate.of(2024, 11, 30)))
-        );
-        projectRepository.save(
-            Project.create(new ProjectCreateRequest(
-                partyNaverCloud.getId(),
-                1L,
-                "PROJ-2023-008",
-                "네이버페이 정산 시스템 리뉴얼",
-                "차세대 정산 시스템 개발 및 레거시 마이그레이션",
-                ProjectStatus.COMPLETED,
-                480000000L,
-                LocalDate.of(2023, 1, 1),
-                LocalDate.of(2023, 12, 31)))
-        );
-        projectRepository.save(
-            Project.create(new ProjectCreateRequest(
-                partySamsungSDS.getId(),
-                1L,
-                "PROJ-2023-012",
-                "삼성디스플레이 MES 고도화",
-                "제조실행시스템(MES) 기능 개선 및 고도화",
-                ProjectStatus.CANCELLED,
-                390000000L,
-                LocalDate.of(2023, 6, 1),
-                LocalDate.of(2024, 3, 31)))
-        );
-        projectRepository.save(
-            Project.create(new ProjectCreateRequest(
-                partyKakao.getId(),
-                1L,
-                "PROJ-2025-001",
-                "카카오뱅크 디지털 플랫폼",
-                "차세대 디지털 뱅킹 플랫폼 구축",
-                ProjectStatus.ON_HOLD,
-                920000000L,
-                LocalDate.of(2025, 1, 1),
-                LocalDate.of(2025, 12, 31)))
-        );
+        // projectRepository.save(
+        //     Project.create(new ProjectCreateRequest(
+        //         partySamsungSDS.getId(),
+        //         1L,
+        //         "PROJ-2024-002",
+        //         "삼성전자 협력사 포털 개발",
+        //         "삼성전자向 협력사 통합 관리 포털 시스템 구축",
+        //         ProjectStatus.IN_PROGRESS,
+        //         420000000L,
+        //         LocalDate.of(2024, 3, 1),
+        //         LocalDate.of(2024, 10, 31)))
+        // );
+        // projectRepository.save(
+        //     Project.create(new ProjectCreateRequest(
+        //         partyKakao.getId(),
+        //         1L,
+        //         "PROJ-2024-003",
+        //         "카카오 AI 챗봇 플랫폼",
+        //         "LLM 기반 고객지원 챗봇 플랫폼 개발",
+        //         ProjectStatus.COMPLETED,
+        //         350000000L,
+        //         LocalDate.of(2023, 9, 1),
+        //         LocalDate.of(2024, 2, 29)))
+        // );
+        // projectRepository.save(
+        //     Project.create(new ProjectCreateRequest(
+        //         partyLGCNS.getId(),
+        //         1L,
+        //         "PROJ-2024-004",
+        //         "LG화학 데이터 웨어하우스",
+        //         "빅데이터 기반 통합 데이터 웨어하우스 구축",
+        //         ProjectStatus.ON_HOLD,
+        //         820000000L,
+        //         LocalDate.of(2024, 7, 1),
+        //         LocalDate.of(2025, 6, 30)))
+        // );
+        // projectRepository.save(
+        //     Project.create(new ProjectCreateRequest(
+        //         partySkTelecom.getId(),
+        //         1L,
+        //         "PROJ-2024-005",
+        //         "5G IoT 플랫폼 고도화",
+        //         "5G 기반 IoT 디바이스 통합 관리 플랫폼 고도화",
+        //         ProjectStatus.IN_PROGRESS,
+        //         670000000L,
+        //         LocalDate.of(2024, 4, 1),
+        //         LocalDate.of(2024, 11, 30)))
+        // );
+        // projectRepository.save(
+        //     Project.create(new ProjectCreateRequest(
+        //         partyNaverCloud.getId(),
+        //         1L,
+        //         "PROJ-2023-008",
+        //         "네이버페이 정산 시스템 리뉴얼",
+        //         "차세대 정산 시스템 개발 및 레거시 마이그레이션",
+        //         ProjectStatus.COMPLETED,
+        //         480000000L,
+        //         LocalDate.of(2023, 1, 1),
+        //         LocalDate.of(2023, 12, 31)))
+        // );
+        // projectRepository.save(
+        //     Project.create(new ProjectCreateRequest(
+        //         partySamsungSDS.getId(),
+        //         1L,
+        //         "PROJ-2023-012",
+        //         "삼성디스플레이 MES 고도화",
+        //         "제조실행시스템(MES) 기능 개선 및 고도화",
+        //         ProjectStatus.CANCELLED,
+        //         390000000L,
+        //         LocalDate.of(2023, 6, 1),
+        //         LocalDate.of(2024, 3, 31)))
+        // );
+        // projectRepository.save(
+        //     Project.create(new ProjectCreateRequest(
+        //         partyKakao.getId(),
+        //         1L,
+        //         "PROJ-2025-001",
+        //         "카카오뱅크 디지털 플랫폼",
+        //         "차세대 디지털 뱅킹 플랫폼 구축",
+        //         ProjectStatus.ON_HOLD,
+        //         920000000L,
+        //         LocalDate.of(2025, 1, 1),
+        //         LocalDate.of(2025, 12, 31)))
+        // );
 
 
         // ---------------------------------------------------------
