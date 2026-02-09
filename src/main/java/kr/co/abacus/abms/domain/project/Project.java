@@ -31,6 +31,9 @@ public class Project extends AbstractEntity {
     @Column(name = "party_id", nullable = false)
     private Long partyId;
 
+    @Column(name = "lead_department_id", nullable = false)
+    private Long leadDepartmentId;
+
     @Column(name = "project_code", nullable = false, length = 50)
     private String code;
 
@@ -54,9 +57,10 @@ public class Project extends AbstractEntity {
     @AttributeOverride(name = "endDate", column = @Column(name = "end_date", nullable = false))
     private Period period;
 
-    private Project(Long partyId, String code, String name, @Nullable String description, ProjectStatus status,
+    private Project(Long partyId, Long leadDepartmentId, String code, String name, @Nullable String description, ProjectStatus status,
                     Money contractAmount, Period period) {
         this.partyId = partyId;
+        this.leadDepartmentId = leadDepartmentId;
         this.code = code;
         this.name = name;
         this.description = description;
@@ -68,6 +72,7 @@ public class Project extends AbstractEntity {
     public static Project create(ProjectCreateRequest request) {
         return new Project(
                 requireNonNull(request.partyId()),
+                requireNonNull(request.leadDepartmentId()),
                 requireNonNull(request.code()),
                 requireNonNull(request.name()),
                 request.description(),
@@ -78,6 +83,7 @@ public class Project extends AbstractEntity {
 
     public void update(ProjectUpdateRequest request) {
         this.partyId = requireNonNull(request.partyId());
+        this.leadDepartmentId = requireNonNull(request.leadDepartmentId());
         this.name = requireNonNull(request.name());
         this.description = request.description();
         this.status = requireNonNull(request.status());

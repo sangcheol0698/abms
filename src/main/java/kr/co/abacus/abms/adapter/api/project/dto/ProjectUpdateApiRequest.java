@@ -7,6 +7,7 @@ import kr.co.abacus.abms.domain.project.ProjectUpdateRequest;
 
 public record ProjectUpdateApiRequest(
         Long partyId,
+        Long leadDepartmentId,
         String name,
         String description,
         String status,
@@ -17,6 +18,7 @@ public record ProjectUpdateApiRequest(
     public ProjectUpdateRequest toDomainRequest() {
         return new ProjectUpdateRequest(
                 partyId, // Added partyId
+                leadDepartmentId,
                 name,
                 description,
                 ProjectStatus.valueOf(status), // Conversion added

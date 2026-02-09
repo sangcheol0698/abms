@@ -9,6 +9,7 @@ import kr.co.abacus.abms.domain.project.ProjectStatus;
 
 public record ProjectCreateApiRequest(
         Long partyId,
+        Long leadDepartmentId,
         String code,
         String name,
         @Nullable String description,
@@ -20,6 +21,7 @@ public record ProjectCreateApiRequest(
     public ProjectCreateRequest toDomainRequest() {
         return new ProjectCreateRequest(
                 partyId,
+                leadDepartmentId,
                 code,
                 name,
                 description,
