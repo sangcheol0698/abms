@@ -19,32 +19,10 @@
         @department-click="goToDepartment"
       >
         <template #actions>
-          <AlertDialog>
-            <AlertDialogTrigger as-child>
-              <Button variant="outline" size="sm" class="text-destructive hover:text-destructive">
-                <Trash2 class="mr-2 h-4 w-4" />
-                삭제
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>직원을 삭제하시겠습니까?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {{ employee?.name }} 직원 정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction
-                  class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  :disabled="isDeleting"
-                  @click="handleDelete"
-                >
-                  {{ isDeleting ? '삭제 중...' : '삭제' }}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button variant="outline" size="sm" @click="openPromotionDialog">
+            <TrendingUp class="mr-2 h-4 w-4" />
+            승진
+          </Button>
           <Button variant="outline" size="sm" @click="openEditDialog">
             <Pencil class="mr-2 h-4 w-4" />
             직원 편집
@@ -94,6 +72,47 @@
           </TabsContent>
         </div>
       </Tabs>
+
+      <div class="mt-8 flex justify-end">
+        <div
+          class="flex w-full max-w-[400px] items-center justify-between rounded-lg border border-border p-4"
+        >
+          <div class="space-y-1">
+            <h3 class="text-sm font-medium">직원 삭제</h3>
+            <p class="text-xs text-muted-foreground">이 작업은 되돌릴 수 없습니다.</p>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger as-child>
+              <Button
+                variant="outline"
+                size="sm"
+                class="text-muted-foreground hover:text-foreground"
+              >
+                <Trash2 class="mr-2 h-4 w-4" />
+                직원 삭제
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>직원을 삭제하시겠습니까?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {{ employee?.name }} 직원 정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  :disabled="isDeleting"
+                  @click="handleDelete"
+                >
+                  {{ isDeleting ? '삭제 중...' : '삭제' }}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
     </template>
 
     <EmployeeUpdateDialog
@@ -105,6 +124,15 @@
       :employee="employee ?? undefined"
       @update:open="isEmployeeUpdateDialogOpen = $event"
       @updated="handleEmployeeUpdated"
+    />
+
+    <EmployeePromotionDialog
+      :open="isPromotionDialogOpen"
+      :employee="employee"
+      :grade-options="gradeOptions"
+      :position-options="positionOptions"
+      @update:open="isPromotionDialogOpen = $event"
+      @promoted="handleEmployeePromoted"
     />
   </section>
 </template>
@@ -126,7 +154,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Pencil, Trash2 } from 'lucide-vue-next';
+import { Pencil, Trash2, TrendingUp } from 'lucide-vue-next';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
@@ -141,6 +169,7 @@ import EmployeeEmploymentPanel from '@/features/employee/components/EmployeeEmpl
 import EmployeeSalaryPanel from '@/features/employee/components/EmployeeSalaryPanel.vue';
 import EmployeeProjectsPanel from '@/features/employee/components/EmployeeProjectsPanel.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
+import EmployeePromotionDialog from '@/features/employee/components/EmployeePromotionDialog.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -167,6 +196,7 @@ const employeeInitials = computed(() => {
 });
 
 const isEmployeeUpdateDialogOpen = ref(false);
+const isPromotionDialogOpen = ref(false);
 const departmentOptions = ref<{ label: string; value: number }[]>([]);
 const statusOptions = ref<EmployeeFilterOption[]>([]);
 const typeOptions = ref<EmployeeFilterOption[]>([]);
@@ -354,6 +384,10 @@ function openEditDialog() {
   isEmployeeUpdateDialogOpen.value = true;
 }
 
+function openPromotionDialog() {
+  isPromotionDialogOpen.value = true;
+}
+
 function handleEmployeeUpdated() {
   isEmployeeUpdateDialogOpen.value = false;
   if (employee.value?.employeeId) {
@@ -361,9 +395,16 @@ function handleEmployeeUpdated() {
   }
 }
 
+function handleEmployeePromoted() {
+  isPromotionDialogOpen.value = false;
+  if (employee.value?.employeeId) {
+    fetchEmployee(employee.value.employeeId, { showLoading: false });
+  }
+}
+
 async function handleDelete() {
   if (!employee.value?.employeeId) return;
-  
+
   isDeleting.value = true;
   try {
     await repository.delete(employee.value.employeeId);
