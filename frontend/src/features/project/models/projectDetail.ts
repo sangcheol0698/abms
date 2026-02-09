@@ -13,6 +13,8 @@ export interface ProjectDetail {
   contractAmount: number;
   startDate: string;
   endDate: string | null;
+  leadDepartmentId: number | null;
+  leadDepartmentName: string | null;
 }
 
 /**
@@ -31,6 +33,8 @@ export function mapProjectDetail(input: any): ProjectDetail {
     contractAmount: Number(input?.contractAmount ?? 0),
     startDate: String(input?.startDate ?? ''),
     endDate: input?.endDate ?? null,
+    leadDepartmentId: input?.leadDepartmentId ? Number(input.leadDepartmentId) : null,
+    leadDepartmentName: input?.leadDepartmentName ? String(input.leadDepartmentName) : null,
   };
 }
 
@@ -46,6 +50,7 @@ export interface ProjectCreateData {
   contractAmount: number;
   startDate: string;
   endDate: string;
+  leadDepartmentId: number | null;
 }
 
 /**
@@ -59,4 +64,5 @@ export interface ProjectUpdateData {
   contractAmount: number;
   startDate: string;
   endDate: string;
+  leadDepartmentId: number | null;
 }

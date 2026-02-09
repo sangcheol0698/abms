@@ -21,6 +21,19 @@
             </dd>
           </div>
           <div class="grid grid-cols-[100px_1fr] gap-2">
+            <dt class="text-muted-foreground">주관 부서</dt>
+            <dd>
+              <button
+                type="button"
+                class="font-medium text-primary underline underline-offset-4 transition hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-muted-foreground"
+                :disabled="!project.leadDepartmentId"
+                @click="handleDepartmentClick"
+              >
+                {{ project.leadDepartmentName || '—' }}
+              </button>
+            </dd>
+          </div>
+          <div class="grid grid-cols-[100px_1fr] gap-2">
             <dt class="text-muted-foreground">시작일</dt>
             <dd class="font-medium text-foreground">{{ formatDate(project.startDate) }}</dd>
           </div>
@@ -49,7 +62,9 @@
           </div>
           <div class="grid grid-cols-[100px_1fr] gap-2">
             <dt class="text-muted-foreground">계약금액</dt>
-            <dd class="font-medium text-foreground">{{ formatCurrency(project.contractAmount) }}</dd>
+            <dd class="font-medium text-foreground">
+              {{ formatCurrency(project.contractAmount) }}
+            </dd>
           </div>
         </dl>
       </section>
@@ -79,6 +94,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   'party-click': [];
+  'department-click': [];
 }>();
 
 const statusVariant = computed(() => {
@@ -100,5 +116,12 @@ function handlePartyClick() {
     return;
   }
   emit('party-click');
+}
+
+function handleDepartmentClick() {
+  if (!props.project?.leadDepartmentId) {
+    return;
+  }
+  emit('department-click');
 }
 </script>
