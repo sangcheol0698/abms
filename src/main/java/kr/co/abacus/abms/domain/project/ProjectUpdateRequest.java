@@ -6,6 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 public record ProjectUpdateRequest(
         Long partyId,
+        Long leadDepartmentId,
         String name,
         @Nullable String description,
         ProjectStatus status,

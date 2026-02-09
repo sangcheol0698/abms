@@ -107,11 +107,11 @@ class PartyApiTest extends ApiIntegrationTestBase {
                 "contact2@test.com")));
 
         projectRepository.save(Project.create(ProjectFixture.createProjectCreateRequest(
-                "PRJ-PARTY-001", "협력사 프로젝트 1", party.getId())));
+                "PRJ-PARTY-001", "협력사 프로젝트 1", party.getId(), 1L)));
         projectRepository.save(Project.create(ProjectFixture.createProjectCreateRequest(
-                "PRJ-PARTY-002", "협력사 프로젝트 2", party.getId())));
+                "PRJ-PARTY-002", "협력사 프로젝트 2", party.getId(), 1L)));
         projectRepository.save(Project.create(ProjectFixture.createProjectCreateRequest(
-                "PRJ-OTHER-001", "다른 협력사 프로젝트", otherParty.getId())));
+                "PRJ-OTHER-001", "다른 협력사 프로젝트", otherParty.getId(), 1L)));
         flushAndClear();
 
         var response = restTestClient.get()

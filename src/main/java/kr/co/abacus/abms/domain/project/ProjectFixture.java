@@ -19,6 +19,7 @@ public class ProjectFixture {
     public static ProjectCreateRequest createProjectCreateRequest() {
         return new ProjectCreateRequest(
                 1L,
+                1L,
                 "PRJ-001",
                 "테스트 프로젝트",
                 "테스트 프로젝트 설명",
@@ -31,6 +32,7 @@ public class ProjectFixture {
     public static ProjectCreateRequest createProjectCreateRequest(Long partyId) {
         return new ProjectCreateRequest(
                 partyId,
+                1L,
                 "PRJ-001",
                 "테스트 프로젝트",
                 "테스트 프로젝트 설명",
@@ -43,6 +45,7 @@ public class ProjectFixture {
     public static ProjectCreateRequest createProjectCreateRequest(String code) {
         return new ProjectCreateRequest(
                 1L,
+                1L,
                 code,
                 "테스트 프로젝트",
                 "테스트 프로젝트 설명",
@@ -52,9 +55,10 @@ public class ProjectFixture {
                 LocalDate.of(2024, 12, 31));
     }
 
-    public static ProjectCreateRequest createProjectCreateRequest(String code, String name, Long partyId) {
+    public static ProjectCreateRequest createProjectCreateRequest(String code, String name, Long partyId, Long leadDepartmentId) {
         return new ProjectCreateRequest(
                 partyId,
+                leadDepartmentId,
                 code,
                 name,
                 "테스트 프로젝트 설명",

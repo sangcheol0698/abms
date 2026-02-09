@@ -60,13 +60,14 @@ public class PoiProjectExcelImporter implements ProjectExcelImporter {
 
     private ProjectCreateRequest toCreateRequest(Row row, Function<String, Long> partyLookup) {
         String partyName = getCellValue(row, 0);
-        String code = getCellValue(row, 1);
-        String name = getCellValue(row, 2);
-        String statusValue = getCellValue(row, 3);
-        String contractAmount = getCellValue(row, 4);
-        String startDate = getCellValue(row, 5);
-        String endDate = getCellValue(row, 6);
-        String description = getCellValue(row, 7);
+        String leadDepartmentName = getCellValue(row, 1);
+        String code = getCellValue(row, 2);
+        String name = getCellValue(row, 3);
+        String statusValue = getCellValue(row, 4);
+        String contractAmount = getCellValue(row, 5);
+        String startDate = getCellValue(row, 6);
+        String endDate = getCellValue(row, 7);
+        String description = getCellValue(row, 8);
 
         Long partyId = partyLookup.apply(partyName);
         if (partyId == null) {
@@ -75,6 +76,7 @@ public class PoiProjectExcelImporter implements ProjectExcelImporter {
 
         return new ProjectCreateRequest(
                 partyId,
+                Long.parseLong(leadDepartmentName), // 임시
                 code,
                 name,
                 description.isBlank() ? null : description,

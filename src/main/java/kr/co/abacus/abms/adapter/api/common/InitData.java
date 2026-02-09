@@ -611,6 +611,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partyNaverCloud.getId(),
+                1L,
                 "PROJ-2024-001",
                 "네이버클라우드 ERP 시스템 구축",
                 "네이버클라우드 기반 전사 ERP 시스템 개발 및 구축 프로젝트",
@@ -622,6 +623,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partySamsungSDS.getId(),
+                1L,
                 "PROJ-2024-002",
                 "삼성전자 협력사 포털 개발",
                 "삼성전자向 협력사 통합 관리 포털 시스템 구축",
@@ -633,6 +635,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partyKakao.getId(),
+                1L,
                 "PROJ-2024-003",
                 "카카오 AI 챗봇 플랫폼",
                 "LLM 기반 고객지원 챗봇 플랫폼 개발",
@@ -644,6 +647,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partyLGCNS.getId(),
+                1L,
                 "PROJ-2024-004",
                 "LG화학 데이터 웨어하우스",
                 "빅데이터 기반 통합 데이터 웨어하우스 구축",
@@ -655,6 +659,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partySkTelecom.getId(),
+                1L,
                 "PROJ-2024-005",
                 "5G IoT 플랫폼 고도화",
                 "5G 기반 IoT 디바이스 통합 관리 플랫폼 고도화",
@@ -666,6 +671,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partyNaverCloud.getId(),
+                1L,
                 "PROJ-2023-008",
                 "네이버페이 정산 시스템 리뉴얼",
                 "차세대 정산 시스템 개발 및 레거시 마이그레이션",
@@ -677,6 +683,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partySamsungSDS.getId(),
+                1L,
                 "PROJ-2023-012",
                 "삼성디스플레이 MES 고도화",
                 "제조실행시스템(MES) 기능 개선 및 고도화",
@@ -688,6 +695,7 @@ public class InitData {
         projectRepository.save(
             Project.create(new ProjectCreateRequest(
                 partyKakao.getId(),
+                1L,
                 "PROJ-2025-001",
                 "카카오뱅크 디지털 플랫폼",
                 "차세대 디지털 뱅킹 플랫폼 구축",
