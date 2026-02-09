@@ -23,7 +23,7 @@ public class PartyQueryService implements PartyFinder {
         return partyRepository.search(pageable, name);
     }
 
-    public String getPartyId(Long partyId) {
+    public String getPartyName(Long partyId) {
         return partyRepository.findByIdAndDeletedFalse(partyId).map(Party::getName).orElse(null);
     }
 

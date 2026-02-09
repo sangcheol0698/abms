@@ -5,8 +5,10 @@ import jakarta.validation.Valid;
 import kr.co.abacus.abms.adapter.api.common.FilenameBuilder;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.*;
+import kr.co.abacus.abms.application.department.DepartmentQueryService;
 import kr.co.abacus.abms.application.party.PartyQueryService;
 import kr.co.abacus.abms.application.project.ProjectExcelService;
+import kr.co.abacus.abms.application.project.ProjectQueryService;
 import kr.co.abacus.abms.application.project.dto.ProjectExcelUploadResult;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
@@ -39,12 +41,13 @@ public class ProjectApi {
     private final ProjectManager projectManager;
     private final ProjectFinder projectFinder;
     private final PartyQueryService partyQueryService;
+    private final ProjectQueryService projectQueryService;
     private final ProjectExcelService projectExcelService;
 
     @PostMapping("/api/projects")
     public ProjectResponse create(@RequestBody ProjectCreateApiRequest request) {
         Project project = projectManager.create(request.toDomainRequest());
-        String partyName = partyQueryService.getPartyId(project.getPartyId());
+        String partyName = partyQueryService.getPartyName(project.getPartyId());
 
         return ProjectResponse.from(project, partyName);
     }
@@ -54,23 +57,20 @@ public class ProjectApi {
         Page<ProjectSummary> projects = projectFinder.search(condition, pageable);
 
         return PageResponse.of(projects.map(project -> {
-            String partyName = partyQueryService.getPartyId(project.partyId());
+            String partyName = partyQueryService.getPartyName(project.partyId());
             return ProjectResponse.from(project, partyName);
         }));
     }
 
     @GetMapping("/api/projects/{id}")
-    public ProjectResponse find(@PathVariable Long id) {
-        Project project = projectFinder.find(id);
-        String partyName = partyQueryService.getPartyId(project.getPartyId());
-
-        return ProjectResponse.from(project, partyName);
+    public ProjectDetailResponse find(@PathVariable Long id) {
+        return projectQueryService.findDetail(id);
     }
 
     @PutMapping("/api/projects/{id}")
     public ProjectResponse update(@PathVariable Long id, @RequestBody ProjectUpdateApiRequest request) {
         Project project = projectManager.update(id, request.toDomainRequest());
-        String partyName = partyQueryService.getPartyId(project.getPartyId());
+        String partyName = partyQueryService.getPartyName(project.getPartyId());
 
         return ProjectResponse.from(project, partyName);
     }
@@ -78,7 +78,7 @@ public class ProjectApi {
     @PatchMapping("/api/projects/{id}/complete")
     public ProjectResponse complete(@PathVariable Long id) {
         Project project = projectManager.complete(id);
-        String partyName = partyQueryService.getPartyId(project.getPartyId());
+        String partyName = partyQueryService.getPartyName(project.getPartyId());
 
         return ProjectResponse.from(project, partyName);
     }
@@ -86,7 +86,7 @@ public class ProjectApi {
     @PatchMapping("/api/projects/{id}/cancel")
     public ProjectResponse cancel(@PathVariable Long id) {
         Project project = projectManager.cancel(id);
-        String partyName = partyQueryService.getPartyId(project.getPartyId());
+        String partyName = partyQueryService.getPartyName(project.getPartyId());
 
         return ProjectResponse.from(project, partyName);
     }
