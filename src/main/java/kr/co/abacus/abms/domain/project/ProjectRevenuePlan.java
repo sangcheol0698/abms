@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.domain.project;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -27,8 +28,11 @@ public class ProjectRevenuePlan extends AbstractEntity {
     @Column(name = "project_id", nullable = false)
     private Long projectId;
 
-    @Column(name = "revenue_month", nullable = false)
-    private LocalDate revenueMonth;
+    @Column(name = "plan_sequence", nullable = false)
+    private Integer sequence;
+
+    @Column(name = "revenue_date", nullable = false)
+    private LocalDate revenueDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "revenue_type", nullable = false, length = 20)
@@ -42,7 +46,31 @@ public class ProjectRevenuePlan extends AbstractEntity {
     private Boolean isIssued;
 
     @Nullable
-    @Column(name = "description")
-    private LocalDate description;
+    @Column(name = "memo")
+    private String memo;
+
+
+    public static ProjectRevenuePlan create(ProjectRevenuePlanCreateRequest createRequest) {
+        ProjectRevenuePlan projectRevenuePlan = new ProjectRevenuePlan();
+
+        projectRevenuePlan.projectId = Objects.requireNonNull(createRequest.projectId());
+        projectRevenuePlan.sequence = Objects.requireNonNull(createRequest.sequence());
+        projectRevenuePlan.revenueDate = Objects.requireNonNull(createRequest.revenueDate());
+        projectRevenuePlan.type = Objects.requireNonNull(createRequest.type());
+        projectRevenuePlan.amount = Objects.requireNonNull(Money.wons(createRequest.amount()));
+        projectRevenuePlan.isIssued = false; // default(초기값)
+        projectRevenuePlan.memo = createRequest.memo();
+
+        return projectRevenuePlan;
+    }
+
+    public void issue() {
+        this.isIssued = true;
+    }
+
+    public void cancel() {
+        this.isIssued = false;
+    }
+
 
 }

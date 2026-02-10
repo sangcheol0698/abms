@@ -52,6 +52,7 @@
         <TabsList class="flex-wrap">
           <TabsTrigger value="overview">개요</TabsTrigger>
           <TabsTrigger value="assignments">투입인력</TabsTrigger>
+          <TabsTrigger value="revenue">매출 일정</TabsTrigger>
         </TabsList>
 
         <div class="flex flex-1 flex-col gap-4">
@@ -65,6 +66,9 @@
           </TabsContent>
           <TabsContent value="assignments" class="flex-1">
             <ProjectAssignmentPanel :project-id="project?.projectId ?? 0" />
+          </TabsContent>
+          <TabsContent value="revenue" class="flex-1">
+            <ProjectRevenuePlanPanel :project-id="project?.projectId ?? 0" />
           </TabsContent>
         </div>
       </Tabs>
@@ -104,6 +108,7 @@ import HttpError from '@/core/http/HttpError';
 import ProjectDetailHeader from '@/features/project/components/ProjectDetailHeader.vue';
 import ProjectOverviewPanel from '@/features/project/components/ProjectOverviewPanel.vue';
 import ProjectAssignmentPanel from '@/features/project/components/ProjectAssignmentPanel.vue';
+import ProjectRevenuePlanPanel from '@/features/project/components/ProjectRevenuePlanPanel.vue';
 import ProjectUpdateDialog from '@/features/project/components/ProjectUpdateDialog.vue';
 
 defineOptions({ name: 'ProjectDetailView' });
