@@ -1,16 +1,18 @@
 package kr.co.abacus.abms.domain.projectassignment;
 
-import java.time.LocalDate;
 import java.util.Objects;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.domain.project.Project;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,56 +26,41 @@ import kr.co.abacus.abms.domain.shared.Period;
 @Table(name = "project_assignment")
 public class ProjectAssignment extends AbstractEntity {
 
-    @Column(name = "contract_id", nullable = false)
-    private Long contractId;
+    @Column(name = "project_id", nullable = false)
+    private Long projectId;
 
     @Column(name = "employee_id", nullable = false)
     private Long employeeId;
 
     @Nullable
-    @Column(name = "assignment_role", length = 50)
-    private String assignmentRole;
-
-    @Nullable
-    @Column(name = "assignment_rate")
-    private Double assignmentRate;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "assignment_role", length = 20)
+    private AssignmentRole role;
 
     @Embedded
     @AttributeOverride(name = "startDate", column = @Column(name = "start_date", nullable = false))
     @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
     private Period period;
 
-    public static ProjectAssignment assign(ProjectAssignmentRequest request) {
+    public static ProjectAssignment assign(Project project, ProjectAssignmentCreateRequest request) {
         ProjectAssignment assignment = new ProjectAssignment();
 
-        assignment.contractId = Objects.requireNonNull(request.contractId());
+        // 프로젝트 할당 기간 유효성 검사
+        if (request.startDate().isBefore(project.getPeriod().startDate())) {
+            throw new IllegalArgumentException("투입 시작일은 프로젝트 시작일보다 빠를 수 없습니다.");
+        }
+        if (project.getPeriod().endDate() != null) {
+            if (request.endDate() == null || request.endDate().isAfter(project.getPeriod().endDate())) {
+                throw new IllegalArgumentException("투입 종료일은 프로젝트 종료일보다 늦을 수 없습니다.");
+            }
+        }
+
+        assignment.projectId = Objects.requireNonNull(request.projectId());
         assignment.employeeId = Objects.requireNonNull(request.employeeId());
-        assignment.assignmentRole = request.assignmentRole();
-        assignment.assignmentRate = request.assignmentRate();
+        assignment.role = request.role() != null ? request.role() : null;
         assignment.period = new Period(Objects.requireNonNull(request.startDate()), request.endDate());
 
-        // 투입률 검증
-        if (assignment.assignmentRate != null) {
-            if (assignment.assignmentRate < 0.0 || assignment.assignmentRate > 1.0) {
-                throw new IllegalArgumentException("투입률은 0.0 이상 1.0 이하여야 합니다");
-            }
-        }
-
         return assignment;
-    }
-
-    public void unassign(LocalDate endDate) {
-        Objects.requireNonNull(endDate, "종료일은 필수입니다");
-        this.period = new Period(this.period.startDate(), endDate);
-    }
-
-    public void updateRate(Double newRate) {
-        if (newRate != null) {
-            if (newRate < 0.0 || newRate > 1.0) {
-                throw new IllegalArgumentException("투입률은 0.0 이상 1.0 이하여야 합니다");
-            }
-        }
-        this.assignmentRate = newRate;
     }
 
 }
