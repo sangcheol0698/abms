@@ -2,20 +2,13 @@
   <section class="flex h-full min-h-0 flex-1 flex-col gap-6 overflow-hidden">
     <div
       v-if="isLoading"
-      class="flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground"
-      role="status"
-      aria-live="polite"
+      class="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10"
     >
-      부서 정보를 불러오는 중입니다...
+      <span class="text-sm text-muted-foreground">부서 정보를 불러오는 중입니다...</span>
     </div>
 
-    <Alert v-else-if="errorMessage" variant="destructive">
-      <AlertTitle>부서 정보를 불러오지 못했습니다</AlertTitle>
-      <AlertDescription>{{ errorMessage }}</AlertDescription>
-    </Alert>
-
     <FeatureSplitLayout
-      v-else
+      v-if="!isLoading"
       :sidebar-default-size="20"
       :sidebar-min-size="14"
       :sidebar-max-size="32"
@@ -118,7 +111,7 @@ import type {
 import DepartmentTree from '@/features/department/components/DepartmentTree.vue';
 import DepartmentDetailPanel from '@/features/department/components/DepartmentDetailPanel.vue';
 import HttpError from '@/core/http/HttpError';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { toast } from 'vue-sonner';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -134,7 +127,6 @@ import { Menu, Slash } from 'lucide-vue-next';
 const repository = appContainer.resolve(DepartmentRepository);
 const chart = ref<DepartmentChartNode[]>([]);
 const isLoading = ref(true);
-const errorMessage = ref<string | null>(null);
 const selectedDepartmentId = ref<number | undefined>();
 const departmentDetail = ref<DepartmentDetail | null>(null);
 const isDepartmentLoading = ref(false);
@@ -218,17 +210,15 @@ const selectedDepartment = computed(() => {
 
 async function loadOrganizationChart() {
   isLoading.value = true;
-  errorMessage.value = null;
 
   try {
     chart.value = await repository.fetchOrganizationChart();
     ensureSelectedDepartmentExists();
   } catch (error) {
-    if (error instanceof HttpError) {
-      errorMessage.value = error.message;
-    } else {
-      errorMessage.value = '부서 정보를 불러오지 못했습니다.';
-    }
+    const message = error instanceof HttpError ? error.message : '부서 정보를 불러오지 못했습니다.';
+    toast.error('부서 정보를 불러오지 못했습니다.', {
+      description: message,
+    });
   } finally {
     isLoading.value = false;
   }
