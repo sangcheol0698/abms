@@ -1,21 +1,12 @@
 package kr.co.abacus.abms.adapter.api.employee;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+
 import jakarta.validation.Valid;
-
-import kr.co.abacus.abms.adapter.api.common.EnumResponse;
-import kr.co.abacus.abms.adapter.api.common.FilenameBuilder;
-import kr.co.abacus.abms.adapter.api.common.PageResponse;
-import kr.co.abacus.abms.adapter.api.employee.dto.*;
-import kr.co.abacus.abms.application.employee.EmployeeExcelService;
-import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
-import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
-import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
-import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
-import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
-import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
-import kr.co.abacus.abms.domain.employee.*;
-
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -24,14 +15,43 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
+
+import kr.co.abacus.abms.adapter.api.common.EnumResponse;
+import kr.co.abacus.abms.adapter.api.common.FilenameBuilder;
+import kr.co.abacus.abms.adapter.api.common.PageResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateRequest;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDetailResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeExcelUploadResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateResponse;
+import kr.co.abacus.abms.application.employee.EmployeeExcelService;
+import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
+import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
+import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeStatus;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 @RequiredArgsConstructor
 @RestController
@@ -105,8 +125,8 @@ public class EmployeeApi {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/promote")
-    public void promote(@PathVariable Long id, @RequestParam EmployeePosition position) {
-        employeeManager.promote(id, position);
+    public void promote(@PathVariable Long id, @RequestBody EmployeePositionUpdateRequest request) {
+        employeeManager.promote(id, request.position());
     }
 
     @GetMapping("/api/employees/positions")
