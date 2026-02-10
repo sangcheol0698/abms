@@ -27,6 +27,7 @@ import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDetailResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
@@ -598,8 +599,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR)).getId();
         flushAndClear();
 
+        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE);
+        String requestJson = objectMapper.writeValueAsString(request);
+
         restTestClient.patch()
-                .uri("/api/employees/{id}/promote?position=STAFF", employeeId)
+                .uri("/api/employees/{id}/promote", employeeId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestJson)
                 .exchange()
                 .expectStatus().isNoContent();
         flushAndClear();
@@ -614,14 +620,19 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
+        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.ASSOCIATE);
+        String requestJson = objectMapper.writeValueAsString(request);
+
         restTestClient.patch()
-                .uri("/api/employees/{id}/promote?position=ASSOCIATE", employeeId)
+                .uri("/api/employees/{id}/promote", employeeId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestJson)
                 .exchange()
                 .expectStatus().isBadRequest();
     }
 
     @Test
-    @DisplayName("퇴사한 직원의 직급을 승진시키려 할 때 예외가 발생한다.")
+    @DisplayName("퇴사한 직원의 직급을 승진시킨다.")
     void promote_resignedEmployee_throwsException() {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
@@ -629,8 +640,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
+        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE);
+        String requestJson = objectMapper.writeValueAsString(request);
+
         restTestClient.patch()
-                .uri("/api/employees/{id}/promote?position=STAFF", employeeId)
+                .uri("/api/employees/{id}/promote", employeeId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestJson)
                 .exchange()
                 .expectStatus().isBadRequest();
     }
