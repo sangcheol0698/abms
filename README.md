@@ -8,46 +8,46 @@ ABMS is an enterprise-grade business management system that demonstrates hexagon
 
 - **Employee Management**: Complete employee lifecycle management with department organization
 - **Payroll Processing**: Automated payroll calculations and processing
-- **Project & Contract Management**: Project tracking with employee assignments
+- **Project & Contract Management**: Project tracking with employee assignments and contract management
 - **AI Chat Assistant**: Integration with Google Vertex AI Gemini for natural language queries
 - **Excel Import/Export**: Bulk operations support via Excel files
 
 ### Technology Stack
 
 **Backend:**
-- Java 25 with virtual threads
-- Spring Boot 4.0.0
+- **Java 25**
+- **Spring Boot 4.0.2**
 - Spring Data JPA with QueryDSL 7.0
 - MySQL 8.x (via Docker Compose)
 - H2 Database (for testing)
-- Spring AI with Vertex AI Gemini integration
+- Spring AI 2.0.0-M2 with Vertex AI Gemini integration
 - Error Prone with NullAway for null safety
-- P6Spy for SQL query logging
+- P6Spy 2.0.0 for SQL query logging
 
 **Frontend:**
-- Vue 3.5 with Composition API
-- TypeScript 5.8
-- Vite 7 (build tool)
-- Pinia (state management)
+- **Vue 3.5.21** with Composition API
+- **TypeScript 5.8.3**
+- **Vite 7.1.6** (build tool)
+- Pinia 3.0.3 (state management)
 - Vue Router 4.5
-- TailwindCSS 4.1
-- Vitest (unit testing)
-- Playwright (e2e testing)
+- TailwindCSS 4.1.13
+- Reka UI (Headless UI components)
+- Vitest & Playwright (testing)
 
 **Build & Tools:**
-- Gradle 9.x with Kotlin DSL
+- **Gradle 9.x** with Kotlin DSL
 - Lombok for code generation
-- Apache POI for Excel processing
+- Apache POI 5.4.1 for Excel processing
 - ArchUnit for architecture validation
 
 ### Architecture
 
 The project follows **Hexagonal Architecture** (Ports & Adapters) with three main layers:
 
-```
+```text
 kr.co.abacus.abms/
 ├── domain/           # Core business logic, entities, value objects
-├── application/      # Use cases, application services, port interfaces
+├── application/      # Use cases, application services, port interfaces (inbound/outbound)
 └── adapter/          # External interfaces (REST API, persistence, integrations, security)
 ```
 
@@ -61,7 +61,7 @@ Layer rules are enforced by ArchUnit tests to maintain architectural integrity.
 - **Gradle 9.x**: Wrapper included (`./gradlew`)
 - **Docker**: For MySQL database
 - **Docker Compose**: For container orchestration
-- **Node.js & npm**: For frontend development (if working with UI)
+- **Node.js 22+ & npm**: For frontend development
 
 ### Environment Variables
 
@@ -134,7 +134,7 @@ The server will start on `http://localhost:8080`.
 - Sample data initialization (via `InitData` class in `local`/`default` profiles)
 - P6Spy SQL logging with actual parameters
 
-### 6. Frontend Development (Optional)
+### 6. Frontend Development
 
 ```bash
 cd frontend
@@ -161,14 +161,8 @@ The frontend development server will start on `http://localhost:5173`.
 # Run specific test class
 ./gradlew test --tests "kr.co.abacus.abms.domain.shared.MoneyTest"
 
-# Run specific test method
-./gradlew test --tests "kr.co.abacus.abms.domain.shared.MoneyTest.add"
-
 # Clean build artifacts
 ./gradlew clean
-
-# Generate AsciiDoc documentation
-./gradlew asciidoctor
 ```
 
 ### Frontend (npm)
@@ -186,20 +180,11 @@ npm run preview
 # Run unit tests
 npm run test
 
-# Lint TypeScript and Vue files
-npm run lint
-
-# Fix linting issues
+# Lint & Fix
 npm run lint:fix
 
 # Type checking
 npm run typecheck
-
-# Format code
-npm run format
-
-# Format and write
-npm run format:write
 ```
 
 ### Docker
@@ -213,12 +198,6 @@ docker compose down
 
 # Stop and remove volumes (full reset)
 docker compose down -v
-
-# View logs
-docker compose logs -f
-
-# Check status
-docker compose ps
 ```
 
 ## Testing
@@ -227,12 +206,12 @@ docker compose ps
 
 Tests follow the hexagonal architecture structure:
 
-```
+```text
 src/test/java/kr/co/abacus/abms/
 ├── domain/                    # Domain model tests (unit tests)
-├── application/              # Application service tests (integration)
-├── adapter/api/              # API tests (integration)
-├── support/                  # Test base classes and utilities
+├── application/               # Application service tests (integration)
+├── adapter/api/               # API tests (integration)
+├── support/                   # Test base classes and utilities
 └── HexagonalArchitectureTest.java  # ArchUnit tests
 ```
 
@@ -243,34 +222,11 @@ src/test/java/kr/co/abacus/abms/
 3. **API Integration Tests**: REST API tests using MockMvc and RestTestClient
 4. **Architecture Tests**: ArchUnit validation of hexagonal architecture rules
 
-### Running Tests
-
-```bash
-# Run all tests
-./gradlew test
-
-# Run with coverage
-./gradlew test jacocoTestReport
-
-# Run specific test
-./gradlew test --tests "EmployeeTest"
-
-# Run tests in a package
-./gradlew test --tests "kr.co.abacus.abms.domain.*"
-```
-
-### Test Configuration
-
-- **Mockito Agent**: Automatically attached via JVM args for Java 25 compatibility
-- **Test Profile**: Uses H2 in-memory database (not MySQL)
-- **Transactions**: Auto-rollback after each test (via `@Transactional`)
-- **NullAway**: Disabled for test code
-
 ## Project Structure
 
 ### Backend Structure
 
-```
+```text
 src/main/java/kr/co/abacus/abms/
 ├── AbmsApplication.java           # Spring Boot entry point
 ├── domain/                        # Domain layer (business logic)
@@ -291,9 +247,8 @@ src/main/java/kr/co/abacus/abms/
 │   │   ├── outbound/              # Ports (repository interfaces)
 │   │   └── dto/                   # Commands/queries
 │   ├── department/
-│   ├── payroll/
 │   ├── project/
-│   ├── positionhistory/
+│   ├── contract/
 │   ├── party/
 │   └── chat/                      # AI chat service
 └── adapter/                       # Adapter layer (external interfaces)
@@ -302,55 +257,24 @@ src/main/java/kr/co/abacus/abms/
     ├── infrastructure/            # JPA repository implementations
     ├── security/                  # Security configuration
     └── integration/               # External API clients
-
-src/main/resources/
-└── application.yml                # Application configuration
-
-src/test/resources/
-├── application.yml                # Test profile configuration
-└── junit-platform.properties      # JUnit platform settings
-
-src/test/java/kr/co/abacus/abms/
-├── domain/                        # Domain tests
-├── application/                   # Service tests
-├── adapter/api/                  # API tests
-├── support/                       # Test utilities
-│   ├── IntegrationTestBase.java
-│   ├── ApiIntegrationTestBase.java
-│   └── AssertThatUtils.java
-└── HexagonalArchitectureTest.java
 ```
 
 ### Frontend Structure
 
-```
+```text
 frontend/
 ├── src/
 │   ├── main.ts                    # Application entry point
 │   ├── App.vue                    # Root component
-│   ├── components/                # Reusable Vue components
-│   ├── views/                     # Page components
-│   ├── stores/                    # Pinia state management
-│   ├── router/                    # Vue Router configuration
-│   ├── services/                  # API service layer
-│   ├── types/                     # TypeScript type definitions
-│   └── assets/                    # Static assets
+│   ├── core/                      # Core infrastructure (API, Router, Utils)
+│   ├── components/                # Shared UI components
+│   ├── features/                  # Feature-based modules (Chat, Employee, etc.)
+│   ├── assets/                    # Static assets
+│   └── style.css                  # Global styles (Tailwind)
 ├── public/                        # Public static files
 ├── package.json                   # npm dependencies and scripts
-├── vite.config.ts                 # Vite configuration
-├── tsconfig.json                  # TypeScript configuration
-└── tailwind.config.js             # TailwindCSS configuration
+└── vite.config.ts                 # Vite configuration
 ```
-
-### Configuration Files
-
-- `build.gradle.kts`: Gradle build configuration with dependencies
-- `settings.gradle.kts`: Gradle project settings
-- `compose.yaml`: Docker Compose configuration for MySQL
-- `.env`: Environment variables (API keys)
-- `spy.log`: P6Spy SQL query log (generated at runtime)
-- `HELP.md`: Spring Boot generated help documentation
-- `AGENTS.md`: Agent-related documentation
 
 ## API Documentation
 
@@ -367,157 +291,12 @@ frontend/
 - `POST /api/employees` - Create new employee
 - `PUT /api/employees/{id}` - Update employee
 - `DELETE /api/employees/{id}` - Delete employee (soft delete)
-- `GET /api/employees/excel/download` - Download employees as Excel
-- `POST /api/employees/excel/upload` - Upload employees from Excel
-
-**Department Management:**
-- `GET /api/departments/organization-chart` - Organization chart
-- `GET /api/departments/{departmentId}` - Get department details
-- `GET /api/departments/{departmentId}/employees` - List department employees
-- `POST /api/departments/{departmentId}/assign-team-leader` - Assign team leader
-
-**Payroll:**
-- TODO - Document payroll endpoints
-
-**Project Management:**
-- TODO - Document project endpoints
 
 **AI Chat:**
 - `POST /api/v1/chat/message` - Send chat message to AI assistant
 - `POST /api/v1/chat/stream` - Stream chat responses (SSE)
 - `GET /api/v1/chat/sessions` - List recent chat sessions
-- `GET /api/v1/chat/sessions/favorites` - List favorite chat sessions
-- `GET /api/v1/chat/sessions/{sessionId}` - Get chat session details
-- `POST /api/v1/chat/sessions/{sessionId}/favorite` - Toggle favorite
-
-**Actuator:**
-- `GET /actuator/health` - Health check endpoint
-
-## Development
-
-### Code Style
-
-The project follows strict code style conventions:
-
-- **Indentation**: 4 spaces
-- **Null Safety**: JSpecify with `@NullMarked` on packages, `@Nullable` for nullable fields
-- **Static Analysis**: Error Prone with NullAway enabled (compile-time null checking)
-- **Naming**: 
-  - Entities: `Employee`, `Department`
-  - Services: `EmployeeManager` (write), `EmployeeFinder` (read)
-  - Repositories: `EmployeeRepository`
-  - DTOs: `EmployeeCreateRequest`, `EmployeeResponse`
-
-### Null Safety
-
-All packages must have `package-info.java`:
-
-```java
-@NullMarked
-package kr.co.abacus.abms.domain.employee;
-
-import org.jspecify.annotations.NullMarked;
-```
-
-Use `@Nullable` for nullable fields/parameters:
-
-```java
-import org.jspecify.annotations.Nullable;
-
-@Nullable
-private String optionalField;
-```
-
-### Domain-Driven Design
-
-- **Aggregates**: Each aggregate root manages its own consistency
-- **Value Objects**: Immutable records (e.g., `Money`, `Email`, `Period`)
-- **Factories**: Static factory methods for entity creation (`create()`, `startWith()`)
-- **Soft Delete**: All entities support soft deletion via `BaseEntity`
-- **Domain Events**: Can be published for cross-aggregate coordination
-
-### QueryDSL
-
-Generated Q-classes are located in `build/generated/sources/annotationProcessor/`. If you get compilation errors about missing Q-classes:
-
-```bash
-./gradlew clean build
-```
-
-## Profiles
-
-### Available Profiles
-
-- `default`: Default profile with sample data initialization (uses MySQL via Docker)
-- `local`: Local development with sample data (uses MySQL via Docker)
-- `test`: Test profile (uses H2 in-memory database)
-
-### Activating Profiles
-
-**Via Gradle:**
-```bash
-./gradlew bootRun --args='--spring.profiles.active=local'
-```
-
-**Via Environment Variable:**
-```bash
-export SPRING_PROFILES_ACTIVE=local
-./gradlew bootRun
-```
-
-### Profile-Specific Configuration
-
-- `local`/`default`: Initializes sample departments and employees via `InitData`
-- `test`: Uses H2 database, no sample data initialization
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue: NullAway compilation errors**
-
-Solution: Ensure all packages have `package-info.java` with `@NullMarked` annotation.
-
-**Issue: QueryDSL Q-classes not found**
-
-Solution: Clean and rebuild the project:
-```bash
-./gradlew clean build
-```
-
-**Issue: Mockito errors in tests**
-
-Solution: Mockito agent is auto-configured. Verify `jvmArgs("-javaagent:${mockitoAgent.asPath}")` in `build.gradle.kts`.
-
-**Issue: Database connection fails**
-
-Solution: 
-- Verify Docker is running: `docker compose ps`
-- Check port 3307 (not 3306): `netstat -an | grep 3307`
-- Restart database: `docker compose restart mysql`
-
-**Issue: ArchUnit tests fail**
-
-Solution: Ensure code follows hexagonal architecture rules:
-- Domain layer should not depend on application or adapter
-- Application layer should not depend on adapter
-- Check import statements in failing classes
-
-**Issue: Port 8080 already in use**
-
-Solution: Change the port in `application.yml`:
-```yaml
-server:
-  port: 8081
-```
-
-Or kill the process using port 8080:
-```bash
-# macOS/Linux
-lsof -ti:8080 | xargs kill -9
-```
 
 ---
 
-**Version:** 0.0.2-SNAPSHOT  
-**Last Updated:** 2026-01-27
+**Last Updated:** 2026-02-10
