@@ -44,7 +44,8 @@
                 <SelectValue placeholder="직책 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="option in positionOptions" :key="option.value" :value="String(option.value)">
+                <SelectItem v-for="option in positionOptions" :key="option.value" :value="String(option.value)"
+                  :disabled="option.level != null && currentPositionLevel != null && option.level < currentPositionLevel">
                   {{ option.label }}
                 </SelectItem>
               </SelectContent>
@@ -64,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive } from 'vue';
+import { ref, watch, reactive, computed } from 'vue';
 import {
   Dialog,
   DialogContent,
@@ -106,6 +107,12 @@ const isSubmitting = ref(false);
 const form = reactive({
   gradeCode: '',
   positionCode: '',
+});
+
+const currentPositionLevel = computed(() => {
+  if (!props.employee?.positionCode) return null;
+  const current = props.positionOptions.find(o => o.value === props.employee?.positionCode);
+  return current?.level ?? null;
 });
 
 // 다이얼로그가 열릴 때 현재 값으로 초기화
