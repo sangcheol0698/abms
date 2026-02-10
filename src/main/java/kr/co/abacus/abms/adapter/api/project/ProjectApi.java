@@ -9,6 +9,7 @@ import kr.co.abacus.abms.application.department.DepartmentQueryService;
 import kr.co.abacus.abms.application.party.PartyQueryService;
 import kr.co.abacus.abms.application.project.ProjectExcelService;
 import kr.co.abacus.abms.application.project.ProjectQueryService;
+import kr.co.abacus.abms.application.project.dto.ProjectDetail;
 import kr.co.abacus.abms.application.project.dto.ProjectExcelUploadResult;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
@@ -64,7 +65,8 @@ public class ProjectApi {
 
     @GetMapping("/api/projects/{id}")
     public ProjectDetailResponse find(@PathVariable Long id) {
-        return projectQueryService.findDetail(id);
+        ProjectDetail detail = projectQueryService.findDetail(id);
+        return ProjectDetailResponse.of(detail);
     }
 
     @PutMapping("/api/projects/{id}")

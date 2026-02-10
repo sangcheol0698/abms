@@ -2,7 +2,7 @@ package kr.co.abacus.abms.adapter.api.project.dto;
 
 import java.time.LocalDate;
 import org.jspecify.annotations.Nullable;
-import kr.co.abacus.abms.domain.project.Project;
+import kr.co.abacus.abms.application.project.dto.ProjectDetail;
 
 public record ProjectDetailResponse(
     Long projectId,
@@ -19,20 +19,20 @@ public record ProjectDetailResponse(
     @Nullable Long leadDepartmentId,
     @Nullable String leadDepartmentName) {
 
-    public static ProjectDetailResponse of(Project project, String partyName, @Nullable String leadDepartmentName) {
+    public static ProjectDetailResponse of(ProjectDetail detail) {
         return new ProjectDetailResponse(
-            project.getId(),
-            project.getPartyId(),
-            partyName,
-            project.getCode(),
-            project.getName(),
-            project.getDescription(),
-            project.getStatus().name(),
-            project.getStatus().getDescription(),
-            project.getContractAmount().amount().longValue(),
-            project.getPeriod().startDate(),
-            project.getPeriod().endDate(),
-            project.getLeadDepartmentId(),
-            leadDepartmentName);
+            detail.projectId(),
+            detail.partyId(),
+            detail.partyName(),
+            detail.code(),
+            detail.name(),
+            detail.description(),
+            detail.status().name(),
+            detail.status().getDescription(),
+            detail.contractAmount(),
+            detail.startDate(),
+            detail.endDate(),
+            detail.leadDepartmentId(),
+            detail.leadDepartmentName());
     }
 }

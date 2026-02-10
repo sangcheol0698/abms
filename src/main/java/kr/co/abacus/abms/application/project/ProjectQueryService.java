@@ -7,11 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.co.abacus.abms.adapter.api.project.dto.ProjectDetailResponse;
 import kr.co.abacus.abms.application.department.DepartmentQueryService;
 import kr.co.abacus.abms.application.party.PartyQueryService;
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.project.dto.ProjectDetail;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
@@ -35,14 +35,14 @@ public class ProjectQueryService implements ProjectFinder {
                 .orElseThrow(() -> new ProjectNotFoundException("존재하지 않는 프로젝트입니다: " + id));
     }
 
-    public ProjectDetailResponse findDetail(Long id) {
+    public ProjectDetail findDetail(Long id) {
         Project project =  projectRepository.findByIdAndDeletedFalse(id)
             .orElseThrow(() -> new ProjectNotFoundException("존재하지 않는 프로젝트입니다: " + id));
 
         String partyName = partyQueryService.getPartyName(project.getPartyId());
         String leadDepartmentName = departmentQueryService.find(project.getLeadDepartmentId()).getName();
 
-        return ProjectDetailResponse.of(project, partyName, leadDepartmentName);
+        return ProjectDetail.of(project, partyName, leadDepartmentName);
     }
 
     @Override
