@@ -29,4 +29,5 @@ public interface ProjectRepository extends Repository<Project, Long>, CustomProj
     List<Project> findAllByStatusAndDeletedFalse(ProjectStatus status);
 
     int countByStatus(ProjectStatus status);
+
 }

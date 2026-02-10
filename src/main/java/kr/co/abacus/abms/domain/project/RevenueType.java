@@ -23,10 +23,9 @@ public enum RevenueType {
 
         String normalized = description.trim();
         return Arrays.stream(values())
-            .filter(status -> status.name().equalsIgnoreCase(normalized)
-                || status.description.equals(normalized))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("알 수 없는 프로젝트 매출 유형: " + description));
+                .filter(status -> status.name().equalsIgnoreCase(normalized)
+                        || status.description.equals(normalized))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("알 수 없는 프로젝트 매출 유형: " + description));
     }
-
 }

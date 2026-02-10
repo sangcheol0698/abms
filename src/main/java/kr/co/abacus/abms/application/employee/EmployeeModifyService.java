@@ -118,9 +118,9 @@ public class EmployeeModifyService implements EmployeeManager {
          * 추후에 도메인 이벤트 방식으로 변경
          */
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
-            employee.getId(),
-            new Period(LocalDate.now(), null),
-            employee.getPosition()
+                employee.getId(),
+                new Period(LocalDate.now(), null),
+                employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);
     }

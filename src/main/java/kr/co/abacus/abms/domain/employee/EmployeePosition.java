@@ -24,7 +24,6 @@ public enum EmployeePosition {
     PRESIDENT("사장", 8),
     CHAIRMAN("회장", 9);
 
-
     private final String description;
     private final int level;
 

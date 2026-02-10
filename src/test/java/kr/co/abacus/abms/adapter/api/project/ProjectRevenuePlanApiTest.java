@@ -17,6 +17,6 @@ class ProjectRevenuePlanApiTest extends ApiIntegrationTestBase {
     @DisplayName("프로젝트 매출 계획 생성")
     void create() {
 
-
     }
+
 }

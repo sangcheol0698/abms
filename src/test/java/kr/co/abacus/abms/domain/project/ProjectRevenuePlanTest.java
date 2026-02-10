@@ -17,14 +17,14 @@ class ProjectRevenuePlanTest {
     @DisplayName("프로젝트 매출 계획 생성 - 필수 정보와 초기 상태")
     void create() {
         ProjectRevenuePlan projectRevenuePlan = ProjectRevenuePlan.create(
-            new ProjectRevenuePlanCreateRequest(
-                1L,
-                1,
-                LocalDate.of(2024, 1, 1),
-                RevenueType.DOWN_PAYMENT,
-                100000000L,
-                "메모~"
-            )
+                new ProjectRevenuePlanCreateRequest(
+                        1L,
+                        1,
+                        LocalDate.of(2024, 1, 1),
+                        RevenueType.DOWN_PAYMENT,
+                        100000000L,
+                        "메모~"
+                )
         );
 
         assertThat(projectRevenuePlan.getProjectId()).isEqualTo(1L);

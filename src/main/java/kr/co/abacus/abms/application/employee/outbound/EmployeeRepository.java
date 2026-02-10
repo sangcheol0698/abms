@@ -35,4 +35,5 @@ public interface EmployeeRepository extends Repository<Employee, Long>, CustomEm
     int countByJoinDateBetween(LocalDate startDate, LocalDate endDate);
 
     int countByStatus(EmployeeStatus status);
+
 }

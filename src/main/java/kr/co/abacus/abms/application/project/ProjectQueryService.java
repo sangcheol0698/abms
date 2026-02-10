@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.application.department.DepartmentQueryService;
 import kr.co.abacus.abms.application.party.PartyQueryService;
+
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.project.dto.ProjectDetail;
@@ -36,8 +37,8 @@ public class ProjectQueryService implements ProjectFinder {
     }
 
     public ProjectDetail findDetail(Long id) {
-        Project project =  projectRepository.findByIdAndDeletedFalse(id)
-            .orElseThrow(() -> new ProjectNotFoundException("존재하지 않는 프로젝트입니다: " + id));
+        Project project = projectRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new ProjectNotFoundException("존재하지 않는 프로젝트입니다: " + id));
 
         String partyName = partyQueryService.getPartyName(project.getPartyId());
         String leadDepartmentName = departmentQueryService.find(project.getLeadDepartmentId()).getName();

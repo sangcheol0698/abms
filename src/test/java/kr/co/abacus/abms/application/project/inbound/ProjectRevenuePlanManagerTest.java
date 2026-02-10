@@ -32,7 +32,7 @@ class ProjectRevenuePlanManagerTest extends IntegrationTestBase {
         Long projectId = 1L;
 
         ProjectRevenuePlan projectRevenuePlan = projectRevenuePlanManager.create(
-            createProjectRevenuePlanCreateRequest(projectId, 1)
+                createProjectRevenuePlanCreateRequest(projectId, 1)
         );
 
         Optional<ProjectRevenuePlan> foundRevenuePlan = projectRevenuePlanRepository.findByProjectIdAndSequence(projectRevenuePlan.getProjectId(), projectRevenuePlan.getSequence());
@@ -47,7 +47,7 @@ class ProjectRevenuePlanManagerTest extends IntegrationTestBase {
 
         projectRevenuePlanManager.create(createProjectRevenuePlanCreateRequest(projectId, sequence));
 
-        ProjectRevenuePlanCreateRequest createRequest =  createProjectRevenuePlanCreateRequest(projectId, sequence);
+        ProjectRevenuePlanCreateRequest createRequest = createProjectRevenuePlanCreateRequest(projectId, sequence);
 
         assertThatThrownBy(() -> projectRevenuePlanManager.create(createRequest)).isInstanceOf(ProjectRevenuePlanDuplicateException.class);
     }

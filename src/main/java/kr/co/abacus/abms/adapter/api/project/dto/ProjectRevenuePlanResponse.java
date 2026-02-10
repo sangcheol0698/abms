@@ -20,12 +20,12 @@ public record ProjectRevenuePlanResponse(
 
     public static ProjectRevenuePlanResponse from(ProjectRevenuePlan projectRevenuePlan) {
         return new ProjectRevenuePlanResponse(
-            projectRevenuePlan.getProjectId(),
-            projectRevenuePlan.getSequence(),
-            projectRevenuePlan.getRevenueDate(),
-            projectRevenuePlan.getType(),
-            projectRevenuePlan.getAmount().amount().longValue(),
-            projectRevenuePlan.getMemo()
+                projectRevenuePlan.getProjectId(),
+                projectRevenuePlan.getSequence(),
+                projectRevenuePlan.getRevenueDate(),
+                projectRevenuePlan.getType(),
+                projectRevenuePlan.getAmount().amount().longValue(),
+                projectRevenuePlan.getMemo()
         );
     }
 

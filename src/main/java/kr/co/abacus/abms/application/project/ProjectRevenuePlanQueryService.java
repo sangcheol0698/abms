@@ -21,6 +21,7 @@ import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlanDuplicateException;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
+
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class ProjectRevenuePlanQueryService implements ProjectRevenuePlanFinder 
     @Override
     public ProjectRevenuePlan findByProjectIdAndSequence(Long projectId, Integer sequence) {
         return projectRevenuePlanRepository.findByProjectIdAndSequence(projectId, sequence)
-            .orElseThrow(() -> new ProjectRevenuePlanDuplicateException("존재하지 않는 프로젝트 매출 계획입니다."));
+                .orElseThrow(() -> new ProjectRevenuePlanDuplicateException("존재하지 않는 프로젝트 매출 계획입니다."));
     }
 
     @Override

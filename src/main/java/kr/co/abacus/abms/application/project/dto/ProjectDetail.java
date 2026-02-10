@@ -36,4 +36,5 @@ public record ProjectDetail(
                 project.getLeadDepartmentId(),
                 leadDepartmentName);
     }
+
 }

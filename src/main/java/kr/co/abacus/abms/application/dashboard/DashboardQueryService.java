@@ -8,7 +8,9 @@ import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,4 +35,5 @@ public class DashboardQueryService implements DashboardFinder {
 
         return new DashboardSummaryResponse(totalEmployeesCount, activeProjectsCount, newEmployeesCount, onLeaveEmployeesCount);
     }
+
 }

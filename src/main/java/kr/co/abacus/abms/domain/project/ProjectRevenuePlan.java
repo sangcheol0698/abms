@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 
 import kr.co.abacus.abms.domain.AbstractEntity;
 import kr.co.abacus.abms.domain.shared.Money;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -49,7 +50,6 @@ public class ProjectRevenuePlan extends AbstractEntity {
     @Column(name = "memo")
     private String memo;
 
-
     public static ProjectRevenuePlan create(ProjectRevenuePlanCreateRequest createRequest) {
         ProjectRevenuePlan projectRevenuePlan = new ProjectRevenuePlan();
 
@@ -71,6 +71,5 @@ public class ProjectRevenuePlan extends AbstractEntity {
     public void cancel() {
         this.isIssued = false;
     }
-
 
 }

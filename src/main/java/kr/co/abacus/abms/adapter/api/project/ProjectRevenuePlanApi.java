@@ -14,6 +14,7 @@ import kr.co.abacus.abms.application.project.inbound.ProjectRevenuePlanFinder;
 import kr.co.abacus.abms.application.project.inbound.ProjectRevenuePlanManager;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlanCreateRequest;
+
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -26,8 +27,8 @@ public class ProjectRevenuePlanApi {
     @GetMapping("/api/projectRevenuePlans/{projectId}")
     public List<ProjectRevenuePlanResponse> findByProjectId(@PathVariable Long projectId) {
         return projectRevenuePlanFinder.findByProjectId(projectId).stream()
-            .map(ProjectRevenuePlanResponse::from)
-            .toList();
+                .map(ProjectRevenuePlanResponse::from)
+                .toList();
     }
 
     @PostMapping("/api/projectRevenuePlans")
