@@ -126,7 +126,7 @@ public class EmployeeApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/promote")
     public void promote(@PathVariable Long id, @RequestBody EmployeePositionUpdateRequest request) {
-        employeeManager.promote(id, request.position());
+        employeeManager.promote(id, request.position(), request.grade());
     }
 
     @GetMapping("/api/employees/positions")

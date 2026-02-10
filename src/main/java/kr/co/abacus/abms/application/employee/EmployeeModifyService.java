@@ -2,6 +2,7 @@ package kr.co.abacus.abms.application.employee;
 
 import java.time.LocalDate;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.shared.Email;
@@ -106,10 +108,10 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public void promote(Long id, EmployeePosition newPosition) {
+    public void promote(Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade) {
         Employee employee = find(id);
 
-        employee.promote(newPosition);
+        employee.promote(newPosition, newGrade);
 
         employeeRepository.save(employee);
 
@@ -126,10 +128,10 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public void promote(Long id, EmployeePosition newPosition, LocalDate promotedDate) {
+    public void promote(Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade, LocalDate promotedDate) {
         Employee employee = find(id);
 
-        employee.promote(newPosition);
+        employee.promote(newPosition, newGrade);
 
         employeeRepository.save(employee);
 

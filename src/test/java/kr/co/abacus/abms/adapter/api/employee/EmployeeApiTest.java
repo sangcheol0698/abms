@@ -599,7 +599,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR)).getId();
         flushAndClear();
 
-        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE);
+        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE, null);
         String requestJson = objectMapper.writeValueAsString(request);
 
         restTestClient.patch()
@@ -615,12 +615,12 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("직원의 직급를 현재 직급보다 낮거나 같은 직급로 승진시키려 할 때 예외가 발생한다.")
+    @DisplayName("직원의 직급를 현재 직급보다 낮은 직급로 승진시키려 할 때 예외가 발생한다.")
     void promote_lowerPosition_throwsException() {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.ASSOCIATE);
+        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.ASSOCIATE, null);
         String requestJson = objectMapper.writeValueAsString(request);
 
         restTestClient.patch()
@@ -640,7 +640,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
-        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE);
+        EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE, null);
         String requestJson = objectMapper.writeValueAsString(request);
 
         restTestClient.patch()

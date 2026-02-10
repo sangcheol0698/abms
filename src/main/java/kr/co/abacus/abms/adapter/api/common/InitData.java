@@ -706,8 +706,8 @@ public class InitData {
         // ---------------------------------------------------------
         // 직급이력 구성
         // ---------------------------------------------------------
-        employeeModifyService.promote(1L, EmployeePosition.CHAIRMAN, LocalDate.of(2026, 1, 30));
-        employeeModifyService.promote(2L, EmployeePosition.PRESIDENT, LocalDate.of(2026, 1, 30));
+        employeeModifyService.promote(1L, EmployeePosition.CHAIRMAN, null, LocalDate.of(2026, 1, 30));
+        employeeModifyService.promote(2L, EmployeePosition.PRESIDENT, null, LocalDate.of(2026, 1, 30));
     }
 
     private Employee createEmployee(Long departmentId, String email, String name, LocalDate joinDate,

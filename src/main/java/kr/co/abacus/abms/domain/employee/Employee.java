@@ -158,16 +158,19 @@ public class Employee extends AbstractEntity {
         this.memo = memo;
     }
 
-    public void promote(EmployeePosition newPosition) {
+    public void promote(EmployeePosition newPosition, @Nullable EmployeeGrade newGrade) {
         if (status == EmployeeStatus.RESIGNED) {
             throw new InvalidEmployeeStatusException("퇴사한 직원은 승진할 수 없습니다.");
         }
 
-        if (newPosition.getLevel() <= this.position.getLevel()) {
-            throw new InvalidEmployeeStatusException("현재 직급보다 낮거나 같은 직급으로 변경할 수 없습니다.");
+        if (newPosition.getLevel() < this.position.getLevel()) {
+            throw new InvalidEmployeeStatusException("현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
         }
 
         this.position = requireNonNull(newPosition);
+        if (newGrade != null) {
+            this.grade = newGrade;
+        }
     }
 
     @Override

@@ -292,7 +292,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.promote(employee.getId(), EmployeePosition.SENIOR_ASSOCIATE); // 승진
+        employeeManager.promote(employee.getId(), EmployeePosition.SENIOR_ASSOCIATE, null); // 승진
         flushAndClear();
 
         assertThat(employee.getPosition()).isEqualTo(EmployeePosition.SENIOR_ASSOCIATE);
@@ -309,7 +309,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         /**
          * 승진 시, 직급 이력 생성
          */
-        employeeManager.promote(employee.getId(), EmployeePosition.SENIOR_ASSOCIATE); // 승진
+        employeeManager.promote(employee.getId(), EmployeePosition.SENIOR_ASSOCIATE, null); // 승진
         flushAndClear();
 
         PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(employee.getId()).getLast();

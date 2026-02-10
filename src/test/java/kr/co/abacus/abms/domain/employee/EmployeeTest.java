@@ -189,20 +189,20 @@ class EmployeeTest {
         Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
 
         // when
-        employee.promote(EmployeePosition.DIRECTOR);
+        employee.promote(EmployeePosition.DIRECTOR, null);
 
         // then
         assertThat(employee.getPosition()).isEqualTo(EmployeePosition.DIRECTOR);
     }
 
     @Test
-    @DisplayName("현재 직급보다 낮거나 같은 직급으로 승진할 수 없다")
+    @DisplayName("현재 직급보다 낮은 직급으로 승진할 수 없다")
     void promoteFail() {
         Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
 
-        assertThatThrownBy(() -> employee.promote(EmployeePosition.SENIOR_ASSOCIATE))
+        assertThatThrownBy(() -> employee.promote(EmployeePosition.SENIOR_ASSOCIATE, null))
                 .isInstanceOf(InvalidEmployeeStatusException.class)
-                .hasMessage("현재 직급보다 낮거나 같은 직급으로 변경할 수 없습니다.");
+                .hasMessage("현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
     }
 
     @Test
@@ -215,7 +215,7 @@ class EmployeeTest {
         employee.resign(LocalDate.of(2025, 12, 31));
 
         // then
-        assertThatThrownBy(() -> employee.promote(EmployeePosition.DIRECTOR))
+        assertThatThrownBy(() -> employee.promote(EmployeePosition.DIRECTOR, null))
                 .isInstanceOf(InvalidEmployeeStatusException.class)
                 .hasMessage("퇴사한 직원은 승진할 수 없습니다.");
     }
