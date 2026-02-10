@@ -217,6 +217,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 .when(employee.position.eq(EmployeePosition.TEAM_LEADER)).then(EmployeePosition.TEAM_LEADER.getLevel())
                 .when(employee.position.eq(EmployeePosition.CHIEF)).then(EmployeePosition.CHIEF.getLevel())
                 .when(employee.position.eq(EmployeePosition.DIRECTOR)).then(EmployeePosition.DIRECTOR.getLevel())
+                .when(employee.position.eq(EmployeePosition.MANAGING_DIRECTOR)).then(EmployeePosition.MANAGING_DIRECTOR.getLevel())
                 .when(employee.position.eq(EmployeePosition.TECHNICAL_DIRECTOR)).then(EmployeePosition.TECHNICAL_DIRECTOR.getLevel())
                 .when(employee.position.eq(EmployeePosition.VICE_PRESIDENT)).then(EmployeePosition.VICE_PRESIDENT.getLevel())
                 .when(employee.position.eq(EmployeePosition.PRESIDENT)).then(EmployeePosition.PRESIDENT.getLevel())
