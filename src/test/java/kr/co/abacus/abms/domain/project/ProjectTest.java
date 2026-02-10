@@ -19,6 +19,7 @@ class ProjectTest {
     void create() {
         Project project = Project.create(new ProjectCreateRequest(
                 1L,
+                4L,
                 "PROJECT_123",
                 "This is a test project",
                 null,
@@ -40,6 +41,7 @@ class ProjectTest {
     void update() {
         Project project = Project.create(new ProjectCreateRequest(
                 1L,
+                4L,
                 "PROJECT_123",
                 "This is a test project",
                 null,
@@ -50,6 +52,7 @@ class ProjectTest {
 
         project.update(new ProjectUpdateRequest(
                 99L,
+                4L,
                 "Updated Project Name",
                 "Updated description",
                 ProjectStatus.IN_PROGRESS,
@@ -69,6 +72,7 @@ class ProjectTest {
     void complete() {
         Project project = Project.create(new ProjectCreateRequest(
                 1L,
+                4L,
                 "PROJECT_123",
                 "Test Project",
                 null,
@@ -87,6 +91,7 @@ class ProjectTest {
     void cancel() {
         Project project = Project.create(new ProjectCreateRequest(
                 1L,
+                4L,
                 "PROJECT_123",
                 "Test Project",
                 null,

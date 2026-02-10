@@ -128,10 +128,11 @@ class ProjectRepositoryTest extends IntegrationTestBase {
     void findAllByPartyIdAndDeletedFalse() {
         Long partyId = 1L;
         Long otherPartyId = 2L;
+        Long leadDepartmentId = 1L;
 
-        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-001", "프로젝트1", partyId)));
-        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-002", "프로젝트2", partyId)));
-        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-003", "프로젝트3", otherPartyId)));
+        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-001", "프로젝트1", partyId, leadDepartmentId)));
+        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-002", "프로젝트2", partyId, leadDepartmentId)));
+        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-003", "프로젝트3", otherPartyId, leadDepartmentId)));
         flushAndClear();
 
         List<Project> projects = projectRepository.findAllByPartyIdAndDeletedFalse(partyId);
@@ -162,13 +163,13 @@ class ProjectRepositoryTest extends IntegrationTestBase {
     @Test
     @DisplayName("프로젝트 조건에 따른 검색")
     void search() {
-        projectRepository.save(createProjectForSearch("PRJ-ALPHA-001", "알파 프로젝트", 1L, ProjectStatus.IN_PROGRESS,
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-001", "알파 프로젝트", 1L, 1L, ProjectStatus.IN_PROGRESS,
                 LocalDate.of(2024, 1, 10)));
-        projectRepository.save(createProjectForSearch("PRJ-ALPHA-002", "알파 보조", 1L, ProjectStatus.COMPLETED,
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-002", "알파 보조", 1L, 1L, ProjectStatus.COMPLETED,
                 LocalDate.of(2024, 2, 5)));
-        projectRepository.save(createProjectForSearch("PRJ-ALPHA-003", "알파 프로젝트", 2L, ProjectStatus.IN_PROGRESS,
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-003", "알파 프로젝트", 2L, 1L, ProjectStatus.IN_PROGRESS,
                 LocalDate.of(2024, 3, 1)));
-        projectRepository.save(createProjectForSearch("PRJ-ALPHA-004", "알파 프로젝트", 1L, ProjectStatus.IN_PROGRESS,
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-004", "알파 프로젝트", 1L, 1L, ProjectStatus.IN_PROGRESS,
                 LocalDate.of(2023, 5, 1)));
         flushAndClear();
 
@@ -186,10 +187,11 @@ class ProjectRepositoryTest extends IntegrationTestBase {
                 .containsExactly("PRJ-ALPHA-001");
     }
 
-    private Project createProjectForSearch(String code, String name, Long partyId, ProjectStatus status,
+    private Project createProjectForSearch(String code, String name, Long partyId, Long leadDepartmentId, ProjectStatus status,
                                            LocalDate startDate) {
         return Project.create(new ProjectCreateRequest(
                 partyId,
+                leadDepartmentId,
                 code,
                 name,
                 "테스트 프로젝트 설명",
