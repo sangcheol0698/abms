@@ -13,12 +13,12 @@
         <div class="flex items-center justify-between rounded-lg border p-3 bg-muted/50">
           <div class="space-y-0.5">
             <span class="text-xs text-muted-foreground">현재 직급</span>
-            <p class="text-sm font-medium">{{ employee?.gradeLabel || '-' }}</p>
+            <p class="text-sm font-medium">{{ employee?.grade || '-' }}</p>
           </div>
           <div class="h-8 w-px bg-border"></div>
           <div class="space-y-0.5 text-right">
             <span class="text-xs text-muted-foreground">현재 직책</span>
-            <p class="text-sm font-medium">{{ employee?.positionLabel || '-' }}</p>
+            <p class="text-sm font-medium">{{ employee?.position || '-' }}</p>
           </div>
         </div>
 
@@ -30,11 +30,7 @@
                 <SelectValue placeholder="직급 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="option in gradeOptions"
-                  :key="option.value"
-                  :value="String(option.value)"
-                >
+                <SelectItem v-for="option in gradeOptions" :key="option.value" :value="String(option.value)">
                   {{ option.label }}
                 </SelectItem>
               </SelectContent>
@@ -48,11 +44,7 @@
                 <SelectValue placeholder="직책 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="option in positionOptions"
-                  :key="option.value"
-                  :value="String(option.value)"
-                >
+                <SelectItem v-for="option in positionOptions" :key="option.value" :value="String(option.value)">
                   {{ option.label }}
                 </SelectItem>
               </SelectContent>
@@ -129,24 +121,22 @@ watch(
 
 async function handleSubmit() {
   if (!props.employee?.employeeId) return;
-  if (!form.gradeCode && !form.positionCode) {
+  if (!form.positionCode && !form.gradeCode) {
     toast.error('변경할 직급이나 직책을 선택해주세요.');
+    return;
+  }
+  if (!form.positionCode) {
+    toast.error('변경할 직책을 선택해주세요.');
     return;
   }
 
   isSubmitting.value = true;
   try {
-    await repository.update(props.employee.employeeId, {
-      gradeCode: form.gradeCode,
-      positionCode: form.positionCode,
-      // 기존 데이터 유지 (API 스펙에 따라 필요할 수 있음)
-      name: props.employee.name,
-      email: props.employee.email,
-      departmentId: props.employee.departmentId,
-      typeCode: props.employee.typeCode,
-      statusCode: props.employee.statusCode,
-      joinDate: props.employee.joinDate,
-    });
+    await repository.promote(
+      props.employee.employeeId,
+      form.positionCode,
+      form.gradeCode || undefined,
+    );
 
     toast.success('승진 처리가 완료되었습니다.');
     emit('promoted');

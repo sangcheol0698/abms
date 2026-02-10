@@ -109,7 +109,7 @@ export class EmployeeRepository {
   private gradeOptionsLoaded = false;
   private positionOptionsLoaded = false;
 
-  constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
+  constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) { }
 
   private hasFilterOptionsLoaded(): boolean {
     return (
@@ -242,6 +242,13 @@ export class EmployeeRepository {
     await this.httpRepository.patch({
       path: `/api/employees/${employeeId}/resign`,
       params: { resignationDate },
+    });
+  }
+
+  async promote(employeeId: number, position: string, grade?: string): Promise<void> {
+    await this.httpRepository.patch({
+      path: `/api/employees/${employeeId}/promote`,
+      data: { position, grade },
     });
   }
 
