@@ -173,11 +173,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
         assertThat(contents).hasSize(3);
         assertThat(contents.get(0).grade())
-                .isEqualTo(new EnumResponse(EmployeeGrade.EXPERT.name(), EmployeeGrade.EXPERT.getDescription()));
+                .isEqualTo(new EnumResponse(EmployeeGrade.EXPERT.name(), EmployeeGrade.EXPERT.getDescription(), EmployeeGrade.EXPERT.getLevel()));
         assertThat(contents.get(1).grade())
-                .isEqualTo(new EnumResponse(EmployeeGrade.SENIOR.name(), EmployeeGrade.SENIOR.getDescription()));
+                .isEqualTo(new EnumResponse(EmployeeGrade.SENIOR.name(), EmployeeGrade.SENIOR.getDescription(), EmployeeGrade.SENIOR.getLevel()));
         assertThat(contents.get(2).grade())
-                .isEqualTo(new EnumResponse(EmployeeGrade.JUNIOR.name(), EmployeeGrade.JUNIOR.getDescription()));
+                .isEqualTo(new EnumResponse(EmployeeGrade.JUNIOR.name(), EmployeeGrade.JUNIOR.getDescription(), EmployeeGrade.JUNIOR.getLevel()));
     }
 
     @Test
@@ -206,11 +206,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
         assertThat(contents).hasSize(3);
         assertThat(contents.get(0).position()).isEqualTo(
-                new EnumResponse(EmployeePosition.ASSOCIATE.name(), EmployeePosition.ASSOCIATE.getDescription()));
+                new EnumResponse(EmployeePosition.ASSOCIATE.name(), EmployeePosition.ASSOCIATE.getDescription(), EmployeePosition.ASSOCIATE.getLevel()));
         assertThat(contents.get(1).position()).isEqualTo(
-                new EnumResponse(EmployeePosition.DIRECTOR.name(), EmployeePosition.DIRECTOR.getDescription()));
+                new EnumResponse(EmployeePosition.DIRECTOR.name(), EmployeePosition.DIRECTOR.getDescription(), EmployeePosition.DIRECTOR.getLevel()));
         assertThat(contents.get(2).position()).isEqualTo(new EnumResponse(EmployeePosition.VICE_PRESIDENT.name(),
-                EmployeePosition.VICE_PRESIDENT.getDescription()));
+                EmployeePosition.VICE_PRESIDENT.getDescription(), EmployeePosition.VICE_PRESIDENT.getLevel()));
     }
 
     @Test

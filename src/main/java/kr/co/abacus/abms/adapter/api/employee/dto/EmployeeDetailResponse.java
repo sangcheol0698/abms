@@ -35,11 +35,11 @@ public record EmployeeDetailResponse(
                 .email(detail.email())
                 .joinDate(detail.joinDate())
                 .birthDate(detail.birthDate())
-                .position(new EnumResponse(detail.position().name(), detail.position().getDescription()))
-                .status(new EnumResponse(detail.status().name(), detail.status().getDescription()))
-                .grade(new EnumResponse(detail.grade().name(), detail.grade().getDescription()))
-                .type(new EnumResponse(detail.type().name(), detail.type().getDescription()))
-                .avatar(new EnumResponse(detail.avatar().name(), detail.avatar().getDescription()))
+                .position(new EnumResponse(detail.position().name(), detail.position().getDescription(), detail.position().getLevel()))
+                .status(new EnumResponse(detail.status().name(), detail.status().getDescription(), detail.status().ordinal()))
+                .grade(new EnumResponse(detail.grade().name(), detail.grade().getDescription(), detail.grade().getLevel()))
+                .type(new EnumResponse(detail.type().name(), detail.type().getDescription(), detail.type().ordinal()))
+                .avatar(new EnumResponse(detail.avatar().name(), detail.avatar().getDescription(), detail.avatar().ordinal()))
                 .memo(detail.memo())
                 .build();
     }

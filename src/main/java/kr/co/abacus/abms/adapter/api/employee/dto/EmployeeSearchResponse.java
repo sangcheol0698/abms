@@ -34,11 +34,11 @@ public record EmployeeSearchResponse(
                 .email(summary.email().address())
                 .joinDate(summary.joinDate())
                 .birthDate(summary.birthDate())
-                .position(new EnumResponse(summary.position().name(), summary.position().getDescription()))
-                .status(new EnumResponse(summary.status().name(), summary.status().getDescription()))
-                .grade(new EnumResponse(summary.grade().name(), summary.grade().getDescription()))
-                .type(new EnumResponse(summary.type().name(), summary.type().getDescription()))
-                .avatar(new EnumResponse(summary.avatar().name(), summary.avatar().getDescription()))
+                .position(new EnumResponse(summary.position().name(), summary.position().getDescription(), summary.position().getLevel()))
+                .status(new EnumResponse(summary.status().name(), summary.status().getDescription(), summary.status().ordinal()))
+                .grade(new EnumResponse(summary.grade().name(), summary.grade().getDescription(), summary.grade().getLevel()))
+                .type(new EnumResponse(summary.type().name(), summary.type().getDescription(), summary.type().ordinal()))
+                .avatar(new EnumResponse(summary.avatar().name(), summary.avatar().getDescription(), summary.avatar().ordinal()))
                 .memo(summary.memo())
                 .build();
     }

@@ -1,6 +1,7 @@
 export interface EmployeeFilterOption {
   label: string;
   value: string;
+  level?: number;
 }
 
 let employeeStatusOptions: EmployeeFilterOption[] = [];

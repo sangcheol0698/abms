@@ -132,35 +132,35 @@ public class EmployeeApi {
     @GetMapping("/api/employees/positions")
     public List<EnumResponse> getEmployeePositions() {
         return Arrays.stream(EmployeePosition.values())
-                .map(position -> new EnumResponse(position.name(), position.getDescription()))
+                .map(position -> new EnumResponse(position.name(), position.getDescription(), position.getLevel()))
                 .toList();
     }
 
     @GetMapping("/api/employees/grades")
     public List<EnumResponse> getEmployeeGrades() {
         return Arrays.stream(EmployeeGrade.values())
-                .map(grade -> new EnumResponse(grade.name(), grade.getDescription()))
+                .map(grade -> new EnumResponse(grade.name(), grade.getDescription(), grade.getLevel()))
                 .toList();
     }
 
     @GetMapping("/api/employees/types")
     public List<EnumResponse> getEmployeeTypes() {
         return Arrays.stream(EmployeeType.values())
-                .map(type -> new EnumResponse(type.name(), type.getDescription()))
+                .map(type -> new EnumResponse(type.name(), type.getDescription(), type.ordinal()))
                 .toList();
     }
 
     @GetMapping("/api/employees/statuses")
     public List<EnumResponse> getEmployeeStatuses() {
         return Arrays.stream(EmployeeStatus.values())
-                .map(status -> new EnumResponse(status.name(), status.getDescription()))
+                .map(status -> new EnumResponse(status.name(), status.getDescription(), status.ordinal()))
                 .toList();
     }
 
     @GetMapping("/api/employees/avatars")
     public List<EnumResponse> getEmployeeAvatars() {
         return Arrays.stream(EmployeeAvatar.values())
-                .map(avatar -> new EnumResponse(avatar.name(), avatar.getDescription()))
+                .map(avatar -> new EnumResponse(avatar.name(), avatar.getDescription(), avatar.ordinal()))
                 .toList();
     }
 

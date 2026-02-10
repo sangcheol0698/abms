@@ -49,19 +49,13 @@ type EmployeeTypeResponse = EnumResponse;
 
 /**
  * 등급(Grade) API 응답 타입
- * level: 정렬을 위한 순서 값 (낮을수록 높은 등급)
  */
-interface EmployeeGradeResponse extends EnumResponse {
-  level?: number;
-}
+type EmployeeGradeResponse = EnumResponse;
 
 /**
  * 직급(Position) API 응답 타입
- * rank: 정렬을 위한 순서 값 (낮을수록 높은 직급)
  */
-interface EmployeePositionResponse extends EnumResponse {
-  rank?: number;
-}
+type EmployeePositionResponse = EnumResponse;
 
 /**
  * 아바타 API 응답 타입
@@ -172,10 +166,9 @@ export class EmployeeRepository {
     if (!Array.isArray(response)) {
       return [];
     }
-    // level을 기준으로 정렬 후 SelectOption으로 변환
     return response
       .slice()
-      .sort((a, b) => (a.level ?? Number.MAX_SAFE_INTEGER) - (b.level ?? Number.MAX_SAFE_INTEGER))
+      .sort((a, b) => a.level - b.level)
       .map(toSelectOption);
   }
 
@@ -186,10 +179,9 @@ export class EmployeeRepository {
     if (!Array.isArray(response)) {
       return [];
     }
-    // rank를 기준으로 정렬 후 SelectOption으로 변환
     return response
       .slice()
-      .sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER))
+      .sort((a, b) => a.level - b.level)
       .map(toSelectOption);
   }
 

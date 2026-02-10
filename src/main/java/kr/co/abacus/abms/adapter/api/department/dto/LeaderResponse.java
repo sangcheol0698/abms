@@ -12,7 +12,7 @@ public record LeaderResponse(
         return new LeaderResponse(
                 employeeId,
                 employeeName,
-                new EnumResponse(position.name(), position.getDescription()));
+                new EnumResponse(position.name(), position.getDescription(), position.getLevel()));
     }
 
 }

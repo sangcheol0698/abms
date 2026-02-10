@@ -22,6 +22,7 @@
 export interface EnumResponse {
   code: string;
   description: string;
+  level: number;
 }
 
 /**
@@ -32,6 +33,7 @@ export interface EnumResponse {
 export interface SelectOption {
   value: string;
   label: string;
+  level?: number;
 }
 
 /**
@@ -86,6 +88,7 @@ export function toSelectOption(response: EnumResponse): SelectOption {
   return {
     value: response.code,
     label: response.description || response.code,
+    level: response.level,
   };
 }
 
