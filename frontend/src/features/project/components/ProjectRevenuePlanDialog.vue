@@ -42,10 +42,9 @@
 
         <div class="grid grid-cols-4 items-center gap-4">
           <Label for="amount" class="text-right">금액</Label>
-          <Input
+          <MoneyInput
             id="amount"
-            v-model.number="form.amount"
-            type="number"
+            v-model="form.amount"
             class="col-span-3"
             placeholder="금액을 입력하세요"
           />
@@ -83,6 +82,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { MoneyInput } from '@/components/business';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

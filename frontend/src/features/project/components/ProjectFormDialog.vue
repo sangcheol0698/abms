@@ -180,10 +180,9 @@
                         <span class="ml-0.5 text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          :model-value="field.value"
-                          type="number"
-                          placeholder="580000000"
+                        <MoneyInput
+                          :model-value="toNumber(field.value)"
+                          placeholder="580,000,000"
                           :disabled="isSubmitting"
                           @update:model-value="handleChange"
                           @blur="handleBlur"
@@ -340,6 +339,7 @@ import { Separator } from '@/components/ui/separator';
 import { appContainer } from '@/core/di/container';
 import ProjectRepository from '@/features/project/repository/ProjectRepository';
 import PartyRepository from '@/features/party/repository/PartyRepository';
+import { MoneyInput } from '@/components/business';
 import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
 import { Building } from 'lucide-vue-next';
 import HttpError from '@/core/http/HttpError';
@@ -548,6 +548,11 @@ function toDateValue(value: unknown): Date | undefined {
     return Number.isNaN(date.getTime()) ? undefined : date;
   }
   return undefined;
+}
+
+function toNumber(value: unknown): number {
+  const parsed = typeof value === "number" ? value : Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function initializeFormValues() {

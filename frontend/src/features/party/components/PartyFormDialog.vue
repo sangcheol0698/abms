@@ -26,7 +26,11 @@
 
         <div class="space-y-2">
           <Label for="salesRepPhone">연락처</Label>
-          <Input id="salesRepPhone" v-model="form.salesRepPhone" placeholder="010-0000-0000" />
+          <PhoneNumberInput
+            id="salesRepPhone"
+            v-model="form.salesRepPhone"
+            placeholder="010-0000-0000"
+          />
         </div>
 
         <div class="space-y-2">
@@ -58,6 +62,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneNumberInput } from '@/components/business';
 import { appContainer } from '@/core/di/container';
 import PartyRepository from '@/features/party/repository/PartyRepository';
 import type { PartyDetail } from '@/features/party/models/partyDetail';

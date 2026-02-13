@@ -8,3 +8,5 @@ export { default as DataTablePagination } from './DataTablePagination.vue';
 export { default as DataTableToolbar } from './DataTableToolbar.vue';
 export { default as ExcelUploadDialog } from './ExcelUploadDialog.vue';
 export { default as DateRangeFilter } from './DateRangeFilter.vue';
+export { default as MoneyInput } from './MoneyInput.vue';
+export { default as PhoneNumberInput } from './PhoneNumberInput.vue';
