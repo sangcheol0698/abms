@@ -1,73 +1,64 @@
 <template>
-  <section class="flex h-full flex-col gap-6">
-    <!-- 로딩 상태 처리 -->
-    <div v-if="isLoading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <div
-        v-for="i in 4"
-        :key="i"
-        class="h-[120px] rounded-xl border border-border/60 bg-muted/10 animate-pulse"
-      />
-    </div>
-
-    <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <Card v-for="metric in metrics" :key="metric.title" class="shadow-none">
-        <CardHeader class="space-y-1">
-          <CardTitle class="text-sm font-medium text-muted-foreground">{{
-            metric.title
-          }}</CardTitle>
-          <div class="flex items-baseline gap-2">
-            <span class="text-2xl font-semibold text-foreground">{{ metric.value }}</span>
-          </div>
-        </CardHeader>
-        <CardContent class="text-xs text-muted-foreground">
-          {{ metric.description }}
-        </CardContent>
-      </Card>
-    </div>
-
-    <div class="grid gap-4 lg:grid-cols-3">
-      <Card class="lg:col-span-2 shadow-none">
-        <CardHeader>
-          <CardTitle class="text-base">최근 알림</CardTitle>
-          <CardDescription>시스템 전반에서 발생한 주요 이벤트입니다.</CardDescription>
-        </CardHeader>
-        <CardContent class="space-y-3">
+  <section class="h-full">
+    <div class="grid h-full grid-cols-1 gap-6 lg:grid-cols-3 xl:grid-cols-4">
+      <!-- 메인 콘텐츠 영역 (왼쪽) -->
+      <div class="flex flex-col gap-6 lg:col-span-2 xl:col-span-3">
+        <!-- 로딩 상태 처리 -->
+        <div v-if="isLoading" class="grid gap-4 md:grid-cols-3">
           <div
-            v-for="notification in notifications"
-            :key="notification.id"
-            class="flex items-start justify-between rounded-md border border-border/70 p-3 text-sm"
-          >
-            <div>
-              <p class="font-medium text-foreground">{{ notification.title }}</p>
-              <p class="text-xs text-muted-foreground">{{ notification.description }}</p>
-            </div>
-            <Badge variant="outline" class="text-[11px] uppercase tracking-tight">{{
-              notification.time
-            }}</Badge>
-          </div>
-          <p v-if="!notifications.length" class="text-sm text-muted-foreground">
-            최근 알림이 없습니다.
-          </p>
-        </CardContent>
-      </Card>
+            v-for="i in 3"
+            :key="i"
+            class="h-[300px] rounded-xl border border-border/60 bg-muted/10 animate-pulse"
+          />
+        </div>
 
-      <Card class="shadow-none">
-        <CardHeader>
-          <CardTitle class="text-base">빠른 작업</CardTitle>
-          <CardDescription>자주 사용하는 화면으로 바로 이동하세요.</CardDescription>
-        </CardHeader>
-        <CardContent class="space-y-3">
-          <router-link
-            v-for="action in quickActions"
-            :key="action.to"
-            :to="action.to"
-            class="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm transition hover:bg-accent hover:text-accent-foreground"
-          >
-            <span class="font-medium">{{ action.label }}</span>
-            <Badge variant="outline" class="text-[11px] uppercase tracking-tight">바로가기</Badge>
-          </router-link>
-        </CardContent>
-      </Card>
+        <div v-else class="grid gap-4 md:grid-cols-3">
+          <DashboardEmployeeDistributionPanel :total-count="summary?.totalEmployeesCount" />
+          <DashboardEmployeeStatusPanel
+            :total-count="summary?.totalEmployeesCount"
+            :on-leave-count="summary?.onLeaveEmployeesCount"
+          />
+          <DashboardJobLevelPanel />
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <DashboardMonthlyFinancialPanel class="col-span-4" />
+          <DashboardDepartmentFinancialPanel class="col-span-3" />
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <DashboardProjectStatusPanel />
+          <DashboardUpcomingDeadlinesPanel />
+        </div>
+      </div>
+
+      <!-- 사이드바 영역 (오른쪽) -->
+      <div class="lg:col-span-1 xl:col-span-1">
+        <Card class="h-full shadow-none">
+          <CardHeader>
+            <CardTitle class="text-base">최근 알림</CardTitle>
+            <CardDescription>시스템 전반에서 발생한 주요 이벤트입니다.</CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-3">
+            <div
+              v-for="notification in notifications"
+              :key="notification.id"
+              class="flex items-start justify-between rounded-md border border-border/70 p-3 text-sm"
+            >
+              <div>
+                <p class="font-medium text-foreground">{{ notification.title }}</p>
+                <p class="text-xs text-muted-foreground">{{ notification.description }}</p>
+              </div>
+              <Badge variant="outline" class="text-[11px] uppercase tracking-tight">{{
+                notification.time
+              }}</Badge>
+            </div>
+            <p v-if="!notifications.length" class="text-sm text-muted-foreground">
+              최근 알림이 없습니다.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   </section>
 </template>
@@ -81,41 +72,18 @@ import {
   DashboardRepository,
   type DashboardSummary,
 } from '@/features/dashboard/repository/DashboardRepository';
+import DashboardMonthlyFinancialPanel from '@/features/dashboard/components/DashboardMonthlyFinancialPanel.vue';
+import DashboardDepartmentFinancialPanel from '@/features/dashboard/components/DashboardDepartmentFinancialPanel.vue';
+import DashboardProjectStatusPanel from '@/features/dashboard/components/DashboardProjectStatusPanel.vue';
+import DashboardUpcomingDeadlinesPanel from '@/features/dashboard/components/DashboardUpcomingDeadlinesPanel.vue';
+import DashboardEmployeeDistributionPanel from '@/features/dashboard/components/DashboardEmployeeDistributionPanel.vue';
+import DashboardEmployeeStatusPanel from '@/features/dashboard/components/DashboardEmployeeStatusPanel.vue';
+import DashboardJobLevelPanel from '@/features/dashboard/components/DashboardJobLevelPanel.vue';
 
 const repository = appContainer.resolve(DashboardRepository);
 
 const summary = ref<DashboardSummary | null>(null);
 const isLoading = ref(true);
-
-const metrics = computed(() => {
-  if (!summary.value) return [];
-
-  const { totalEmployeesCount, activeProjectsCount, newEmployeesCount, onLeaveEmployeesCount } =
-    summary.value;
-
-  return [
-    {
-      title: '총 직원',
-      value: `${totalEmployeesCount ?? 0}명`,
-      description: '현재 총 직원 수입니다.',
-    },
-    {
-      title: '활성 프로젝트',
-      value: `${activeProjectsCount ?? 0}건`,
-      description: '최신 진행 기준 활성 상태 프로젝트 수입니다.',
-    },
-    {
-      title: '이번 달 신규 입사',
-      value: `${newEmployeesCount ?? 0}명`,
-      description: '이번 달 입사 완료된 직원 수입니다.',
-    },
-    {
-      title: '휴가 중 직원',
-      value: `${onLeaveEmployeesCount ?? 0}명`,
-      description: '현재 휴직 또는 장기 휴가 중인 인원입니다.',
-    },
-  ];
-});
 
 const notifications = computed(() => [
   {
@@ -137,11 +105,6 @@ const notifications = computed(() => [
     time: '3일 전',
   },
 ]);
-
-const quickActions = [
-  { label: '부서 확인', to: '/departments' },
-  { label: '직원 관리', to: '/employees' },
-];
 
 async function fetchDashboardData() {
   isLoading.value = true;
