@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -727.3414,
-    "scrollLeft": -446.1539,
-    "zoomLevel": 0.22,
+    "scrollTop": -509.8706,
+    "scrollLeft": -284.3573,
+    "zoomLevel": 0.64,
     "show": 431,
     "database": 4,
     "databaseName": "abms",
@@ -155,15 +155,15 @@
           "aF7OpusUMcWQOwvNQjM9Z"
         ],
         "ui": {
-          "x": 54.7276,
-          "y": 580.5921,
+          "x": 481.2582,
+          "y": 590.7962,
           "zIndex": 141,
           "widthName": 86,
           "widthComment": 60,
           "color": ""
         },
         "meta": {
-          "updateAt": 1770991437682,
+          "updateAt": 1770993339218,
           "createAt": 1770964782236
         }
       },
@@ -3036,8 +3036,8 @@
           "columnIds": [
             "uc4tSf2ZX6R1xRy_DCyXY"
           ],
-          "x": 503.72760000000005,
-          "y": 580.5921,
+          "x": 930.2582,
+          "y": 590.7962,
           "direction": 4
         },
         "end": {
@@ -3045,8 +3045,8 @@
           "columnIds": [
             "Af9zIe6G5NTPFkKpfPyef"
           ],
-          "x": 523.7276,
-          "y": 666.5921,
+          "x": 950.2582,
+          "y": 676.7962,
           "direction": 2
         },
         "meta": {
@@ -3148,9 +3148,9 @@
           "columnIds": [
             "uc4tSf2ZX6R1xRy_DCyXY"
           ],
-          "x": 289.2276,
-          "y": 924.5921,
-          "direction": 8
+          "x": 481.2582,
+          "y": 762.7962,
+          "direction": 1
         },
         "end": {
           "tableId": "xL7buxM7EQDOTW3A4bHXP",
@@ -3176,8 +3176,8 @@
           "columnIds": [
             "uc4tSf2ZX6R1xRy_DCyXY"
           ],
-          "x": 523.7276,
-          "y": 838.5921,
+          "x": 950.2582,
+          "y": 848.7962,
           "direction": 2
         },
         "end": {
