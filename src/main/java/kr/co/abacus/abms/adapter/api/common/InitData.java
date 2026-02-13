@@ -10,6 +10,8 @@ import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
+import kr.co.abacus.abms.application.project.outbound.ProjectRevenuePlanRepository;
+import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.*;
@@ -19,7 +21,13 @@ import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
+import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
+import kr.co.abacus.abms.domain.project.ProjectRevenuePlanCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
+import kr.co.abacus.abms.domain.project.RevenueType;
+import kr.co.abacus.abms.domain.projectassignment.AssignmentRole;
+import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
+import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentCreateRequest;
 import kr.co.abacus.abms.domain.shared.Period;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +45,8 @@ public class InitData {
     private final DepartmentRepository departmentRepository;
     private final ProjectRepository projectRepository;
     private final PartyRepository partyRepository;
+    private final ProjectRevenuePlanRepository projectRevenuePlanRepository;
+    private final ProjectAssignmentRepository projectAssignmentRepository;
     private final EmployeeModifyService employeeModifyService;
 
     @PostConstruct
@@ -550,7 +560,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "")
         );
-        employeeModifyService.create(
+        Long employeeShin = employeeModifyService.create(
                 createEmployeeCreateCommand(
                         ABC2201.getId(), "sdi4932@abms.co", "신사원", LocalDate.of(2023, 11, 5),
                         LocalDate.of(2002, 12, 7),
@@ -604,9 +614,9 @@ public class InitData {
         );
 
         // ---------------------------------------------------------
-        // 프로젝트 구성
+        // 프로젝트 (프로젝트, 매출 일정, 인력 투입) 구성
         // ---------------------------------------------------------
-        projectRepository.save(
+        Project naverErpProject = projectRepository.save(
                 Project.create(new ProjectCreateRequest(
                         partyNaverCloud.getId(),
                         22L,
@@ -618,6 +628,35 @@ public class InitData {
                         LocalDate.of(2024, 1, 15),
                         LocalDate.of(2024, 12, 31)))
         );
+
+        projectRevenuePlanRepository.save(
+            ProjectRevenuePlan.create(
+                new ProjectRevenuePlanCreateRequest(
+                    naverErpProject.getId(),
+                    1,
+                    LocalDate.of(2024, 1, 16),
+                    RevenueType.DOWN_PAYMENT,
+                    180000000L,
+                    "메모"
+                )
+            )
+        );
+
+        projectAssignmentRepository.save(
+            ProjectAssignment.assign(
+                naverErpProject,
+                new ProjectAssignmentCreateRequest(
+                    naverErpProject.getId(),
+                    employeeShin,
+                    AssignmentRole.DEV,
+                    LocalDate.of(2024, 1, 15),
+                    LocalDate.of(2024, 12, 31)
+                )
+            )
+        );
+
+
+
         // projectRepository.save(
         //     Project.create(new ProjectCreateRequest(
         //         partySamsungSDS.getId(),
