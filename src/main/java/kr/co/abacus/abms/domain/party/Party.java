@@ -18,7 +18,7 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "party", uniqueConstraints = {
+@Table(name = "tb_party", uniqueConstraints = {
         @UniqueConstraint(name = "UK_PARTY_NAME", columnNames = {"party_name"})
 })
 public class Party extends AbstractEntity {

@@ -8,6 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,6 +19,7 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "tb_chat_memory_message")
 public class ChatMemoryMessage extends AbstractEntity {
 
     @Column(nullable = false, length = 100)

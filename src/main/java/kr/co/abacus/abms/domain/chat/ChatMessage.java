@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,6 +17,7 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "tb_chat_message")
 public class ChatMessage extends AbstractEntity {
 
     public enum Role {

@@ -24,7 +24,7 @@ import kr.co.abacus.abms.domain.shared.Period;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Entity
+// @Entity
 @Table(name = "contract")
 public class Contract extends AbstractEntity {
 

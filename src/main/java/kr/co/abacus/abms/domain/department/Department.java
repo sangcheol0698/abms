@@ -31,7 +31,7 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @NaturalIdCache
 @Entity
-@Table(name = "department", uniqueConstraints = {
+@Table(name = "tb_department", uniqueConstraints = {
         @UniqueConstraint(name = "UK_DEPARTMENT_CODE", columnNames = {"department_code"})
 })
 public class Department extends AbstractEntity {
@@ -48,11 +48,11 @@ public class Department extends AbstractEntity {
     private DepartmentType type;
 
     @Nullable
-    @Column(name = "leader_employee_id", length = 32)
+    @Column(name = "leader_id", length = 32)
     private Long leaderEmployeeId;
 
     @Nullable
-    @JoinColumn(name = "department_parent_id")
+    @JoinColumn(name = "parent_department_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Department parent;
 

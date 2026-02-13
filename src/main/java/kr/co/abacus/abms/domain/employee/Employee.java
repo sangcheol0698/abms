@@ -27,7 +27,7 @@ import kr.co.abacus.abms.domain.shared.Email;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "employee", uniqueConstraints = {
+@Table(name = "tb_employee", uniqueConstraints = {
         @UniqueConstraint(name = "UK_EMPLOYEE_EMAIL_ADDRESS", columnNames = "email_address")
 })
 public class Employee extends AbstractEntity {

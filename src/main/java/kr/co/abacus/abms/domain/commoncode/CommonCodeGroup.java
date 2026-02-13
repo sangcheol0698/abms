@@ -20,7 +20,7 @@ import kr.co.abacus.abms.domain.BaseEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "common_code_group")
+@Table(name = "tb_common_code_group")
 public class CommonCodeGroup extends BaseEntity {
 
     @Id

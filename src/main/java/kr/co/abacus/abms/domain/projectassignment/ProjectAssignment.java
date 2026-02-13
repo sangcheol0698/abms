@@ -23,7 +23,7 @@ import kr.co.abacus.abms.domain.shared.Period;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "project_assignment")
+@Table(name = "tb_project_assignment")
 public class ProjectAssignment extends AbstractEntity {
 
     @Column(name = "project_id", nullable = false)

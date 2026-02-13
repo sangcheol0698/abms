@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "project_revenue_plan")
+@Table(name = "tb_project_revenue_plan")
 public class ProjectRevenuePlan extends AbstractEntity {
 
     @Column(name = "project_id", nullable = false)

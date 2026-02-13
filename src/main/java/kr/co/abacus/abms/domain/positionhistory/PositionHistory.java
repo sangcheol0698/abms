@@ -21,7 +21,7 @@ import kr.co.abacus.abms.domain.shared.Period;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "position_history")
+@Table(name = "tb_position_history")
 public class PositionHistory extends AbstractEntity {
 
     @Column(name = "employee_id", nullable = false)

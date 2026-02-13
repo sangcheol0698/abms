@@ -20,7 +20,7 @@ import kr.co.abacus.abms.domain.shared.Period;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "payroll")
+@Table(name = "tb_payroll")
 public class Payroll extends AbstractEntity {
 
     @Column(name = "employee_id", nullable = false)

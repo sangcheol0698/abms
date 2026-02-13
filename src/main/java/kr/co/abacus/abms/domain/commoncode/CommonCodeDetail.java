@@ -19,7 +19,7 @@ import kr.co.abacus.abms.domain.BaseEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "common_code_detail")
+@Table(name = "tb_common_code_detail")
 public class CommonCodeDetail extends BaseEntity {
 
     @EmbeddedId

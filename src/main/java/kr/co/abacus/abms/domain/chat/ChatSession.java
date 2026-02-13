@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,6 +17,7 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "tb_chat_session")
 public class ChatSession extends AbstractEntity {
 
     @Column(nullable = false, length = 200)

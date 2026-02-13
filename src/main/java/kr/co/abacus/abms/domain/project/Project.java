@@ -24,7 +24,7 @@ import kr.co.abacus.abms.domain.shared.Period;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "project", uniqueConstraints = @UniqueConstraint(name = "UK_PROJECT_CODE", columnNames = {
+@Table(name = "tb_project", uniqueConstraints = @UniqueConstraint(name = "UK_PROJECT_CODE", columnNames = {
         "project_code"}))
 public class Project extends AbstractEntity {
 
