@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.application.project.outbound;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,4 +18,5 @@ public interface ProjectRevenuePlanRepository extends Repository<ProjectRevenueP
 
     List<ProjectRevenuePlan> findByProjectId(Long projectId);
 
+    List<ProjectRevenuePlan> findByRevenueDateBetweenAndIsIssuedTrue(LocalDate startOfMonth, LocalDate endOfMonth);
 }
