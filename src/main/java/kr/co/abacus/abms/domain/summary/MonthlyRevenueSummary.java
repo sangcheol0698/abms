@@ -15,8 +15,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "tb_project_monthly_revenue_summary")
-public class ProjectMonthlyRevenueSummary extends AbstractEntity {
+@Table(name = "tb_monthly_revenue_summary")
+public class MonthlyRevenueSummary extends AbstractEntity {
 
     @Column(name = "project_id", nullable = false)
     private Long projectId;

@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -509.8706,
-    "scrollLeft": -284.3573,
-    "zoomLevel": 0.64,
+    "scrollTop": 0,
+    "scrollLeft": -113.3333,
+    "zoomLevel": 1,
     "show": 431,
     "database": 4,
     "databaseName": "abms",
@@ -366,7 +366,7 @@
           "Qwz_Lo8VovDucJCwHYA67"
         ],
         "ui": {
-          "x": 92.5901,
+          "x": 94.1526,
           "y": 115.6894,
           "zIndex": 680,
           "widthName": 146,
@@ -374,7 +374,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1770992900187,
+          "updateAt": 1771092779929,
           "createAt": 1770987555290
         }
       },
