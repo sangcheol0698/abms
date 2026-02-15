@@ -664,8 +664,8 @@ public class InitData {
             EmployeeCostPolicy.create(
                 2025,
                 EmployeeType.FULL_TIME,
-                10.0,
-                7.0
+                0.1,
+                0.07
             )
         );
 
@@ -673,8 +673,8 @@ public class InitData {
             EmployeeCostPolicy.create(
                 2025,
                 EmployeeType.FREELANCER,
-                2.0,
-                4.0
+                0.02,
+                0.04
             )
         );
 
@@ -682,8 +682,8 @@ public class InitData {
             EmployeeCostPolicy.create(
                 2026,
                 EmployeeType.FULL_TIME,
-                11.0,
-                7.0
+                0.1,
+                0.07
             )
         );
 
@@ -691,8 +691,8 @@ public class InitData {
             EmployeeCostPolicy.create(
                 2026,
                 EmployeeType.FREELANCER,
-                2.0,
-                3.0
+                0.02,
+                0.03
             )
         );
 
