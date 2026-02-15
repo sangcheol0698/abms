@@ -6,6 +6,7 @@ import kr.co.abacus.abms.application.department.DepartmentModifyService;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.EmployeeModifyService;
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeCostPolicyRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
@@ -47,6 +48,7 @@ public class InitData {
     private final PartyRepository partyRepository;
     private final ProjectRevenuePlanRepository projectRevenuePlanRepository;
     private final ProjectAssignmentRepository projectAssignmentRepository;
+    private final EmployeeCostPolicyRepository employeeCostPolicyRepository;
     private final EmployeeModifyService employeeModifyService;
 
     @PostConstruct
@@ -655,7 +657,44 @@ public class InitData {
             )
         );
 
+        // ---------------------------------------------------------
+        // 직원 비용 정책 구성
+        // ---------------------------------------------------------
+        employeeCostPolicyRepository.save(
+            EmployeeCostPolicy.create(
+                2025,
+                EmployeeType.FULL_TIME,
+                0.1,
+                0.07
+            )
+        );
 
+        employeeCostPolicyRepository.save(
+            EmployeeCostPolicy.create(
+                2025,
+                EmployeeType.FREELANCER,
+                0.02,
+                0.04
+            )
+        );
+
+        employeeCostPolicyRepository.save(
+            EmployeeCostPolicy.create(
+                2026,
+                EmployeeType.FULL_TIME,
+                0.1,
+                0.07
+            )
+        );
+
+        employeeCostPolicyRepository.save(
+            EmployeeCostPolicy.create(
+                2026,
+                EmployeeType.FREELANCER,
+                0.02,
+                0.03
+            )
+        );
 
         // projectRepository.save(
         //     Project.create(new ProjectCreateRequest(
