@@ -63,9 +63,10 @@ public class EmployeeCostPolicy  {
             .build();
     }
 
-    public Money calculateEmployeeCost(Money baseSalary) {
+    public Money calculateEmployeeCost(Money annualSalary) {
         // 비용 계산 로직 = 월급 * (1 + 제경비 + 판관비)
-        return baseSalary.multiply(BigDecimal.valueOf(1.0 + overheadRate + sgaRate));
+        annualSalary = annualSalary.divide(BigDecimal.valueOf(12));
+        return annualSalary.multiply(BigDecimal.valueOf(1.0 + overheadRate + sgaRate));
     }
 
 }

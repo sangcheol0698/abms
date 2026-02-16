@@ -1,22 +1,35 @@
 package kr.co.abacus.abms.application.summary.inbound;
 
+import static kr.co.abacus.abms.domain.employee.EmployeeFixture.*;
 import static kr.co.abacus.abms.domain.project.ProjectFixture.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import kr.co.abacus.abms.application.employee.outbound.EmployeeCostPolicyRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.payroll.outbound.PayrollRepository;
+import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRevenuePlanRepository;
+import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeCostPolicy;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.payroll.Payroll;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlanCreateRequest;
 import kr.co.abacus.abms.domain.project.RevenueType;
+import kr.co.abacus.abms.domain.projectassignment.AssignmentRole;
+import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
+import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentCreateRequest;
 import kr.co.abacus.abms.domain.shared.Money;
 import kr.co.abacus.abms.domain.shared.Period;
 import kr.co.abacus.abms.support.IntegrationTestBase;
@@ -29,6 +42,22 @@ class MonthlyRevenueSummaryManagerTest extends IntegrationTestBase {
 
     @Autowired
     private ProjectRevenuePlanRepository projectRevenuePlanRepository;
+
+    @Autowired
+    private ProjectAssignmentRepository projectAssignmentRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private PayrollRepository payrollRepository;
+
+    @Autowired
+    private EmployeeCostPolicyRepository employeeCostPolicyRepository;
+
 
     @Test
     @DisplayName("매출 계산: 해당 월에 발행된 매출 계획들의 금액을 모두 합산한다")
@@ -64,7 +93,7 @@ class MonthlyRevenueSummaryManagerTest extends IntegrationTestBase {
 
         // when
         LocalDate targetMonth = LocalDate.of(2026, 2, 15); // 2월 기준
-        Money result = monthlyRevenueSummaryManager.calculateRevenue(project, targetMonth);
+        Money result = monthlyRevenueSummaryManager.calculateRevenue(targetMonth);
         System.out.println("result = " + result);
 
         // then
@@ -105,23 +134,84 @@ class MonthlyRevenueSummaryManagerTest extends IntegrationTestBase {
 
         // when
         LocalDate targetMonth = LocalDate.of(2026, 2, 20); // 2월 기준 조회
-        Money result = monthlyRevenueSummaryManager.calculateRevenue(project, targetMonth);
+        Money result = monthlyRevenueSummaryManager.calculateRevenue(targetMonth);
 
         // then
         // 1월 발행건(1000원) 제외, 2월 미발행건(5000원) 제외 -> 결과는 0원이어야 함
         assertThat(result.amount()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
-    private ProjectRevenuePlan createProjectRevenuePlan(Long projectId, Integer sequence, LocalDate revenueDate, RevenueType type, Long amount) {
-        return ProjectRevenuePlan.create(
-            new ProjectRevenuePlanCreateRequest(
-                projectId,
-                sequence,
-                revenueDate,
-                type,
-                amount,
-                null
+    @Test
+    @DisplayName("비용 계산: 해당 월에 투입된 모든 인력의 비용을 합산한다")
+    void calculateTotalCost_Success() {
+        // given
+        // 1. 프로젝트 생성
+        Project project = createProject();
+        ReflectionTestUtils.setField(project, "id", 10L);
+         ReflectionTestUtils.setField(project, "period", new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30)));
+        // project = projectRepository.save(project);
+
+        // 2. 직원 및 급여/정책 데이터 세팅 (헬퍼 메서드 활용)
+        Employee empA = saveEmployeeWithCost("이직원", "this@naver.com", EmployeeType.FULL_TIME, 5_000_000L, 0.1, 0.05);
+        Employee empB = saveEmployeeWithCost("저직원", "that@naver.com", EmployeeType.FREELANCER, 3_000_000L, 0.04, 0.02);
+
+        // 3. 프로젝트 할당 생성
+        // 직원A: 2월 꽉 채움 (1.0 MM)
+        ProjectAssignment assignmentA = ProjectAssignment.assign(
+            project,
+            new ProjectAssignmentCreateRequest(
+                project.getId(), empA.getId(), AssignmentRole.DEV,
+                LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28)
             )
         );
+
+        // 직원B: 2월 절반 (0.5 MM)
+        ProjectAssignment assignmentB = ProjectAssignment.assign(
+            project,
+            new ProjectAssignmentCreateRequest(
+                project.getId(), empB.getId(), AssignmentRole.DEV,
+                LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 14)
+            )
+        );
+
+        projectAssignmentRepository.saveAll(List.of(assignmentA, assignmentB));
+        flushAndClear();
+
+        // when
+        LocalDate targetMonth = LocalDate.of(2026, 2, 15); // 2월 기준
+        Money result = monthlyRevenueSummaryManager.calculateTotalCost(targetMonth);
+        System.out.println("Total Cost Result = " + result);
+
+        // then
+        // (500만 * (1.0 +. 0.1 + 0.05) * 1.0) + (300만 * (1.0 + 0.04 + 0.02) * 0.5) = 575만 + 159만 = 734만
+        assertThat(result.amount()).isEqualByComparingTo(BigDecimal.valueOf(7_340_000L));
     }
+
+    private ProjectRevenuePlan createProjectRevenuePlan(Long projectId, Integer sequence, LocalDate revenueDate, RevenueType type, Long amount) {
+        return ProjectRevenuePlan.create(
+            new ProjectRevenuePlanCreateRequest(projectId, sequence, revenueDate, type, amount, null)
+        );
+    }
+
+    // 직원 + 급여 + 정책을 한방에 저장하는 헬퍼
+    private Employee saveEmployeeWithCost(String name, String email, EmployeeType type, Long monthlyCost, Double overheadRate, Double sgaRate) {
+        // 1. 직원 저장
+        Employee employee = createEmployee(name, email, type);
+        employee = employeeRepository.save(employee);
+
+        // 2. 급여 저장
+        Payroll payroll = Payroll.create(
+            employee.getId(), Money.wons(monthlyCost * 12), LocalDate.of(2026, 1, 1)
+        );
+        payrollRepository.save(payroll);
+
+        // 3. 비용 정책 저장
+        if (employeeCostPolicyRepository.findByApplyYearAndType(2026, type).isEmpty()) {
+            EmployeeCostPolicy policy = EmployeeCostPolicy.create(2026, type, overheadRate, sgaRate);
+            employeeCostPolicyRepository.save(policy);
+        }
+
+        return employee;
+    }
+
 }
