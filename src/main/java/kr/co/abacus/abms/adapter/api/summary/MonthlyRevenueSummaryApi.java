@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.adapter.api.summary;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,4 +32,14 @@ public class MonthlyRevenueSummaryApi {
         return MonthlyRevenueSummaryResponse.of(summary);
     }
 
+    @GetMapping("/sixMonthTrend")
+    public List<MonthlyRevenueSummaryResponse> getSixMonthsRevenueTrend(
+        @RequestParam("yearMonth") String yearMonth
+    ) {
+        List<MonthlyRevenueSummaryResponse> responseList = summaryFinder.findRecentSixMonths(yearMonth).stream()
+            .map(MonthlyRevenueSummaryResponse::of)
+            .toList();
+
+        return responseList;
+    }
 }
