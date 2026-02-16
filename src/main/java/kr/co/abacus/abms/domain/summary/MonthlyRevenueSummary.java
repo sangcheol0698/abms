@@ -34,7 +34,6 @@ public class MonthlyRevenueSummary extends AbstractEntity {
     @AttributeOverride(name = "amount", column = @Column(name = "cost_amount", nullable = false, comment = "비용금액"))
     private Money costAmount;
 
-    // todo: 적자 처리를 위해 마이너스 가능하게 해야함
     @Embedded
     @AttributeOverride(name = "amount", column = @Column(name = "profit_amount", nullable = false, comment = "이익금액"))
     private Money profitAmount;

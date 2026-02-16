@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/monthlyRevenueSummary")
+@RequestMapping("/api/monthlyRevenueSummary")
 public class MonthlyRevenueSummaryApi {
 
     private final MonthlyRevenueSummaryFinder summaryFinder;
