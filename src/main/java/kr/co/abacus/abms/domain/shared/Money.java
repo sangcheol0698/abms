@@ -12,11 +12,8 @@ public record Money(BigDecimal amount) {
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
     public Money(BigDecimal amount) {
-        BigDecimal normalized = amount.setScale(SCALE, ROUNDING_MODE);
-        if (normalized.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("금액은 음수일 수 없습니다: " + normalized);
-        }
-        this.amount = normalized;
+        // 260216: 적자(마이너스)로 인해 음수 방지 로직 제거
+        this.amount = amount.setScale(SCALE, ROUNDING_MODE);
     }
 
     public static Money wons(BigDecimal amount) {
@@ -36,11 +33,8 @@ public record Money(BigDecimal amount) {
     }
 
     public Money subtract(Money other) {
-        BigDecimal result = this.amount.subtract(other.amount);
-        if (result.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("금액은 음수일 수 없습니다: " + result);
-        }
-        return Money.wons(result);
+        // 260216: 적자(마이너스)로 인해 음수 방지 로직 제거
+        return new Money(this.amount.subtract(other.amount));
     }
 
     public Money multiply(BigDecimal factor) {
