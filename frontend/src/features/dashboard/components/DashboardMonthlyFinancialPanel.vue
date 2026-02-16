@@ -5,7 +5,13 @@
       <CardDescription>최근 6개월간의 매출, 비용, 이익 현황입니다.</CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="mt-4 flex h-[240px] items-end gap-2 sm:gap-4">
+      <div
+        v-if="isLoading && data.length === 0"
+        class="mt-4 flex h-[240px] items-center justify-center text-sm text-muted-foreground"
+      >
+        데이터를 불러오는 중입니다...
+      </div>
+      <div v-else class="mt-4 flex h-[240px] items-end gap-2 sm:gap-4">
         <div
           v-for="(item, i) in data"
           :key="i"
@@ -71,20 +77,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { appContainer } from '@/core/di/container';
+import DashboardRevenueRepository, {
+  type MonthlyRevenueSummaryResponse,
+} from '@/features/dashboard/repository/DashboardRevenueRepository';
 
-const data = [
-  { month: '1월', revenue: 120000000, cost: 90000000, profit: 30000000 },
-  { month: '2월', revenue: 150000000, cost: 110000000, profit: 40000000 },
-  { month: '3월', revenue: 180000000, cost: 130000000, profit: 50000000 },
-  { month: '4월', revenue: 140000000, cost: 100000000, profit: 40000000 },
-  { month: '5월', revenue: 210000000, cost: 150000000, profit: 60000000 },
-  { month: '6월', revenue: 190000000, cost: 140000000, profit: 50000000 },
-];
+const repository = appContainer.resolve(DashboardRevenueRepository);
+const items = ref<MonthlyRevenueSummaryResponse[]>([]);
+const isLoading = ref(false);
+
+const data = computed(() => {
+  return items.value.map((item) => {
+    const date = new Date(item.targetMonth);
+    return {
+      month: `${date.getMonth() + 1}월`,
+      revenue: item.revenue,
+      cost: item.cost,
+      profit: item.profit,
+    };
+  });
+});
 
 const maxValue = computed(
-  () => Math.max(...data.map((d) => Math.max(d.revenue, d.cost, d.profit))) * 1.1,
+  () =>
+    (Math.max(...data.value.map((d) => Math.max(d.revenue, d.cost, d.profit))) || 100000000) * 1.1,
 );
 
 function formatAmount(value: number) {
@@ -92,4 +110,15 @@ function formatAmount(value: number) {
   if (value >= 1000000) return `${(value / 1000000).toFixed(0)}백만`;
   return value.toLocaleString();
 }
+
+onMounted(async () => {
+  isLoading.value = true;
+  try {
+    items.value = await repository.fetchMonthlyRevenueSummary();
+  } catch (error) {
+    console.error('Failed to fetch monthly revenue summary:', error);
+  } finally {
+    isLoading.value = false;
+  }
+});
 </script>

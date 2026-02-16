@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MonthlyRevenueSummaryService implements MonthlyRevenueSummaryManager {
+public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummaryManager {
 
     private final ProjectRevenuePlanRepository projectRevenuePlanRepository;
     private final ProjectAssignmentRepository projectAssignmentRepository;
