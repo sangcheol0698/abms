@@ -183,7 +183,7 @@ class MonthlyRevenueSummaryManagerTest extends IntegrationTestBase {
         System.out.println("Total Cost Result = " + result);
 
         // then
-        // (500만 * (1.0 +. 0.1 + 0.05) * 1.0) + (300만 * (1.0 + 0.04 + 0.02) * 0.5) = 575만 + 159만 = 734만
+        // 500만 * (1 + 0.1 + 0.05) * 1.0 MM + 300만 * (1 + 0.04 + 0.02) * 0.5 MM = 575만 + 159만 = 734만
         assertThat(result.amount()).isEqualByComparingTo(BigDecimal.valueOf(7_340_000L));
     }
 
@@ -212,6 +212,31 @@ class MonthlyRevenueSummaryManagerTest extends IntegrationTestBase {
         }
 
         return employee;
+    }
+
+    @Test
+    @DisplayName("이익 계산: 매출에서 비용을 뺀 금액이 이익이다 (흑자/적자/본전)")
+    void calculateProfit_Basic() {
+        // 1. 흑자 (매출 1000 > 비용 700)
+        Money revenue1 = Money.wons(1000L);
+        Money cost1 = Money.wons(700L);
+
+        Money profit1 = monthlyRevenueSummaryManager.calculateProfit(revenue1, cost1);
+        assertThat(profit1.amount()).isEqualByComparingTo(BigDecimal.valueOf(300L));
+
+        // 2. 적자 (매출 500 < 비용 800) -> -300원
+        Money revenue2 = Money.wons(500L);
+        Money cost2 = Money.wons(800L);
+
+        Money profit2 = monthlyRevenueSummaryManager.calculateProfit(revenue2, cost2);
+        assertThat(profit2.amount()).isEqualByComparingTo(BigDecimal.valueOf(-300L));
+
+        // 3. 본전 (매출 100 == 비용 100) -> 0원
+        Money revenue3 = Money.wons(100L);
+        Money cost3 = Money.wons(100L);
+
+        Money profit3 = monthlyRevenueSummaryManager.calculateProfit(revenue3, cost3);
+        assertThat(profit3.amount()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
 }
