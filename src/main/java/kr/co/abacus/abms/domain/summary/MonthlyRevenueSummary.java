@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.domain.summary;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -38,4 +39,15 @@ public class MonthlyRevenueSummary extends AbstractEntity {
     @AttributeOverride(name = "amount", column = @Column(name = "profit_amount", nullable = false, comment = "이익금액"))
     private Money profitAmount;
 
+    public static MonthlyRevenueSummary create(MonthlyRevenueSummaryCreateRequest createRequest) {
+        MonthlyRevenueSummary summary = new MonthlyRevenueSummary();
+
+        summary.projectId = Objects.requireNonNull(createRequest.projectId());
+        summary.summaryDate = Objects.requireNonNull(createRequest.summaryDate());
+        summary.revenueAmount = Objects.requireNonNull(createRequest.revenueAmount());
+        summary.costAmount = Objects.requireNonNull(createRequest.costAmount());
+        summary.profitAmount = Objects.requireNonNull(createRequest.profitAmount());
+
+        return summary;
+    }
 }
