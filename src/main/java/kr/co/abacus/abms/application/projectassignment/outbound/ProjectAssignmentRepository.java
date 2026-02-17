@@ -19,4 +19,10 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
         "AND (pa.period.endDate IS NULL OR pa.period.endDate >= :monthStart)")
     List<ProjectAssignment> findActiveAssignments(@Param("monthStart") LocalDate monthStart,
                                                   @Param("monthEnd") LocalDate monthEnd);
+
+    // 특정 프로젝트의 해당 월 할당 조회
+    @Query("SELECT pa FROM ProjectAssignment pa WHERE pa.projectId = :projectId AND pa.period.startDate <= :endOfMonth AND pa.period.endDate >= :startOfMonth")
+    List<ProjectAssignment> findActiveAssignmentsByProjectId(@Param("projectId") Long projectId,
+                                                             @Param("startOfMonth") LocalDate startOfMonth,
+                                                             @Param("endOfMonth") LocalDate endOfMonth);
 }

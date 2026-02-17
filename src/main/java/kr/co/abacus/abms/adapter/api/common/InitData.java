@@ -9,6 +9,7 @@ import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeCostPolicyRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
+import kr.co.abacus.abms.application.payroll.outbound.PayrollRepository;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRevenuePlanRepository;
@@ -18,6 +19,7 @@ import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.*;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
+import kr.co.abacus.abms.domain.payroll.Payroll;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
@@ -29,6 +31,7 @@ import kr.co.abacus.abms.domain.project.RevenueType;
 import kr.co.abacus.abms.domain.projectassignment.AssignmentRole;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentCreateRequest;
+import kr.co.abacus.abms.domain.shared.Money;
 import kr.co.abacus.abms.domain.shared.Period;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +40,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Profile({"local", "default"})
@@ -49,6 +53,7 @@ public class InitData {
     private final ProjectRevenuePlanRepository projectRevenuePlanRepository;
     private final ProjectAssignmentRepository projectAssignmentRepository;
     private final EmployeeCostPolicyRepository employeeCostPolicyRepository;
+    private final PayrollRepository payrollRepository;
     private final EmployeeModifyService employeeModifyService;
 
     @PostConstruct
@@ -392,7 +397,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        employeeModifyService.create(
+        Long employeeJang = employeeModifyService.create(
                 createEmployeeCreateCommand(
                         ABC3204.getId(), "myride@abms.co", "장책임", LocalDate.of(2012, 3, 1),
                         LocalDate.of(1972, 7, 1),
@@ -618,42 +623,75 @@ public class InitData {
         // ---------------------------------------------------------
         // 프로젝트 (프로젝트, 매출 일정, 인력 투입) 구성
         // ---------------------------------------------------------
-        Project naverErpProject = projectRepository.save(
-                Project.create(new ProjectCreateRequest(
-                        partyNaverCloud.getId(),
-                        22L,
-                        "PROJ-2024-001",
-                        "네이버클라우드 ERP 시스템 구축",
-                        "네이버클라우드 기반 전사 ERP 시스템 개발 및 구축 프로젝트",
-                        ProjectStatus.IN_PROGRESS,
-                        580000000L,
-                        LocalDate.of(2024, 1, 15),
-                        LocalDate.of(2024, 12, 31)))
+        Project aiProject = projectRepository.save(
+            Project.create(new ProjectCreateRequest(
+                partyNaverCloud.getId(),
+                22L, // PM ID (임의)
+                "PROJ-2026-AI",
+                "2026 차세대 AI 플랫폼 구축",
+                "LLM 기반 사내 지식 관리 시스템 구축",
+                ProjectStatus.IN_PROGRESS,
+                1000000000L, // 총 계약금 10억
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 6, 30)
+            ))
         );
 
-        projectRevenuePlanRepository.save(
-            ProjectRevenuePlan.create(
-                new ProjectRevenuePlanCreateRequest(
-                    naverErpProject.getId(),
-                    1,
-                    LocalDate.of(2024, 1, 16),
-                    RevenueType.DOWN_PAYMENT,
-                    180000000L,
-                    "메모"
-                )
+        ProjectRevenuePlan aiPlanJan = projectRevenuePlanRepository.save(
+            ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
+                aiProject.getId(),
+                1,
+                LocalDate.of(2026, 1, 15), // 1월 매출
+                RevenueType.DOWN_PAYMENT,
+                300000000L,
+                "1차 선수금"
+            ))
+        );
+        aiPlanJan.issue();
+
+        ProjectRevenuePlan aiPlanFeb = projectRevenuePlanRepository.save(
+            ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
+                aiProject.getId(),
+                2,
+                LocalDate.of(2026, 2, 20), // 2월 매출
+                RevenueType.INTERMEDIATE_PAYMENT,
+                100000000L,
+                "1차 중도금"
+            ))
+        );
+        aiPlanFeb.issue();
+
+        projectAssignmentRepository.saveAll(List.of(
+            ProjectAssignment.assign(aiProject, new ProjectAssignmentCreateRequest(
+                aiProject.getId(),
+                employeeShin, //신개발
+                AssignmentRole.PL,
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 6, 30)
+            )),
+            ProjectAssignment.assign(aiProject, new ProjectAssignmentCreateRequest(
+                aiProject.getId(),
+                employeeJang, // 김사원
+                AssignmentRole.DEV,
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 3, 31)
+            ))
+        ));
+
+        payrollRepository.save(
+            Payroll.create(
+                49L,                        // employeeId
+                Money.wons(84_000_000L),    // annualSalary (연봉)
+                LocalDate.of(2026, 1, 1)    // startDate (적용 시작일)
             )
         );
 
-        projectAssignmentRepository.save(
-            ProjectAssignment.assign(
-                naverErpProject,
-                new ProjectAssignmentCreateRequest(
-                    naverErpProject.getId(),
-                    employeeShin,
-                    AssignmentRole.DEV,
-                    LocalDate.of(2024, 1, 15),
-                    LocalDate.of(2024, 12, 31)
-                )
+        // 2. 직원 ID 28 (Dev/초급 인력 가정): 연봉 4,200만원 (월 350)
+        payrollRepository.save(
+            Payroll.create(
+                28L,                        // employeeId
+                Money.wons(42_000_000L),    // annualSalary (연봉)
+                LocalDate.of(2026, 1, 1)    // startDate (적용 시작일)
             )
         );
 
@@ -696,90 +734,6 @@ public class InitData {
             )
         );
 
-        // projectRepository.save(
-        //     Project.create(new ProjectCreateRequest(
-        //         partySamsungSDS.getId(),
-        //         1L,
-        //         "PROJ-2024-002",
-        //         "삼성전자 협력사 포털 개발",
-        //         "삼성전자向 협력사 통합 관리 포털 시스템 구축",
-        //         ProjectStatus.IN_PROGRESS,
-        //         420000000L,
-        //         LocalDate.of(2024, 3, 1),
-        //         LocalDate.of(2024, 10, 31)))
-        // );
-        // projectRepository.save(
-        //     Project.create(new ProjectCreateRequest(
-        //         partyKakao.getId(),
-        //         1L,
-        //         "PROJ-2024-003",
-        //         "카카오 AI 챗봇 플랫폼",
-        //         "LLM 기반 고객지원 챗봇 플랫폼 개발",
-        //         ProjectStatus.COMPLETED,
-        //         350000000L,
-        //         LocalDate.of(2023, 9, 1),
-        //         LocalDate.of(2024, 2, 29)))
-        // );
-        // projectRepository.save(
-        //     Project.create(new ProjectCreateRequest(
-        //         partyLGCNS.getId(),
-        //         1L,
-        //         "PROJ-2024-004",
-        //         "LG화학 데이터 웨어하우스",
-        //         "빅데이터 기반 통합 데이터 웨어하우스 구축",
-        //         ProjectStatus.ON_HOLD,
-        //         820000000L,
-        //         LocalDate.of(2024, 7, 1),
-        //         LocalDate.of(2025, 6, 30)))
-        // );
-        // projectRepository.save(
-        //     Project.create(new ProjectCreateRequest(
-        //         partySkTelecom.getId(),
-        //         1L,
-        //         "PROJ-2024-005",
-        //         "5G IoT 플랫폼 고도화",
-        //         "5G 기반 IoT 디바이스 통합 관리 플랫폼 고도화",
-        //         ProjectStatus.IN_PROGRESS,
-        //         670000000L,
-        //         LocalDate.of(2024, 4, 1),
-        //         LocalDate.of(2024, 11, 30)))
-        // );
-        // projectRepository.save(
-        //     Project.create(new ProjectCreateRequest(
-        //         partyNaverCloud.getId(),
-        //         1L,
-        //         "PROJ-2023-008",
-        //         "네이버페이 정산 시스템 리뉴얼",
-        //         "차세대 정산 시스템 개발 및 레거시 마이그레이션",
-        //         ProjectStatus.COMPLETED,
-        //         480000000L,
-        //         LocalDate.of(2023, 1, 1),
-        //         LocalDate.of(2023, 12, 31)))
-        // );
-        // projectRepository.save(
-        //     Project.create(new ProjectCreateRequest(
-        //         partySamsungSDS.getId(),
-        //         1L,
-        //         "PROJ-2023-012",
-        //         "삼성디스플레이 MES 고도화",
-        //         "제조실행시스템(MES) 기능 개선 및 고도화",
-        //         ProjectStatus.CANCELLED,
-        //         390000000L,
-        //         LocalDate.of(2023, 6, 1),
-        //         LocalDate.of(2024, 3, 31)))
-        // );
-        // projectRepository.save(
-        //     Project.create(new ProjectCreateRequest(
-        //         partyKakao.getId(),
-        //         1L,
-        //         "PROJ-2025-001",
-        //         "카카오뱅크 디지털 플랫폼",
-        //         "차세대 디지털 뱅킹 플랫폼 구축",
-        //         ProjectStatus.ON_HOLD,
-        //         920000000L,
-        //         LocalDate.of(2025, 1, 1),
-        //         LocalDate.of(2025, 12, 31)))
-        // );
 
         // ---------------------------------------------------------
         // 직급이력 구성

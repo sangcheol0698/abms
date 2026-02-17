@@ -19,4 +19,6 @@ public interface ProjectRevenuePlanRepository extends Repository<ProjectRevenueP
     List<ProjectRevenuePlan> findByProjectId(Long projectId);
 
     List<ProjectRevenuePlan> findByRevenueDateBetweenAndIsIssuedTrue(LocalDate startOfMonth, LocalDate endOfMonth);
+
+    List<ProjectRevenuePlan> findByProjectIdAndRevenueDateBetweenAndIsIssuedTrue(Long projectId, LocalDate start, LocalDate end);
 }

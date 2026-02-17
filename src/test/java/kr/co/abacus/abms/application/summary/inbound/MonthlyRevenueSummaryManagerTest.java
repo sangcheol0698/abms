@@ -24,8 +24,10 @@ import kr.co.abacus.abms.domain.employee.EmployeeCostPolicy;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.payroll.Payroll;
 import kr.co.abacus.abms.domain.project.Project;
+import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlanCreateRequest;
+import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.domain.project.RevenueType;
 import kr.co.abacus.abms.domain.projectassignment.AssignmentRole;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
@@ -237,6 +239,29 @@ class MonthlyRevenueSummaryManagerTest extends IntegrationTestBase {
 
         Money profit3 = monthlyRevenueSummaryManager.calculateProfit(revenue3, cost3);
         assertThat(profit3.amount()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    @DisplayName("프로젝트별 월별 집계: 진행 중인 여러 프로젝트의 매출/비용/이익을 각각 계산하여 리스트로 반환한다")
+    void calculateMonthlySummaryByProject_Success() {
+        // given
+        // 1. [프로젝트 A] (매출 O, 비용 O -> 흑자)
+        Project projectA = projectRepository.save(
+            Project.create(
+                new ProjectCreateRequest(
+                    1L,
+                    10L,
+                    "PRJ-0001",
+                    "차세대 빌링 구축",
+                    "차세대 빌링 구축 시스템입니다.",
+                    ProjectStatus.IN_PROGRESS,
+                    10_000_000L,
+                    LocalDate.of(2026, 1, 1),
+                    LocalDate.of(2026, 6, 30)
+                )
+            )
+        );
+
     }
 
 }
