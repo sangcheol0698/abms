@@ -2,6 +2,7 @@ spring:
   application:
     name: abms
   jpa:
+    defer-datasource-initialization: true  # 테이블을 새로 만들고 -> data.sql을 실행해야 함
     hibernate:
       ddl-auto: create
     open-in-view: false
@@ -11,6 +12,9 @@ spring:
   threads:
     virtual:
       enabled: true
+  sql:
+    init:
+      mode: always
 
   ai:
     openai:

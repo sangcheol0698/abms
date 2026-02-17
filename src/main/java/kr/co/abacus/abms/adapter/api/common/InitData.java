@@ -44,7 +44,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Profile({"local", "default"})
-@Component
+// @Component
 public class InitData {
 
     private final DepartmentRepository departmentRepository;
