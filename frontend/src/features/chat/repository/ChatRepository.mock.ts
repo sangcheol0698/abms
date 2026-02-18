@@ -52,4 +52,12 @@ export class MockChatRepository implements ChatRepository {
   async toggleFavorite(_sessionId: string): Promise<void> {
     // Do nothing
   }
+
+  async updateSessionTitle(_sessionId: string, _title: string): Promise<void> {
+    // Do nothing
+  }
+
+  async deleteSession(_sessionId: string): Promise<void> {
+    // Do nothing
+  }
 }

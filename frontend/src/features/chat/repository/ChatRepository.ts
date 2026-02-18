@@ -15,5 +15,6 @@ export interface ChatRepository {
   getFavoriteSessions(): Promise<ChatSession[]>;
   getSessionDetail(sessionId: string): Promise<ChatSessionDetail>;
   toggleFavorite(sessionId: string): Promise<void>;
+  updateSessionTitle(sessionId: string, title: string): Promise<void>;
+  deleteSession(sessionId: string): Promise<void>;
 }
-

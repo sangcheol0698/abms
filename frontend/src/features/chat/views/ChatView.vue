@@ -27,15 +27,37 @@
             </div>
             <ul class="space-y-1">
               <li v-for="item in filteredFavorites" :key="item.sessionId">
-                <button type="button"
-                  class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors"
-                  :class="currentSessionId === item.sessionId
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-muted/60 text-foreground'
-                    " @click="handleSessionSelect(item.sessionId, pane)">
-                  <span class="truncate">{{ item.title }}</span>
-                  <Star class="h-3.5 w-3.5 fill-current" />
-                </button>
+                <div class="group relative">
+                  <button type="button"
+                    class="flex w-full min-w-0 items-center justify-between rounded-xl px-3 py-2 pr-10 text-left text-xs transition-colors"
+                    :class="currentSessionId === item.sessionId
+                      ? 'bg-primary/10 text-primary'
+                      : 'hover:bg-muted/60 text-foreground'
+                      " @click="handleSessionSelect(item.sessionId, pane)">
+                    <span class="truncate">{{ item.title }}</span>
+                    <Star class="h-3.5 w-3.5 fill-current" />
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                      <Button variant="ghost" size="icon"
+                        class="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground transition-opacity"
+                        :class="currentSessionId === item.sessionId
+                          ? 'opacity-100 pointer-events-auto'
+                          : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto'"
+                        @click.stop>
+                        <MoreHorizontal class="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" class="w-36">
+                      <DropdownMenuItem @click="openRenameDialog(item)">
+                        세션명 변경
+                      </DropdownMenuItem>
+                      <DropdownMenuItem class="text-destructive" @click="openDeleteDialog(item)">
+                        세션 삭제
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </li>
             </ul>
           </div>
@@ -46,19 +68,41 @@
             </div>
             <ul class="space-y-1 text-xs">
               <li v-for="item in filteredRecent" :key="item.sessionId">
-                <button type="button"
-                  class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors"
-                  :class="currentSessionId === item.sessionId
-                    ? 'bg-muted text-foreground'
-                    : 'hover:bg-muted/50 text-foreground'
-                    " @click="handleSessionSelect(item.sessionId, pane)">
-                  <div class="min-w-0">
-                    <p class="truncate font-medium">{{ item.title }}</p>
-                    <p class="truncate text-[11px] text-muted-foreground">
-                      {{ formatRelativeTime(item.updatedAt) }}
-                    </p>
-                  </div>
-                </button>
+                <div class="group relative">
+                  <button type="button"
+                    class="flex w-full min-w-0 items-center justify-between rounded-xl px-3 py-2 pr-10 text-left transition-colors"
+                    :class="currentSessionId === item.sessionId
+                      ? 'bg-muted text-foreground'
+                      : 'hover:bg-muted/50 text-foreground'
+                      " @click="handleSessionSelect(item.sessionId, pane)">
+                    <div class="min-w-0">
+                      <p class="truncate font-medium">{{ item.title }}</p>
+                      <p class="truncate text-[11px] text-muted-foreground">
+                        {{ formatRelativeTime(item.updatedAt) }}
+                      </p>
+                    </div>
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                      <Button variant="ghost" size="icon"
+                        class="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground transition-opacity"
+                        :class="currentSessionId === item.sessionId
+                          ? 'opacity-100 pointer-events-auto'
+                          : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto'"
+                        @click.stop>
+                        <MoreHorizontal class="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" class="w-36">
+                      <DropdownMenuItem @click="openRenameDialog(item)">
+                        세션명 변경
+                      </DropdownMenuItem>
+                      <DropdownMenuItem class="text-destructive" @click="openDeleteDialog(item)">
+                        세션 삭제
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </li>
             </ul>
           </div>
@@ -143,6 +187,52 @@
       </div>
     </template>
   </FeatureSplitLayout>
+
+  <Dialog :open="isRenameDialogOpen" @update:open="handleRenameDialogOpenChange">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>세션명 변경</DialogTitle>
+        <DialogDescription>
+          채팅 세션 제목을 수정합니다.
+        </DialogDescription>
+      </DialogHeader>
+      <div class="space-y-2 py-2">
+        <label for="chat-session-title" class="text-sm font-medium text-foreground">
+          세션명
+        </label>
+        <Input id="chat-session-title" v-model="renameTitle" placeholder="세션명을 입력하세요" maxlength="200"
+          @keydown.enter.prevent="handleRenameSession" />
+      </div>
+      <DialogFooter>
+        <Button variant="outline" :disabled="isSessionActionProcessing" @click="handleRenameDialogOpenChange(false)">
+          취소
+        </Button>
+        <Button :disabled="isSessionActionProcessing" @click="handleRenameSession">
+          {{ isSessionActionProcessing ? '저장 중...' : '저장' }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <AlertDialog :open="isDeleteDialogOpen" @update:open="handleDeleteDialogOpenChange">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>세션을 삭제할까요?</AlertDialogTitle>
+        <AlertDialogDescription>
+          {{ deleteTargetSession ? `"${deleteTargetSession.title}" 세션이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.` : '' }}
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel :disabled="isSessionActionProcessing" @click="handleDeleteDialogOpenChange(false)">
+          취소
+        </AlertDialogCancel>
+        <AlertDialogAction class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          :disabled="isSessionActionProcessing" @pointerdown.prevent @click="handleDeleteSession">
+          {{ isSessionActionProcessing ? '삭제 중...' : '삭제' }}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
@@ -162,6 +252,30 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import ChatWidget from '@/features/chat/components/ChatWidget.vue';
 import {
   createChatMessage,
@@ -174,6 +288,7 @@ import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplit
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { sanitizeAssistantLinks } from '@/features/chat/utils/linkSanitizer';
+import { toast } from 'vue-sonner';
 
 const repository: ChatRepository = useChatRepository();
 const route = useRoute();
@@ -190,6 +305,12 @@ const draft = ref('');
 const isResponding = ref(false);
 const isLoading = ref(false);
 const isDragging = ref(false);
+const isRenameDialogOpen = ref(false);
+const renameTargetSession = ref<ChatSession | null>(null);
+const renameTitle = ref('');
+const isDeleteDialogOpen = ref(false);
+const deleteTargetSession = ref<ChatSession | null>(null);
+const isSessionActionProcessing = ref(false);
 const chatWidgetRef = ref<any>(null);
 let dragCounter = 0;
 
@@ -295,10 +416,8 @@ async function loadSessionDetail(sessionId: string) {
 
 // Actions
 function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
-  // Generate new sessionId and navigate to it
-  const newSessionId = crypto.randomUUID();
-  router.push({ name: 'assistant-session', params: { sessionId: newSessionId } });
-  currentSessionId.value = newSessionId;
+  router.push({ name: 'assistant' });
+  currentSessionId.value = null;
   currentSession.value = null;
   messages.value = [];
   draft.value = '';
@@ -316,6 +435,102 @@ function handleSessionSelect(sessionId: string, pane?: FeatureSplitPaneContext) 
 
   if (pane && !pane.isLargeScreen.value) {
     pane.closeSidebar();
+  }
+}
+
+function openRenameDialog(session: ChatSession) {
+  renameTargetSession.value = session;
+  renameTitle.value = session.title;
+  isRenameDialogOpen.value = true;
+}
+
+function openDeleteDialog(session: ChatSession) {
+  deleteTargetSession.value = session;
+  isDeleteDialogOpen.value = true;
+}
+
+function handleRenameDialogOpenChange(open: boolean) {
+  isRenameDialogOpen.value = open;
+  if (!open) {
+    renameTargetSession.value = null;
+    renameTitle.value = '';
+  }
+}
+
+function handleDeleteDialogOpenChange(open: boolean) {
+  isDeleteDialogOpen.value = open;
+}
+
+async function handleRenameSession() {
+  if (!renameTargetSession.value) {
+    return;
+  }
+
+  const normalizedTitle = renameTitle.value.trim();
+  if (!normalizedTitle) {
+    toast.error('세션명을 입력해주세요.');
+    return;
+  }
+
+  if (normalizedTitle.length > 200) {
+    toast.error('세션명은 200자 이하로 입력해주세요.');
+    return;
+  }
+
+  if (normalizedTitle === renameTargetSession.value.title) {
+    handleRenameDialogOpenChange(false);
+    return;
+  }
+
+  isSessionActionProcessing.value = true;
+  try {
+    await repository.updateSessionTitle(renameTargetSession.value.sessionId, normalizedTitle);
+    await loadSessions();
+
+    if (currentSessionId.value === renameTargetSession.value.sessionId && currentSession.value) {
+      currentSession.value = {
+        ...currentSession.value,
+        title: normalizedTitle,
+      };
+    }
+
+    toast.success('세션명이 변경되었습니다.');
+    handleRenameDialogOpenChange(false);
+  } catch (error) {
+    console.error('Failed to rename session:', error);
+    toast.error('세션명 변경에 실패했습니다.');
+  } finally {
+    isSessionActionProcessing.value = false;
+  }
+}
+
+async function handleDeleteSession() {
+  if (!deleteTargetSession.value) {
+    return;
+  }
+
+  isSessionActionProcessing.value = true;
+  try {
+    const targetSessionId = deleteTargetSession.value.sessionId;
+    await repository.deleteSession(targetSessionId);
+    await loadSessions();
+
+    if (currentSessionId.value === targetSessionId) {
+      await router.push({ name: 'assistant' });
+      currentSessionId.value = null;
+      currentSession.value = null;
+      messages.value = [];
+      draft.value = '';
+    }
+
+    toast.success('세션이 삭제되었습니다.');
+    handleDeleteDialogOpenChange(false);
+    deleteTargetSession.value = null;
+  } catch (error) {
+    console.error('Failed to delete session:', error);
+    toast.error('세션 삭제에 실패했습니다.');
+  } finally {
+    isSessionActionProcessing.value = false;
   }
 }
 
@@ -470,12 +685,11 @@ watch(
       currentSessionId.value = newSessionId;
       await loadSessionDetail(newSessionId);
     } else {
-      // No sessionId in URL - generate new one and redirect
-      const newId = crypto.randomUUID();
-      router.replace({ name: 'assistant-session', params: { sessionId: newId } });
-      currentSessionId.value = newId;
+      // Keep /assistant as blank "new chat" state until first message is sent
+      currentSessionId.value = null;
       currentSession.value = null;
       messages.value = [];
+      draft.value = '';
     }
   },
   { immediate: true }

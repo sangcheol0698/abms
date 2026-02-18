@@ -141,4 +141,28 @@ export class RemoteChatRepository implements ChatRepository {
       throw new Error(`Server responded with status ${response.status}`);
     }
   }
+
+  async updateSessionTitle(sessionId: string, title: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}/title`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server responded with status ${response.status}`);
+    }
+  }
+
+  async deleteSession(sessionId: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server responded with status ${response.status}`);
+    }
+  }
 }
