@@ -8,3 +8,6 @@ spring:
       chat:
         options:
           model: gpt-4o-mini
+  sql:
+    init:
+      mode: never
