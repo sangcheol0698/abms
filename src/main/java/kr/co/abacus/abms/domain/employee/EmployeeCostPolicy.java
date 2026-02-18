@@ -69,4 +69,14 @@ public class EmployeeCostPolicy  {
         return annualSalary.multiply(BigDecimal.valueOf(1.0 + overheadRate + sgaRate));
     }
 
+    public Money calculateOverheadCost(Money annualSalary) {
+        Money monthSalary = annualSalary.divide(BigDecimal.valueOf(12));
+        return monthSalary.multiply(BigDecimal.valueOf(this.overheadRate));
+    }
+
+    public Money calculateSgaCost(Money annualSalary) {
+        Money monthSalary = annualSalary.divide(BigDecimal.valueOf(12));
+        return monthSalary.multiply(BigDecimal.valueOf(this.sgaRate));
+    }
+
 }
