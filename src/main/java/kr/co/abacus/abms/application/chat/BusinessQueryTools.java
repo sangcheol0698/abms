@@ -19,6 +19,9 @@ import lombok.Setter;
 
 import kr.co.abacus.abms.application.dashboard.dto.DashboardSummaryResponse;
 import kr.co.abacus.abms.application.dashboard.inbound.DashboardFinder;
+import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
+import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
@@ -28,10 +31,17 @@ import kr.co.abacus.abms.application.project.ProjectQueryService;
 import kr.co.abacus.abms.application.project.dto.ProjectDetail;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
+import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentFinder;
+import kr.co.abacus.abms.application.positionhistory.inbound.PositionHistoryFinder;
 import kr.co.abacus.abms.application.summary.inbound.MonthlyRevenueSummaryFinder;
+import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import kr.co.abacus.abms.domain.party.Party;
+import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
+import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
 
 @Component
@@ -43,9 +53,14 @@ public class BusinessQueryTools {
     private static final int DEFAULT_LIMIT = 10;
     private static final int MAX_LIMIT = 20;
     private static final DateTimeFormatter YEAR_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
+    private static final int RESOLVE_CANDIDATE_LIMIT = 20;
 
     private final EmployeeFinder employeeFinder;
+    private final DepartmentRepository departmentRepository;
+    private final DepartmentFinder departmentFinder;
     private final ProjectQueryService projectQueryService;
+    private final ProjectAssignmentFinder projectAssignmentFinder;
+    private final PositionHistoryFinder positionHistoryFinder;
     private final DashboardFinder dashboardFinder;
     private final PartyFinder partyFinder;
     private final PartyQueryService partyQueryService;
@@ -106,7 +121,7 @@ public class BusinessQueryTools {
                             summary.projectId(),
                             summary.code(),
                             summary.name(),
-                            partyName != null ? partyName : "거래처 없음",
+                            partyName != null ? partyName : "협력사 없음",
                             summary.status().name(),
                             summary.status().getDescription(),
                             summary.contractAmount().amount().longValue(),
@@ -125,7 +140,7 @@ public class BusinessQueryTools {
                 projects);
     }
 
-    @Tool(description = "프로젝트 ID로 상세 정보를 조회하는 도구입니다. 거래처, 주관 부서, 기간, 상태, 계약금과 상세 페이지 링크를 반환합니다.")
+    @Tool(description = "프로젝트 ID로 상세 정보를 조회하는 도구입니다. 협력사, 주관 부서, 기간, 상태, 계약금과 상세 페이지 링크를 반환합니다.")
     public ProjectDetailInfo getProjectDetail(Long projectId) {
         notifyToolCall("getProjectDetail");
 
@@ -160,7 +175,7 @@ public class BusinessQueryTools {
                 summary.onLeaveEmployeesCount());
     }
 
-    @Tool(description = "거래처 목록을 검색하는 도구입니다. 이름으로 검색하고 최대 20건을 반환합니다.")
+    @Tool(description = "협력사 목록을 검색하는 도구입니다. 이름으로 검색하고 최대 20건을 반환합니다.")
     public PartySearchResult searchParties(@Nullable String name, @Nullable Integer limit) {
         notifyToolCall("searchParties");
 
@@ -180,16 +195,16 @@ public class BusinessQueryTools {
         return new PartySearchResult(name, (int) page.getTotalElements(), parties.size(), parties);
     }
 
-    @Tool(description = "특정 거래처의 프로젝트 목록을 조회하는 도구입니다. 거래처 ID를 받아 프로젝트 목록과 링크를 반환합니다.")
-    public @Nullable PartyProjectsResult getPartyProjects(Long partyId) {
+    @Tool(description = "특정 협력사의 프로젝트 목록을 조회하는 도구입니다. 협력사명을 받아 프로젝트 목록과 링크를 반환합니다.")
+    public @Nullable PartyProjectsResult getPartyProjects(String partyName) {
         notifyToolCall("getPartyProjects");
 
-        String partyName = partyQueryService.getPartyName(partyId);
-        if (partyName == null) {
+        @Nullable Party resolvedParty = resolvePartyByName(partyName);
+        if (resolvedParty == null) {
             return null;
         }
 
-        List<Project> projects = projectQueryService.findAllByPartyId(partyId);
+        List<Project> projects = projectQueryService.findAllByPartyId(resolvedParty.getId());
         List<PartyProjectItem> items = projects.stream()
                 .map(project -> new PartyProjectItem(
                         project.getId(),
@@ -204,9 +219,9 @@ public class BusinessQueryTools {
                 .toList();
 
         return new PartyProjectsResult(
-                partyId,
-                partyName,
-                "/parties/" + partyId,
+                resolvedParty.getId(),
+                resolvedParty.getName(),
+                "/parties/" + resolvedParty.getId(),
                 items.size(),
                 items);
     }
@@ -227,6 +242,125 @@ public class BusinessQueryTools {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    @Tool(description = "부서 소속 직원을 조회하는 도구입니다. 부서명과 직원 이름 필터로 검색하며 최대 20명까지 반환합니다.")
+    public @Nullable DepartmentEmployeesResult getDepartmentEmployees(
+            String departmentName,
+            @Nullable String employeeName,
+            @Nullable Integer limit) {
+        notifyToolCall("getDepartmentEmployees");
+
+        int pageSize = normalizeLimit(limit);
+        @Nullable Department department = departmentRepository.findByName(departmentName).orElse(null);
+        if (department == null) {
+            return null;
+        }
+
+        DepartmentDetail departmentDetail = departmentFinder.findDetail(department.getId());
+        Page<EmployeeSummary> page = departmentFinder.getEmployees(
+                department.getId(),
+                employeeName,
+                PageRequest.of(0, pageSize));
+
+        List<DepartmentEmployeeItem> employees = page.getContent().stream()
+                .map(summary -> new DepartmentEmployeeItem(
+                        summary.employeeId(),
+                        summary.name(),
+                        summary.position().getDescription(),
+                        summary.grade().getDescription(),
+                        summary.status().getDescription(),
+                        summary.email().address(),
+                        "/employees/" + summary.employeeId()))
+                .toList();
+
+        return new DepartmentEmployeesResult(
+                departmentDetail.id(),
+                departmentDetail.name(),
+                employeeName,
+                (int) page.getTotalElements(),
+                employees.size(),
+                "/departments/" + departmentDetail.id(),
+                employees);
+    }
+
+    @Tool(description = "프로젝트 투입 인력 목록을 조회하는 도구입니다. 프로젝트명을 입력하면 역할/기간/직원 링크를 반환합니다.")
+    public @Nullable ProjectAssignmentsResult getProjectAssignments(String projectName) {
+        notifyToolCall("getProjectAssignments");
+
+        @Nullable ProjectSummary resolvedProject = resolveProjectByName(projectName);
+        if (resolvedProject == null) {
+            return null;
+        }
+
+        ProjectDetail projectDetail = projectQueryService.findDetail(resolvedProject.projectId());
+        List<ProjectAssignment> assignments = projectAssignmentFinder.findByProjectId(resolvedProject.projectId());
+
+        List<ProjectAssignmentItem> items = assignments.stream()
+                .map(assignment -> {
+                    String assignedEmployeeName = "직원 정보 없음";
+                    String position = "정보 없음";
+                    String status = "정보 없음";
+
+                    @Nullable Employee assignedEmployee = resolveEmployeeById(assignment.getEmployeeId());
+                    if (assignedEmployee != null) {
+                        assignedEmployeeName = assignedEmployee.getName();
+                        position = assignedEmployee.getPosition().getDescription();
+                        status = assignedEmployee.getStatus().getDescription();
+                    }
+
+                    return new ProjectAssignmentItem(
+                            assignment.getId(),
+                            assignment.getEmployeeId(),
+                            assignedEmployeeName,
+                            position,
+                            status,
+                            assignment.getRole() != null ? assignment.getRole().name() : null,
+                            assignment.getRole() != null ? assignment.getRole().getDescription() : null,
+                            assignment.getPeriod().startDate().toString(),
+                            assignment.getPeriod().endDate() != null ? assignment.getPeriod().endDate().toString() : null,
+                            "/employees/" + assignment.getEmployeeId());
+                })
+                .toList();
+
+        return new ProjectAssignmentsResult(
+                projectDetail.projectId(),
+                projectDetail.name(),
+                "/projects/" + projectDetail.projectId(),
+                items.size(),
+                items);
+    }
+
+    @Tool(description = "직원의 직급 이력을 조회하는 도구입니다. 직원명을 입력하면 과거/현재 직급 이력과 기간을 반환합니다.")
+    public @Nullable EmployeePositionHistoryResult getEmployeePositionHistory(String employeeName) {
+        notifyToolCall("getEmployeePositionHistory");
+
+        @Nullable Employee employee = resolveEmployeeByName(employeeName);
+        if (employee == null) {
+            return null;
+        }
+
+        List<PositionHistory> histories = positionHistoryFinder.findAll(employee.getId()).stream()
+                .sorted((a, b) -> b.getPeriod().startDate().compareTo(a.getPeriod().startDate()))
+                .toList();
+
+        List<PositionHistoryItem> items = histories.stream()
+                .map(history -> new PositionHistoryItem(
+                        history.getId(),
+                        history.getPosition().name(),
+                        history.getPosition().getDescription(),
+                        history.getPeriod().startDate().toString(),
+                        history.getPeriod().endDate() != null ? history.getPeriod().endDate().toString() : null))
+                .toList();
+
+        return new EmployeePositionHistoryResult(
+                employee.getId(),
+                employee.getName(),
+                employee.getPosition().name(),
+                employee.getPosition().getDescription(),
+                "/employees/" + employee.getId(),
+                items.size(),
+                items);
     }
 
     private void notifyToolCall(String toolName) {
@@ -254,6 +388,53 @@ public class BusinessQueryTools {
             return LocalDate.now().format(YEAR_MONTH_FORMATTER);
         }
         return yearMonth.trim();
+    }
+
+    private @Nullable ProjectSummary resolveProjectByName(String projectName) {
+        ProjectSearchCondition condition = new ProjectSearchCondition(projectName, null, null, null, null);
+        Page<ProjectSummary> page = projectQueryService.search(condition, PageRequest.of(0, RESOLVE_CANDIDATE_LIMIT));
+        if (page.isEmpty()) {
+            return null;
+        }
+
+        return page.getContent().stream()
+                .filter(project -> project.name().equalsIgnoreCase(projectName))
+                .findFirst()
+                .orElse(page.getContent().getFirst());
+    }
+
+    private @Nullable Employee resolveEmployeeByName(String employeeName) {
+        EmployeeSearchCondition condition = new EmployeeSearchCondition(employeeName, null, null, null, null, null);
+        Page<EmployeeSummary> page = employeeFinder.search(condition, PageRequest.of(0, RESOLVE_CANDIDATE_LIMIT));
+        if (page.isEmpty()) {
+            return null;
+        }
+
+        @Nullable EmployeeSummary selected = page.getContent().stream()
+                .filter(summary -> summary.name().equalsIgnoreCase(employeeName))
+                .findFirst()
+                .orElse(page.getContent().getFirst());
+        return resolveEmployeeById(selected.employeeId());
+    }
+
+    private @Nullable Party resolvePartyByName(String partyName) {
+        Page<Party> page = partyFinder.getParties(PageRequest.of(0, RESOLVE_CANDIDATE_LIMIT), partyName);
+        if (page.isEmpty()) {
+            return null;
+        }
+
+        return page.getContent().stream()
+                .filter(party -> party.getName().equalsIgnoreCase(partyName))
+                .findFirst()
+                .orElse(page.getContent().getFirst());
+    }
+
+    private @Nullable Employee resolveEmployeeById(Long employeeId) {
+        try {
+            return employeeFinder.find(employeeId);
+        } catch (EmployeeNotFoundException e) {
+            return null;
+        }
     }
 
     public record EmployeeSearchResult(
@@ -375,6 +556,71 @@ public class BusinessQueryTools {
             long revenue,
             long cost,
             long profit) {
+
+    }
+
+    public record DepartmentEmployeesResult(
+            Long departmentId,
+            String departmentName,
+            @Nullable String nameFilter,
+            int totalCount,
+            int returnedCount,
+            String departmentLink,
+            List<DepartmentEmployeeItem> employees) {
+
+    }
+
+    public record DepartmentEmployeeItem(
+            Long id,
+            String name,
+            String position,
+            String grade,
+            String status,
+            String email,
+            String link) {
+
+    }
+
+    public record ProjectAssignmentsResult(
+            Long projectId,
+            String projectName,
+            String projectLink,
+            int assignmentCount,
+            List<ProjectAssignmentItem> assignments) {
+
+    }
+
+    public record ProjectAssignmentItem(
+            Long assignmentId,
+            Long employeeId,
+            String employeeName,
+            String position,
+            String employeeStatus,
+            @Nullable String role,
+            @Nullable String roleDescription,
+            String startDate,
+            @Nullable String endDate,
+            String employeeLink) {
+
+    }
+
+    public record EmployeePositionHistoryResult(
+            Long employeeId,
+            String employeeName,
+            String currentPosition,
+            String currentPositionDescription,
+            String employeeLink,
+            int historyCount,
+            List<PositionHistoryItem> histories) {
+
+    }
+
+    public record PositionHistoryItem(
+            Long id,
+            String position,
+            String positionDescription,
+            String startDate,
+            @Nullable String endDate) {
 
     }
 
