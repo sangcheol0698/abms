@@ -51,7 +51,7 @@ public class ChatTitleService {
 
     @Transactional
     public void applyInitialTitle(String sessionId, String userMessage) {
-        String initialTitle = createInitialTitle(userMessage);
+        String initialTitle = createInitialTitleWithAi(userMessage);
         chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId)
                 .ifPresent(session -> {
                     if (session.getTitle() == null
@@ -142,6 +142,25 @@ public class ChatTitleService {
             return DEFAULT_TITLE;
         }
         return normalized;
+    }
+
+    private String createInitialTitleWithAi(String userMessage) {
+        String fallbackTitle = createInitialTitle(userMessage);
+        try {
+            String messageContext = toMessageContext(List.of(userMessage));
+            String response = chatClient.prompt()
+                    .user(String.format(TITLE_PROMPT, messageContext))
+                    .call()
+                    .content();
+            if (response == null || response.isBlank()) {
+                return fallbackTitle;
+            }
+            String refinedTitle = normalizeTitle(response);
+            return refinedTitle.isBlank() ? fallbackTitle : refinedTitle;
+        } catch (Exception e) {
+            log.warn("Failed to create initial AI title: {}", e.getMessage());
+            return fallbackTitle;
+        }
     }
 
     private boolean isGreetingMessage(String message) {
