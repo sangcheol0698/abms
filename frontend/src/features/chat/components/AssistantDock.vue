@@ -18,7 +18,7 @@
       <div v-if="isDockOpen" class="flex h-full min-h-0 w-full flex-col">
         <header class="flex items-center justify-between border-b border-border/40 px-3 py-2">
           <div class="min-w-0">
-            <p class="truncate text-sm font-semibold text-foreground">AI Assistant</p>
+            <p class="truncate text-sm font-semibold text-foreground">{{ dockSessionTitle }}</p>
             <p class="text-[11px] text-muted-foreground">어디서든 이어서 대화</p>
           </div>
           <div class="flex items-center gap-1">
@@ -81,7 +81,7 @@
         <SheetDescription class="sr-only">Assistant chat panel</SheetDescription>
         <div class="flex h-full min-h-0 flex-col bg-background">
           <header class="flex items-center justify-between border-b border-border/40 px-3 py-2">
-            <p class="text-sm font-semibold text-foreground">AI Assistant</p>
+            <p class="truncate text-sm font-semibold text-foreground">{{ dockSessionTitle }}</p>
             <div class="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger as-child>
@@ -149,6 +149,7 @@ const DESKTOP_WIDTH_STORAGE_KEY = 'assistant_dock_desktop_width';
 const messages = ref<ChatMessage[]>([]);
 const draft = ref('');
 const isResponding = ref(false);
+const sessionTitle = ref('새 채팅');
 const desktopWidth = ref(DOCK_DEFAULT_WIDTH);
 const isResizing = ref(false);
 let resizeStartX = 0;
@@ -157,6 +158,7 @@ let resizeStartWidth = DOCK_DEFAULT_WIDTH;
 const infoText = computed(() =>
   isResponding.value ? '응답을 생성 중입니다...' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
 );
+const dockSessionTitle = computed(() => sessionTitle.value || '새 채팅');
 
 const draftValue = computed({
   get: () => draft.value,
@@ -207,6 +209,7 @@ function ensureSessionId(): string {
 async function loadSessionDetail(sessionId: string) {
   try {
     const detail = await repository.getSessionDetail(sessionId);
+    sessionTitle.value = detail.title?.trim() || '새 채팅';
     messages.value = detail.messages.map((message) => {
       if (message.role !== 'assistant') return message;
       return {
@@ -215,6 +218,7 @@ async function loadSessionDetail(sessionId: string) {
       };
     });
   } catch {
+    sessionTitle.value = '새 채팅';
     messages.value = [];
   }
 }
@@ -290,6 +294,7 @@ function handleSuggestion(value: string) {
 function handleNewChat() {
   if (isResponding.value) return;
   dockStore.setActiveSessionId(null);
+  sessionTitle.value = '새 채팅';
   messages.value = [];
   draft.value = '';
 }
@@ -358,7 +363,12 @@ watch(
 watch(
   () => [activeSessionId.value, isAssistantRoute.value] as const,
   async ([sessionId, assistantRoute]) => {
-    if (assistantRoute || !sessionId) return;
+    if (assistantRoute) return;
+    if (!sessionId) {
+      sessionTitle.value = '새 채팅';
+      messages.value = [];
+      return;
+    }
     await loadSessionDetail(sessionId);
   },
   { immediate: true },

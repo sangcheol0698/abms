@@ -49,6 +49,9 @@
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-36">
+                      <DropdownMenuItem @click="handleToggleFavoriteForSession(item)">
+                        {{ item.favorite ? '즐겨찾기 해제' : '즐겨찾기' }}
+                      </DropdownMenuItem>
                       <DropdownMenuItem @click="openRenameDialog(item)">
                         세션명 변경
                       </DropdownMenuItem>
@@ -94,6 +97,9 @@
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-36">
+                      <DropdownMenuItem @click="handleToggleFavoriteForSession(item)">
+                        {{ item.favorite ? '즐겨찾기 해제' : '즐겨찾기' }}
+                      </DropdownMenuItem>
                       <DropdownMenuItem @click="openRenameDialog(item)">
                         세션명 변경
                       </DropdownMenuItem>
@@ -550,6 +556,22 @@ async function handleToggleFavorite() {
     }
   } catch (error) {
     console.error('Failed to toggle favorite:', error);
+  }
+}
+
+async function handleToggleFavoriteForSession(session: ChatSession) {
+  try {
+    await repository.toggleFavorite(session.sessionId);
+    await loadSessions();
+    if (currentSessionId.value === session.sessionId && currentSession.value) {
+      currentSession.value = {
+        ...currentSession.value,
+        favorite: !currentSession.value.favorite,
+      };
+    }
+  } catch (error) {
+    console.error('Failed to toggle favorite:', error);
+    toast.error('즐겨찾기 변경에 실패했습니다.');
   }
 }
 
