@@ -107,6 +107,19 @@
         </InputGroupText>
         <Separator orientation="vertical" class="!h-4" />
         <InputGroupButton
+          v-if="props.isResponding"
+          type="button"
+          variant="secondary"
+          size="icon-xs"
+          class="rounded-full"
+          title="응답 중지"
+          @click="emit('stop')"
+        >
+          <Square class="h-3.5 w-3.5" />
+          <span class="sr-only">응답 중지</span>
+        </InputGroupButton>
+        <InputGroupButton
+          v-else
           type="submit"
           variant="default"
           size="icon-xs"
@@ -127,6 +140,7 @@
 import { nextTick, ref, watch, onUnmounted, computed } from 'vue';
 import {
   ArrowUp,
+  Square,
   Plus,
   X,
   Paperclip,
@@ -156,11 +170,13 @@ import {
 const props = withDefaults(
   defineProps<{
     disabled?: boolean;
+    isResponding?: boolean;
     suggestions?: string[];
     infoText?: string;
   }>(),
   {
     disabled: false,
+    isResponding: false,
     suggestions: () => [],
     infoText: 'Enter: 전송 · Shift + Enter: 줄바꿈',
   },
@@ -169,6 +185,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   submit: [value: string];
   suggestion: [value: string];
+  stop: [];
 }>();
 
 interface FileAttachment {

@@ -41,7 +41,8 @@
     <div class="bg-background px-4 pb-6 pt-2">
       <div class="mx-auto w-full max-w-3xl">
         <ChatComposer ref="composerRef" v-model="draftValue" :disabled="isResponding" :info-text="infoText"
-          @submit="$emit('submit', $event)" @suggestion="$emit('suggestion', $event)" />
+          :is-responding="isResponding" @submit="$emit('submit', $event)" @suggestion="$emit('suggestion', $event)"
+          @stop="$emit('stop')" />
       </div>
     </div>
   </div>
@@ -69,6 +70,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
   submit: [value: string];
   suggestion: [value: string];
+  stop: [];
 }>();
 
 const scrollAreaRef = ref<ComponentPublicInstance | null>(null);

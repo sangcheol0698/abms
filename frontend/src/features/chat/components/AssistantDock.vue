@@ -57,6 +57,7 @@
             :info-text="infoText"
             @submit="handleSubmit"
             @suggestion="handleSuggestion"
+            @stop="handleStopResponse"
           />
         </div>
       </div>
@@ -110,6 +111,7 @@
               :info-text="infoText"
               @submit="handleSubmit"
               @suggestion="handleSuggestion"
+              @stop="handleStopResponse"
             />
           </div>
         </div>
@@ -148,6 +150,8 @@ const DESKTOP_WIDTH_STORAGE_KEY = 'assistant_dock_desktop_width';
 const messages = ref<ChatMessage[]>([]);
 const draft = ref('');
 const isResponding = ref(false);
+const streamAbortController = ref<AbortController | null>(null);
+const isStopRequested = ref(false);
 const sessionTitle = ref('새 채팅');
 const desktopWidth = ref(DOCK_DEFAULT_WIDTH);
 const isResizing = ref(false);
@@ -155,7 +159,7 @@ let resizeStartX = 0;
 let resizeStartWidth = DOCK_DEFAULT_WIDTH;
 
 const infoText = computed(() =>
-  isResponding.value ? '응답을 생성 중입니다...' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
+  isResponding.value ? '응답 생성 중... 중지 버튼으로 멈출 수 있습니다.' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
 );
 const dockSessionTitle = computed(() => sessionTitle.value || '새 채팅');
 
@@ -224,14 +228,40 @@ async function loadSessionDetail(sessionId: string) {
   }
 }
 
+function markAssistantMessageStopped(messageIndex: number) {
+  const message = messages.value[messageIndex];
+  if (!message || message.role !== 'assistant') {
+    return;
+  }
+  message.toolStatus = undefined;
+  if (message.content.includes('(중지됨)')) {
+    return;
+  }
+  const trimmed = message.content.trimEnd();
+  message.content = trimmed.length > 0 ? `${trimmed}\n\n(중지됨)` : '(중지됨)';
+}
+
+function handleStopResponse() {
+  if (!isResponding.value || !streamAbortController.value) {
+    return;
+  }
+  isStopRequested.value = true;
+  streamAbortController.value.abort();
+}
+
 async function handleSubmit(content: string) {
   messages.value.push(createChatMessage('user', content));
+  let assistantMessageIndex = -1;
+  let abortController: AbortController | null = null;
 
   try {
     isResponding.value = true;
+    isStopRequested.value = false;
+    abortController = new AbortController();
+    streamAbortController.value = abortController;
     const assistantMessage = createChatMessage('assistant', '');
     messages.value.push(assistantMessage);
-    const assistantMessageIndex = messages.value.length - 1;
+    assistantMessageIndex = messages.value.length - 1;
     let toolIndicator: string | null = null;
 
     const streamedSessionId = await repository.streamMessage(
@@ -251,6 +281,9 @@ async function handleSubmit(content: string) {
         }
       },
       (error: Error) => {
+        if (isStopRequested.value) {
+          return;
+        }
         console.error('Dock streaming error:', error);
         const message = messages.value[assistantMessageIndex];
         if (message && !message.content) {
@@ -267,12 +300,22 @@ async function handleSubmit(content: string) {
           description: getToolDescription(toolName),
         };
       },
+      { signal: abortController.signal },
     );
+
+    if (isStopRequested.value) {
+      markAssistantMessageStopped(assistantMessageIndex);
+    }
 
     if (streamedSessionId && streamedSessionId !== activeSessionId.value) {
       dockStore.setActiveSessionId(streamedSessionId);
     }
   } catch (error) {
+    if (isStopRequested.value) {
+      markAssistantMessageStopped(assistantMessageIndex);
+      return;
+    }
+
     const fallback =
       error instanceof Error
         ? error.message
@@ -284,6 +327,10 @@ async function handleSubmit(content: string) {
       messages.value.push(createChatMessage('assistant', fallback));
     }
   } finally {
+    if (streamAbortController.value === abortController) {
+      streamAbortController.value = null;
+    }
+    isStopRequested.value = false;
     isResponding.value = false;
   }
 }
@@ -389,6 +436,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  streamAbortController.value?.abort();
   stopResize();
 });
 </script>

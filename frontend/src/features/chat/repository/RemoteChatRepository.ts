@@ -1,4 +1,4 @@
-import type { ChatRepository } from './ChatRepository';
+import type { ChatRepository, ChatStreamOptions } from './ChatRepository';
 import type {
   ChatRequest,
   ChatSession,
@@ -33,13 +33,52 @@ export class RemoteChatRepository implements ChatRepository {
     onChunk: (chunk: string) => void,
     onError?: (error: Error) => void,
     onToolCall?: (toolName: string) => void,
+    options?: ChatStreamOptions,
   ): Promise<string | null> {
     const ctrl = new AbortController();
+    const externalSignal = options?.signal;
 
     return new Promise((resolve, reject) => {
       let streamedSessionId: string | null = null;
+      let settled = false;
+      let abortedByCaller = false;
+      let abortByCallerHandler: (() => void) | null = null;
 
-      fetchEventSource(`${this.baseUrl}/api/v1/chat/stream`, {
+      const cleanup = () => {
+        if (externalSignal && abortByCallerHandler) {
+          externalSignal.removeEventListener('abort', abortByCallerHandler);
+        }
+      };
+      const resolveOnce = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(streamedSessionId);
+      };
+      const rejectOnce = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      };
+      const isAbortError = (error: unknown): boolean =>
+        error instanceof Error &&
+          (error.name === 'AbortError' || error.message.toLowerCase().includes('aborted'));
+
+      abortByCallerHandler = () => {
+        abortedByCaller = true;
+        ctrl.abort();
+        resolveOnce();
+      };
+      if (externalSignal) {
+        if (externalSignal.aborted) {
+          abortByCallerHandler();
+          return;
+        }
+        externalSignal.addEventListener('abort', abortByCallerHandler, { once: true });
+      }
+
+      void fetchEventSource(`${this.baseUrl}/api/v1/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +107,8 @@ export class RemoteChatRepository implements ChatRepository {
           if (onError) {
             onError(error);
           }
-          reject(error);
+          ctrl.abort();
+          rejectOnce(error);
         },
         onmessage(ev) {
           try {
@@ -85,16 +125,30 @@ export class RemoteChatRepository implements ChatRepository {
           }
         },
         onclose() {
-          resolve(streamedSessionId);
+          resolveOnce();
         },
         onerror(err) {
+          if (abortedByCaller || isAbortError(err)) {
+            resolveOnce();
+            return;
+          }
           const error = err instanceof Error ? err : new Error(String(err));
           if (onError) {
             onError(error);
           }
           ctrl.abort();
-          reject(error);
+          rejectOnce(error);
         },
+      }).catch((err: unknown) => {
+        if (abortedByCaller || isAbortError(err)) {
+          resolveOnce();
+          return;
+        }
+        const error = err instanceof Error ? err : new Error(String(err));
+        if (onError) {
+          onError(error);
+        }
+        rejectOnce(error);
       });
     });
   }

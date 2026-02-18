@@ -1,4 +1,5 @@
 import type { ChatRepository } from '@/features/chat/repository/ChatRepository';
+import type { ChatStreamOptions } from '@/features/chat/repository/ChatRepository';
 import type {
   ChatRequest,
   ChatSession,
@@ -17,9 +18,13 @@ export class MockChatRepository implements ChatRepository {
   async streamMessage(
     request: ChatRequest,
     onChunk: (chunk: string) => void,
-    _onError?: (error: Error) => void,
-    _onToolCall?: (toolName: string) => void
+    onError?: (error: Error) => void,
+    onToolCall?: (toolName: string) => void,
+    options?: ChatStreamOptions
   ): Promise<string | null> {
+    void onError;
+    void onToolCall;
+    void options;
     const responseText = `\n현재는 샘플 응답만 제공하고 있어요.\n\n> "${request.content}"에 대한 정보는 곧 실제 서비스 데이터와 연동될 예정입니다.`;
     const chunks = responseText.split('');
     for (const chunk of chunks) {
@@ -29,7 +34,8 @@ export class MockChatRepository implements ChatRepository {
     return null;
   }
 
-  async getRecentSessions(_limit?: number): Promise<ChatSession[]> {
+  async getRecentSessions(limit?: number): Promise<ChatSession[]> {
+    void limit;
     return [];
   }
 
@@ -49,15 +55,19 @@ export class MockChatRepository implements ChatRepository {
     };
   }
 
-  async toggleFavorite(_sessionId: string): Promise<void> {
+  async toggleFavorite(sessionId: string): Promise<void> {
+    void sessionId;
     // Do nothing
   }
 
-  async updateSessionTitle(_sessionId: string, _title: string): Promise<void> {
+  async updateSessionTitle(sessionId: string, title: string): Promise<void> {
+    void sessionId;
+    void title;
     // Do nothing
   }
 
-  async deleteSession(_sessionId: string): Promise<void> {
+  async deleteSession(sessionId: string): Promise<void> {
+    void sessionId;
     // Do nothing
   }
 }

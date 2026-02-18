@@ -188,7 +188,7 @@
           :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'">
           <ChatWidget ref="chatWidgetRef" class="flex w-full flex-1 min-h-0" v-model="draft" :messages="messages"
             :is-responding="isResponding" :suggestions="[]" :info-text="infoText" @submit="handleSubmit"
-            @suggestion="handleSuggestion" />
+            @suggestion="handleSuggestion" @stop="handleStopResponse" />
         </div>
       </div>
     </template>
@@ -291,7 +291,7 @@ import {
 import { useChatRepository } from '@/features/chat/repository/useChatRepository';
 import type { ChatRepository } from '@/features/chat/repository/ChatRepository';
 import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { sanitizeAssistantLinks } from '@/features/chat/utils/linkSanitizer';
 import { toast } from 'vue-sonner';
@@ -309,6 +309,8 @@ const searchQuery = ref('');
 const messages = ref<ChatMessage[]>([]);
 const draft = ref('');
 const isResponding = ref(false);
+const streamAbortController = ref<AbortController | null>(null);
+const isStopRequested = ref(false);
 const isLoading = ref(false);
 const isDragging = ref(false);
 const isRenameDialogOpen = ref(false);
@@ -322,7 +324,7 @@ let dragCounter = 0;
 
 // Computed
 const infoText = computed(() =>
-  isResponding.value ? '응답을 생성 중입니다...' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
+  isResponding.value ? '응답 생성 중... 중지 버튼으로 멈출 수 있습니다.' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
 );
 
 const filteredFavorites = computed(() =>
@@ -588,7 +590,7 @@ function handleDragEnter(event: DragEvent) {
   }
 }
 
-function handleDragLeave(_event: DragEvent) {
+function handleDragLeave() {
   dragCounter--;
   if (dragCounter === 0) {
     isDragging.value = false;
@@ -607,18 +609,44 @@ function handleDrop(event: DragEvent) {
   }
 }
 
+function markAssistantMessageStopped(messageIndex: number) {
+  const message = messages.value[messageIndex];
+  if (!message || message.role !== 'assistant') {
+    return;
+  }
+  message.toolStatus = undefined;
+  if (message.content.includes('(중지됨)')) {
+    return;
+  }
+  const trimmed = message.content.trimEnd();
+  message.content = trimmed.length > 0 ? `${trimmed}\n\n(중지됨)` : '(중지됨)';
+}
+
+function handleStopResponse() {
+  if (!isResponding.value || !streamAbortController.value) {
+    return;
+  }
+  isStopRequested.value = true;
+  streamAbortController.value.abort();
+}
+
 async function handleSubmit(content: string) {
   messages.value.push(createChatMessage('user', content));
+  let assistantMessageIndex = -1;
+  let abortController: AbortController | null = null;
 
   try {
     isResponding.value = true;
+    isStopRequested.value = false;
+    abortController = new AbortController();
+    streamAbortController.value = abortController;
 
     // Create a placeholder message for the assistant
     const assistantMessage = createChatMessage('assistant', '');
     messages.value.push(assistantMessage);
 
     // Get the index of the assistant message we just added
-    const assistantMessageIndex = messages.value.length - 1;
+    assistantMessageIndex = messages.value.length - 1;
 
     // Track tool call indicator separately
     let toolIndicator: string | null = null;
@@ -649,6 +677,9 @@ async function handleSubmit(content: string) {
         }
       },
       (error: Error) => {
+        if (isStopRequested.value) {
+          return;
+        }
         console.error('Streaming error:', error);
         const message = messages.value[assistantMessageIndex];
         if (message && !message.content) {
@@ -670,8 +701,13 @@ async function handleSubmit(content: string) {
           };
           // Do NOT touch message.content
         }
-      }
+      },
+      { signal: abortController.signal }
     );
+
+    if (isStopRequested.value) {
+      markAssistantMessageStopped(assistantMessageIndex);
+    }
 
     if (streamedSessionId && streamedSessionId !== currentSessionId.value) {
       currentSessionId.value = streamedSessionId;
@@ -684,6 +720,11 @@ async function handleSubmit(content: string) {
     // Reload again after delay to get AI-generated title
     setTimeout(() => loadSessions(), 2000);
   } catch (error) {
+    if (isStopRequested.value) {
+      markAssistantMessageStopped(assistantMessageIndex);
+      return;
+    }
+
     const fallback =
       error instanceof Error
         ? error.message
@@ -697,6 +738,10 @@ async function handleSubmit(content: string) {
       messages.value.push(createChatMessage('assistant', fallback));
     }
   } finally {
+    if (streamAbortController.value === abortController) {
+      streamAbortController.value = null;
+    }
+    isStopRequested.value = false;
     isResponding.value = false;
   }
 }
@@ -722,5 +767,9 @@ watch(
 // Initial load
 onMounted(async () => {
   await loadSessions();
+});
+
+onBeforeUnmount(() => {
+  streamAbortController.value?.abort();
 });
 </script>

@@ -1,5 +1,9 @@
 import type { ChatRequest, ChatSession, ChatSessionDetail } from '@/features/chat/entity/ChatMessage';
 
+export interface ChatStreamOptions {
+  signal?: AbortSignal;
+}
+
 export interface ChatRepository {
   // Messages
   sendMessage(request: ChatRequest): Promise<string>;
@@ -7,7 +11,8 @@ export interface ChatRepository {
     request: ChatRequest,
     onChunk: (chunk: string) => void,
     onError?: (error: Error) => void,
-    onToolCall?: (toolName: string) => void
+    onToolCall?: (toolName: string) => void,
+    options?: ChatStreamOptions
   ): Promise<string | null>; // Returns sessionId if new session created
 
   // Sessions
