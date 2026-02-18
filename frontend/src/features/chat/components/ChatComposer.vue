@@ -304,6 +304,12 @@ watch(
 );
 
 function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && props.isResponding) {
+    event.preventDefault();
+    emit('stop');
+    return;
+  }
+
   if (event.key !== 'Enter' || event.shiftKey) {
     return;
   }

@@ -36,7 +36,7 @@
               :key="party.partyId"
               :class="[
                 'cursor-pointer hover:bg-muted/50 transition-colors',
-                selectedPartyId === party.partyId && 'bg-primary/10',
+                selectedPartyIdValue === party.partyId && 'bg-primary/10',
               ]"
               @click="handleSelect(party)"
             >
@@ -84,14 +84,14 @@
             {{ selectedPartySummary ?? '협력사를 선택하세요.' }}
           </span>
         </div>
-        <Button variant="ghost" size="sm" :disabled="!selectedPartyId" @click="clearSelection">
+        <Button variant="ghost" size="sm" :disabled="!selectedPartyIdValue" @click="clearSelection">
           선택 해제
         </Button>
       </div>
 
       <DialogFooter class="justify-between">
         <Button variant="outline" @click="$emit('update:open', false)">취소</Button>
-        <Button :disabled="!selectedPartyId" @click="confirmSelection">선택</Button>
+        <Button :disabled="!selectedPartyIdValue" @click="confirmSelection">선택</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
@@ -130,7 +130,7 @@ const repository = appContainer.resolve(PartyRepository);
 
 const loading = ref(false);
 const parties = ref<PartyListItem[]>([]);
-const selectedPartyId = ref<number | undefined>();
+const selectedPartyIdValue = ref<number | undefined>();
 const searchQuery = ref('');
 const page = ref(1);
 const pageSize = ref(10);
@@ -138,10 +138,10 @@ const totalPages = ref(1);
 const totalElements = ref(0);
 
 const selectedPartySummary = computed(() => {
-  if (!selectedPartyId.value) {
+  if (!selectedPartyIdValue.value) {
     return null;
   }
-  const party = parties.value.find((p) => p.partyId === selectedPartyId.value);
+  const party = parties.value.find((p) => p.partyId === selectedPartyIdValue.value);
   return party ? `${party.name} (${party.ceo})` : null;
 });
 
@@ -149,12 +149,12 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      selectedPartyId.value = props.selectedPartyId;
+      selectedPartyIdValue.value = props.selectedPartyId;
       searchQuery.value = '';
       page.value = 1;
       loadParties();
     } else {
-      selectedPartyId.value = undefined;
+      selectedPartyIdValue.value = undefined;
       searchQuery.value = '';
       page.value = 1;
     }
@@ -165,7 +165,7 @@ watch(
   () => props.selectedPartyId,
   (next) => {
     if (props.open) {
-      selectedPartyId.value = next;
+      selectedPartyIdValue.value = next;
     }
   },
 );
@@ -192,19 +192,19 @@ async function loadParties() {
 }
 
 function handleSelect(party: PartyListItem) {
-  selectedPartyId.value = party.partyId;
+  selectedPartyIdValue.value = party.partyId;
 }
 
 function clearSelection() {
-  selectedPartyId.value = undefined;
+  selectedPartyIdValue.value = undefined;
 }
 
 function confirmSelection() {
-  if (!selectedPartyId.value) {
+  if (!selectedPartyIdValue.value) {
     toast.info('협력사를 선택해 주세요.');
     return;
   }
-  const party = parties.value.find((p) => p.partyId === selectedPartyId.value);
+  const party = parties.value.find((p) => p.partyId === selectedPartyIdValue.value);
   if (!party) {
     toast.error('선택한 협력사를 찾을 수 없습니다. 다시 시도해 주세요.');
     return;

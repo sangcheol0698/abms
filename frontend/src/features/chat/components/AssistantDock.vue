@@ -31,7 +31,7 @@
             </Tooltip>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button variant="ghost" size="icon" class="h-7 w-7" @click="openFullView">
+                <Button variant="ghost" size="icon" class="h-7 w-7" :disabled="isResponding" @click="openFullView">
                   <Expand class="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -93,7 +93,7 @@
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" class="h-7 w-7" @click="openFullView">
+                  <Button variant="ghost" size="icon" class="h-7 w-7" :disabled="isResponding" @click="openFullView">
                     <Expand class="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -152,6 +152,7 @@ const draft = ref('');
 const isResponding = ref(false);
 const streamAbortController = ref<AbortController | null>(null);
 const isStopRequested = ref(false);
+const titleRefreshTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 const sessionTitle = ref('새 채팅');
 const desktopWidth = ref(DOCK_DEFAULT_WIDTH);
 const isResizing = ref(false);
@@ -207,14 +208,22 @@ function getToolDescription(toolName: string): string {
 async function loadSessionDetail(sessionId: string) {
   try {
     const detail = await repository.getSessionDetail(sessionId);
-    sessionTitle.value = detail.title?.trim() || '새 채팅';
-    messages.value = detail.messages.map((message) => {
-      if (message.role !== 'assistant') return message;
-      return {
-        ...message,
-        content: sanitizeAssistantLinks(message.content),
-      };
-    });
+    const nextTitle = detail.title?.trim() || '새 채팅';
+    if (sessionTitle.value !== nextTitle) {
+      sessionTitle.value = nextTitle;
+    }
+
+    const nextMessages = detail.messages.map((message) =>
+      message.role === 'assistant'
+        ? {
+            ...message,
+            content: sanitizeAssistantLinks(message.content),
+          }
+        : message
+    );
+    if (!areMessagesEquivalent(messages.value, nextMessages)) {
+      messages.value = nextMessages;
+    }
   } catch {
     sessionTitle.value = '새 채팅';
     messages.value = [];
@@ -230,6 +239,23 @@ async function refreshSessionTitle(sessionId: string) {
   }
 }
 
+function clearScheduledTitleRefresh() {
+  if (titleRefreshTimeout.value == null) {
+    return;
+  }
+  clearTimeout(titleRefreshTimeout.value);
+  titleRefreshTimeout.value = null;
+}
+
+function scheduleSessionTitleRefresh(sessionId: string) {
+  void refreshSessionTitle(sessionId);
+  clearScheduledTitleRefresh();
+  titleRefreshTimeout.value = setTimeout(() => {
+    void refreshSessionTitle(sessionId);
+    titleRefreshTimeout.value = null;
+  }, 1500);
+}
+
 function markAssistantMessageStopped(messageIndex: number) {
   const message = messages.value[messageIndex];
   if (!message || message.role !== 'assistant') {
@@ -241,6 +267,19 @@ function markAssistantMessageStopped(messageIndex: number) {
   }
   const trimmed = message.content.trimEnd();
   message.content = trimmed.length > 0 ? `${trimmed}\n\n(중지됨)` : '(중지됨)';
+}
+
+function areMessagesEquivalent(current: ChatMessage[], next: ChatMessage[]): boolean {
+  if (current.length !== next.length) {
+    return false;
+  }
+  return current.every((message, index) => {
+    const nextMessage = next[index];
+    if (!nextMessage) {
+      return false;
+    }
+    return message.role === nextMessage.role && message.content === nextMessage.content;
+  });
 }
 
 function handleStopResponse() {
@@ -255,6 +294,7 @@ async function handleSubmit(content: string) {
   messages.value.push(createChatMessage('user', content));
   let assistantMessageIndex = -1;
   let abortController: AbortController | null = null;
+  const startedWithoutSession = !activeSessionId.value;
 
   try {
     isResponding.value = true;
@@ -315,9 +355,8 @@ async function handleSubmit(content: string) {
       dockStore.setActiveSessionId(streamedSessionId);
     }
 
-    if (effectiveSessionId) {
-      void refreshSessionTitle(effectiveSessionId);
-      setTimeout(() => void refreshSessionTitle(effectiveSessionId), 1500);
+    if (effectiveSessionId && (startedWithoutSession || sessionTitle.value === '새 채팅')) {
+      scheduleSessionTitleRefresh(effectiveSessionId);
     }
   } catch (error) {
     if (isStopRequested.value) {
@@ -351,12 +390,16 @@ function handleSuggestion(value: string) {
 function handleNewChat() {
   if (isResponding.value) return;
   dockStore.setActiveSessionId(null);
+  clearScheduledTitleRefresh();
   sessionTitle.value = '새 채팅';
   messages.value = [];
   draft.value = '';
 }
 
 function openFullView() {
+  if (isResponding.value) {
+    return;
+  }
   isMobileOpen.value = false;
   if (activeSessionId.value) {
     router.push({ name: 'assistant-session', params: { sessionId: activeSessionId.value } });
@@ -447,6 +490,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   streamAbortController.value?.abort();
+  clearScheduledTitleRefresh();
   stopResize();
 });
 </script>

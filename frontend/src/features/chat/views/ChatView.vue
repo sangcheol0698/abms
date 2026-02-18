@@ -5,7 +5,7 @@
         <div class="flex items-center justify-between px-3 py-3"></div>
 
         <div class="px-4 pb-3">
-          <Button class="w-full gap-2 text-sm" @click="handleCreateNewChat(pane)">
+          <Button class="w-full gap-2 text-sm" :disabled="isResponding" @click="handleCreateNewChat(pane)">
             <SquarePen class="h-4 w-4" /> 새 채팅
           </Button>
         </div>
@@ -29,11 +29,11 @@
               <li v-for="item in filteredFavorites" :key="item.sessionId">
                 <div class="group relative">
                   <button type="button"
-                    class="flex w-full min-w-0 items-center justify-between rounded-xl px-3 py-2 pr-10 text-left text-xs transition-colors"
+                    class="flex w-full min-w-0 items-center justify-between rounded-xl px-3 py-2 pr-10 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                     :class="currentSessionId === item.sessionId
                       ? 'bg-primary/10 text-primary'
                       : 'hover:bg-muted/60 text-foreground'
-                      " @click="handleSessionSelect(item.sessionId, pane)">
+                      " :disabled="isResponding" @click="handleSessionSelect(item.sessionId, pane)">
                     <span class="truncate">{{ item.title }}</span>
                     <Star class="h-3.5 w-3.5 fill-current" />
                   </button>
@@ -44,18 +44,19 @@
                         :class="currentSessionId === item.sessionId
                           ? 'opacity-100 pointer-events-auto'
                           : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto'"
+                        :disabled="isResponding"
                         @click.stop>
                         <MoreHorizontal class="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-36">
-                      <DropdownMenuItem @click="handleToggleFavoriteForSession(item)">
+                      <DropdownMenuItem :disabled="isResponding" @click="handleToggleFavoriteForSession(item)">
                         {{ item.favorite ? '즐겨찾기 해제' : '즐겨찾기' }}
                       </DropdownMenuItem>
-                      <DropdownMenuItem @click="openRenameDialog(item)">
+                      <DropdownMenuItem :disabled="isResponding" @click="openRenameDialog(item)">
                         세션명 변경
                       </DropdownMenuItem>
-                      <DropdownMenuItem class="text-destructive" @click="openDeleteDialog(item)">
+                      <DropdownMenuItem :disabled="isResponding" class="text-destructive" @click="openDeleteDialog(item)">
                         세션 삭제
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -73,11 +74,11 @@
               <li v-for="item in filteredRecent" :key="item.sessionId">
                 <div class="group relative">
                   <button type="button"
-                    class="flex w-full min-w-0 items-center justify-between rounded-xl px-3 py-2 pr-10 text-left transition-colors"
+                    class="flex w-full min-w-0 items-center justify-between rounded-xl px-3 py-2 pr-10 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                     :class="currentSessionId === item.sessionId
                       ? 'bg-muted text-foreground'
                       : 'hover:bg-muted/50 text-foreground'
-                      " @click="handleSessionSelect(item.sessionId, pane)">
+                      " :disabled="isResponding" @click="handleSessionSelect(item.sessionId, pane)">
                     <div class="min-w-0">
                       <p class="truncate font-medium">{{ item.title }}</p>
                       <p class="truncate text-[11px] text-muted-foreground">
@@ -92,18 +93,19 @@
                         :class="currentSessionId === item.sessionId
                           ? 'opacity-100 pointer-events-auto'
                           : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto'"
+                        :disabled="isResponding"
                         @click.stop>
                         <MoreHorizontal class="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-36">
-                      <DropdownMenuItem @click="handleToggleFavoriteForSession(item)">
+                      <DropdownMenuItem :disabled="isResponding" @click="handleToggleFavoriteForSession(item)">
                         {{ item.favorite ? '즐겨찾기 해제' : '즐겨찾기' }}
                       </DropdownMenuItem>
-                      <DropdownMenuItem @click="openRenameDialog(item)">
+                      <DropdownMenuItem :disabled="isResponding" @click="openRenameDialog(item)">
                         세션명 변경
                       </DropdownMenuItem>
-                      <DropdownMenuItem class="text-destructive" @click="openDeleteDialog(item)">
+                      <DropdownMenuItem :disabled="isResponding" class="text-destructive" @click="openDeleteDialog(item)">
                         세션 삭제
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -170,7 +172,7 @@
             </div>
           </div>
           <div class="flex items-center gap-1 text-xs text-muted-foreground">
-            <Button v-if="currentSessionId" variant="ghost" size="sm" class="gap-1" @click="handleToggleFavorite">
+            <Button v-if="currentSessionId" variant="ghost" size="sm" class="gap-1" :disabled="isResponding" @click="handleToggleFavorite">
               <Star class="h-3.5 w-3.5" :class="currentSession?.favorite ? 'fill-current text-yellow-500' : ''" />
               즐겨찾기
             </Button>
@@ -311,6 +313,9 @@ const draft = ref('');
 const isResponding = ref(false);
 const streamAbortController = ref<AbortController | null>(null);
 const isStopRequested = ref(false);
+const skipNextRouteSyncSessionId = ref<string | null>(null);
+const pendingRouteSessionId = ref<string | null>(null);
+const sessionsReloadTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 const isLoading = ref(false);
 const isDragging = ref(false);
 const isRenameDialogOpen = ref(false);
@@ -386,6 +391,22 @@ function getToolDescription(toolName: string): string {
   return TOOL_CONFIG[toolName]?.description ?? `${toolName} 실행 중...`;
 }
 
+function clearScheduledSessionsReload() {
+  if (sessionsReloadTimeout.value == null) {
+    return;
+  }
+  clearTimeout(sessionsReloadTimeout.value);
+  sessionsReloadTimeout.value = null;
+}
+
+function scheduleSessionsReload(delayMs = 2000) {
+  clearScheduledSessionsReload();
+  sessionsReloadTimeout.value = setTimeout(() => {
+    void loadSessions();
+    sessionsReloadTimeout.value = null;
+  }, delayMs);
+}
+
 // Data loading
 async function loadSessions() {
   isLoading.value = true;
@@ -406,17 +427,18 @@ async function loadSessions() {
 async function loadSessionDetail(sessionId: string) {
   try {
     const detail = await repository.getSessionDetail(sessionId);
-    const sanitizedMessages = detail.messages.map((message) => {
-      if (message.role !== 'assistant') {
-        return message;
-      }
-      return {
-        ...message,
-        content: sanitizeAssistantLinks(message.content),
-      };
-    });
+    const sanitizedMessages = detail.messages.map((message) =>
+      message.role === 'assistant'
+        ? {
+            ...message,
+            content: sanitizeAssistantLinks(message.content),
+          }
+        : message
+    );
     currentSession.value = detail;
-    messages.value = sanitizedMessages;
+    if (!areMessagesEquivalent(messages.value, sanitizedMessages)) {
+      messages.value = sanitizedMessages;
+    }
   } catch {
     // Session not found in backend - this is a new session, start fresh
     currentSession.value = null;
@@ -424,8 +446,25 @@ async function loadSessionDetail(sessionId: string) {
   }
 }
 
+function areMessagesEquivalent(current: ChatMessage[], next: ChatMessage[]): boolean {
+  if (current.length !== next.length) {
+    return false;
+  }
+  return current.every((message, index) => {
+    const nextMessage = next[index];
+    if (!nextMessage) {
+      return false;
+    }
+    return message.role === nextMessage.role && message.content === nextMessage.content;
+  });
+}
+
 // Actions
 function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
+  if (isResponding.value) {
+    return;
+  }
+
   router.push({ name: 'assistant' });
   currentSessionId.value = null;
   currentSession.value = null;
@@ -441,6 +480,15 @@ function handleCreateNewChat(pane?: FeatureSplitPaneContext) {
 }
 
 function handleSessionSelect(sessionId: string, pane?: FeatureSplitPaneContext) {
+  if (isResponding.value) {
+    return;
+  }
+  if (currentSessionId.value === sessionId) {
+    if (pane && !pane.isLargeScreen.value) {
+      pane.closeSidebar();
+    }
+    return;
+  }
   router.push({ name: 'assistant-session', params: { sessionId } });
 
   if (pane && !pane.isLargeScreen.value) {
@@ -449,12 +497,18 @@ function handleSessionSelect(sessionId: string, pane?: FeatureSplitPaneContext) 
 }
 
 function openRenameDialog(session: ChatSession) {
+  if (isResponding.value) {
+    return;
+  }
   renameTargetSession.value = session;
   renameTitle.value = session.title;
   isRenameDialogOpen.value = true;
 }
 
 function openDeleteDialog(session: ChatSession) {
+  if (isResponding.value) {
+    return;
+  }
   deleteTargetSession.value = session;
   isDeleteDialogOpen.value = true;
 }
@@ -545,7 +599,7 @@ async function handleDeleteSession() {
 }
 
 async function handleToggleFavorite() {
-  if (!currentSessionId.value) return;
+  if (!currentSessionId.value || isResponding.value) return;
 
   try {
     await repository.toggleFavorite(currentSessionId.value);
@@ -564,6 +618,9 @@ async function handleToggleFavorite() {
 }
 
 async function handleToggleFavoriteForSession(session: ChatSession) {
+  if (isResponding.value) {
+    return;
+  }
   try {
     await repository.toggleFavorite(session.sessionId);
     await loadSessions();
@@ -710,6 +767,7 @@ async function handleSubmit(content: string) {
     }
 
     if (streamedSessionId && streamedSessionId !== currentSessionId.value) {
+      skipNextRouteSyncSessionId.value = streamedSessionId;
       currentSessionId.value = streamedSessionId;
       await router.replace({ name: 'assistant-session', params: { sessionId: streamedSessionId } });
     }
@@ -718,7 +776,7 @@ async function handleSubmit(content: string) {
     await loadSessions();
 
     // Reload again after delay to get AI-generated title
-    setTimeout(() => loadSessions(), 2000);
+    scheduleSessionsReload(2000);
   } catch (error) {
     if (isStopRequested.value) {
       markAssistantMessageStopped(assistantMessageIndex);
@@ -749,9 +807,20 @@ async function handleSubmit(content: string) {
 // Watch route changes
 watch(
   () => route.params.sessionId,
-  async (newSessionId) => {
+  async (newSessionId, oldSessionId) => {
+    if (newSessionId === oldSessionId && messages.value.length > 0) {
+      return;
+    }
     if (newSessionId && typeof newSessionId === 'string') {
       currentSessionId.value = newSessionId;
+      if (skipNextRouteSyncSessionId.value === newSessionId) {
+        skipNextRouteSyncSessionId.value = null;
+        return;
+      }
+      if (isResponding.value) {
+        pendingRouteSessionId.value = newSessionId;
+        return;
+      }
       await loadSessionDetail(newSessionId);
     } else {
       // Keep /assistant as blank "new chat" state until first message is sent
@@ -759,9 +828,26 @@ watch(
       currentSession.value = null;
       messages.value = [];
       draft.value = '';
+      pendingRouteSessionId.value = null;
+      skipNextRouteSyncSessionId.value = null;
     }
   },
   { immediate: true }
+);
+
+watch(
+  () => isResponding.value,
+  async (responding) => {
+    if (responding) {
+      return;
+    }
+    const deferredSessionId = pendingRouteSessionId.value;
+    if (!deferredSessionId) {
+      return;
+    }
+    pendingRouteSessionId.value = null;
+    await loadSessionDetail(deferredSessionId);
+  },
 );
 
 // Initial load
@@ -771,5 +857,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   streamAbortController.value?.abort();
+  clearScheduledSessionsReload();
 });
 </script>

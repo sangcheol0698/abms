@@ -76,7 +76,7 @@ const highlightWithShiki = async (code: string, lang: string): Promise<string> =
 
         highlightCache.set(cacheKey, html);
         return html;
-    } catch (error) {
+    } catch {
         // Fallback
         try {
             const theme = isDarkMode.value ? 'one-dark-pro' : 'github-light';
