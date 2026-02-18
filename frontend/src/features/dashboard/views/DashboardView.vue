@@ -47,10 +47,12 @@
             >
               <div>
                 <p class="font-medium text-foreground">{{ notification.title }}</p>
-                <p class="text-xs text-muted-foreground">{{ notification.description }}</p>
+                <p class="text-xs text-muted-foreground">
+                  {{ notification.description ?? '상세 내용이 없습니다.' }}
+                </p>
               </div>
               <Badge variant="outline" class="text-[11px] uppercase tracking-tight">{{
-                notification.time
+                formatRelative(notification.createdAt)
               }}</Badge>
             </div>
             <p v-if="!notifications.length" class="text-sm text-muted-foreground">
@@ -65,6 +67,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { appContainer } from '@/core/di/container';
@@ -79,32 +82,16 @@ import DashboardUpcomingDeadlinesPanel from '@/features/dashboard/components/Das
 import DashboardEmployeeDistributionPanel from '@/features/dashboard/components/DashboardEmployeeDistributionPanel.vue';
 import DashboardEmployeeStatusPanel from '@/features/dashboard/components/DashboardEmployeeStatusPanel.vue';
 import DashboardJobLevelPanel from '@/features/dashboard/components/DashboardJobLevelPanel.vue';
+import { useNotificationsStore } from '@/core/stores/notifications.store';
 
 const repository = appContainer.resolve(DashboardRepository);
+const notificationsStore = useNotificationsStore();
+const { sorted: allNotifications } = storeToRefs(notificationsStore);
 
 const summary = ref<DashboardSummary | null>(null);
 const isLoading = ref(true);
 
-const notifications = computed(() => [
-  {
-    id: 'n-1',
-    title: '조직 개편 완료',
-    description: '경영기획실이 신설되어 부서 정보가 업데이트되었습니다.',
-    time: '2시간 전',
-  },
-  {
-    id: 'n-2',
-    title: '연말 정산 안내',
-    description: '전 직원 대상 연말 정산 일정이 공지되었습니다.',
-    time: '어제',
-  },
-  {
-    id: 'n-3',
-    title: '교육 일정 등록',
-    description: '1월 신규 입사자 교육 일정이 추가되었습니다.',
-    time: '3일 전',
-  },
-]);
+const notifications = computed(() => allNotifications.value.slice(0, 5));
 
 async function fetchDashboardData() {
   isLoading.value = true;
@@ -115,7 +102,27 @@ async function fetchDashboardData() {
   }
 }
 
+function formatRelative(isoString: string) {
+  const created = new Date(isoString);
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+
+  if (diffMs < 0) {
+    return '방금 전';
+  }
+
+  const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes < 1) return '방금 전';
+  if (diffMinutes < 60) return `${diffMinutes}분 전`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}일 전`;
+  return created.toLocaleDateString();
+}
+
 onMounted(() => {
-  fetchDashboardData();
+  void fetchDashboardData();
+  void notificationsStore.fetchAll();
 });
 </script>

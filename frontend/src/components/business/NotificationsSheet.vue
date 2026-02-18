@@ -14,7 +14,7 @@
             size="sm"
             variant="ghost"
             class="h-8 px-2"
-            :disabled="unreadCount === 0"
+            :disabled="unreadCount === 0 || isLoading"
             @click="markAllAsRead"
           >
             모두 읽음 처리
@@ -23,7 +23,7 @@
             size="icon"
             variant="ghost"
             class="h-8 w-8"
-            :disabled="items.length === 0"
+            :disabled="items.length === 0 || isLoading"
             @click="clearAll"
           >
             <Trash2 class="h-4 w-4" />
@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Bell, Trash2 } from 'lucide-vue-next';
@@ -120,7 +120,7 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const store = useNotificationsStore();
-const { unreadCount, sorted: items } = storeToRefs(store);
+const { unreadCount, sorted: items, isLoading } = storeToRefs(store);
 const tab = ref<'all' | 'unread'>('all');
 
 const filtered = computed(() =>
@@ -135,6 +135,10 @@ watch(
     }
   },
 );
+
+onMounted(() => {
+  void store.fetchAll();
+});
 
 function indicatorClass(type: NotificationItem['type']) {
   switch (type) {
@@ -168,17 +172,17 @@ function formatRelative(isoString: string) {
   return created.toLocaleDateString();
 }
 
-function markAllAsRead() {
-  store.markAllAsRead();
+async function markAllAsRead() {
+  await store.markAllAsRead();
 }
 
-function clearAll() {
-  store.clearAll();
+async function clearAll() {
+  await store.clearAll();
   emit('update:open', false);
 }
 
 async function openNotification(notification: NotificationItem) {
-  store.markAsRead(notification.id);
+  await store.markAsRead(notification.id);
   emit('update:open', false);
   if (notification.link) {
     try {

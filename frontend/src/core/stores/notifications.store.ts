@@ -1,93 +1,97 @@
+import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
+import { appContainer } from '@/core/di/container';
+import NotificationRepository from '@/features/notification/repository/NotificationRepository';
+import type { NotificationItem, NotificationType } from '@/features/notification/models/notification';
 
-export type NotificationType = 'info' | 'success' | 'warning' | 'error';
+export type { NotificationItem, NotificationType };
 
-export interface NotificationItem {
-  id: string;
-  title: string;
-  description?: string;
-  type: NotificationType;
-  createdAt: string;
-  read: boolean;
-  link?: string;
-}
+export const useNotificationsStore = defineStore('notifications', () => {
+  const repository = appContainer.resolve(NotificationRepository);
 
-function toIsoMinutesAgo(minutes: number): string {
-  const date = new Date(Date.now() - minutes * 60_000);
-  return date.toISOString();
-}
+  const items = ref<NotificationItem[]>([]);
+  const isLoading = ref(false);
+  const isLoaded = ref(false);
 
-export const useNotificationsStore = defineStore('notifications', {
-  state: () => ({
-    items: [
-      {
-        id: 'n-organization',
-        title: '조직 구조 변경',
-        description: '부서 목록에서 경영기획실이 신설되었습니다.',
-        type: 'info' as NotificationType,
-        createdAt: toIsoMinutesAgo(3),
-        read: false,
-        link: '/',
-      },
-      {
-        id: 'n-employee',
-        title: '직원 정보 갱신',
-        description: '인사팀이 직원 정보를 최신화했습니다.',
-        type: 'success' as NotificationType,
-        createdAt: toIsoMinutesAgo(18),
-        read: false,
-        link: '/employees',
-      },
-      {
-        id: 'n-policy',
-        title: '근태 정책 안내',
-        description: '다음 주부터 신규 근태 정책이 적용됩니다.',
-        type: 'warning' as NotificationType,
-        createdAt: toIsoMinutesAgo(180),
-        read: true,
-      },
-    ] as NotificationItem[],
-  }),
-  getters: {
-    unreadCount: (state) => state.items.filter((item) => !item.read).length,
-    sorted: (state) =>
-      [...state.items].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      ),
-  },
-  actions: {
-    markAsRead(id: string) {
-      const target = this.items.find((item) => item.id === id);
-      if (target) {
-        target.read = true;
-      }
+  const unreadCount = computed(() => items.value.filter((item) => !item.read).length);
+  const sorted = computed(() =>
+    [...items.value].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    ),
+  );
+
+  async function fetchAll(options: { force?: boolean } = {}) {
+    if (isLoading.value) {
+      return;
+    }
+    if (isLoaded.value && !options.force) {
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      items.value = await repository.fetchAll();
+      isLoaded.value = true;
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function markAsRead(id: number) {
+    const target = items.value.find((item) => item.id === id);
+    if (!target || target.read) {
+      return;
+    }
+
+    await repository.markAsRead(id);
+    target.read = true;
+  }
+
+  async function markAllAsRead() {
+    if (unreadCount.value === 0) {
+      return;
+    }
+
+    await repository.markAllAsRead();
+    items.value = items.value.map((item) => ({ ...item, read: true }));
+  }
+
+  async function add(
+    notification: Omit<NotificationItem, 'id' | 'createdAt' | 'read'> & {
+      createdAt?: string;
+      read?: boolean;
     },
-    markAllAsRead() {
-      this.items = this.items.map((item) => ({ ...item, read: true }));
-    },
-    add(
-      notification: Omit<NotificationItem, 'id' | 'createdAt' | 'read'> & {
-        id?: string;
-        createdAt?: string;
-        read?: boolean;
-      },
-    ) {
-      const id = notification.id ?? `n-${Math.random().toString(36).slice(2, 9)}`;
-      const createdAt = notification.createdAt ?? new Date().toISOString();
-      const read = notification.read ?? false;
+  ) {
+    const created = await repository.create({
+      title: notification.title,
+      description: notification.description,
+      type: notification.type,
+      link: notification.link,
+    });
 
-      this.items = [
-        {
-          ...notification,
-          id,
-          createdAt,
-          read,
-        },
-        ...this.items,
-      ];
-    },
-    clearAll() {
-      this.items = [];
-    },
-  },
+    items.value = [created, ...items.value];
+  }
+
+  async function clearAll() {
+    if (items.value.length === 0) {
+      return;
+    }
+
+    await repository.clearAll();
+    items.value = [];
+  }
+
+  return {
+    items,
+    isLoading,
+    unreadCount,
+    sorted,
+    fetchAll,
+    markAsRead,
+    markAllAsRead,
+    add,
+    clearAll,
+  };
 });

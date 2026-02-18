@@ -263,6 +263,7 @@ function openCommandPalette() {
 
 function toggleNotifications() {
   isNotificationsOpen.value = true;
+  void notificationsStore.fetchAll();
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -276,16 +277,11 @@ onMounted(() => {
   loadUserFromStorage();
   document.addEventListener('keydown', handleKeydown);
   window.addEventListener('storage', handleStorage);
+  void notificationsStore.fetchAll();
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeydown);
   window.removeEventListener('storage', handleStorage);
-});
-
-watch(isNotificationsOpen, (next) => {
-  if (next) {
-    notificationsStore.markAllAsRead();
-  }
 });
 </script>
