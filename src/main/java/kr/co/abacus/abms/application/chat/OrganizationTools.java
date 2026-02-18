@@ -5,7 +5,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OrganizationTools {

@@ -3,7 +3,9 @@ package kr.co.abacus.abms.application.chat;
 import java.util.function.Consumer;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class EmployeeInfoTools {
 
