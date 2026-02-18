@@ -204,13 +204,6 @@ function getToolDescription(toolName: string): string {
   return TOOL_CONFIG[toolName]?.description ?? `${toolName} 실행 중...`;
 }
 
-function ensureSessionId(): string {
-  if (!activeSessionId.value) {
-    dockStore.setActiveSessionId(crypto.randomUUID());
-  }
-  return activeSessionId.value!;
-}
-
 async function loadSessionDetail(sessionId: string) {
   try {
     const detail = await repository.getSessionDetail(sessionId);
@@ -225,6 +218,15 @@ async function loadSessionDetail(sessionId: string) {
   } catch {
     sessionTitle.value = '새 채팅';
     messages.value = [];
+  }
+}
+
+async function refreshSessionTitle(sessionId: string) {
+  try {
+    const detail = await repository.getSessionDetail(sessionId);
+    sessionTitle.value = detail.title?.trim() || '새 채팅';
+  } catch {
+    // Ignore title refresh failures
   }
 }
 
@@ -266,7 +268,7 @@ async function handleSubmit(content: string) {
 
     const streamedSessionId = await repository.streamMessage(
       {
-        sessionId: ensureSessionId(),
+        sessionId: activeSessionId.value ?? undefined,
         content,
       },
       (chunk: string) => {
@@ -303,12 +305,19 @@ async function handleSubmit(content: string) {
       { signal: abortController.signal },
     );
 
+    const effectiveSessionId = streamedSessionId ?? activeSessionId.value;
+
     if (isStopRequested.value) {
       markAssistantMessageStopped(assistantMessageIndex);
     }
 
     if (streamedSessionId && streamedSessionId !== activeSessionId.value) {
       dockStore.setActiveSessionId(streamedSessionId);
+    }
+
+    if (effectiveSessionId) {
+      void refreshSessionTitle(effectiveSessionId);
+      setTimeout(() => void refreshSessionTitle(effectiveSessionId), 1500);
     }
   } catch (error) {
     if (isStopRequested.value) {
@@ -417,6 +426,7 @@ watch(
       messages.value = [];
       return;
     }
+    if (isResponding.value) return;
     await loadSessionDetail(sessionId);
   },
   { immediate: true },
