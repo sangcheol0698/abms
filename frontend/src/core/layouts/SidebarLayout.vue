@@ -1,8 +1,8 @@
 <template>
   <SidebarProvider>
-    <div class="flex min-h-svh w-full bg-background text-foreground">
+    <div class="flex h-svh w-full overflow-hidden bg-background text-foreground">
       <AppSidebar :onOpenProfileDialog="openProfileDialog" />
-      <SidebarInset>
+      <SidebarInset class="min-h-0 min-w-0 overflow-hidden">
         <header
           class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 md:px-8 lg:px-12 backdrop-blur"
         >
@@ -64,10 +64,11 @@
           </div>
         </header>
 
-        <main :class="['flex min-h-0 flex-1 flex-col overflow-hidden', paddingClass]">
+        <main :class="['flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden', paddingClass]">
           <slot />
         </main>
       </SidebarInset>
+      <AssistantDock />
 
       <ProfileDialog
         :open="isProfileDialogOpen"
@@ -95,6 +96,7 @@ import { Button } from '@/components/ui/button';
 import AppSidebar from '@/components/sidebar/AppSidebar.vue';
 import ThemeToggle from '@/core/theme/ThemeToggle.vue';
 import CommandPalette from '@/components/business/CommandPalette.vue';
+import AssistantDock from '@/features/chat/components/AssistantDock.vue';
 import {
   Breadcrumb,
   BreadcrumbItem,

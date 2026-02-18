@@ -1,9 +1,10 @@
 <template>
-    <div class="markdown-content" v-html="formattedContent" @click="handleCopy" />
+    <div class="markdown-content" v-html="formattedContent" @click="handleContentClick" />
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { marked } from 'marked';
 import { codeToHtml } from 'shiki';
 import he from 'he';
@@ -12,6 +13,7 @@ import { useMutationObserver } from '@vueuse/core';
 const props = defineProps<{
     content: string;
 }>();
+const router = useRouter();
 
 // Configure marked
 marked.setOptions({
@@ -150,34 +152,71 @@ watch(isDarkMode, () => {
     processContent();
 });
 
-// 코드 복사 핸들러
-const handleCopy = async (event: MouseEvent) => {
-    const target = (event.target as HTMLElement).closest('.copy-code-btn');
-    if (!target) return;
+const resolveInternalPath = (href: string): string | null => {
+    if (href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+        return null;
+    }
 
-    const container = target.closest('.code-block-container');
-    if (!container) return;
+    if (href.startsWith('/')) {
+        return href;
+    }
 
-    const code = container.querySelector('code')?.innerText || '';
-    if (!code) return;
+    if (typeof window === 'undefined') {
+        return null;
+    }
 
     try {
-        await navigator.clipboard.writeText(code);
-
-        // 복사 성공 피드백
-        target.classList.add('복사성공');
-        const originalHtml = target.innerHTML;
-        target.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        `;
-
-        setTimeout(() => {
-            target.classList.remove('복사성공');
-            target.innerHTML = originalHtml;
-        }, 2000);
-    } catch (err) {
-        console.error('Failed to copy code:', err);
+        const url = new URL(href, window.location.origin);
+        if (url.origin !== window.location.origin) {
+            return null;
+        }
+        return `${url.pathname}${url.search}${url.hash}`;
+    } catch {
+        return null;
     }
+};
+
+const handleContentClick = async (event: MouseEvent) => {
+    const copyButton = (event.target as HTMLElement).closest('.copy-code-btn') as HTMLElement | null;
+    if (copyButton) {
+        const container = copyButton.closest('.code-block-container');
+        if (!container) return;
+
+        const code = container.querySelector('code')?.innerText || '';
+        if (!code) return;
+
+        try {
+            await navigator.clipboard.writeText(code);
+
+            copyButton.classList.add('복사성공');
+            const originalHtml = copyButton.innerHTML;
+            copyButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            `;
+
+            setTimeout(() => {
+                copyButton.classList.remove('복사성공');
+                copyButton.innerHTML = originalHtml;
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy code:', err);
+        }
+        return;
+    }
+
+    const anchor = (event.target as HTMLElement).closest('a') as HTMLAnchorElement | null;
+    if (!anchor) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+
+    const href = anchor.getAttribute('href');
+    if (!href) return;
+
+    const internalPath = resolveInternalPath(href);
+    if (!internalPath) return;
+
+    event.preventDefault();
+    router.push(internalPath);
 };
 </script>
 
