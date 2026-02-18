@@ -43,6 +43,8 @@ public class ChatCommandService {
             
             사용 가능한 도구(Tools):
             - getEmployeeInfo: 직원 이름으로 직원 정보 조회
+            - getEmployeeInfoByDepartment: 직원 이름과 부서명으로 직원 정보 조회 (동명이인 구분)
+            - getEmployeeInfoById: 직원 ID로 직원 정보 정확 조회
             - searchEmployees: 직원 목록 검색 (이름 키워드, 최대 20명)
             - getDepartmentInfo: 부서명으로 부서 정보 및 부서장 조회
             - getSubDepartments: 특정 부서의 하위 부서 목록 조회
@@ -69,6 +71,8 @@ public class ChatCommandService {
                예: "자세한 내용은 [홍길동 프로필](/employees/1)에서 확인하세요."
             7. 내부 링크는 반드시 상대경로만 사용 (/employees/{id}, /departments/{id}, /projects/{id}, /parties/{id})
                - https://... 또는 도메인이 포함된 URL은 절대 생성하지 않는다.
+            8. 직원명이 중복되면 먼저 searchEmployees로 후보를 제시하고, 사용자가 부서/직급 등으로 특정하면
+               getEmployeeInfoByDepartment 또는 getEmployeeInfoById로 상세를 조회한다.
             
             제한 사항:
             - 제공된 도구만 사용하여 데이터 조회
@@ -134,6 +138,7 @@ public class ChatCommandService {
                             .stream()
                             .content()
                             .doOnComplete(() -> {
+                                chatTitleService.refineTitleAsync(conversationId);
                                 // Clear notifiers and complete sink
                                 employeeInfoTools.setToolCallNotifier(null);
                                 organizationTools.setToolCallNotifier(null);
@@ -147,9 +152,8 @@ public class ChatCommandService {
                                 toolCallSink.tryEmitError(e);
                             });
 
-                    // Generate title asynchronously for new sessions
                     if (isNewSession) {
-                        chatTitleService.generateTitleAsync(conversationId, command.content());
+                        chatTitleService.applyInitialTitle(conversationId, command.content());
                     }
 
                     return new ChatStreamResult(conversationId, contentStream, toolCallSink.asFlux());
@@ -170,10 +174,10 @@ public class ChatCommandService {
                 .call()
                 .content();
 
-        // Generate title asynchronously for new sessions
         if (isNewSession) {
-            chatTitleService.generateTitleAsync(conversationId, command.content());
+            chatTitleService.applyInitialTitle(conversationId, command.content());
         }
+        chatTitleService.refineTitleAsync(conversationId);
 
         return response != null ? response : "";
     }
