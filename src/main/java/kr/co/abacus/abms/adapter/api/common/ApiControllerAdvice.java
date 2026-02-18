@@ -16,6 +16,7 @@ import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.EmployeeExcelException;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
+import kr.co.abacus.abms.domain.notification.NotificationNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectCodeDuplicateException;
 import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
 
@@ -33,7 +34,8 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.BAD_REQUEST, exception);
     }
 
-    @ExceptionHandler({EmployeeNotFoundException.class, DepartmentNotFoundException.class, ProjectNotFoundException.class})
+    @ExceptionHandler({EmployeeNotFoundException.class, DepartmentNotFoundException.class, ProjectNotFoundException.class,
+            NotificationNotFoundException.class})
     public ProblemDetail handleNotFoundException(Exception exception) {
         return getProblemDetail(HttpStatus.NOT_FOUND, exception);
     }
