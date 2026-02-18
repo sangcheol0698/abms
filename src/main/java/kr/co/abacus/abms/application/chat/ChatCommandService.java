@@ -7,6 +7,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,6 +81,7 @@ public class ChatCommandService {
     private final ObjectProvider<OrganizationTools> organizationToolsProvider;
     private final ObjectProvider<BusinessQueryTools> businessQueryToolsProvider;
     private final ChatSessionRepository chatSessionRepository;
+    private final ChatMemoryRepository chatMemoryRepository;
     private final ChatTitleService chatTitleService;
 
     public ChatCommandService(
@@ -89,6 +91,7 @@ public class ChatCommandService {
             ObjectProvider<OrganizationTools> organizationToolsProvider,
             ObjectProvider<BusinessQueryTools> businessQueryToolsProvider,
             ChatSessionRepository chatSessionRepository,
+            ChatMemoryRepository chatMemoryRepository,
             ChatTitleService chatTitleService) {
         this.chatClient = chatClientBuilder
                 .defaultSystem(SYSTEM_PROMPT)
@@ -98,6 +101,7 @@ public class ChatCommandService {
         this.organizationToolsProvider = organizationToolsProvider;
         this.businessQueryToolsProvider = businessQueryToolsProvider;
         this.chatSessionRepository = chatSessionRepository;
+        this.chatMemoryRepository = chatMemoryRepository;
         this.chatTitleService = chatTitleService;
     }
 
@@ -205,6 +209,25 @@ public class ChatCommandService {
                 .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
         session.toggleFavorite();
         chatSessionRepository.save(session);
+    }
+
+    public void updateSessionTitle(String sessionId, String title) {
+        ChatSession session = chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
+        String normalizedTitle = title.trim();
+        if (normalizedTitle.isEmpty()) {
+            throw new IllegalArgumentException("세션 제목은 비어 있을 수 없습니다.");
+        }
+        session.updateTitle(normalizedTitle);
+        chatSessionRepository.save(session);
+    }
+
+    public void deleteSession(String sessionId) {
+        ChatSession session = chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
+        session.softDelete("system");
+        chatSessionRepository.save(session);
+        chatMemoryRepository.deleteByConversationId(sessionId);
     }
 
 }

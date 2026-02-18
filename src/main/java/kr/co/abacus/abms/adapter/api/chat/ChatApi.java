@@ -4,13 +4,17 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -19,6 +23,7 @@ import reactor.core.publisher.Flux;
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatMessageResponse;
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatSendRequest;
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatSessionResponse;
+import kr.co.abacus.abms.adapter.api.chat.dto.ChatSessionTitleUpdateRequest;
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatStreamChunk;
 import kr.co.abacus.abms.application.chat.ChatCommandService;
 import kr.co.abacus.abms.application.chat.ChatQueryService;
@@ -86,6 +91,20 @@ public class ChatApi {
     @PostMapping("/sessions/{sessionId}/favorite")
     public void toggleFavorite(@PathVariable String sessionId) {
         chatCommandService.toggleFavorite(sessionId);
+    }
+
+    @PatchMapping("/sessions/{sessionId}/title")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateSessionTitle(
+            @PathVariable String sessionId,
+            @RequestBody @Valid ChatSessionTitleUpdateRequest request) {
+        chatCommandService.updateSessionTitle(sessionId, request.title());
+    }
+
+    @DeleteMapping("/sessions/{sessionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSession(@PathVariable String sessionId) {
+        chatCommandService.deleteSession(sessionId);
     }
 
 }
