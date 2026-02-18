@@ -22,12 +22,30 @@
             <p class="text-[11px] text-muted-foreground">어디서든 이어서 대화</p>
           </div>
           <div class="flex items-center gap-1">
-            <Button variant="ghost" size="icon" class="h-7 w-7" @click="openFullView">
-              <Expand class="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" class="h-7 w-7" @click="isDockOpen = false">
-              <PanelRightClose class="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="ghost" size="icon" class="h-7 w-7" :disabled="isResponding" @click="handleNewChat">
+                  <SquarePen class="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">새 채팅</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="ghost" size="icon" class="h-7 w-7" @click="openFullView">
+                  <Expand class="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">전체 보기</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="ghost" size="icon" class="h-7 w-7" @click="isDockOpen = false">
+                  <PanelRightClose class="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">채팅 닫기</TooltipContent>
+            </Tooltip>
           </div>
         </header>
         <div class="min-h-0 flex-1">
@@ -59,15 +77,28 @@
 
     <Sheet :open="isMobileOpen" @update:open="isMobileOpen = $event">
       <SheetContent side="right" class="p-0 w-[92vw] sm:w-[420px]">
-        <SheetTitle class="sr-only">Assistant Dock</SheetTitle>
-        <SheetDescription class="sr-only">Assistant chat dock</SheetDescription>
+        <SheetTitle class="sr-only">Assistant Panel</SheetTitle>
+        <SheetDescription class="sr-only">Assistant chat panel</SheetDescription>
         <div class="flex h-full min-h-0 flex-col bg-background">
           <header class="flex items-center justify-between border-b border-border/40 px-3 py-2">
             <p class="text-sm font-semibold text-foreground">AI Assistant</p>
             <div class="flex items-center gap-1">
-              <Button variant="ghost" size="icon" class="h-7 w-7" @click="openFullView">
-                <Expand class="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button variant="ghost" size="icon" class="h-7 w-7" :disabled="isResponding" @click="handleNewChat">
+                    <SquarePen class="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">새 채팅</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button variant="ghost" size="icon" class="h-7 w-7" @click="openFullView">
+                    <Expand class="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">전체 보기</TooltipContent>
+              </Tooltip>
             </div>
           </header>
           <div class="min-h-0 flex-1">
@@ -91,10 +122,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Bot, Expand, PanelRightClose } from 'lucide-vue-next';
+import { Bot, Expand, PanelRightClose, SquarePen } from 'lucide-vue-next';
 import { useRoute, useRouter } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ChatWidget from '@/features/chat/components/ChatWidget.vue';
 import { createChatMessage, type ChatMessage } from '@/features/chat/entity/ChatMessage';
 import { RemoteChatRepository } from '@/features/chat/repository/RemoteChatRepository';
@@ -255,10 +287,20 @@ function handleSuggestion(value: string) {
   draft.value = value;
 }
 
+function handleNewChat() {
+  if (isResponding.value) return;
+  dockStore.setActiveSessionId(null);
+  messages.value = [];
+  draft.value = '';
+}
+
 function openFullView() {
-  const sessionId = ensureSessionId();
   isMobileOpen.value = false;
-  router.push({ name: 'assistant-session', params: { sessionId } });
+  if (activeSessionId.value) {
+    router.push({ name: 'assistant-session', params: { sessionId: activeSessionId.value } });
+    return;
+  }
+  router.push({ name: 'assistant' });
 }
 
 function clampDockWidth(width: number): number {
