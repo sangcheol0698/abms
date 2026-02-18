@@ -239,9 +239,12 @@ const TOOL_CONFIG: Record<string, { emoji: string; description: string }> = {
   searchProjects: { emoji: '📁', description: '프로젝트 검색 중...' },
   getProjectDetail: { emoji: '📌', description: '프로젝트 상세 조회 중...' },
   getDashboardSummary: { emoji: '📊', description: '대시보드 지표 조회 중...' },
-  searchParties: { emoji: '🏷️', description: '거래처 검색 중...' },
-  getPartyProjects: { emoji: '🧾', description: '거래처 프로젝트 조회 중...' },
+  searchParties: { emoji: '🏷️', description: '협력사 검색 중...' },
+  getPartyProjects: { emoji: '🧾', description: '협력사 프로젝트 조회 중...' },
   getMonthlyRevenueSummary: { emoji: '💹', description: '월별 매출 집계 조회 중...' },
+  getDepartmentEmployees: { emoji: '👨‍👩‍👧‍👦', description: '부서 직원 목록 조회 중...' },
+  getProjectAssignments: { emoji: '🧑‍💻', description: '프로젝트 투입 인력 조회 중...' },
+  getEmployeePositionHistory: { emoji: '🪜', description: '직급 이력 조회 중...' },
 };
 
 function getToolEmoji(toolName: string): string {
