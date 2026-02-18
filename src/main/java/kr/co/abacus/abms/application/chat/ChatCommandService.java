@@ -1,6 +1,8 @@
 package kr.co.abacus.abms.application.chat;
 
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
@@ -8,11 +10,14 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
@@ -130,6 +135,7 @@ public class ChatCommandService {
                     employeeInfoTools.setToolCallNotifier(toolCallSink::tryEmitNext);
                     organizationTools.setToolCallNotifier(toolCallSink::tryEmitNext);
                     businessQueryTools.setToolCallNotifier(toolCallSink::tryEmitNext);
+                    StringBuilder partialAssistantResponse = new StringBuilder();
 
                     Flux<String> contentStream = chatClient.prompt()
                             .user(command.content())
@@ -137,19 +143,23 @@ public class ChatCommandService {
                             .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                             .stream()
                             .content()
+                            .doOnNext(partialAssistantResponse::append)
+                            .doOnError(e -> {
+                                toolCallSink.tryEmitError(e);
+                            })
                             .doOnComplete(() -> {
                                 chatTitleService.refineTitleAsync(conversationId);
-                                // Clear notifiers and complete sink
-                                employeeInfoTools.setToolCallNotifier(null);
-                                organizationTools.setToolCallNotifier(null);
-                                businessQueryTools.setToolCallNotifier(null);
-                                toolCallSink.tryEmitComplete();
                             })
-                            .doOnError(e -> {
+                            .doFinally(signalType -> {
                                 employeeInfoTools.setToolCallNotifier(null);
                                 organizationTools.setToolCallNotifier(null);
                                 businessQueryTools.setToolCallNotifier(null);
-                                toolCallSink.tryEmitError(e);
+                                if (signalType == SignalType.CANCEL) {
+                                    saveCanceledAssistantMessage(conversationId, partialAssistantResponse.toString());
+                                }
+                                if (signalType != SignalType.ON_ERROR) {
+                                    toolCallSink.tryEmitComplete();
+                                }
                             });
 
                     if (isNewSession) {
@@ -232,6 +242,18 @@ public class ChatCommandService {
         session.softDelete("system");
         chatSessionRepository.save(session);
         chatMemoryRepository.deleteByConversationId(sessionId);
+    }
+
+    private void saveCanceledAssistantMessage(String conversationId, String partialText) {
+        String normalizedText = partialText.trim();
+        String stoppedText = normalizedText.isBlank()
+                ? "(중지됨)"
+                : normalizedText + "\n\n(중지됨)";
+
+        List<Message> currentMessages = chatMemoryRepository.findByConversationId(conversationId);
+        List<Message> updatedMessages = new ArrayList<>(currentMessages);
+        updatedMessages.add(new AssistantMessage(stoppedText));
+        chatMemoryRepository.saveAll(conversationId, updatedMessages);
     }
 
 }
