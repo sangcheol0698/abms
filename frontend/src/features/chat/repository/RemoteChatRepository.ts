@@ -37,6 +37,8 @@ export class RemoteChatRepository implements ChatRepository {
     const ctrl = new AbortController();
 
     return new Promise((resolve, reject) => {
+      let streamedSessionId: string | null = null;
+
       fetchEventSource(`${this.baseUrl}/api/v1/chat/stream`, {
         method: 'POST',
         headers: {
@@ -73,6 +75,8 @@ export class RemoteChatRepository implements ChatRepository {
             const data = JSON.parse(ev.data);
             if (data.type === 'text' && data.text != null) {
               onChunk(data.text);
+            } else if (data.type === 'session' && data.sessionId != null) {
+              streamedSessionId = data.sessionId;
             } else if (data.type === 'tool_call' && data.toolName != null && onToolCall) {
               onToolCall(data.toolName);
             }
@@ -81,8 +85,7 @@ export class RemoteChatRepository implements ChatRepository {
           }
         },
         onclose() {
-          // TODO: Return sessionId from response headers if new session was created
-          resolve(null);
+          resolve(streamedSessionId);
         },
         onerror(err) {
           const error = err instanceof Error ? err : new Error(String(err));

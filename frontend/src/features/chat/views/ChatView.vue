@@ -173,6 +173,7 @@ import type { ChatRepository } from '@/features/chat/repository/ChatRepository';
 import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { sanitizeAssistantLinks } from '@/features/chat/utils/linkSanitizer';
 
 const repository: ChatRepository = useChatRepository();
 const route = useRoute();
@@ -234,6 +235,13 @@ const TOOL_CONFIG: Record<string, { emoji: string; description: string }> = {
   getDepartmentMembers: { emoji: '👥', description: '부서 구성원 조회 중...' },
   getAllDepartments: { emoji: '🗂️', description: '전체 부서 목록 조회 중...' },
   getOrganizationStats: { emoji: '📈', description: '조직 통계 조회 중...' },
+  searchEmployees: { emoji: '🔎', description: '직원 목록 검색 중...' },
+  searchProjects: { emoji: '📁', description: '프로젝트 검색 중...' },
+  getProjectDetail: { emoji: '📌', description: '프로젝트 상세 조회 중...' },
+  getDashboardSummary: { emoji: '📊', description: '대시보드 지표 조회 중...' },
+  searchParties: { emoji: '🏷️', description: '거래처 검색 중...' },
+  getPartyProjects: { emoji: '🧾', description: '거래처 프로젝트 조회 중...' },
+  getMonthlyRevenueSummary: { emoji: '💹', description: '월별 매출 집계 조회 중...' },
 };
 
 function getToolEmoji(toolName: string): string {
@@ -264,8 +272,17 @@ async function loadSessions() {
 async function loadSessionDetail(sessionId: string) {
   try {
     const detail = await repository.getSessionDetail(sessionId);
+    const sanitizedMessages = detail.messages.map((message) => {
+      if (message.role !== 'assistant') {
+        return message;
+      }
+      return {
+        ...message,
+        content: sanitizeAssistantLinks(message.content),
+      };
+    });
     currentSession.value = detail;
-    messages.value = detail.messages;
+    messages.value = sanitizedMessages;
   } catch {
     // Session not found in backend - this is a new session, start fresh
     currentSession.value = null;
@@ -364,7 +381,7 @@ async function handleSubmit(content: string) {
     // Track tool call indicator separately
     let toolIndicator: string | null = null;
 
-    await repository.streamMessage(
+    const streamedSessionId = await repository.streamMessage(
       {
         sessionId: currentSessionId.value ?? undefined,
         content,
@@ -386,6 +403,7 @@ async function handleSubmit(content: string) {
             toolIndicator = null;
           }
           message.content += chunk;
+          message.content = sanitizeAssistantLinks(message.content);
         }
       },
       (error: Error) => {
@@ -412,6 +430,11 @@ async function handleSubmit(content: string) {
         }
       }
     );
+
+    if (streamedSessionId && streamedSessionId !== currentSessionId.value) {
+      currentSessionId.value = streamedSessionId;
+      await router.replace({ name: 'assistant-session', params: { sessionId: streamedSessionId } });
+    }
 
     // Reload sessions to get the new/updated session
     await loadSessions();
