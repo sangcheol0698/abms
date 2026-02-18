@@ -124,24 +124,24 @@ watch(
 
 const defaultSuggestions = [
   {
-    label: '신규 입사자 현황',
-    description: '이번 달 새로 합류한 직원 목록을 보여줘',
-    query: '이번 달 신규 입사자 목록 알려줘',
+    label: '조직 핵심 지표',
+    description: '직원/부서/휴직 등 조직 현황을 한 번에 확인',
+    query: '현재 조직 핵심 지표를 요약해줘 (총 직원 수, 부서 수, 휴직 인원 포함)',
   },
   {
-    label: '부서별 인원 통계',
-    description: '각 부서의 현재 인원 현황을 알려줘',
-    query: '부서별 인원 현황 알려줘',
+    label: '부서별 인원 현황',
+    description: '전체 부서를 인원 기준으로 빠르게 비교',
+    query: '전체 부서 목록과 각 부서 인원 수를 정리해줘',
   },
   {
-    label: '휴직자 조회',
-    description: '현재 휴직 중인 직원 목록 확인',
-    query: '현재 휴직 중인 직원은 누구야?',
+    label: '프로젝트 투입 현황',
+    description: '프로젝트별 투입 인력 현황을 요약',
+    query: '진행 중인 프로젝트별 투입 인력 현황을 요약해줘',
   },
   {
-    label: '부서 위치 찾기',
-    description: '특정 부서나 팀의 위치 확인',
-    query: '인사팀은 부서 구조 어디에 있어?',
+    label: '협력사 프로젝트 현황',
+    description: '협력사별 진행 프로젝트를 빠르게 조회',
+    query: '협력사 목록과 각 협력사의 진행 프로젝트 수를 정리해줘',
   },
 ];
 const composerRef = ref<any>(null);
