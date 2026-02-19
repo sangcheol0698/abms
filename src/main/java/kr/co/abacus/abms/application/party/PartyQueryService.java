@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.domain.party.Party;
+import kr.co.abacus.abms.domain.party.PartyNotFoundException;
+import org.jspecify.annotations.Nullable;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -19,12 +21,14 @@ public class PartyQueryService implements PartyFinder {
     private final PartyRepository partyRepository;
 
     @Override
-    public Page<Party> getParties(Pageable pageable, String name) {
+    public Page<Party> getParties(Pageable pageable, @Nullable String name) {
         return partyRepository.search(pageable, name);
     }
 
     public String getPartyName(Long partyId) {
-        return partyRepository.findByIdAndDeletedFalse(partyId).map(Party::getName).orElse(null);
+        return partyRepository.findById(partyId)
+                .map(Party::getName)
+                .orElseThrow(() -> new PartyNotFoundException("존재하지 않는 협력사입니다: " + partyId));
     }
 
 }

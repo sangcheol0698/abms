@@ -22,7 +22,7 @@ public record ProjectResponse(
 
     public static ProjectResponse from(Project project, String partyName) {
         return new ProjectResponse(
-                project.getId(),
+                project.getIdOrThrow(),
                 project.getPartyId(),
                 partyName,
                 project.getCode(),

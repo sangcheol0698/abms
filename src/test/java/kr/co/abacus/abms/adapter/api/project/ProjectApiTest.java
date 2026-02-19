@@ -7,6 +7,8 @@ import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
+import kr.co.abacus.abms.domain.party.Party;
+import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectFixture;
@@ -43,8 +45,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @DisplayName("프로젝트 생성")
     void create() {
         // Given
+        Long partyId = createParty("테스트 협력사 A");
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
-                1L,
+                partyId,
                 1L,
                 "PRJ-TEST-001",
                 "테스트 프로젝트",
@@ -108,11 +111,13 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("프로젝트 검색 - 코드/이름, 상태, 기간 조건")
     void search() {
-        projectRepository.save(createProject("PRJ-ALPHA-001", "알파 프로젝트", 1L, 1L, ProjectStatus.IN_PROGRESS,
+        Long partyAlphaId = createParty("테스트 협력사 Alpha");
+        Long partyBetaId = createParty("테스트 협력사 Beta");
+        projectRepository.save(createProject("PRJ-ALPHA-001", "알파 프로젝트", partyAlphaId, 1L, ProjectStatus.IN_PROGRESS,
                 LocalDate.of(2024, 1, 10)));
-        projectRepository.save(createProject("PRJ-ALPHA-002", "알파 보조", 1L, 1L, ProjectStatus.COMPLETED,
+        projectRepository.save(createProject("PRJ-ALPHA-002", "알파 보조", partyAlphaId, 1L, ProjectStatus.COMPLETED,
                 LocalDate.of(2024, 2, 5)));
-        projectRepository.save(createProject("PRJ-BETA-001", "베타 프로젝트", 2L, 1L, ProjectStatus.IN_PROGRESS,
+        projectRepository.save(createProject("PRJ-BETA-001", "베타 프로젝트", partyBetaId, 1L, ProjectStatus.IN_PROGRESS,
                 LocalDate.of(2023, 5, 1)));
         flushAndClear();
 
@@ -179,12 +184,15 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @DisplayName("프로젝트 수정")
     void update() {
         // Given
-        Project project = ProjectFixture.createProject("PRJ-UPDATE-001");
+        Long oldPartyId = createParty("테스트 협력사 Old");
+        Long newPartyId = createParty("테스트 협력사 New");
+        Project project = createProject("PRJ-UPDATE-001", "테스트 프로젝트", oldPartyId, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 1, 1));
         projectRepository.save(project);
         flushAndClear();
 
         ProjectUpdateApiRequest request = new ProjectUpdateApiRequest(
-                99L,
+                newPartyId,
                 1L,
                 "수정된 프로젝트명",
                 "수정된 설명",
@@ -218,7 +226,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @DisplayName("프로젝트 완료 처리")
     void complete() {
         // Given
-        Project project = ProjectFixture.createProject("PRJ-COMPLETE-001");
+        Long partyId = createParty("테스트 협력사 Complete");
+        Project project = createProject("PRJ-COMPLETE-001", "완료 테스트", partyId, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 1, 1));
         projectRepository.save(project);
         flushAndClear();
 
@@ -243,7 +253,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @DisplayName("프로젝트 취소 처리")
     void cancel() {
         // Given
-        Project project = ProjectFixture.createProject("PRJ-CANCEL-001");
+        Long partyId = createParty("테스트 협력사 Cancel");
+        Project project = createProject("PRJ-CANCEL-001", "취소 테스트", partyId, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 1, 1));
         projectRepository.save(project);
         flushAndClear();
 
@@ -374,6 +386,12 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                 100_000_000L,
                 startDate,
                 startDate.plusMonths(6)));
+    }
+
+    private Long createParty(String name) {
+        Party party = partyRepository.save(Party.create(
+                new PartyCreateRequest(name, null, null, null, null)));
+        return party.getIdOrThrow();
     }
 
 }

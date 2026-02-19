@@ -25,7 +25,7 @@ public class ProjectAssignmentApi {
 
     @PostMapping("/api/project-assignments")
     public ProjectAssignmentCreateResponse assign(@RequestBody @Valid ProjectAssignmentCreateRequest request) {
-        Long id = projectAssignmentManager.create(request).getId();
+        Long id = projectAssignmentManager.create(request).getIdOrThrow();
         return ProjectAssignmentCreateResponse.of(id);
     }
 

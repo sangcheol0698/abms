@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.application.employee.inbound;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,7 +16,7 @@ public interface EmployeeFinder {
 
     Employee find(Long id);
 
-    EmployeeDetail findEmployeeDetail(Long id);
+    @Nullable EmployeeDetail findEmployeeDetail(Long id);
 
     Page<EmployeeSummary> search(EmployeeSearchCondition condition, Pageable pageable);
 

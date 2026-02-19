@@ -2,6 +2,7 @@ package kr.co.abacus.abms.application.department.inbound;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -16,7 +17,7 @@ public interface DepartmentFinder {
 
     List<OrganizationChartDetail> getOrganizationChart();
 
-    Page<EmployeeSummary> getEmployees(Long departmentId, String name, Pageable pageable);
+    Page<EmployeeSummary> getEmployees(Long departmentId, @Nullable String name, Pageable pageable);
 
     DepartmentDetail findDetail(Long departmentId);
 

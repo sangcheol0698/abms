@@ -121,7 +121,7 @@ public class BusinessQueryTools {
                             summary.projectId(),
                             summary.code(),
                             summary.name(),
-                            partyName != null ? partyName : "협력사 없음",
+                            partyName,
                             summary.status().name(),
                             summary.status().getDescription(),
                             summary.contractAmount().amount().longValue(),
@@ -183,13 +183,13 @@ public class BusinessQueryTools {
         Page<Party> page = partyFinder.getParties(PageRequest.of(0, pageSize), name);
         List<PartySearchItem> parties = page.getContent().stream()
                 .map(party -> new PartySearchItem(
-                        party.getId(),
+                        party.getIdOrThrow(),
                         party.getName(),
                         party.getCeoName(),
                         party.getSalesRepName(),
                         party.getSalesRepPhone(),
                         party.getSalesRepEmail(),
-                        "/parties/" + party.getId()))
+                        "/parties/" + party.getIdOrThrow()))
                 .toList();
 
         return new PartySearchResult(name, (int) page.getTotalElements(), parties.size(), parties);
@@ -204,10 +204,10 @@ public class BusinessQueryTools {
             return null;
         }
 
-        List<Project> projects = projectQueryService.findAllByPartyId(resolvedParty.getId());
+        List<Project> projects = projectQueryService.findAllByPartyId(resolvedParty.getIdOrThrow());
         List<PartyProjectItem> items = projects.stream()
                 .map(project -> new PartyProjectItem(
-                        project.getId(),
+                        project.getIdOrThrow(),
                         project.getCode(),
                         project.getName(),
                         project.getStatus().name(),
@@ -215,13 +215,13 @@ public class BusinessQueryTools {
                         project.getContractAmount().amount().longValue(),
                         project.getPeriod().startDate().toString(),
                         project.getPeriod().endDate() != null ? project.getPeriod().endDate().toString() : null,
-                        "/projects/" + project.getId()))
+                        "/projects/" + project.getIdOrThrow()))
                 .toList();
 
         return new PartyProjectsResult(
-                resolvedParty.getId(),
+                resolvedParty.getIdOrThrow(),
                 resolvedParty.getName(),
-                "/parties/" + resolvedParty.getId(),
+                "/parties/" + resolvedParty.getIdOrThrow(),
                 items.size(),
                 items);
     }
@@ -257,9 +257,9 @@ public class BusinessQueryTools {
             return null;
         }
 
-        DepartmentDetail departmentDetail = departmentFinder.findDetail(department.getId());
+        DepartmentDetail departmentDetail = departmentFinder.findDetail(department.getIdOrThrow());
         Page<EmployeeSummary> page = departmentFinder.getEmployees(
-                department.getId(),
+                department.getIdOrThrow(),
                 employeeName,
                 PageRequest.of(0, pageSize));
 
@@ -310,7 +310,7 @@ public class BusinessQueryTools {
                     }
 
                     return new ProjectAssignmentItem(
-                            assignment.getId(),
+                            assignment.getIdOrThrow(),
                             assignment.getEmployeeId(),
                             assignedEmployeeName,
                             position,
@@ -340,13 +340,13 @@ public class BusinessQueryTools {
             return null;
         }
 
-        List<PositionHistory> histories = positionHistoryFinder.findAll(employee.getId()).stream()
+        List<PositionHistory> histories = positionHistoryFinder.findAll(employee.getIdOrThrow()).stream()
                 .sorted((a, b) -> b.getPeriod().startDate().compareTo(a.getPeriod().startDate()))
                 .toList();
 
         List<PositionHistoryItem> items = histories.stream()
                 .map(history -> new PositionHistoryItem(
-                        history.getId(),
+                        history.getIdOrThrow(),
                         history.getPosition().name(),
                         history.getPosition().getDescription(),
                         history.getPeriod().startDate().toString(),
@@ -354,11 +354,11 @@ public class BusinessQueryTools {
                 .toList();
 
         return new EmployeePositionHistoryResult(
-                employee.getId(),
+                employee.getIdOrThrow(),
                 employee.getName(),
                 employee.getPosition().name(),
                 employee.getPosition().getDescription(),
-                "/employees/" + employee.getId(),
+                "/employees/" + employee.getIdOrThrow(),
                 items.size(),
                 items);
     }

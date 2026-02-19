@@ -31,7 +31,7 @@ public class PartyRepositoryImpl implements CustomPartyRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Party> search(Pageable pageable, String name) {
+    public Page<Party> search(Pageable pageable, @Nullable String name) {
         OrderSpecifier<?>[] orderSpecifiers = resolveSort(pageable);
         List<Party> content = queryFactory
                 .selectFrom(party)
@@ -53,7 +53,7 @@ public class PartyRepositoryImpl implements CustomPartyRepository {
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
-    private @Nullable BooleanExpression containsName(String name) {
+    private @Nullable BooleanExpression containsName(@Nullable String name) {
         if (ObjectUtils.isEmpty(name)) {
             return null;
         }

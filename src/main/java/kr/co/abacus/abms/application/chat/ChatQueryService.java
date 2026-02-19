@@ -33,7 +33,7 @@ public class ChatQueryService {
         return chatSessionRepository.findAllByFavoriteTrueAndDeletedFalseOrderByUpdatedAtDesc()
                 .stream()
                 .map(session -> new ChatSessionSummary(
-                        session.getId(),
+                        session.getIdOrThrow(),
                         session.getSessionId(),
                         session.getTitle(),
                         session.getFavorite(),
@@ -52,7 +52,7 @@ public class ChatQueryService {
                 .toList();
 
         return new ChatSessionDetail(
-                session.getId(),
+                session.getIdOrThrow(),
                 session.getSessionId(),
                 session.getTitle(),
                 session.getFavorite(),

@@ -48,4 +48,8 @@ public abstract class AbstractEntity extends BaseEntity {
                 : getClass().hashCode();
     }
 
+    public final Long getIdOrThrow() {
+        return Objects.requireNonNull(id, "엔티티 ID가 초기화되지 않았습니다.");
+    }
+
 }

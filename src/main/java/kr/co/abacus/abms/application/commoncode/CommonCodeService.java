@@ -32,7 +32,7 @@ public class CommonCodeService {
 
     @Cacheable(cacheNames = "commonCode", key = "#groupCode + '_' + #code")
     public @Nullable CommonCodeInfo findByCode(String groupCode, String code) {
-        CommonCodeDetail detail = commonCodeDetailRepository.findByCode(groupCode, code);
+        @Nullable CommonCodeDetail detail = commonCodeDetailRepository.findByCode(groupCode, code);
         return detail != null ? CommonCodeInfo.from(detail) : null;
     }
 

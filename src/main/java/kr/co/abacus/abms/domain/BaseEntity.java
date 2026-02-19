@@ -31,9 +31,11 @@ public abstract class BaseEntity {
 
     @CreatedBy
     @Column(updatable = false)
+    @Nullable
     private String createdBy;
 
     @LastModifiedBy
+    @Nullable
     private String updatedBy;
 
     @Column(nullable = false)

@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import kr.co.abacus.abms.application.employee.outbound.EmployeeCostPolicyRepository;
@@ -44,7 +45,7 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
 
     @Override
     public MonthlyRevenueSummary calculateMonthlySummary(LocalDate targetMonth) {
-        return null;
+        throw new UnsupportedOperationException("프로젝트 단위 집계만 지원합니다.");
     }
 
     // 매출 계산: 해당 월에 발행된(isIssued) 매출 합계
@@ -98,8 +99,8 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
             .orElseThrow(() -> new IllegalStateException("비용 정보 없음: " + employee.getType()));
 
         // 월 원가(단가) 계산
-        Payroll payroll = payrollRepository.findCurrentSalaryByEmployeeId(employee.getId())
-            .orElseThrow(() -> new IllegalStateException("급여 정보 없음: " + employee.getId()));
+        Payroll payroll = payrollRepository.findCurrentSalaryByEmployeeId(employee.getIdOrThrow())
+            .orElseThrow(() -> new IllegalStateException("급여 정보 없음: " + employee.getIdOrThrow()));
 
         Money monthlyUnitCost = costPolicy.calculateEmployeeCost(payroll.getAnnualSalary());
 
@@ -110,12 +111,10 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
     }
 
     @Override
-    public Money calculateProfit(Money revenue, Money cost) {
+    public Money calculateProfit(@Nullable Money revenue, @Nullable Money cost) {
         Money safeRevenue = (revenue != null) ? revenue : Money.zero();
         Money safeCost = (cost != null) ? cost : Money.zero();
-        Money profit = safeRevenue.subtract(safeCost);
-
-        return profit;
+        return new Money(safeRevenue.amount().subtract(safeCost.amount()));
     }
 
     // 해당 월에 실적이 있는 프로젝트별로 집계 리스트를 반환
@@ -143,7 +142,7 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
             // 2-4. 결과 객체 생성 및 추가
             MonthlyRevenueSummary summary = MonthlyRevenueSummary.create(
                 new MonthlyRevenueSummaryCreateRequest(
-                    project.getId(),
+                    project.getIdOrThrow(),
                     targetMonth,
                     revenue,
                     cost,
@@ -170,7 +169,7 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
         // 4. 결과 엔티티 생성
         return MonthlyRevenueSummary.create(
             new MonthlyRevenueSummaryCreateRequest(
-                project.getId(),
+                project.getIdOrThrow(),
                 targetMonth,
                 revenue,
                 cost,
@@ -185,7 +184,7 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
         LocalDate endOfMonth = targetMonth.withDayOfMonth(targetMonth.lengthOfMonth());
 
         List<ProjectRevenuePlan> revenuePlans = projectRevenuePlanRepository
-            .findByProjectIdAndRevenueDateBetweenAndIsIssuedTrue(project.getId(), startOfMonth, endOfMonth);
+            .findByProjectIdAndRevenueDateBetweenAndIsIssuedTrue(project.getIdOrThrow(), startOfMonth, endOfMonth);
 
         return revenuePlans.stream()
             .map(ProjectRevenuePlan::getAmount)
@@ -200,7 +199,7 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
         Money totalCost = Money.zero();
 
         List<ProjectAssignment> assignments = projectAssignmentRepository
-            .findActiveAssignmentsByProjectId(project.getId(), startOfMonth, endOfMonth);
+            .findActiveAssignmentsByProjectId(project.getIdOrThrow(), startOfMonth, endOfMonth);
 
         for (ProjectAssignment assignment : assignments) {
             Money onePersonCost = calculateOneEmployeeAssignmentCost(assignment, targetMonth);

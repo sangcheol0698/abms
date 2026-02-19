@@ -42,14 +42,14 @@ public class EmployeeModifyService implements EmployeeManager {
 
         Employee employee = command.toEntity();
 
-        Long id = employeeRepository.save(employee).getId();
+        Long id = employeeRepository.save(employee).getIdOrThrow();
 
         /**
          * 직급 이력 생성 추가
          * 추후에 도메인 이벤트 방식으로 변경
          */
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
-                employee.getId(),
+                employee.getIdOrThrow(),
                 new Period(employee.getJoinDate(), null),
                 employee.getPosition()
         ));
@@ -77,7 +77,7 @@ public class EmployeeModifyService implements EmployeeManager {
                 command.avatar(),
                 command.memo());
 
-        return employeeRepository.save(employee).getId();
+        return employeeRepository.save(employee).getIdOrThrow();
     }
 
     @Override
@@ -120,7 +120,7 @@ public class EmployeeModifyService implements EmployeeManager {
          * 추후에 도메인 이벤트 방식으로 변경
          */
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
-                employee.getId(),
+                employee.getIdOrThrow(),
                 new Period(LocalDate.now(), null),
                 employee.getPosition()
         ));
@@ -140,7 +140,7 @@ public class EmployeeModifyService implements EmployeeManager {
          * 추후에 도메인 이벤트 방식으로 변경
          */
         PositionHistory positionHistory = PositionHistory.create(new PositionHistoryCreateRequest(
-                employee.getId(),
+                employee.getIdOrThrow(),
                 new Period(promotedDate, null),
                 employee.getPosition()
         ));

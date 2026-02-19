@@ -48,12 +48,12 @@ public class OrganizationTools {
                                 .orElse("부서장 정보 없음");
                     }
                     return new DepartmentInfo(
-                            dept.getId(),
+                            dept.getIdOrThrow(),
                             dept.getName(),
                             dept.getCode(),
                             dept.getType().getDescription(),
                             leaderName,
-                            "/departments/" + dept.getId());
+                            "/departments/" + dept.getIdOrThrow());
                 })
                 .orElse(null);
     }
@@ -67,11 +67,11 @@ public class OrganizationTools {
         return departmentRepository.findByName(parentDepartmentName)
                 .map(parent -> parent.getChildren().stream()
                         .map(child -> new SubDepartmentInfo(
-                                child.getId(),
+                                child.getIdOrThrow(),
                                 child.getName(),
                                 child.getCode(),
                                 child.getType().getDescription(),
-                                "/departments/" + child.getId()))
+                                "/departments/" + child.getIdOrThrow()))
                         .collect(Collectors.toList()))
                 .orElse(null);
     }
@@ -85,14 +85,14 @@ public class OrganizationTools {
         return departmentRepository.findByName(departmentName)
                 .map(dept -> {
                     var employees = employeeRepository.findAllByDepartmentIdAndDeletedFalse(
-                            dept.getId(), PageRequest.of(0, 10));
+                            dept.getIdOrThrow(), PageRequest.of(0, 10));
                     return employees.stream()
                             .map(emp -> new DepartmentMember(
-                                    emp.getId(),
+                                    emp.getIdOrThrow(),
                                     emp.getName(),
                                     emp.getPosition().getDescription(),
                                     emp.getStatus().getDescription(),
-                                    "/employees/" + emp.getId()))
+                                    "/employees/" + emp.getIdOrThrow()))
                             .collect(Collectors.toList());
                 })
                 .orElse(null);
@@ -106,11 +106,11 @@ public class OrganizationTools {
 
         return departmentRepository.findAllByDeletedFalse().stream()
                 .map(dept -> new SimpleDepartmentInfo(
-                        dept.getId(),
+                        dept.getIdOrThrow(),
                         dept.getName(),
                         dept.getCode(),
                         dept.getType().getDescription(),
-                        "/departments/" + dept.getId()))
+                        "/departments/" + dept.getIdOrThrow()))
                 .collect(Collectors.toList());
     }
 
@@ -121,7 +121,7 @@ public class OrganizationTools {
         }
 
         List<Department> allDepts = departmentRepository.findAllByDeletedFalse();
-        List<Long> deptIds = allDepts.stream().map(Department::getId).toList();
+        List<Long> deptIds = allDepts.stream().map(Department::getIdOrThrow).toList();
         List<Employee> allEmployees = employeeRepository.findAllByDepartmentIdInAndDeletedFalse(deptIds);
 
         long activeCount = allEmployees.stream()

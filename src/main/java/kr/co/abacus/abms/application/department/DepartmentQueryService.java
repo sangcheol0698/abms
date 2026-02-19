@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -44,7 +45,7 @@ public class DepartmentQueryService implements DepartmentFinder {
     }
 
     @Override
-    public Page<EmployeeSummary> getEmployees(Long departmentId, String name, Pageable pageable) {
+    public Page<EmployeeSummary> getEmployees(Long departmentId, @Nullable String name, Pageable pageable) {
         // 부서 존재 여부 확인
         find(departmentId);
 
@@ -114,10 +115,13 @@ public class DepartmentQueryService implements DepartmentFinder {
                 current.departmentName(),
                 current.departmentCode(),
                 current.departmentType(),
-                current.leaderEmployeeId() != null ? new DepartmentLeaderDetail(
-                        current.leaderEmployeeId(),
-                        current.leaderEmployeeName(),
-                        current.leaderEmployeePosition()) : null,
+                current.leaderEmployeeId() != null
+                        && current.leaderEmployeeName() != null
+                        && current.leaderEmployeePosition() != null
+                                ? new DepartmentLeaderDetail(
+                                current.leaderEmployeeId(),
+                                current.leaderEmployeeName(),
+                                current.leaderEmployeePosition()) : null,
                 current.employeeCount(),
                 children);
     }

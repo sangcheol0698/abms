@@ -29,9 +29,9 @@ public class DepartmentModifyService implements DepartmentManager {
         Department department = departmentFinder.find(departmentId);
         Employee employee = employeeFinder.find(leaderEmployeeId);
 
-        department.assignLeader(employee.getId());
+        department.assignLeader(employee.getIdOrThrow());
 
-        Long id = departmentRepository.save(department).getId();
+        Long id = departmentRepository.save(department).getIdOrThrow();
 
         departmentFinder.clearOrganizationChartCache();
 

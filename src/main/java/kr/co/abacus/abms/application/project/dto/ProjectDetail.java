@@ -23,7 +23,7 @@ public record ProjectDetail(
 
     public static ProjectDetail of(Project project, String partyName, @Nullable String leadDepartmentName) {
         return new ProjectDetail(
-                project.getId(),
+                project.getIdOrThrow(),
                 project.getPartyId(),
                 partyName,
                 project.getCode(),

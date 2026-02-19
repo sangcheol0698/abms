@@ -91,7 +91,7 @@ public class EmployeeInfoTools {
                 .orElse("부서 없음");
 
         return new EmployeeInfo(
-                employee.getId(),
+                employee.getIdOrThrow(),
                 employee.getName(),
                 departmentName,
                 employee.getEmail().address(),
@@ -100,7 +100,7 @@ public class EmployeeInfoTools {
                 employee.getStatus().getDescription(),
                 employee.getJoinDate().toString(),
                 employee.getBirthDate().toString(),
-                "/employees/" + employee.getId());
+                "/employees/" + employee.getIdOrThrow());
     }
 
     public record EmployeeInfo(

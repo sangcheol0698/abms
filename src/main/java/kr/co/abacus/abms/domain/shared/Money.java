@@ -2,6 +2,7 @@ package kr.co.abacus.abms.domain.shared;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Objects;
 
 import jakarta.persistence.Embeddable;
 
@@ -12,16 +13,20 @@ public record Money(BigDecimal amount) {
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
     public Money(BigDecimal amount) {
-        // 260216: 적자(마이너스)로 인해 음수 방지 로직 제거
-        this.amount = amount.setScale(SCALE, ROUNDING_MODE);
+        BigDecimal normalized = Objects.requireNonNull(amount, "amount는 null일 수 없습니다")
+                .setScale(SCALE, ROUNDING_MODE);
+        this.amount = normalized;
     }
 
     public static Money wons(BigDecimal amount) {
+        validateNonNegative(amount);
         return new Money(amount);
     }
 
     public static Money wons(Long amount) {
-        return new Money(BigDecimal.valueOf(amount));
+        BigDecimal decimalAmount = BigDecimal.valueOf(amount);
+        validateNonNegative(decimalAmount);
+        return new Money(decimalAmount);
     }
 
     public static Money zero() {
@@ -33,8 +38,9 @@ public record Money(BigDecimal amount) {
     }
 
     public Money subtract(Money other) {
-        // 260216: 적자(마이너스)로 인해 음수 방지 로직 제거
-        return new Money(this.amount.subtract(other.amount));
+        BigDecimal result = this.amount.subtract(other.amount);
+        validateNonNegative(result);
+        return new Money(result);
     }
 
     public Money multiply(BigDecimal factor) {
@@ -53,6 +59,12 @@ public record Money(BigDecimal amount) {
 
     public boolean isGreaterThan(Money other) {
         return this.amount.compareTo(other.amount) > 0;
+    }
+
+    private static void validateNonNegative(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("금액은 음수일 수 없습니다: " + amount);
+        }
     }
 
 }

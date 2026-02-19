@@ -49,6 +49,7 @@ import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
@@ -73,6 +74,9 @@ public class EmployeeApi {
     @GetMapping("/api/employees/{id}")
     public EmployeeDetailResponse findEmployeeDetail(@PathVariable Long id) {
         EmployeeDetail detail = employeeFinder.findEmployeeDetail(id);
+        if (detail == null) {
+            throw new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id);
+        }
 
         return EmployeeDetailResponse.of(detail);
     }

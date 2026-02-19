@@ -33,8 +33,8 @@ public class Notification extends AbstractEntity {
     @Column(name = "notification_type", nullable = false, length = 20)
     private NotificationType type;
 
-    @Column(name = "read", nullable = false)
-    private boolean read;
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead;
 
     @Nullable
     @Column(name = "link_url", length = 255)
@@ -46,12 +46,12 @@ public class Notification extends AbstractEntity {
         notification.description = request.description();
         notification.type = request.type() != null ? request.type() : NotificationType.INFO;
         notification.link = request.link();
-        notification.read = false;
+        notification.isRead = false;
         return notification;
     }
 
     public void markAsRead() {
-        this.read = true;
+        this.isRead = true;
     }
 
 }
