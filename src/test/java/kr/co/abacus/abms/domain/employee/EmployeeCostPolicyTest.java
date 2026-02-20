@@ -39,5 +39,4 @@ class EmployeeCostPolicyTest {
         assertThat(resultSgaAmount.amount()).isEqualByComparingTo(expectedSgaAmount);
     }
 
-
 }
