@@ -46,5 +46,9 @@ spy.log
 /frontend/AGENTS.md
 
 .env
+/.env.*
+!.env.example
+frontend/.env.local
+frontend/.env.*.local
 /.junie/
 /CHANGELOG.md

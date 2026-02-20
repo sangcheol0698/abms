@@ -1,10 +1,7 @@
 spring:
-  config:
-    activate:
-      on-profile: test
   ai:
     openai:
-      api-key: ${AI_OPENAI_API_KEY}
+      api-key: test-api-key
       chat:
         options:
           model: gpt-4o-mini

@@ -1,0 +1,24 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  docker:
+    compose:
+      lifecycle-management: start_only
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3307/abms}
+    username: ${DB_USERNAME:myuser}
+    password: ${DB_PASSWORD:secret}
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create
+  sql:
+    init:
+      mode: always
+  ai:
+    openai:
+      api-key: ${AI_OPENAI_API_KEY}
+
+logging:
+  level:
+    p6spy: debug

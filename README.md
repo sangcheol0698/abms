@@ -65,15 +65,23 @@ Layer rules are enforced by ArchUnit tests to maintain architectural integrity.
 
 ### Environment Variables
 
-Configure OpenAI API Key.
+The backend is separated by Spring profiles:
+- `local` (default): uses project root `.env` (`spring.config.import`)
+- `dev`: uses OS/CI environment variables
+- `prod`: uses OS/CI environment variables
+- `test`: uses `src/test/resources/application-test.yml`
 
-Create a `.env` file in the project root:
+Create local env from template:
 
-```properties
-AI_OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx
+```bash
+cp .env.example .env
 ```
 
-**Note:** If the API key is missing or invalid, AI chat features will fail.
+`dev`/`prod` require these variables from runtime environment:
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `AI_OPENAI_API_KEY`
 
 ## Getting Started
 
@@ -87,8 +95,8 @@ cd abms
 ### 2. Set Up Environment Variables
 
 ```bash
-# Create .env file
-echo "AI_OPENAI_API_KEY=sk-proj-..." > .env
+# Local profile
+cp .env.example .env
 ```
 
 ### 3. Start Database
@@ -123,15 +131,22 @@ This will:
 ### 5. Run the Application
 
 ```bash
+# local profile (default)
 ./gradlew bootRun
+
+# dev profile
+./gradlew bootRun --args='--spring.profiles.active=dev'
+
+# prod profile
+./gradlew bootRun --args='--spring.profiles.active=prod'
 ```
 
 The server will start on `http://localhost:8080`.
 
-**Key Features Enabled:**
+**Local Profile Features:**
 - Virtual threads for improved concurrency
 - JPA schema auto-creation (`ddl-auto: create`)
-- Sample data initialization (via `InitData` class in `local`/`default` profiles)
+- Sample data initialization (via `InitData` class in `local` profile)
 - P6Spy SQL logging with actual parameters
 
 ### 6. Frontend Development
@@ -143,6 +158,7 @@ npm run dev
 ```
 
 The frontend development server will start on `http://localhost:5173`.
+`frontend/.env.development` is used for development mode and `frontend/.env.production` for production build.
 
 ## Available Scripts
 
@@ -154,6 +170,10 @@ The frontend development server will start on `http://localhost:5173`.
 
 # Run application
 ./gradlew bootRun
+
+# Run application with specific profile
+./gradlew bootRun --args='--spring.profiles.active=dev'
+./gradlew bootRun --args='--spring.profiles.active=prod'
 
 # Run tests
 ./gradlew test
@@ -171,6 +191,7 @@ The frontend development server will start on `http://localhost:5173`.
 # Start development server (port 5173)
 npm run dev
 
+# Uses frontend/.env.production by default
 # Build for production
 npm run build
 

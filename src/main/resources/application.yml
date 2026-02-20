@@ -1,31 +1,15 @@
 spring:
   application:
     name: abms
+  profiles:
+    default: local
   jpa:
-    defer-datasource-initialization: true  # 테이블을 새로 만들고 -> data.sql을 실행해야 함
-    hibernate:
-      ddl-auto: create
     open-in-view: false
-  docker:
-    compose:
-      lifecycle-management: start_only
   threads:
     virtual:
       enabled: true
-  sql:
-    init:
-      mode: always
-
   ai:
     openai:
-      api-key: ${AI_OPENAI_API_KEY}
       chat:
         options:
           model: gpt-4o-mini
-
-  config:
-    import: optional:file:.env[.properties]
-
-logging:
-  level:
-    p6spy: debug
