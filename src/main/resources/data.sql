@@ -164,6 +164,18 @@ INSERT INTO tb_employee_cost_policy (id, apply_year, employee_type, overhead_rat
 -- ---------------------------------------------------------
 -- 6. 급여 정보 (Payroll) - 2026년 기준 (팀장~사원 전체)
 -- ---------------------------------------------------------
+-- [임원진] (ID 1 ~ 9)
+INSERT INTO tb_payroll (employee_id, annual_salary, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(1, 300000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 임회장
+(2, 250000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 채사장
+(3, 200000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 유부사장
+(4, 200000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 진부사장
+(5, 160000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 김상무
+(6, 140000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 허담당
+(7, 130000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 홍이사
+(8, 130000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 손이사
+(9, 160000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0); -- 박상무
+
 -- [팀장급] (ID 10 ~ 19) : 연봉 약 9,600 ~ 1.05억
 INSERT INTO tb_payroll (employee_id, annual_salary, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
 (10, 105000000, '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0), -- 고팀장
