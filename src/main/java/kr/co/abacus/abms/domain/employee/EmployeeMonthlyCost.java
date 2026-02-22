@@ -22,15 +22,15 @@ import lombok.NoArgsConstructor;
 @Table(name = "tb_employee_monthly_cost",
         comment = "월별 인력 비용 (월급 + 제경비 + 판관비)",
         uniqueConstraints = {
-            @UniqueConstraint(columnNames = {"employee_id", "cost_date"}) // 직원+비용발생월 중복 방지
+            @UniqueConstraint(columnNames = {"employee_id", "cost_month"}) // 직원+비용발생월 중복 방지
         })
 public class EmployeeMonthlyCost extends AbstractEntity {
 
     @Column(name = "employee_id", nullable = false, comment = "직원ID")
     private Long employeeId;
 
-    @Column(name = "cost_date", nullable = false, length = 6, comment = "비용발생월 (202602)")
-    private String costDate;
+    @Column(name = "cost_month", nullable = false, length = 6, comment = "비용발생월 (202602)")
+    private String costMonth;
 
     @Embedded
     @AttributeOverride(name = "amount",
@@ -53,23 +53,30 @@ public class EmployeeMonthlyCost extends AbstractEntity {
     private Money totalCost;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private EmployeeMonthlyCost(Long employeeId, String costDate, Money monthlySalary, Money overHeadCost, Money sgaCost, Money totalCost) {
+    private EmployeeMonthlyCost(Long employeeId, String costMonth, Money monthlySalary, Money overHeadCost, Money sgaCost, Money totalCost) {
         this.employeeId = employeeId;
-        this.costDate = costDate;
+        this.costMonth = costMonth;
         this.monthlySalary = monthlySalary;
         this.overHeadCost = overHeadCost;
         this.sgaCost = sgaCost;
         this.totalCost = totalCost;
     }
 
-    public static EmployeeMonthlyCost create(Long employeeId, String costDate, Money monthlySalary, Money overHeadCost, Money sgaCost, Money totalCost) {
+    public static EmployeeMonthlyCost create(Long employeeId, String costMonth, Money monthlySalary, Money overHeadCost, Money sgaCost, Money totalCost) {
         return EmployeeMonthlyCost.builder()
             .employeeId(employeeId)
-            .costDate(costDate)
+            .costMonth(costMonth)
             .monthlySalary(monthlySalary)
             .overHeadCost(overHeadCost)
             .sgaCost(sgaCost)
             .totalCost(totalCost)
             .build();
+    }
+
+    public void update(Money monthlySalary, Money overHeadCost, Money sgaCost, Money totalCost) {
+        this.monthlySalary = monthlySalary;
+        this.overHeadCost = overHeadCost;
+        this.sgaCost = sgaCost;
+        this.totalCost =  totalCost;
     }
 }
