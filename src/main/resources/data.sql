@@ -242,13 +242,13 @@ INSERT INTO tb_project (id, party_id, lead_department_id, project_code, project_
 
 -- [Project A] AI 플랫폼 (3회 분할)
 INSERT INTO tb_project_revenue_plan (project_id, plan_sequence, revenue_date, revenue_type, amount, memo, is_issued, created_at, updated_at, created_by, updated_by, deleted) VALUES
-(1, 1, '2026-01-15', 'DOWN_PAYMENT', 300000000, '1차 선수금', 1, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
-(1, 2, '2026-02-10', 'INTERMEDIATE_PAYMENT', 400000000, '1차 중도금', 1, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
-(1, 3, '2026-06-30', 'BALANCE_PAYMENT', 300000000, '잔금', 0, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+(1, 1, '2026-01-15', 'DOWN_PAYMENT', 300000000, '선수 착수금', 1, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
+(1, 2, '2026-02-10', 'INTERMEDIATE_PAYMENT', 400000000, '중도금', 1, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
+(1, 3, '2026-06-30', 'BALANCE_PAYMENT', 300000000, '최종 잔금', 0, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
 
 -- [Project B] 토스 고도화 (3회 분할)
 INSERT INTO tb_project_revenue_plan (project_id, plan_sequence, revenue_date, revenue_type, amount, memo, is_issued, created_at, updated_at, created_by, updated_by, deleted) VALUES
-(2, 1, '2026-02-15', 'DOWN_PAYMENT', 100000000, '계약금', 1, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
+(2, 1, '2026-02-15', 'DOWN_PAYMENT', 100000000, '선수 착수금', 1, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
 (2, 2, '2026-07-20', 'INTERMEDIATE_PAYMENT', 250000000, '중도금', 0, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
 (2, 3, '2026-11-30', 'BALANCE_PAYMENT', 150000000, '검수 완료금', 0, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
 
@@ -265,48 +265,56 @@ INSERT INTO tb_project_revenue_plan (project_id, plan_sequence, revenue_date, re
 -- ---------------------------------------------------------
 
 -- [Project A] AI 플랫폼 (4명 투입)
--- 1. 신사원(49): PL, 전 기간
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(1, 49, 'PL', '2026-01-01', '2026-06-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
----- 2. 장책임(28): DEV, 전 기간
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(1, 28, 'DEV', '2026-01-01', '2026-06-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
----- 3. 신선임(30): DEV, 1월~4월
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(1, 30, 'DEV', '2026-01-01', '2026-04-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
----- 4. 제사원(45): DEV, 2월~6월
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(1, 45, 'DEV', '2026-02-01', '2026-06-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 1. 신사원(49): DEV, 전 기간
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(1, 49, 'DEV', '2026-01-01', '2026-06-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 2. 장책임(28): DEV, 전 기간
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(1, 28, 'DEV', '2026-01-01', '2026-06-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 3. 신선임(30): DEV, 1월~4월
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(1, 30, 'DEV', '2026-01-01', '2026-04-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 4. 제사원(45): DEV, 2월~6월
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(1, 45, 'DEV', '2026-02-01', '2026-06-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
 
---
----- [Project B] 토스 고도화 (3명 투입)
----- 1. 고팀장(10): PM, 전 기간
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(2, 10, 'PM', '2026-02-01', '2026-11-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
----- 2. 권책임(20): PL, 전 기간
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(2, 20, 'PL', '2026-02-01', '2026-11-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
----- 3. 윤사원(48): DEV, 3월~10월
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(2, 48, 'DEV', '2026-03-01', '2026-10-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
---
---
----- [Project C] SKT 유지보수 (4명 투입)
----- 1. 김팀장(12): PM, 1년 전체
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(3, 12, 'PM', '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
----- 2. 이책임(27): PL, 1년 전체
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(3, 27, 'PL', '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
----- 3. 서선임(31): DEV, 상반기
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(3, 31, 'DEV', '2026-01-01', '2026-06-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
----- 4. 임사원(43): DEV, 하반기
---INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
---(3, 43, 'DEV', '2026-07-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+
+-- [Project B] 토스 고도화 (3명 투입)
+-- 1. 고팀장(10): PM, 전 기간
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(2, 10, 'PM', '2026-02-01', '2026-11-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 2. 권책임(20): PL, 전 기간
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(2, 20, 'PL', '2026-02-01', '2026-11-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 3. 윤사원(48): DEV, 3월~10월
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(2, 48, 'DEV', '2026-03-01', '2026-10-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+
+
+-- [Project C] SKT 유지보수 (4명 투입)
+-- 1. 김팀장(12): PM, 1년 전체
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(3, 12, 'PM', '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 2. 이책임(27): PL, 1년 전체
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(3, 27, 'PL', '2026-01-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 3. 서선임(31): DEV, 상반기
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(3, 31, 'DEV', '2026-01-01', '2026-06-30', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+-- 4. 임사원(43): DEV, 하반기
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at, updated_at, created_by, updated_by, deleted) VALUES
+(3, 43, 'DEV', '2026-07-01', '2026-12-31', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+
 
 -- ---------------------------------------------------------
--- 10. 알림 (Notification)
+-- 10. 월 매출 집계 (Monthly Revenue Summary)
+-- ---------------------------------------------------------
+
+
+
+
+-- ---------------------------------------------------------
+-- 11. 알림 (Notification)
 -- ---------------------------------------------------------
 INSERT INTO tb_notification (
     id, notification_title, notification_description, notification_type, is_read, link_url,
