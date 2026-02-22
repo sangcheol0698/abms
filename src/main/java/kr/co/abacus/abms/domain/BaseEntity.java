@@ -22,29 +22,32 @@ import lombok.Getter;
 public abstract class BaseEntity {
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, comment = "생성일자")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(nullable = false)
+    @Column(nullable = false, comment = "수정일자")
     private LocalDateTime updatedAt;
 
     @CreatedBy
-    @Column(updatable = false)
+    @Column(updatable = false, comment = "생성자")
     @Nullable
     private String createdBy;
 
     @LastModifiedBy
+    @Column(comment = "수정자")
     @Nullable
     private String updatedBy;
 
-    @Column(nullable = false)
+    @Column(nullable = false, comment = "삭제여부")
     private Boolean deleted = false;
 
     @Nullable
+    @Column(comment = "삭제일자")
     private LocalDateTime deletedAt;
 
     @Nullable
+    @Column(comment = "삭제자")
     private String deletedBy;
 
     public void softDelete(String deletedBy) {
