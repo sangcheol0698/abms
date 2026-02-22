@@ -43,11 +43,6 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
     private final EmployeeCostPolicyRepository employeeCostPolicyRepository;
     private final PayrollRepository payrollRepository;
 
-    @Override
-    public MonthlyRevenueSummary calculateMonthlySummary(LocalDate targetMonth) {
-        throw new UnsupportedOperationException("프로젝트 단위 집계만 지원합니다.");
-    }
-
     // 매출 계산: 해당 월에 발행된(isIssued) 매출 합계
     @Override
     public Money calculateRevenue(LocalDate targetMonth) {
@@ -117,96 +112,5 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
         return new Money(safeRevenue.amount().subtract(safeCost.amount()));
     }
 
-    // 해당 월에 실적이 있는 프로젝트별로 집계 리스트를 반환
-    @Override
-    public List<MonthlyRevenueSummary> calculateMonthlySummaryByProject(LocalDate targetMonth) {
-        List<MonthlyRevenueSummary> resultList = new ArrayList<>();
-
-        LocalDate startOfMonth = targetMonth.withDayOfMonth(1);
-        LocalDate endOfMonth = targetMonth.withDayOfMonth(targetMonth.lengthOfMonth());
-
-        // 1. 해당 월에 진행 중인(Active) 프로젝트 목록 조회
-        List<Project> activeProjects = projectRepository.findActiveProjects(startOfMonth, endOfMonth);
-
-        // 2. 프로젝트 리스트 반복 (Loop)
-        for (Project project : activeProjects) {
-            // 2-1. 해당 프로젝트의 매출 계산
-            Money revenue = calculateProjectRevenue(project, targetMonth);
-
-            // 2-2. 해당 프로젝트의 비용 계산
-            Money cost = calculateProjectTotalCost(project, targetMonth);
-
-            // 2-3. 이익 계산
-            Money profit = calculateProfit(revenue, cost);
-
-            // 2-4. 결과 객체 생성 및 추가
-            MonthlyRevenueSummary summary = MonthlyRevenueSummary.create(
-                new MonthlyRevenueSummaryCreateRequest(
-                    project.getIdOrThrow(),
-                    targetMonth,
-                    revenue,
-                    cost,
-                    profit
-                )
-            );
-
-            resultList.add(summary);
-        }
-
-        return resultList;
-    }
-
-    public MonthlyRevenueSummary calculateSummaryForProject(Project project, LocalDate targetMonth) {
-        // 1. 해당 프로젝트의 매출 계산
-        Money revenue = calculateProjectRevenue(project, targetMonth);
-
-        // 2. 해당 프로젝트의 비용 계산
-        Money cost = calculateProjectTotalCost(project, targetMonth);
-
-        // 3. 이익 계산
-        Money profit = calculateProfit(revenue, cost);
-
-        // 4. 결과 엔티티 생성
-        return MonthlyRevenueSummary.create(
-            new MonthlyRevenueSummaryCreateRequest(
-                project.getIdOrThrow(),
-                targetMonth,
-                revenue,
-                cost,
-                profit
-            )
-        );
-    }
-
-    // 해당 월의 특정 프로젝트 매출 계산
-    private Money calculateProjectRevenue(Project project, LocalDate targetMonth) {
-        LocalDate startOfMonth = targetMonth.withDayOfMonth(1);
-        LocalDate endOfMonth = targetMonth.withDayOfMonth(targetMonth.lengthOfMonth());
-
-        List<ProjectRevenuePlan> revenuePlans = projectRevenuePlanRepository
-            .findByProjectIdAndRevenueDateBetweenAndIsIssuedTrue(project.getIdOrThrow(), startOfMonth, endOfMonth);
-
-        return revenuePlans.stream()
-            .map(ProjectRevenuePlan::getAmount)
-            .reduce(Money.zero(), Money::add);
-    }
-
-    // 해당 월의 특정 프로젝트 비용 계산
-    private Money calculateProjectTotalCost(Project project, LocalDate targetMonth) {
-        LocalDate startOfMonth = targetMonth.withDayOfMonth(1);
-        LocalDate endOfMonth = targetMonth.withDayOfMonth(targetMonth.lengthOfMonth());
-
-        Money totalCost = Money.zero();
-
-        List<ProjectAssignment> assignments = projectAssignmentRepository
-            .findActiveAssignmentsByProjectId(project.getIdOrThrow(), startOfMonth, endOfMonth);
-
-        for (ProjectAssignment assignment : assignments) {
-            Money onePersonCost = calculateOneEmployeeAssignmentCost(assignment, targetMonth);
-            totalCost = totalCost.add(onePersonCost);
-        }
-
-        return totalCost;
-    }
 
 }
