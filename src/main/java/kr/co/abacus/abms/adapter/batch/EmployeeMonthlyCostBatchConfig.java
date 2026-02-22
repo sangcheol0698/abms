@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.adapter.batch;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -25,7 +24,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import kr.co.abacus.abms.application.employee.outbound.EmployeeCostPolicyRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeMonthlyCostRepository;
-import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.payroll.outbound.PayrollRepository;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeCostPolicy;
@@ -48,7 +46,6 @@ public class EmployeeMonthlyCostBatchConfig {
     private final PlatformTransactionManager transactionManager;
     private final EntityManagerFactory entityManagerFactory;
 
-    private final EmployeeRepository employeeRepository;
     private final PayrollRepository payrollRepository;
     private final EmployeeCostPolicyRepository policyRepository;
     private final EmployeeMonthlyCostRepository monthlyCostRepository;
@@ -72,6 +69,7 @@ public class EmployeeMonthlyCostBatchConfig {
             .build();
     }
 
+
     @Bean
     @StepScope
     public JpaPagingItemReader<Employee> employeeReader() {
@@ -83,7 +81,6 @@ public class EmployeeMonthlyCostBatchConfig {
             .pageSize(100)
             .build();
     }
-
     @Bean
     @StepScope
     public ItemProcessor<Employee, EmployeeMonthlyCost> employeeCostProcessor(

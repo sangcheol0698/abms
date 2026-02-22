@@ -39,7 +39,7 @@ public record Money(BigDecimal amount) {
 
     public Money subtract(Money other) {
         BigDecimal result = this.amount.subtract(other.amount);
-        validateNonNegative(result);
+        // validateNonNegative(result);
         return new Money(result);
     }
 
