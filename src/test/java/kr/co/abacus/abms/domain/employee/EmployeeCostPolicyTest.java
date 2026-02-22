@@ -12,7 +12,7 @@ import kr.co.abacus.abms.domain.shared.Money;
 class EmployeeCostPolicyTest {
 
     @Test
-    @DisplayName("비용 금액 계산: 기본급에 비용 정책이 적용된 금액이 반환된다")
+    @DisplayName("비용 금액 계산: 기본급에 비용 정책이 적용된 금액이 반환된다 ")
     void calculateCost_Success() {
         // given
         double overheadRate = 0.1;
@@ -38,6 +38,5 @@ class EmployeeCostPolicyTest {
         assertThat(resultOverHeadAmount.amount()).isEqualByComparingTo(expectedOverHeadAmount);
         assertThat(resultSgaAmount.amount()).isEqualByComparingTo(expectedSgaAmount);
     }
-
 
 }
