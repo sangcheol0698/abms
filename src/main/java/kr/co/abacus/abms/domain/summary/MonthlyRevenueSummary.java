@@ -24,6 +24,21 @@ public class MonthlyRevenueSummary extends AbstractEntity {
     @Column(name = "project_id", nullable = false, comment = "프로젝트ID")
     private Long projectId;
 
+    @Column(name = "project_code", nullable = false, comment = "프로젝트코드")
+    private String projectCode;
+
+    @Column(name = "project_name", nullable = false, comment = "프로젝트명")
+    private String projectName;
+
+    @Column(name = "team_id", nullable = false, comment = "귀속팀ID")
+    private Long teamId;
+
+    @Column(name = "team_code", nullable = false, comment = "귀속팀코드")
+    private String teamCode;
+
+    @Column(name = "team_name", nullable = false, comment = "귀속팀명")
+    private String teamName;
+
     @Column(name = "summary_date", nullable = false, comment = "집계대상일자")
     private LocalDate summaryDate;
 
@@ -43,6 +58,11 @@ public class MonthlyRevenueSummary extends AbstractEntity {
         MonthlyRevenueSummary summary = new MonthlyRevenueSummary();
 
         summary.projectId = Objects.requireNonNull(createRequest.projectId());
+        summary.projectCode = Objects.requireNonNull(createRequest.projectCode());
+        summary.projectName = Objects.requireNonNull(createRequest.projectName());
+        summary.teamId = Objects.requireNonNull(createRequest.teamId());
+        summary.teamCode = Objects.requireNonNull(createRequest.teamCode());
+        summary.teamName = Objects.requireNonNull(createRequest.teamName());
         summary.summaryDate = Objects.requireNonNull(createRequest.summaryDate());
         summary.revenueAmount = Objects.requireNonNull(createRequest.revenueAmount());
         summary.costAmount = Objects.requireNonNull(createRequest.costAmount());
