@@ -25,4 +25,13 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
     List<ProjectAssignment> findActiveAssignmentsByProjectId(@Param("projectId") Long projectId,
                                                              @Param("startOfMonth") LocalDate startOfMonth,
                                                              @Param("endOfMonth") LocalDate endOfMonth);
+
+    @Query("SELECT pa FROM ProjectAssignment pa " +
+            "WHERE pa.projectId = :projectId " +
+            "AND pa.deleted = false " +
+            "AND pa.period.startDate <= :endDate " +
+            "AND (pa.period.endDate IS NULL OR pa.period.endDate >= :startDate)")
+    List<ProjectAssignment> findOverlappingAssignments(@Param("projectId") Long projectId,
+                                                        @Param("startDate") LocalDate startDate,
+                                                        @Param("endDate") LocalDate endDate);
 }

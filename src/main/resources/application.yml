@@ -15,4 +15,5 @@ spring:
           model: gpt-4o-mini
   batch:
     job:
-      enabled: false
+      enabled: true
+      name: revenueMonthlySummaryJob
