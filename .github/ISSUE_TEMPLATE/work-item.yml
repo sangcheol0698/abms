@@ -9,7 +9,6 @@ body:
         생성 후 라벨을 아래 규칙대로 반드시 지정하세요.
         - type/* 1개: type/feature, type/bug, type/refactor, type/chore
         - priority/* 1개: priority/P0, priority/P1, priority/P2
-        - status/* 0~1개(선택): status/ready, status/blocked
 
   - type: dropdown
     id: issue_type
