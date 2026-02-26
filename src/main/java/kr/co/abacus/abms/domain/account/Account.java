@@ -33,7 +33,7 @@ public class Account extends AbstractEntity {
     @AttributeOverride(name = "address", column = @Column(name = "username", nullable = false, length = 100))
     private Email username;
 
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Column(name = "password_changed_at", nullable = false)
