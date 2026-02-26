@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,6 +21,7 @@ public abstract class AbstractEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter(onMethod_ = {@Nullable})
+    @Column(comment = "식별자ID")
     private Long id;
 
     @Override

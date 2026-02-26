@@ -9,7 +9,7 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public record Money(BigDecimal amount) {
 
-    private static final int SCALE = 2;
+    private static final int SCALE = 0;
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
     public Money(BigDecimal amount) {
@@ -39,7 +39,7 @@ public record Money(BigDecimal amount) {
 
     public Money subtract(Money other) {
         BigDecimal result = this.amount.subtract(other.amount);
-        validateNonNegative(result);
+        // validateNonNegative(result);
         return new Money(result);
     }
 

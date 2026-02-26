@@ -13,3 +13,7 @@ spring:
       chat:
         options:
           model: gpt-4o-mini
+  batch:
+    job:
+      enabled: true
+      name: revenueMonthlySummaryJob
