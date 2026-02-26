@@ -5,6 +5,7 @@ import java.time.ZoneId;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -43,6 +44,11 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(EmployeeExcelException.class)
     public ProblemDetail handleExcelException(EmployeeExcelException exception) {
         return getProblemDetail(HttpStatus.BAD_REQUEST, exception);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ProblemDetail handleAuthenticationException(AuthenticationException exception) {
+        return getProblemDetail(HttpStatus.UNAUTHORIZED, exception);
     }
 
     private ProblemDetail getProblemDetail(HttpStatus httpStatus, Exception exception) {

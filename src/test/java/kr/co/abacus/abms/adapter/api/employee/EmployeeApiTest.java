@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.adapter.api.employee;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
@@ -412,6 +413,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         var mvcResult = mockMvc.perform(
                         org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                                 .multipart("/api/employees/excel/upload")
+                                .with(user("employee-tester"))
                                 .file(mockFile))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
                 .andReturn();
