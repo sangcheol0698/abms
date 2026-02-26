@@ -57,3 +57,15 @@ body:
         - [ ] 문서 영향이 있으면 반영했다.
     validations:
       required: true
+
+  - type: textarea
+    id: related_issues
+    attributes:
+      label: 관련 이슈 (선택)
+      description: 관련 이슈가 있으면 번호를 연결하세요.
+      placeholder: |
+        Parent #45
+        Refs #123
+        Blocked by #67
+    validations:
+      required: false
