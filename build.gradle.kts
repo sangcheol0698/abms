@@ -68,6 +68,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     mockitoAgent("org.mockito:mockito-core:5.18.0") { isTransitive = false }
 }
+
 dependencyManagement {
     imports {
         mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
@@ -80,7 +81,7 @@ tasks.withType<Test> {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.errorprone  {
+    options.errorprone {
         disableAllChecks = true
         excludedPaths.set(".*/build/generated/.*")
 
