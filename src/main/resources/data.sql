@@ -121,7 +121,8 @@ INSERT INTO tb_employee (id, department_id, email_address, name, position, type,
 (46, 113, 'rainbow2774@abms.co', '차사원', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW', '2022-11-21', '1996-06-16', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
 (47, 105, 'sychoi9089@abms.co', '최사원', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW', '2022-11-21', '1996-07-03', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
 (48, 100, 'kidsan20@abms.co', '윤사원', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW', '2023-11-05', '1996-02-22', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
-(49, 115, 'sdi4932@abms.co', '신사원', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW', '2023-11-05', '2002-12-07', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+(49, 115, 'sdi4932@abms.co', '신사원', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW', '2023-11-05', '2002-12-07', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
+(50, 115, 'tkdcjf38@iabacus.co.kr', '박상철', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW', '2023-11-05', '2002-12-07', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
 
 
 -- ---------------------------------------------------------
