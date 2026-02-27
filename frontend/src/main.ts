@@ -7,9 +7,11 @@ import '@/index.css';
 import '@/assets/fonts.css';
 import { configureContainer } from '@/core/di/container';
 import { initializeTheme } from '@/core/composables';
+import { registerAuthHttpErrorHandler } from '@/features/auth/registerAuthHttpErrorHandler';
 
 configureContainer();
 initializeTheme();
+registerAuthHttpErrorHandler(router);
 
 const app = createApp(App);
 app.use(createPinia());
