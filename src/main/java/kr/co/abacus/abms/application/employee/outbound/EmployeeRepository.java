@@ -18,6 +18,8 @@ public interface EmployeeRepository extends Repository<Employee, Long>, CustomEm
 
     boolean existsByEmail(Email email);
 
+    Optional<Employee> findByEmailAndDeletedFalse(Email email);
+
     Optional<Employee> findById(Long id);
 
     Optional<Employee> findByIdAndDeletedFalse(Long id);

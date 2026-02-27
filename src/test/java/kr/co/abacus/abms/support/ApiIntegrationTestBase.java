@@ -1,5 +1,7 @@
 package kr.co.abacus.abms.support;
 
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,7 +30,9 @@ public abstract class ApiIntegrationTestBase extends IntegrationTestBase {
     @BeforeEach
     void setUpRestTestClient(WebApplicationContext applicationContext) {
         restTestClient = RestTestClient.bindToApplicationContext(applicationContext).build();
-        mockMvc = MockMvcBuilders.webAppContextSetup(applicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(applicationContext)
+                .apply(springSecurity())
+                .build();
     }
 
 }

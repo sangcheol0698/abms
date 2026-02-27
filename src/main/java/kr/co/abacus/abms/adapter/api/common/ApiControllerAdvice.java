@@ -5,12 +5,15 @@ import java.time.ZoneId;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
+import kr.co.abacus.abms.domain.account.AccountAlreadyExistsException;
+import kr.co.abacus.abms.domain.auth.InvalidRegistrationTokenException;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.EmployeeExcelException;
@@ -29,7 +32,13 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, exception);
     }
 
-    @ExceptionHandler({DuplicateEmailException.class, ProjectCodeDuplicateException.class, InvalidEmployeeStatusException.class})
+    @ExceptionHandler({
+            DuplicateEmailException.class,
+            ProjectCodeDuplicateException.class,
+            InvalidEmployeeStatusException.class,
+            AccountAlreadyExistsException.class,
+            InvalidRegistrationTokenException.class
+    })
     public ProblemDetail handleDuplicateException(Exception exception) {
         return getProblemDetail(HttpStatus.BAD_REQUEST, exception);
     }
@@ -43,6 +52,11 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(EmployeeExcelException.class)
     public ProblemDetail handleExcelException(EmployeeExcelException exception) {
         return getProblemDetail(HttpStatus.BAD_REQUEST, exception);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ProblemDetail handleAuthenticationException(AuthenticationException exception) {
+        return getProblemDetail(HttpStatus.UNAUTHORIZED, exception);
     }
 
     private ProblemDetail getProblemDetail(HttpStatus httpStatus, Exception exception) {

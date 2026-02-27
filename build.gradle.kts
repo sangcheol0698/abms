@@ -39,6 +39,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
     implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation("org.springframework.boot:spring-boot-starter-security")
 
     runtimeOnly("com.h2database:h2")
     runtimeOnly("com.mysql:mysql-connector-j")
@@ -61,11 +62,13 @@ dependencies {
     errorprone("com.uber.nullaway:nullaway:0.12.3")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.mockito:mockito-core:5.18.0")
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     mockitoAgent("org.mockito:mockito-core:5.18.0") { isTransitive = false }
 }
+
 dependencyManagement {
     imports {
         mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
@@ -78,7 +81,7 @@ tasks.withType<Test> {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.errorprone  {
+    options.errorprone {
         disableAllChecks = true
         excludedPaths.set(".*/build/generated/.*")
 
