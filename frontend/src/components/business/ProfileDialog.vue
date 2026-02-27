@@ -50,6 +50,9 @@ import {
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { appContainer } from '@/core/di/container';
+import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { clearStoredUser } from '@/features/auth/session';
 
 const props = withDefaults(
   defineProps<{
@@ -71,6 +74,7 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
+const authRepository = appContainer.resolve(AuthRepository);
 
 const userInitials = computed(() => props.user.name?.charAt(0)?.toUpperCase() ?? 'U');
 
@@ -79,9 +83,14 @@ function handleOpenChange(value: boolean) {
 }
 
 async function logout() {
-  localStorage.removeItem('user');
-  localStorage.removeItem('employee');
-  emit('update:open', false);
-  await router.push('/auths/login');
+  try {
+    await authRepository.logout();
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    clearStoredUser();
+    emit('update:open', false);
+    await router.push('/auths/login');
+  }
 }
 </script>

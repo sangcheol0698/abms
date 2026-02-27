@@ -70,6 +70,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { appContainer } from '@/core/di/container';
+import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { clearStoredUser } from '@/features/auth/session';
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 
@@ -89,6 +92,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const router = useRouter();
+const authRepository = appContainer.resolve(AuthRepository);
 
 function openProfileDialog() {
   props.onOpenProfileDialog();
@@ -96,12 +100,12 @@ function openProfileDialog() {
 
 async function logout() {
   try {
-    // AuthRepository를 사용한 로그아웃 로직은 원래 구현에 따라 추가
-    localStorage.removeItem('user');
-    localStorage.removeItem('employee');
-    await router.push('/auths/login');
+    await authRepository.logout();
   } catch (error) {
     console.error('Logout error:', error);
+  } finally {
+    clearStoredUser();
+    await router.push('/auths/login');
   }
 }
 </script>

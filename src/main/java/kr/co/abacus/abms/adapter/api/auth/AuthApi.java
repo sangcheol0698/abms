@@ -4,17 +4,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.adapter.api.auth.dto.AuthMeResponse;
 import kr.co.abacus.abms.adapter.api.auth.dto.LoginRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationConfirmRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationRequest;
+import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.auth.inbound.AuthManager;
 
 @RequiredArgsConstructor
@@ -22,6 +26,7 @@ import kr.co.abacus.abms.application.auth.inbound.AuthManager;
 public class AuthApi {
 
     private final AuthManager authManager;
+    private final AuthFinder authFinder;
     private final SecurityContextRepository securityContextRepository;
 
     @PostMapping("/api/auth/login")
@@ -46,6 +51,11 @@ public class AuthApi {
     @PostMapping("/api/auth/registration-confirmations")
     public void confirmRegistration(@RequestBody @Valid RegistrationConfirmRequest request) {
         authManager.confirmRegistration(request.toCommand());
+    }
+
+    @GetMapping("/api/auth/me")
+    public AuthMeResponse me(Authentication authentication) {
+        return AuthMeResponse.from(authFinder.getCurrentUser(authentication.getName()));
     }
 
 }
