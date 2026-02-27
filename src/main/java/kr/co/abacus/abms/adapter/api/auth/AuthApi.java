@@ -1,18 +1,20 @@
 package kr.co.abacus.abms.adapter.api.auth;
 
-import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.SecurityContextRepository;
 
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.api.auth.dto.LoginRequest;
+import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationConfirmRequest;
+import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationRequest;
 import kr.co.abacus.abms.application.auth.inbound.AuthManager;
 
 @RequiredArgsConstructor
@@ -34,6 +36,16 @@ public class AuthApi {
                 httpServletRequest,
                 httpServletResponse
         );
+    }
+
+    @PostMapping("/api/auth/registration-requests")
+    public void requestRegistration(@RequestBody @Valid RegistrationRequest request) {
+        authManager.requestRegistration(request.toCommand());
+    }
+
+    @PostMapping("/api/auth/registration-confirmations")
+    public void confirmRegistration(@RequestBody @Valid RegistrationConfirmRequest request) {
+        authManager.confirmRegistration(request.toCommand());
     }
 
 }
