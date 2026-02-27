@@ -1,4 +1,15 @@
 spring:
+  mail:
+    host: localhost
+    port: 1025
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
   ai:
     openai:
       api-key: test-api-key
@@ -8,3 +19,10 @@ spring:
   sql:
     init:
       mode: never
+
+app:
+  auth:
+    registration-mail:
+      from: no-reply@iabacus.co.kr
+      subject: "[ABMS] 회원가입 링크 안내"
+      confirm-url: http://localhost:5173/auths/registration-confirm
