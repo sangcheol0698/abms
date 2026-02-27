@@ -36,7 +36,10 @@ public class SecurityConfig {
                         .securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                                "/api/auth/**",
+                                "/api/auth/login",
+                                "/api/auth/registration-requests",
+                                "/api/auth/registration-confirmations",
+                                "/api/auth/logout",
                                 "/actuator/health"
                         ).permitAll()
                         .anyRequest().authenticated()

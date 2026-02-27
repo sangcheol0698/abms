@@ -49,7 +49,8 @@ class AuthApiTest extends ApiIntegrationTestBase {
 
     @BeforeEach
     void setUpAccount() {
-        accountRepository.save(Account.create(9_999L, USERNAME, passwordEncoder.encode(PASSWORD)));
+        Employee employee = employeeRepository.save(createEmployee(USERNAME, "인증사용자"));
+        accountRepository.save(Account.create(employee.getIdOrThrow(), USERNAME, passwordEncoder.encode(PASSWORD)));
         flushAndClear();
     }
 
@@ -77,6 +78,27 @@ class AuthApiTest extends ApiIntegrationTestBase {
 
         mockMvc.perform(get("/api/employees/positions").session(session))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("로그인 후 현재 사용자 정보를 조회할 수 있다")
+    void should_getCurrentUser_whenAuthenticated() throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", PASSWORD
+                        ))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+
+        mockMvc.perform(get("/api/auth/me").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(USERNAME))
+                .andExpect(jsonPath("$.name").value("인증사용자"));
     }
 
     @Test
@@ -161,6 +183,31 @@ class AuthApiTest extends ApiIntegrationTestBase {
                         .content(toJson(Map.of(
                                 "token", "invalid-token",
                                 "password", "Password123!"
+                        ))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("회원가입 확정 비밀번호가 정책에 맞지 않으면 400을 반환한다")
+    void should_returnBadRequest_whenPasswordIsWeak() throws Exception {
+        String email = "weak-password-user@iabacus.co.kr";
+        employeeRepository.save(createEmployee(email, "비번약함직원"));
+        flushAndClear();
+
+        mockMvc.perform(post("/api/auth/registration-requests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("email", email))))
+                .andExpect(status().isOk());
+
+        RegistrationToken registrationToken = registrationTokenRepository
+                .findFirstByEmailOrderByCreatedAtDesc(new Email(email))
+                .orElseThrow();
+
+        mockMvc.perform(post("/api/auth/registration-confirmations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "token", registrationToken.getToken(),
+                                "password", "password1234"
                         ))))
                 .andExpect(status().isBadRequest());
     }
