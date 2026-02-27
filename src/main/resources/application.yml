@@ -17,3 +17,21 @@ spring:
     job:
       enabled: true
       name: revenueMonthlySummaryJob
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  auth:
+    registration-mail:
+      from: ${APP_AUTH_REGISTRATION_MAIL_FROM}
+      subject: ${APP_AUTH_REGISTRATION_MAIL_SUBJECT}
+      confirm-url: ${APP_AUTH_REGISTRATION_MAIL_CONFIRM_URL}

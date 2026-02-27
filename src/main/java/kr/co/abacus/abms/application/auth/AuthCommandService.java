@@ -16,6 +16,7 @@ import kr.co.abacus.abms.application.auth.dto.RegistrationRequestCommand;
 import kr.co.abacus.abms.application.auth.inbound.AuthManager;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.auth.outbound.CredentialAuthenticator;
+import kr.co.abacus.abms.application.auth.outbound.RegistrationLinkSender;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationTokenRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.account.Account;
@@ -35,6 +36,7 @@ public class AuthCommandService implements AuthManager {
     private final AccountRepository accountRepository;
     private final EmployeeRepository employeeRepository;
     private final RegistrationTokenRepository registrationTokenRepository;
+    private final RegistrationLinkSender registrationLinkSender;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -45,13 +47,23 @@ public class AuthCommandService implements AuthManager {
         Employee employee = employeeRepository.findByEmailAndDeletedFalse(email)
                 .orElseThrow(() -> new EmployeeNotFoundException("가입 가능한 직원이 아닙니다: " + command.email()));
 
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(30);
+
         registrationTokenRepository.deleteAllByEmail(email);
+
         registrationTokenRepository.save(RegistrationToken.create(
                 employee.getIdOrThrow(),
                 command.email(),
-                UUID.randomUUID().toString(),
-                LocalDateTime.now().plusMinutes(30)
+                token,
+                expiresAt
         ));
+
+        try {
+            registrationLinkSender.sendRegistrationLink(email, token, expiresAt);
+        } catch (RuntimeException exception) {
+            throw new RegistrationMailSendException("가입 메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.", exception);
+        }
     }
 
     @Override
