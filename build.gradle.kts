@@ -1,104 +1,109 @@
 import net.ltgt.gradle.errorprone.errorprone
+import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension
 
 plugins {
+    base
+    id("org.springframework.boot") version "4.0.2" apply false
+    id("io.spring.dependency-management") version "1.1.7" apply false
+    id("net.ltgt.errorprone") version "4.3.0" apply false
     java
-    id("org.springframework.boot") version "4.0.2"
-    id("io.spring.dependency-management") version "1.1.7"
-    id("net.ltgt.errorprone") version "4.3.0"
 }
 
 group = "kr.co.abacus"
 version = "0.0.2-SNAPSHOT"
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-}
+val springAiVersion = "2.0.0-M2"
 
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
-    }
-}
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "io.spring.dependency-management")
+    apply(plugin = "net.ltgt.errorprone")
 
-repositories {
-    mavenCentral()
-}
+    group = rootProject.group
+    version = rootProject.version
 
-extra["snippetsDir"] = file("build/generated-snippets")
-val springAiVersion by extra("2.0.0-M2")
-
-var mockitoAgent: Configuration = configurations.create("mockitoAgent")
-val p6spyVersion by extra("2.0.0")
-
-dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-mail")
-    implementation("org.springframework.ai:spring-ai-starter-model-openai")
-    implementation("org.springframework.boot:spring-boot-starter-batch")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-
-    runtimeOnly("com.h2database:h2")
-    runtimeOnly("com.mysql:mysql-connector-j")
-
-    implementation("io.github.openfeign.querydsl:querydsl-jpa:7.0")
-    annotationProcessor("io.github.openfeign.querydsl:querydsl-apt:7.0:jakarta")
-
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
-    implementation("com.github.gavlyukovskiy:p6spy-spring-boot-starter:${p6spyVersion}")
-
-    implementation("org.apache.poi:poi:5.4.1")
-    implementation("org.apache.poi:poi-ooxml:5.4.1")
-
-    implementation("com.github.ben-manes.caffeine:caffeine")
-
-    compileOnly("org.jspecify:jspecify:1.0.0")
-    errorprone("com.google.errorprone:error_prone_core:2.42.0")
-    errorprone("com.uber.nullaway:nullaway:0.12.3")
-
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.mockito:mockito-core:5.18.0")
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    mockitoAgent("org.mockito:mockito-core:5.18.0") { isTransitive = false }
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
-    }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-    jvmArgs("-javaagent:${mockitoAgent.asPath}")
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.errorprone {
-        disableAllChecks = true
-        excludedPaths.set(".*/build/generated/.*")
-
-        option("NullAway:OnlyNullMarked", "true")
-        error("NullAway")
-        option("NullAway:JSpecifyMode", "true")
-        option("NullAway:ExcludedFieldAnnotations", "jakarta.persistence.*")
+    repositories {
+        mavenCentral()
     }
 
-    if (name.contains("test", ignoreCase = true)) {
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    extensions.configure<DependencyManagementExtension> {
+        imports {
+            mavenBom("org.springframework.boot:spring-boot-dependencies:4.0.2")
+            mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
+        }
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom(configurations.annotationProcessor.get())
+        }
+    }
+
+    val mockitoAgent by configurations.creating
+
+    dependencies {
+        compileOnly("org.projectlombok:lombok")
+        annotationProcessor("org.projectlombok:lombok")
+        compileOnly("org.jspecify:jspecify:1.0.0")
+
+        add("errorprone", "com.google.errorprone:error_prone_core:2.42.0")
+        add("errorprone", "com.uber.nullaway:nullaway:0.12.3")
+
+        testImplementation("org.junit.jupiter:junit-jupiter")
+        testImplementation("org.assertj:assertj-core")
+        testImplementation("org.springframework:spring-test")
+        testImplementation("org.mockito:mockito-core:5.18.0")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+        mockitoAgent("org.mockito:mockito-core:5.18.0") { isTransitive = false }
+    }
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+        jvmArgs("-javaagent:${mockitoAgent.asPath}")
+    }
+
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.add("-parameters")
+
         options.errorprone {
-            disable("NullAway")
+            disableAllChecks = true
+            excludedPaths.set(".*/build/generated/.*")
+            option("NullAway:OnlyNullMarked", "true")
+            error("NullAway")
+            option("NullAway:JSpecifyMode", "true")
+            option("NullAway:ExcludedFieldAnnotations", "jakarta.persistence.*")
+        }
+
+        if (name.contains("test", ignoreCase = true)) {
+            options.errorprone {
+                disable("NullAway")
+            }
         }
     }
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+tasks.register("bootRun") {
+    group = "application"
+    description = "Runs API application module"
+    dependsOn(":abms-api-boot:bootRun")
+}
+
+tasks.register("bootRunBatch") {
+    group = "application"
+    description = "Runs batch application module"
+    dependsOn(":abms-batch-boot:bootRun")
+}
+
+tasks.named("build") {
+    dependsOn(subprojects.map { "${it.path}:build" })
+}
+
+tasks.named("test") {
+    dependsOn(subprojects.map { "${it.path}:test" })
 }

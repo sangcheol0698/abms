@@ -14,6 +14,7 @@ export class RemoteChatRepository implements ChatRepository {
   async sendMessage(request: ChatRequest): Promise<string> {
     const response = await fetch(`${this.baseUrl}/api/v1/chat/message`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -80,6 +81,7 @@ export class RemoteChatRepository implements ChatRepository {
 
       void fetchEventSource(`${this.baseUrl}/api/v1/chat/stream`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -154,7 +156,9 @@ export class RemoteChatRepository implements ChatRepository {
   }
 
   async getRecentSessions(limit = 20): Promise<ChatSession[]> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions?limit=${limit}`);
+    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions?limit=${limit}`, {
+      credentials: 'include',
+    });
 
     if (!response.ok) {
       throw new Error(`Server responded with status ${response.status}`);
@@ -165,7 +169,9 @@ export class RemoteChatRepository implements ChatRepository {
   }
 
   async getFavoriteSessions(): Promise<ChatSession[]> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/favorites`);
+    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/favorites`, {
+      credentials: 'include',
+    });
 
     if (!response.ok) {
       throw new Error(`Server responded with status ${response.status}`);
@@ -176,7 +182,9 @@ export class RemoteChatRepository implements ChatRepository {
   }
 
   async getSessionDetail(sessionId: string): Promise<ChatSessionDetail> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}`);
+    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}`, {
+      credentials: 'include',
+    });
 
     if (!response.ok) {
       throw new Error(`Server responded with status ${response.status}`);
@@ -189,6 +197,7 @@ export class RemoteChatRepository implements ChatRepository {
   async toggleFavorite(sessionId: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}/favorite`, {
       method: 'POST',
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -199,6 +208,7 @@ export class RemoteChatRepository implements ChatRepository {
   async updateSessionTitle(sessionId: string, title: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}/title`, {
       method: 'PATCH',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -213,6 +223,7 @@ export class RemoteChatRepository implements ChatRepository {
   async deleteSession(sessionId: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}`, {
       method: 'DELETE',
+      credentials: 'include',
     });
 
     if (!response.ok) {
