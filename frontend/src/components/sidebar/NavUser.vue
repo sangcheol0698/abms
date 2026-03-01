@@ -48,18 +48,55 @@
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem @click="logout">
+          <DropdownMenuItem @click="openLogoutDialog">
             <LogOut />
             로그아웃
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog :open="isLogoutDialogOpen" @update:open="handleLogoutDialogOpenChange">
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>로그아웃 하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              현재 세션이 종료되며 로그인 화면으로 이동합니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              :disabled="isLoggingOut"
+              @click="handleLogoutDialogOpenChange(false)"
+            >
+              취소
+            </AlertDialogCancel>
+            <AlertDialogAction
+              class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              :disabled="isLoggingOut"
+              @pointerdown.prevent
+              @click="confirmLogout"
+            >
+              {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarMenuItem>
   </SidebarMenu>
 </template>
 
 <script setup lang="ts">
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +111,7 @@ import { appContainer } from '@/core/di/container';
 import AuthRepository from '@/features/auth/repository/AuthRepository';
 import { clearStoredUser } from '@/features/auth/session';
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from 'lucide-vue-next';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 // Props
@@ -93,17 +131,36 @@ const props = withDefaults(defineProps<Props>(), {
 
 const router = useRouter();
 const authRepository = appContainer.resolve(AuthRepository);
+const isLogoutDialogOpen = ref(false);
+const isLoggingOut = ref(false);
 
 function openProfileDialog() {
   props.onOpenProfileDialog();
 }
 
-async function logout() {
+function openLogoutDialog() {
+  isLogoutDialogOpen.value = true;
+}
+
+function handleLogoutDialogOpenChange(value: boolean) {
+  if (isLoggingOut.value && !value) {
+    return;
+  }
+  isLogoutDialogOpen.value = value;
+}
+
+async function confirmLogout() {
+  if (isLoggingOut.value) {
+    return;
+  }
+  isLoggingOut.value = true;
   try {
     await authRepository.logout();
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
+    isLoggingOut.value = false;
+    isLogoutDialogOpen.value = false;
     clearStoredUser();
     await router.push('/auths/login');
   }

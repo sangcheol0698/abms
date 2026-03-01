@@ -31,15 +31,49 @@
 
       <DialogFooter class="gap-2">
         <Button variant="outline" size="sm" @click="handleOpenChange(false)">닫기</Button>
-        <Button variant="destructive" size="sm" @click="logout">로그아웃</Button>
+        <Button variant="destructive" size="sm" @click="openLogoutDialog">로그아웃</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+  <AlertDialog :open="isLogoutDialogOpen" @update:open="handleLogoutDialogOpenChange">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>로그아웃 하시겠습니까?</AlertDialogTitle>
+        <AlertDialogDescription>
+          현재 세션이 종료되며 로그인 화면으로 이동합니다.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel :disabled="isLoggingOut" @click="handleLogoutDialogOpenChange(false)">
+          취소
+        </AlertDialogCancel>
+        <AlertDialogAction
+          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          :disabled="isLoggingOut"
+          @pointerdown.prevent
+          @click="confirmLogout"
+        >
+          {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -75,19 +109,41 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const authRepository = appContainer.resolve(AuthRepository);
+const isLogoutDialogOpen = ref(false);
+const isLoggingOut = ref(false);
 
 const userInitials = computed(() => props.user.name?.charAt(0)?.toUpperCase() ?? 'U');
 
 function handleOpenChange(value: boolean) {
+  if (!value) {
+    isLogoutDialogOpen.value = false;
+  }
   emit('update:open', value);
 }
 
-async function logout() {
+function openLogoutDialog() {
+  isLogoutDialogOpen.value = true;
+}
+
+function handleLogoutDialogOpenChange(value: boolean) {
+  if (isLoggingOut.value && !value) {
+    return;
+  }
+  isLogoutDialogOpen.value = value;
+}
+
+async function confirmLogout() {
+  if (isLoggingOut.value) {
+    return;
+  }
+  isLoggingOut.value = true;
   try {
     await authRepository.logout();
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
+    isLoggingOut.value = false;
+    isLogoutDialogOpen.value = false;
     clearStoredUser();
     emit('update:open', false);
     await router.push('/auths/login');

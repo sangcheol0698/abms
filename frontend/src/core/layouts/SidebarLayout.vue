@@ -4,7 +4,7 @@
       <AppSidebar :onOpenProfileDialog="openProfileDialog" />
       <SidebarInset class="min-h-0 min-w-0 overflow-hidden">
         <header
-          class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 md:px-8 lg:px-12 backdrop-blur"
+          class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-2 md:px-4 lg:px-6 backdrop-blur"
         >
           <div class="flex flex-1 items-center gap-3">
             <SidebarTrigger class="-ml-1" />
