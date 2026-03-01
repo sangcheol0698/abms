@@ -42,16 +42,22 @@ ABMS is an enterprise-grade business management system that demonstrates hexagon
 
 ### Architecture
 
-The project follows **Hexagonal Architecture** (Ports & Adapters) with three main layers:
+The project follows **Hexagonal Architecture** (Ports & Adapters) and is organized as a Gradle multi-module backend:
 
 ```text
-kr.co.abacus.abms/
-├── domain/           # Core business logic, entities, value objects
-├── application/      # Use cases, application services, port interfaces (inbound/outbound)
-└── adapter/          # External interfaces (REST API, persistence, integrations, security)
+abms/
+├── abms-domain               # Domain entities, value objects, domain rules
+├── abms-application          # Use cases and inbound/outbound ports
+├── abms-adapter-web          # REST API, request/response DTOs, HTTP security config
+├── abms-adapter-persistence  # JPA/QueryDSL persistence adapters
+├── abms-adapter-integration  # Mail/cache/AI/security services and external integrations
+├── abms-adapter-batch        # Spring Batch jobs/steps
+├── abms-api-boot             # API runtime assembly and boot entrypoint
+├── abms-batch-boot           # Batch runtime assembly and boot entrypoint
+└── frontend                  # Vue 3 frontend (outside Gradle multi-module scope)
 ```
 
-Layer rules are enforced by ArchUnit tests to maintain architectural integrity.
+Layer dependency rules are enforced by ArchUnit tests to maintain architectural integrity.
 
 ## Requirements
 
@@ -69,7 +75,7 @@ The backend is separated by Spring profiles:
 - `local` (default): uses project root `.env` (`spring.config.import`)
 - `dev`: uses OS/CI environment variables
 - `prod`: uses OS/CI environment variables
-- `test`: uses `src/test/resources/application-test.yml`
+- `test`: uses `abms-api-boot/src/test/resources/application-test.yml`
 
 Create local env from template:
 
@@ -131,23 +137,28 @@ This will:
 ### 5. Run the Application
 
 ```bash
-# local profile (default)
+# API runtime (root alias)
 ./gradlew bootRun
 
-# dev profile
-./gradlew bootRun --args='--spring.profiles.active=dev'
+# API runtime (direct module task)
+./gradlew :abms-api-boot:bootRun
 
-# prod profile
-./gradlew bootRun --args='--spring.profiles.active=prod'
+# Batch runtime (root alias)
+./gradlew bootRunBatch
+
+# Batch runtime with explicit job name
+./gradlew :abms-batch-boot:bootRun --args='--spring.batch.job.name=revenueMonthlySummaryJob'
 ```
 
 The server will start on `http://localhost:8080`.
 
-**Local Profile Features:**
+**Runtime Defaults:**
 - Virtual threads for improved concurrency
 - JPA schema auto-creation (`ddl-auto: create`)
 - Sample data initialization (via `InitData` class in `local` profile)
 - P6Spy SQL logging with actual parameters
+- API boot default: `spring.batch.job.enabled=false`
+- Batch boot default: `spring.batch.job.enabled=true`
 
 ### 6. Frontend Development
 
@@ -168,18 +179,23 @@ The frontend development server will start on `http://localhost:5173`.
 # Build project
 ./gradlew build
 
-# Run application
+# Run API application (root alias)
 ./gradlew bootRun
 
-# Run application with specific profile
-./gradlew bootRun --args='--spring.profiles.active=dev'
-./gradlew bootRun --args='--spring.profiles.active=prod'
+# Run API application (direct module task)
+./gradlew :abms-api-boot:bootRun
+
+# Run Batch application (root alias)
+./gradlew bootRunBatch
+
+# Run Batch application with explicit job
+./gradlew :abms-batch-boot:bootRun --args='--spring.batch.job.name=employeeCostJob'
 
 # Run tests
 ./gradlew test
 
 # Run specific test class
-./gradlew test --tests "kr.co.abacus.abms.domain.shared.MoneyTest"
+./gradlew :abms-domain:test --tests "kr.co.abacus.abms.domain.shared.MoneyTest"
 
 # Clean build artifacts
 ./gradlew clean
@@ -228,12 +244,16 @@ docker compose down -v
 Tests follow the hexagonal architecture structure:
 
 ```text
-src/test/java/kr/co/abacus/abms/
-├── domain/                    # Domain model tests (unit tests)
-├── application/               # Application service tests (integration)
-├── adapter/api/               # API tests (integration)
-├── support/                   # Test base classes and utilities
-└── HexagonalArchitectureTest.java  # ArchUnit tests
+abms-domain/src/test/java/kr/co/abacus/abms/
+└── domain/                            # Domain model unit tests
+
+abms-api-boot/src/test/java/kr/co/abacus/abms/
+├── adapter/api/                       # API integration tests
+├── support/                           # Integration test base/utilities
+└── HexagonalArchitectureTest.java     # ArchUnit tests
+
+abms-batch-boot/src/test/java/kr/co/abacus/abms/
+└── adapter/batch/                     # Batch integration tests
 ```
 
 ### Test Types
@@ -248,36 +268,14 @@ src/test/java/kr/co/abacus/abms/
 ### Backend Structure
 
 ```text
-src/main/java/kr/co/abacus/abms/
-├── AbmsApplication.java           # Spring Boot entry point
-├── domain/                        # Domain layer (business logic)
-│   ├── employee/                  # Employee aggregate
-│   ├── department/                # Department aggregate
-│   ├── payroll/                   # Payroll aggregate
-│   ├── project/                   # Project aggregate
-│   ├── contract/                  # Contract aggregate
-│   ├── account/                   # Account aggregate
-│   ├── party/                     # Party aggregate
-│   ├── positionhistory/           # Position history aggregate
-│   ├── projectassignment/         # Project assignment aggregate
-│   ├── chat/                      # Chat aggregate
-│   └── shared/                    # Shared value objects (Money, Period, etc.)
-├── application/                   # Application layer (use cases)
-│   ├── employee/
-│   │   ├── inbound/               # Use cases (Manager, Finder)
-│   │   ├── outbound/              # Ports (repository interfaces)
-│   │   └── dto/                   # Commands/queries
-│   ├── department/
-│   ├── project/
-│   ├── contract/
-│   ├── party/
-│   └── chat/                      # AI chat service
-└── adapter/                       # Adapter layer (external interfaces)
-    ├── api/                       # REST controllers and DTOs
-    │   └── common/InitData.java   # Sample data initialization
-    ├── infrastructure/            # JPA repository implementations
-    ├── security/                  # Security configuration
-    └── integration/               # External API clients
+abms-domain/src/main/java/kr/co/abacus/abms/domain
+abms-application/src/main/java/kr/co/abacus/abms/application
+abms-adapter-web/src/main/java/kr/co/abacus/abms/adapter
+abms-adapter-persistence/src/main/java/kr/co/abacus/abms/adapter
+abms-adapter-integration/src/main/java/kr/co/abacus/abms/adapter
+abms-adapter-batch/src/main/java/kr/co/abacus/abms/adapter
+abms-api-boot/src/main/java/kr/co/abacus/abms/AbmsApiApplication.java
+abms-batch-boot/src/main/java/kr/co/abacus/abms/AbmsBatchApplication.java
 ```
 
 ### Frontend Structure
@@ -320,4 +318,4 @@ frontend/
 
 ---
 
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-03-01
