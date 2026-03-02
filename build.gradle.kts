@@ -14,6 +14,10 @@ version = "0.0.2-SNAPSHOT"
 
 val springAiVersion = "2.0.0-M2"
 
+tasks.named("jar") {
+    enabled = false
+}
+
 subprojects {
     apply(plugin = "java")
     apply(plugin = "io.spring.dependency-management")
@@ -84,6 +88,12 @@ subprojects {
             options.errorprone {
                 disable("NullAway")
             }
+        }
+    }
+
+    plugins.withId("org.springframework.boot") {
+        tasks.named("jar") {
+            enabled = false
         }
     }
 }
