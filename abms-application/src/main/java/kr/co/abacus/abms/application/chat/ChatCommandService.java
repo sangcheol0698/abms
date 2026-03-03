@@ -114,11 +114,9 @@ public class ChatCommandService {
         this.chatTitleService = chatTitleService;
     }
 
-    public Mono<ChatStreamResult> streamMessage(ChatSendCommand command) {
+    public Mono<ChatStreamResult> streamMessage(Long accountId, ChatSendCommand command) {
         return Mono.fromCallable(() -> {
-                    boolean isNewSession = isNewSession(command.sessionId());
-                    String conversationId = getOrCreateConversationId(command.sessionId());
-                    return new SessionInfo(isNewSession, conversationId);
+                    return getOrCreateConversation(accountId, command.sessionId());
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(sessionInfo -> {
@@ -148,7 +146,7 @@ public class ChatCommandService {
                                 toolCallSink.tryEmitError(e);
                             })
                             .doOnComplete(() -> {
-                                chatTitleService.refineTitleAsync(conversationId);
+                                chatTitleService.refineTitleAsync(accountId, conversationId);
                             })
                             .doFinally(signalType -> {
                                 employeeInfoTools.setToolCallNotifier(null);
@@ -163,16 +161,17 @@ public class ChatCommandService {
                             });
 
                     if (isNewSession) {
-                        chatTitleService.applyInitialTitle(conversationId, command.content());
+                        chatTitleService.applyInitialTitle(accountId, conversationId, command.content());
                     }
 
                     return new ChatStreamResult(conversationId, contentStream, toolCallSink.asFlux());
                 });
     }
 
-    public String sendMessage(ChatSendCommand command) {
-        boolean isNewSession = isNewSession(command.sessionId());
-        String conversationId = getOrCreateConversationId(command.sessionId());
+    public String sendMessage(Long accountId, ChatSendCommand command) {
+        SessionInfo sessionInfo = getOrCreateConversation(accountId, command.sessionId());
+        boolean isNewSession = sessionInfo.isNewSession();
+        String conversationId = sessionInfo.conversationId();
         EmployeeInfoTools employeeInfoTools = employeeInfoToolsProvider.getObject();
         OrganizationTools organizationTools = organizationToolsProvider.getObject();
         BusinessQueryTools businessQueryTools = businessQueryToolsProvider.getObject();
@@ -185,49 +184,37 @@ public class ChatCommandService {
                 .content();
 
         if (isNewSession) {
-            chatTitleService.applyInitialTitle(conversationId, command.content());
+            chatTitleService.applyInitialTitle(accountId, conversationId, command.content());
         }
-        chatTitleService.refineTitleAsync(conversationId);
+        chatTitleService.refineTitleAsync(accountId, conversationId);
 
         return response != null ? response : "";
     }
 
-    private boolean isNewSession(@Nullable String sessionId) {
-        if (sessionId == null || sessionId.isBlank()) {
-            return true;
-        }
-        return chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId).isEmpty();
-    }
-
-    private String getOrCreateConversationId(@Nullable String sessionId) {
+    private SessionInfo getOrCreateConversation(Long accountId, @Nullable String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             String newSessionId = UUID.randomUUID().toString();
-            ChatSession newSession = ChatSession.create("새로운 대화", newSessionId);
+            ChatSession newSession = ChatSession.create("새로운 대화", newSessionId, accountId);
             chatSessionRepository.save(newSession);
-            return newSessionId;
+            return new SessionInfo(true, newSessionId);
         }
 
-        // Ensure session exists in our metadata table
-        chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId)
-                .orElseGet(() -> chatSessionRepository.save(ChatSession.create("새로운 대화", sessionId)));
-
-        return sessionId;
+        ChatSession session = findOwnedSession(accountId, sessionId);
+        return new SessionInfo(false, session.getSessionId());
     }
 
     private record SessionInfo(boolean isNewSession, String conversationId) {
 
     }
 
-    public void toggleFavorite(String sessionId) {
-        ChatSession session = chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
+    public void toggleFavorite(Long accountId, String sessionId) {
+        ChatSession session = findOwnedSession(accountId, sessionId);
         session.toggleFavorite();
         chatSessionRepository.save(session);
     }
 
-    public void updateSessionTitle(String sessionId, String title) {
-        ChatSession session = chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
+    public void updateSessionTitle(Long accountId, String sessionId, String title) {
+        ChatSession session = findOwnedSession(accountId, sessionId);
         String normalizedTitle = title.trim();
         if (normalizedTitle.isEmpty()) {
             throw new IllegalArgumentException("세션 제목은 비어 있을 수 없습니다.");
@@ -236,12 +223,16 @@ public class ChatCommandService {
         chatSessionRepository.save(session);
     }
 
-    public void deleteSession(String sessionId) {
-        ChatSession session = chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
+    public void deleteSession(Long accountId, String sessionId) {
+        ChatSession session = findOwnedSession(accountId, sessionId);
         session.softDelete("system");
         chatSessionRepository.save(session);
         chatMemoryRepository.deleteByConversationId(sessionId);
+    }
+
+    private ChatSession findOwnedSession(Long accountId, String sessionId) {
+        return chatSessionRepository.findBySessionIdAndAccountIdAndDeletedFalse(sessionId, accountId)
+                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
     }
 
     private void saveCanceledAssistantMessage(String conversationId, String partialText) {

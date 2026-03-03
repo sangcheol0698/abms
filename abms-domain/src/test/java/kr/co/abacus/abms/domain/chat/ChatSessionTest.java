@@ -11,10 +11,12 @@ class ChatSessionTest {
     @DisplayName("채팅 세션 생성")
     void create() {
         String sessionId = "test-session-id";
-        ChatSession session = ChatSession.create("테스트 대화", sessionId);
+        long accountId = 101L;
+        ChatSession session = ChatSession.create("테스트 대화", sessionId, accountId);
 
         assertThat(session.getTitle()).isEqualTo("테스트 대화");
         assertThat(session.getSessionId()).isEqualTo(sessionId);
+        assertThat(session.getAccountId()).isEqualTo(accountId);
         assertThat(session.getFavorite()).isFalse();
         assertThat(session.getMessages()).isEmpty();
     }
@@ -22,7 +24,7 @@ class ChatSessionTest {
     @Test
     @DisplayName("채팅 세션 제목 수정")
     void updateTitle() {
-        ChatSession session = ChatSession.create("원래 제목", "session-id");
+        ChatSession session = ChatSession.create("원래 제목", "session-id", 101L);
         session.updateTitle("새 제목");
 
         assertThat(session.getTitle()).isEqualTo("새 제목");
@@ -31,7 +33,7 @@ class ChatSessionTest {
     @Test
     @DisplayName("즐겨찾기 토글")
     void toggleFavorite() {
-        ChatSession session = ChatSession.create("테스트 대화", "session-id");
+        ChatSession session = ChatSession.create("테스트 대화", "session-id", 101L);
 
         assertThat(session.getFavorite()).isFalse();
 
@@ -45,7 +47,7 @@ class ChatSessionTest {
     @Test
     @DisplayName("메시지 추가")
     void addMessage() {
-        ChatSession session = ChatSession.create("테스트 대화", "session-id");
+        ChatSession session = ChatSession.create("테스트 대화", "session-id", 101L);
         ChatMessage message = ChatMessage.createUserMessage("안녕하세요", session);
 
         assertThat(session.getMessages()).isEmpty();

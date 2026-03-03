@@ -25,12 +25,12 @@ public class ChatQueryService {
     private final ChatSessionRepository chatSessionRepository;
     private final ChatMemoryRepository chatMemoryRepository;
 
-    public List<ChatSessionSummary> getRecentSessions(int limit) {
-        return chatSessionRepository.findRecentSessions(limit);
+    public List<ChatSessionSummary> getRecentSessions(Long accountId, int limit) {
+        return chatSessionRepository.findRecentSessions(accountId, limit);
     }
 
-    public List<ChatSessionSummary> getFavoriteSessions() {
-        return chatSessionRepository.findAllByFavoriteTrueAndDeletedFalseOrderByUpdatedAtDesc()
+    public List<ChatSessionSummary> getFavoriteSessions(Long accountId) {
+        return chatSessionRepository.findAllByAccountIdAndFavoriteTrueAndDeletedFalseOrderByUpdatedAtDesc(accountId)
                 .stream()
                 .map(session -> new ChatSessionSummary(
                         session.getIdOrThrow(),
@@ -41,8 +41,8 @@ public class ChatQueryService {
                 .toList();
     }
 
-    public ChatSessionDetail getSessionDetail(String sessionId) {
-        ChatSession session = chatSessionRepository.findBySessionIdAndDeletedFalse(sessionId)
+    public ChatSessionDetail getSessionDetail(Long accountId, String sessionId) {
+        ChatSession session = chatSessionRepository.findBySessionIdAndAccountIdAndDeletedFalse(sessionId, accountId)
                 .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
 
         // Read messages from ChatMemory (Spring AI)

@@ -6,6 +6,6 @@ import kr.co.abacus.abms.application.chat.dto.query.ChatSessionSummary;
 
 public interface CustomChatSessionRepository {
 
-    List<ChatSessionSummary> findRecentSessions(int limit);
+    List<ChatSessionSummary> findRecentSessions(Long accountId, int limit);
 
 }

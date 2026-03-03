@@ -10,6 +10,7 @@ import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.account.Account;
+import kr.co.abacus.abms.domain.account.AccountNotFoundException;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.shared.Email;
 
@@ -28,6 +29,14 @@ public class AuthQueryService implements AuthFinder {
         return accountRepository.findByUsername(userEmail)
                 .map(this::toUserInfo)
                 .orElseGet(() -> fallbackUserInfo(userEmail.address()));
+    }
+
+    @Override
+    public Long getCurrentAccountId(String username) {
+        Email userEmail = new Email(username);
+        return accountRepository.findByUsername(userEmail)
+                .map(Account::getIdOrThrow)
+                .orElseThrow(() -> new AccountNotFoundException("계정을 찾을 수 없습니다: " + userEmail.address()));
     }
 
     private AuthenticatedUserInfo toUserInfo(Account account) {

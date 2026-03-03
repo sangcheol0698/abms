@@ -11,9 +11,9 @@ public interface ChatSessionRepository extends CustomChatSessionRepository {
 
     Optional<ChatSession> findById(Long id);
 
-    Optional<ChatSession> findBySessionIdAndDeletedFalse(String sessionId);
+    Optional<ChatSession> findBySessionIdAndAccountIdAndDeletedFalse(String sessionId, Long accountId);
 
-    List<ChatSession> findAllByFavoriteTrueAndDeletedFalseOrderByUpdatedAtDesc();
+    List<ChatSession> findAllByAccountIdAndFavoriteTrueAndDeletedFalseOrderByUpdatedAtDesc(Long accountId);
 
     List<ChatSession> findAllByDeletedFalseOrderByUpdatedAtDesc();
 

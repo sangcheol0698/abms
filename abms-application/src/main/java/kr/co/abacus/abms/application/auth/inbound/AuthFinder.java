@@ -6,4 +6,6 @@ public interface AuthFinder {
 
     AuthenticatedUserInfo getCurrentUser(String username);
 
+    Long getCurrentAccountId(String username);
+
 }

@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import lombok.extern.slf4j.Slf4j;
 
 import kr.co.abacus.abms.domain.account.AccountAlreadyExistsException;
+import kr.co.abacus.abms.domain.account.AccountNotFoundException;
 import kr.co.abacus.abms.domain.auth.InvalidRegistrationTokenException;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
@@ -44,6 +45,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler({EmployeeNotFoundException.class, DepartmentNotFoundException.class, ProjectNotFoundException.class,
+            AccountNotFoundException.class,
             NotificationNotFoundException.class})
     public ProblemDetail handleNotFoundException(Exception exception) {
         return getProblemDetail(HttpStatus.NOT_FOUND, exception);

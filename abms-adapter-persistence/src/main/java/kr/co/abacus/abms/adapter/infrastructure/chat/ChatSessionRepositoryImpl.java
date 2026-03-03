@@ -21,7 +21,7 @@ public class ChatSessionRepositoryImpl implements CustomChatSessionRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ChatSessionSummary> findRecentSessions(int limit) {
+    public List<ChatSessionSummary> findRecentSessions(Long accountId, int limit) {
         return queryFactory
                 .select(Projections.constructor(ChatSessionSummary.class,
                         chatSession.id,
@@ -30,7 +30,9 @@ public class ChatSessionRepositoryImpl implements CustomChatSessionRepository {
                         chatSession.favorite,
                         chatSession.updatedAt))
                 .from(chatSession)
-                .where(chatSession.deleted.isFalse())
+                .where(
+                        chatSession.deleted.isFalse(),
+                        chatSession.accountId.eq(accountId))
                 .orderBy(chatSession.updatedAt.desc())
                 .limit(limit)
                 .fetch();

@@ -586,3 +586,5 @@ VALUES (0, 3166667.00, 316667.00, 158333.00, 3641667.00, '202602', NOW(), NULL, 
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_account(deleted, is_valid, login_fail_count, created_at, deleted_at, employee_id, password_changed_at, updated_at, username, created_by, deleted_by, password, updated_by)
 VALUES (0, 1, 0, NOW(), NULL, 1, NOW(), NOW(), 'test@iabacus.co.kr', 'ABMS_INIT', NULL,'{bcrypt}$2a$10$cYUYTpWDhwzsk.VEhowiduWUjqcfpA.sdL7BjDh3El/splYmywJMm', 'ABMS_INIT');
+INSERT INTO abms.tb_account(deleted, is_valid, login_fail_count, created_at, deleted_at, employee_id, password_changed_at, updated_at, username, created_by, deleted_by, password, updated_by)
+VALUES (0, 1, 0, NOW(), NULL, 2, NOW(), NOW(), 'test2@iabacus.co.kr', 'ABMS_INIT', NULL,'{bcrypt}$2a$10$cYUYTpWDhwzsk.VEhowiduWUjqcfpA.sdL7BjDh3El/splYmywJMm', 'ABMS_INIT');
