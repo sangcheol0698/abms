@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:../.env.dev[.properties]
   docker:
     compose:
       enabled: false
