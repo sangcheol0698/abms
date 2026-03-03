@@ -7,9 +7,21 @@ import type {
 } from '../entity/ChatMessage';
 import { normalizeChatSession, normalizeChatSessionDetail } from '../entity/ChatMessage';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { emitAuthHttpError } from '@/features/auth/http-auth-error';
 
 export class RemoteChatRepository implements ChatRepository {
   private baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+
+  private notifyAuthorizationError(status: number): void {
+    if (status === 401 || status === 403) {
+      emitAuthHttpError({ status });
+    }
+  }
+
+  private throwHttpError(status: number): never {
+    this.notifyAuthorizationError(status);
+    throw new Error(`Server responded with status ${status}`);
+  }
 
   async sendMessage(request: ChatRequest): Promise<string> {
     const response = await fetch(`${this.baseUrl}/api/v1/chat/message`, {
@@ -22,7 +34,7 @@ export class RemoteChatRepository implements ChatRepository {
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
+      this.throwHttpError(response.status);
     }
 
     const data = await response.json();
@@ -38,6 +50,7 @@ export class RemoteChatRepository implements ChatRepository {
   ): Promise<string | null> {
     const ctrl = new AbortController();
     const externalSignal = options?.signal;
+    const notifyAuthorizationError = this.notifyAuthorizationError.bind(this);
 
     return new Promise((resolve, reject) => {
       let streamedSessionId: string | null = null;
@@ -92,6 +105,8 @@ export class RemoteChatRepository implements ChatRepository {
             return;
           }
 
+          notifyAuthorizationError(response.status);
+
           let errorMessage = `Server responded with status ${response.status}`;
           try {
             const contentType = response.headers.get('content-type');
@@ -105,12 +120,8 @@ export class RemoteChatRepository implements ChatRepository {
             // failed to parse error body, use default message
           }
 
-          const error = new Error(errorMessage);
-          if (onError) {
-            onError(error);
-          }
-          ctrl.abort();
-          rejectOnce(error);
+          // Throw to force fetch-event-source to stop retrying via onerror handler.
+          throw new Error(errorMessage);
         },
         onmessage(ev) {
           try {
@@ -138,8 +149,9 @@ export class RemoteChatRepository implements ChatRepository {
           if (onError) {
             onError(error);
           }
-          ctrl.abort();
           rejectOnce(error);
+          // Important: throw to break fetch-event-source auto-retry loop.
+          throw error;
         },
       }).catch((err: unknown) => {
         if (abortedByCaller || isAbortError(err)) {
@@ -147,7 +159,7 @@ export class RemoteChatRepository implements ChatRepository {
           return;
         }
         const error = err instanceof Error ? err : new Error(String(err));
-        if (onError) {
+        if (!settled && onError) {
           onError(error);
         }
         rejectOnce(error);
@@ -161,7 +173,7 @@ export class RemoteChatRepository implements ChatRepository {
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
+      this.throwHttpError(response.status);
     }
 
     const data: ChatSessionResponse[] = await response.json();
@@ -174,7 +186,7 @@ export class RemoteChatRepository implements ChatRepository {
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
+      this.throwHttpError(response.status);
     }
 
     const data: ChatSessionResponse[] = await response.json();
@@ -187,7 +199,7 @@ export class RemoteChatRepository implements ChatRepository {
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
+      this.throwHttpError(response.status);
     }
 
     const data: ChatSessionResponse = await response.json();
@@ -201,7 +213,7 @@ export class RemoteChatRepository implements ChatRepository {
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
+      this.throwHttpError(response.status);
     }
   }
 
@@ -216,7 +228,7 @@ export class RemoteChatRepository implements ChatRepository {
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
+      this.throwHttpError(response.status);
     }
   }
 
@@ -227,7 +239,7 @@ export class RemoteChatRepository implements ChatRepository {
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with status ${response.status}`);
+      this.throwHttpError(response.status);
     }
   }
 }

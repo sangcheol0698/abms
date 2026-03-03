@@ -30,6 +30,7 @@ import kr.co.abacus.abms.domain.chat.ChatSession;
 @Transactional
 public class ChatCommandService {
 
+    private static final int MAX_SESSION_TITLE_LENGTH = 200;
     private static final String SYSTEM_PROMPT = """
             당신은 ABMS(Abacus Business Management System)의 인사/조직 관리 시스템 AI 어시스턴트입니다.
             
@@ -218,6 +219,9 @@ public class ChatCommandService {
         String normalizedTitle = title.trim();
         if (normalizedTitle.isEmpty()) {
             throw new IllegalArgumentException("세션 제목은 비어 있을 수 없습니다.");
+        }
+        if (normalizedTitle.length() > MAX_SESSION_TITLE_LENGTH) {
+            throw new IllegalArgumentException("세션 제목은 200자를 초과할 수 없습니다.");
         }
         session.updateTitle(normalizedTitle);
         chatSessionRepository.save(session);

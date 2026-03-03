@@ -38,7 +38,8 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
             ProjectCodeDuplicateException.class,
             InvalidEmployeeStatusException.class,
             AccountAlreadyExistsException.class,
-            InvalidRegistrationTokenException.class
+            InvalidRegistrationTokenException.class,
+            IllegalArgumentException.class
     })
     public ProblemDetail handleDuplicateException(Exception exception) {
         return getProblemDetail(HttpStatus.BAD_REQUEST, exception);
