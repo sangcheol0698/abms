@@ -133,6 +133,7 @@ import { createChatMessage, type ChatMessage } from '@/features/chat/entity/Chat
 import { RemoteChatRepository } from '@/features/chat/repository/RemoteChatRepository';
 import { sanitizeAssistantLinks } from '@/features/chat/utils/linkSanitizer';
 import { useAssistantDockStore } from '@/features/chat/stores/assistantDock.store';
+import { toast } from 'vue-sonner';
 
 const repository = new RemoteChatRepository();
 const dockStore = useAssistantDockStore();
@@ -205,6 +206,18 @@ function getToolDescription(toolName: string): string {
   return TOOL_CONFIG[toolName]?.description ?? `${toolName} 실행 중...`;
 }
 
+function isSessionNotFoundError(error: unknown): boolean {
+  return error instanceof Error && /\b404\b/.test(error.message);
+}
+
+function resetDockToNewChat() {
+  dockStore.setActiveSessionId(null);
+  clearScheduledTitleRefresh();
+  sessionTitle.value = '새 채팅';
+  messages.value = [];
+  draft.value = '';
+}
+
 async function loadSessionDetail(sessionId: string) {
   try {
     const detail = await repository.getSessionDetail(sessionId);
@@ -224,7 +237,12 @@ async function loadSessionDetail(sessionId: string) {
     if (!areMessagesEquivalent(messages.value, nextMessages)) {
       messages.value = nextMessages;
     }
-  } catch {
+  } catch (error) {
+    if (isSessionNotFoundError(error) && activeSessionId.value === sessionId) {
+      resetDockToNewChat();
+      toast.error('접근할 수 없는 채팅 세션입니다. 새 채팅으로 전환했어요.');
+      return;
+    }
     sessionTitle.value = '새 채팅';
     messages.value = [];
   }
@@ -364,6 +382,12 @@ async function handleSubmit(content: string) {
       return;
     }
 
+    if (isSessionNotFoundError(error)) {
+      resetDockToNewChat();
+      toast.error('해당 채팅 세션에 접근할 수 없어 새 채팅으로 전환했습니다.');
+      return;
+    }
+
     const fallback =
       error instanceof Error
         ? error.message
@@ -389,11 +413,7 @@ function handleSuggestion(value: string) {
 
 function handleNewChat() {
   if (isResponding.value) return;
-  dockStore.setActiveSessionId(null);
-  clearScheduledTitleRefresh();
-  sessionTitle.value = '새 채팅';
-  messages.value = [];
-  draft.value = '';
+  resetDockToNewChat();
 }
 
 function openFullView() {

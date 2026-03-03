@@ -407,6 +407,23 @@ function scheduleSessionsReload(delayMs = 2000) {
   }, delayMs);
 }
 
+function isSessionNotFoundError(error: unknown): boolean {
+  return error instanceof Error && /\b404\b/.test(error.message);
+}
+
+async function resetToNewChatState() {
+  currentSessionId.value = null;
+  currentSession.value = null;
+  messages.value = [];
+  draft.value = '';
+  pendingRouteSessionId.value = null;
+  skipNextRouteSyncSessionId.value = null;
+
+  if (route.name === 'assistant-session') {
+    await router.replace({ name: 'assistant' });
+  }
+}
+
 // Data loading
 async function loadSessions() {
   isLoading.value = true;
@@ -439,8 +456,12 @@ async function loadSessionDetail(sessionId: string) {
     if (!areMessagesEquivalent(messages.value, sanitizedMessages)) {
       messages.value = sanitizedMessages;
     }
-  } catch {
-    // Session not found in backend - this is a new session, start fresh
+  } catch (error) {
+    if (isSessionNotFoundError(error)) {
+      await resetToNewChatState();
+      toast.error('접근할 수 없는 채팅 세션입니다. 새 채팅으로 이동했어요.');
+      return;
+    }
     currentSession.value = null;
     messages.value = [];
   }
@@ -780,6 +801,13 @@ async function handleSubmit(content: string) {
   } catch (error) {
     if (isStopRequested.value) {
       markAssistantMessageStopped(assistantMessageIndex);
+      return;
+    }
+
+    if (isSessionNotFoundError(error)) {
+      await resetToNewChatState();
+      toast.error('해당 채팅 세션에 접근할 수 없어 새 채팅으로 전환했습니다.');
+      await loadSessions();
       return;
     }
 
