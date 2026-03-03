@@ -16,6 +16,7 @@ export interface HttpRequestConfig {
   path: string;
   params?: AxiosRequestConfig['params'];
   data?: AxiosRequestConfig['data'];
+  withCredentials?: boolean;
 }
 
 @singleton()
@@ -26,7 +27,6 @@ export default class AxiosHttpClient {
     this.client = axios.create({
       baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080',
       timeout: Number(import.meta.env.VITE_API_BASE_TIMEOUT ?? 10000),
-      withCredentials: true,
     });
 
     this.client.interceptors.response.use(
@@ -80,6 +80,7 @@ export default class AxiosHttpClient {
         url: config.path,
         params: config.params,
         data: config.data,
+        withCredentials: config.withCredentials ?? true,
       });
       return response.data;
     } catch (error) {
@@ -97,6 +98,7 @@ export default class AxiosHttpClient {
         url: config.path,
         params: config.params,
         responseType: 'blob',
+        withCredentials: config.withCredentials ?? true,
       });
 
       return {
@@ -121,6 +123,7 @@ export default class AxiosHttpClient {
         method: config.method ?? 'POST',
         url: config.path,
         data: config.data,
+        withCredentials: config.withCredentials ?? true,
         headers: {
           'Content-Type': 'multipart/form-data',
         },

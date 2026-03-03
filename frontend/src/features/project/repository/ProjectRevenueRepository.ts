@@ -1,5 +1,5 @@
-import { injectable } from 'tsyringe';
-import axios from 'axios';
+import { inject, injectable } from 'tsyringe';
+import HttpRepository from '@/core/http/HttpRepository';
 
 export interface ProjectRevenuePlanCreateRequest {
   projectId: number;
@@ -22,16 +22,18 @@ export interface ProjectRevenuePlanResponse {
 
 @injectable()
 export default class ProjectRevenueRepository {
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 
   async create(request: ProjectRevenuePlanCreateRequest): Promise<void> {
-    await axios.post(`${this.baseUrl}/api/projectRevenuePlans`, request);
+    await this.httpRepository.post({
+      path: '/api/projectRevenuePlans',
+      data: request,
+    });
   }
 
   async findByProjectId(projectId: number): Promise<ProjectRevenuePlanResponse[]> {
-    const { data } = await axios.get<ProjectRevenuePlanResponse[]>(
-      `${this.baseUrl}/api/projectRevenuePlans/${projectId}`,
-    );
-    return data;
+    return this.httpRepository.get<ProjectRevenuePlanResponse[]>({
+      path: `/api/projectRevenuePlans/${projectId}`,
+    });
   }
 }

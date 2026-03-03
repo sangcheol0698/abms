@@ -1,5 +1,5 @@
-import { injectable } from 'tsyringe';
-import axios from 'axios';
+import { inject, injectable } from 'tsyringe';
+import HttpRepository from '@/core/http/HttpRepository';
 
 export interface MonthlyRevenueSummaryResponse {
   targetMonth: string;
@@ -10,7 +10,7 @@ export interface MonthlyRevenueSummaryResponse {
 
 @injectable()
 export default class DashboardRevenueRepository {
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 
   async fetchMonthlyRevenueSummary(): Promise<MonthlyRevenueSummaryResponse[]> {
     const now = new Date();
@@ -18,10 +18,9 @@ export default class DashboardRevenueRepository {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const yearMonth = `${year}${month}`;
 
-    const { data } = await axios.get<MonthlyRevenueSummaryResponse[]>(
-      `${this.baseUrl}/api/monthlyRevenueSummary/sixMonthTrend`,
-      { params: { yearMonth } },
-    );
-    return data;
+    return this.httpRepository.get<MonthlyRevenueSummaryResponse[]>({
+      path: '/api/monthlyRevenueSummary/sixMonthTrend',
+      params: { yearMonth },
+    });
   }
 }

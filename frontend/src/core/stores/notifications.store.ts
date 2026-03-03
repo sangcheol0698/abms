@@ -11,7 +11,6 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   const items = ref<NotificationItem[]>([]);
   const isLoading = ref(false);
-  const isLoaded = ref(false);
 
   const unreadCount = computed(() => items.value.filter((item) => !item.read).length);
   const sorted = computed(() =>
@@ -20,18 +19,14 @@ export const useNotificationsStore = defineStore('notifications', () => {
     ),
   );
 
-  async function fetchAll(options: { force?: boolean } = {}) {
+  async function fetchAll() {
     if (isLoading.value) {
-      return;
-    }
-    if (isLoaded.value && !options.force) {
       return;
     }
 
     isLoading.value = true;
     try {
       items.value = await repository.fetchAll();
-      isLoaded.value = true;
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {

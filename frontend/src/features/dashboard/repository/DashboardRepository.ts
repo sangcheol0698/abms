@@ -1,5 +1,5 @@
-import { injectable } from 'tsyringe';
-import axios from 'axios';
+import { inject, injectable } from 'tsyringe';
+import HttpRepository from '@/core/http/HttpRepository';
 
 export interface DashboardSummary {
   totalEmployeesCount: number;
@@ -10,11 +10,11 @@ export interface DashboardSummary {
 
 @injectable()
 export class DashboardRepository {
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 
   async fetchSummary(): Promise<DashboardSummary> {
-    // 백엔드 API 호출 (/api/dashboards/summary)
-    const { data } = await axios.get<DashboardSummary>(`${this.baseUrl}/api/dashboards/summary`);
-    return data;
+    return this.httpRepository.get<DashboardSummary>({
+      path: '/api/dashboards/summary',
+    });
   }
 }

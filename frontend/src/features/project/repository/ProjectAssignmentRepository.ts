@@ -1,5 +1,5 @@
-import { injectable } from 'tsyringe';
-import axios from 'axios';
+import { inject, injectable } from 'tsyringe';
+import HttpRepository from '@/core/http/HttpRepository';
 
 export interface ProjectAssignmentResponse {
   id: number;
@@ -22,21 +22,19 @@ export interface ProjectAssignmentCreateRequest {
 
 @injectable()
 export default class ProjectAssignmentRepository {
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 
   async findByProjectId(projectId: number): Promise<ProjectAssignmentResponse[]> {
-    const { data } = await axios.get<ProjectAssignmentResponse[]>(
-      `${this.baseUrl}/api/project-assignments`,
-      { params: { projectId } },
-    );
-    return data;
+    return this.httpRepository.get<ProjectAssignmentResponse[]>({
+      path: '/api/project-assignments',
+      params: { projectId },
+    });
   }
 
   async create(request: ProjectAssignmentCreateRequest): Promise<{ id: number }> {
-    const { data } = await axios.post<{ id: number }>(
-      `${this.baseUrl}/api/project-assignments`,
-      request,
-    );
-    return data;
+    return this.httpRepository.post<{ id: number }>({
+      path: '/api/project-assignments',
+      data: request,
+    });
   }
 }
