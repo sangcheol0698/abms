@@ -19,8 +19,8 @@ public class NotificationQueryService implements NotificationFinder {
     private final NotificationRepository notificationRepository;
 
     @Override
-    public List<Notification> findAll() {
-        return notificationRepository.findAllByDeletedFalseOrderByCreatedAtDesc();
+    public List<Notification> findAll(Long accountId) {
+        return notificationRepository.findAllByAccountIdAndDeletedFalseOrderByCreatedAtDesc(accountId);
     }
 
 }

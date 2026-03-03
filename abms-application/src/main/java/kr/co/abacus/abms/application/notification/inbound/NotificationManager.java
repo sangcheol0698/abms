@@ -5,12 +5,12 @@ import kr.co.abacus.abms.domain.notification.NotificationCreateRequest;
 
 public interface NotificationManager {
 
-    Notification create(NotificationCreateRequest request);
+    Notification create(Long accountId, NotificationCreateRequest request);
 
-    void markAsRead(Long notificationId);
+    void markAsRead(Long accountId, Long notificationId);
 
-    void markAllAsRead();
+    void markAllAsRead(Long accountId);
 
-    void clearAll();
+    void clearAll(Long accountId);
 
 }

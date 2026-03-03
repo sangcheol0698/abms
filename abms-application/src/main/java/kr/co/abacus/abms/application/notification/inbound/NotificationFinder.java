@@ -6,6 +6,6 @@ import kr.co.abacus.abms.domain.notification.Notification;
 
 public interface NotificationFinder {
 
-    List<Notification> findAll();
+    List<Notification> findAll(Long accountId);
 
 }

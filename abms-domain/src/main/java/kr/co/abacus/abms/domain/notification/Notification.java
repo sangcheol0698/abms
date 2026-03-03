@@ -22,6 +22,9 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @Table(name = "tb_notification")
 public class Notification extends AbstractEntity {
 
+    @Column(name = "account_id", nullable = false)
+    private Long accountId;
+
     @Column(name = "notification_title", nullable = false, length = 120)
     private String title;
 
@@ -40,8 +43,9 @@ public class Notification extends AbstractEntity {
     @Column(name = "link_url", length = 255)
     private String link;
 
-    public static Notification create(NotificationCreateRequest request) {
+    public static Notification create(Long accountId, NotificationCreateRequest request) {
         Notification notification = new Notification();
+        notification.accountId = requireNonNull(accountId);
         notification.title = requireNonNull(request.title());
         notification.description = request.description();
         notification.type = request.type() != null ? request.type() : NotificationType.INFO;

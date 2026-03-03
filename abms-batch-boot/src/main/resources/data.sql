@@ -330,12 +330,12 @@ INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, sta
 -- 11. 알림 (Notification)
 -- ---------------------------------------------------------
 INSERT INTO tb_notification (
-    id, notification_title, notification_description, notification_type, is_read, link_url,
+    id, account_id, notification_title, notification_description, notification_type, is_read, link_url,
     created_at, updated_at, created_by, updated_by, deleted
 ) VALUES
-    (1, '조직 구조 변경', '부서 목록에서 경영기획실이 신설되었습니다.', 'INFO', 0, '/', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
-    (2, '직원 정보 갱신', '인사팀이 직원 정보를 최신화했습니다.', 'SUCCESS', 0, '/employees', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
-    (3, '근태 정책 안내', '다음 주부터 신규 근태 정책이 적용됩니다.', 'WARNING', 1, NULL, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
+    (1, 1, '조직 구조 변경', '부서 목록에서 경영기획실이 신설되었습니다.', 'INFO', 0, '/', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
+    (2, 1, '직원 정보 갱신', '인사팀이 직원 정보를 최신화했습니다.', 'SUCCESS', 0, '/employees', NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0),
+    (3, 1, '근태 정책 안내', '다음 주부터 신규 근태 정책이 적용됩니다.', 'WARNING', 1, NULL, NOW(), NOW(), 'ABMS_INIT', 'ABMS_INIT', 0);
 
 
 -- ---------------------------------------------------------

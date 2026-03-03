@@ -9,8 +9,8 @@ public interface NotificationRepository {
 
     Notification save(Notification notification);
 
-    Optional<Notification> findByIdAndDeletedFalse(Long id);
+    Optional<Notification> findByIdAndAccountIdAndDeletedFalse(Long id, Long accountId);
 
-    List<Notification> findAllByDeletedFalseOrderByCreatedAtDesc();
+    List<Notification> findAllByAccountIdAndDeletedFalseOrderByCreatedAtDesc(Long accountId);
 
 }
