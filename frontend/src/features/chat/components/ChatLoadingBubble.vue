@@ -1,9 +1,9 @@
 <template>
-  <div class="flex items-start gap-3">
-    <div class="flex items-center space-x-1">
-      <div class="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/60 [animation-delay:-0.3s]"></div>
-      <div class="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/60 [animation-delay:-0.15s]"></div>
-      <div class="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/60"></div>
+  <div class="flex items-start gap-3 group">
+    <div class="flex flex-col gap-1 text-sm min-w-0 items-start w-full">
+      <div class="flex items-center gap-2 mb-1 animate-pulse select-none">
+        <span class="text-sm font-medium text-muted-foreground">생각 중...</span>
+      </div>
     </div>
   </div>
 </template>
