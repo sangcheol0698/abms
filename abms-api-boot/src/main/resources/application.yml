@@ -3,9 +3,6 @@ spring:
     name: abms
   profiles:
     default: local
-  docker:
-    compose:
-      file: ../compose.yaml
   jpa:
     open-in-view: false
   threads:
