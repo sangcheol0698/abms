@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { computed, ref, toRef } from 'vue';
 import { Plus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -106,26 +106,32 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatCurrency } from '@/features/project/models/projectListItem';
-import { appContainer } from '@/core/di/container';
-import ProjectRevenueRepository, {
-  type ProjectRevenuePlanResponse,
-} from '@/features/project/repository/ProjectRevenueRepository';
 import ProjectRevenuePlanDialog from './ProjectRevenuePlanDialog.vue';
-import ProjectRepository from '@/features/project/repository/ProjectRepository';
+import { useProjectDetailQuery, useProjectRevenuePlansQuery } from '@/features/project/queries/useProjectQueries';
 
 interface Props {
   projectId: number;
 }
 
 const props = defineProps<Props>();
-
-const revenueRepository = appContainer.resolve(ProjectRevenueRepository);
-const projectRepository = appContainer.resolve(ProjectRepository);
-
-const isLoading = ref(false);
-const items = ref<(ProjectRevenuePlanResponse & { typeLabel: string; statusLabel: string })[]>([]);
+const projectId = toRef(props, 'projectId');
+const revenuePlansQuery = useProjectRevenuePlansQuery(projectId);
+const projectDetailQuery = useProjectDetailQuery(projectId);
 const isDialogOpen = ref(false);
-const contractAmount = ref(0);
+
+const isLoading = computed(
+  () => revenuePlansQuery.isLoading.value || projectDetailQuery.isLoading.value,
+);
+const contractAmount = computed(() => projectDetailQuery.data.value?.contractAmount ?? 0);
+const items = computed(() =>
+  (revenuePlansQuery.data.value ?? [])
+    .map((item) => ({
+      ...item,
+      typeLabel: typeLabelMap[item.type] || item.type,
+      statusLabel: item.status === 'INVOICED' ? '발행' : '미발행',
+    }))
+    .sort((a, b) => a.sequence - b.sequence),
+);
 
 const totalAmount = computed(() => contractAmount.value);
 const plannedAmount = computed(() =>
@@ -147,33 +153,6 @@ const typeLabelMap: Record<string, string> = {
   ETC: '기타',
 };
 
-async function fetchRevenuePlans(projectId: number) {
-  if (!projectId) return;
-
-  isLoading.value = true;
-  try {
-    const [revenueResponse, projectResponse] = await Promise.all([
-      revenueRepository.findByProjectId(projectId),
-      projectRepository.find(projectId),
-    ]);
-
-    contractAmount.value = projectResponse.contractAmount;
-
-    items.value = revenueResponse
-      .map((item) => ({
-        ...item,
-        typeLabel: typeLabelMap[item.type] || item.type,
-        statusLabel: item.status === 'INVOICED' ? '발행' : '미발행',
-      }))
-      .sort((a, b) => a.sequence - b.sequence);
-  } catch (error) {
-    console.error('Failed to fetch revenue plans:', error);
-    items.value = [];
-  } finally {
-    isLoading.value = false;
-  }
-}
-
 function formatDate(value: string) {
   if (!value) return '-';
   return new Date(value).toLocaleDateString();
@@ -184,14 +163,6 @@ function handleCreate() {
 }
 
 function handleSaved() {
-  fetchRevenuePlans(props.projectId);
+  isDialogOpen.value = false;
 }
-
-watch(
-  () => props.projectId,
-  (newId) => {
-    fetchRevenuePlans(newId);
-  },
-  { immediate: true },
-);
 </script>

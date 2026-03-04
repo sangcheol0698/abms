@@ -499,6 +499,7 @@ async function onSubmit(rawValues: Record<string, unknown>) {
     contractAmount: values.contractAmount,
     startDate: formatDate(values.startDate),
     endDate: formatDate(values.endDate),
+    leadDepartmentId: props.project?.leadDepartmentId ?? null,
   } as const;
 
   try {

@@ -94,8 +94,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { appContainer } from '@/core/di/container';
-import ProjectRevenueRepository from '@/features/project/repository/ProjectRevenueRepository';
+import { useCreateProjectRevenuePlanMutation } from '@/features/project/queries/useProjectQueries';
 
 interface RevenuePlanForm {
   id?: number;
@@ -116,7 +115,7 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits(['update:open', 'saved']);
 
-const repository = appContainer.resolve(ProjectRevenueRepository);
+const createRevenuePlanMutation = useCreateProjectRevenuePlanMutation();
 
 const isSubmitting = ref(false);
 
@@ -124,7 +123,7 @@ const defaultForm: RevenuePlanForm = {
   projectId: props.projectId,
   sequence: 1,
   type: 'DOWN_PAYMENT',
-  plannedDate: new Date().toISOString().split('T')[0],
+  plannedDate: new Date().toISOString().slice(0, 10),
   amount: 0,
   description: '',
 };
@@ -160,7 +159,7 @@ async function handleSubmit() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       emit('saved', { ...form.value });
     } else {
-      await repository.create({
+      await createRevenuePlanMutation.mutateAsync({
         projectId: form.value.projectId,
         sequence: form.value.sequence,
         revenueDate: form.value.plannedDate,

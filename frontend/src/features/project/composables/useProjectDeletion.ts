@@ -1,11 +1,10 @@
 import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
 import HttpError from '@/core/http/HttpError';
-import { appContainer } from '@/core/di/container';
-import ProjectRepository from '@/features/project/repository/ProjectRepository';
+import { useDeleteProjectMutation } from '@/features/project/queries/useProjectQueries';
 
 export function useProjectDeletion(onDeleted: () => Promise<void> | void) {
-  const projectRepository = appContainer.resolve(ProjectRepository);
+  const deleteProjectMutation = useDeleteProjectMutation();
 
   const isDialogOpen = ref(false);
   const candidateId = ref<number | null>(null);
@@ -41,7 +40,7 @@ export function useProjectDeletion(onDeleted: () => Promise<void> | void) {
     isProcessing.value = true;
 
     try {
-      await projectRepository.delete(id);
+      await deleteProjectMutation.mutateAsync(id);
       toast.success('프로젝트를 삭제했습니다.', {
         description: name ?? undefined,
       });

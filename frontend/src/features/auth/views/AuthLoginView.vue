@@ -59,14 +59,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { appContainer } from '@/core/di/container';
 import HttpError from '@/core/http/HttpError';
-import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { useAuthMeQuery, useLoginMutation } from '@/features/auth/queries/useAuthQueries';
 import { clearStoredUser, setStoredUser } from '@/features/auth/session';
 
 const route = useRoute();
 const router = useRouter();
-const authRepository = appContainer.resolve(AuthRepository);
+const loginMutation = useLoginMutation();
+const authMeQuery = useAuthMeQuery(false);
 
 const username = ref('');
 const password = ref('');
@@ -124,7 +124,7 @@ async function submitLogin() {
   try {
     const normalizedEmail = username.value.trim().toLowerCase();
     const displayName = getDisplayNameFromEmail(normalizedEmail);
-    await authRepository.login({
+    await loginMutation.mutateAsync({
       username: normalizedEmail,
       password: password.value,
     });
@@ -132,9 +132,12 @@ async function submitLogin() {
     let resolvedEmail = normalizedEmail;
     let resolvedName = displayName;
     try {
-      const me = await authRepository.fetchMe();
-      resolvedEmail = me.email || normalizedEmail;
-      resolvedName = me.name || displayName;
+      const meResult = await authMeQuery.refetch();
+      const me = meResult.data;
+      if (me) {
+        resolvedEmail = me.email || normalizedEmail;
+        resolvedName = me.name || displayName;
+      }
     } catch {
       // Fallback to login input when /api/auth/me cannot be fetched.
     }

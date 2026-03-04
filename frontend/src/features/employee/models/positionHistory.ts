@@ -8,7 +8,14 @@ export enum EmployeePosition {
   DIRECTOR = 'DIRECTOR',
 }
 
-// 2. [에러 원인 해결] 화면 표시용 한글 매핑 객체를 export 해야 합니다.
+export const PositionLabel: Record<string, string> = {
+  [EmployeePosition.ASSOCIATE]: '사원',
+  [EmployeePosition.STAFF]: '선임',
+  [EmployeePosition.SENIOR]: '책임',
+  [EmployeePosition.PRINCIPAL]: '수석',
+  [EmployeePosition.LEAD]: '팀장',
+  [EmployeePosition.DIRECTOR]: '이사',
+};
 
 // 3. 기간 인터페이스
 export interface PositionPeriod {

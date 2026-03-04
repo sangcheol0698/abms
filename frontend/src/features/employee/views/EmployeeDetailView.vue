@@ -138,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -155,13 +155,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Pencil, Trash2, TrendingUp } from 'lucide-vue-next';
-import { appContainer } from '@/core/di/container';
-import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
-import type { EmployeeSummary } from '@/features/employee/models/employee';
-import type { DepartmentChartNode } from '@/features/department/models/department';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
-
+import {
+  getEmployeeGradeOptions,
+  getEmployeePositionOptions,
+  getEmployeeTypeOptions,
+} from '@/features/employee/models/employeeFilters';
 import HttpError from '@/core/http/HttpError';
 import EmployeeDetailHeader from '@/features/employee/components/EmployeeDetailHeader.vue';
 import EmployeeOverviewPanel from '@/features/employee/components/EmployeeOverviewPanel.vue';
@@ -170,26 +169,59 @@ import EmployeeSalaryPanel from '@/features/employee/components/EmployeeSalaryPa
 import EmployeeProjectsPanel from '@/features/employee/components/EmployeeProjectsPanel.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
 import EmployeePromotionDialog from '@/features/employee/components/EmployeePromotionDialog.vue';
+import type { DepartmentChartNode } from '@/features/department/models/department';
+import { useDepartmentOrganizationChartQuery } from '@/features/department/queries/useDepartmentQueries';
+import {
+  useActivateEmployeeMutation,
+  useDeleteEmployeeMutation,
+  useEmployeeDetailQuery,
+  useEmployeeGradesQuery,
+  useEmployeePositionsQuery,
+  useEmployeeTypesQuery,
+  useResignEmployeeMutation,
+  useTakeLeaveEmployeeMutation,
+} from '@/features/employee/queries/useEmployeeQueries';
+import { employeeKeys, queryClient } from '@/core/query';
 
 const route = useRoute();
 const router = useRouter();
+const employeeId = computed(() => {
+  const raw = route.params.employeeId;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+});
 
-const repository = appContainer.resolve(EmployeeRepository);
-const departmentRepository = appContainer.resolve(DepartmentRepository);
+const employeeQuery = useEmployeeDetailQuery(employeeId);
+const departmentChartQuery = useDepartmentOrganizationChartQuery();
+const employeeTypesQuery = useEmployeeTypesQuery();
+const employeeGradesQuery = useEmployeeGradesQuery();
+const employeePositionsQuery = useEmployeePositionsQuery();
+const resignMutation = useResignEmployeeMutation();
+const takeLeaveMutation = useTakeLeaveEmployeeMutation();
+const activateMutation = useActivateEmployeeMutation();
+const deleteMutation = useDeleteEmployeeMutation();
 
-const employee = ref<EmployeeSummary | null>(null);
-const isLoading = ref(true);
-const errorMessage = ref<string | null>(null);
-const isResigning = ref(false);
+const employee = computed(() => employeeQuery.data.value ?? null);
+const isLoading = computed(() => employeeQuery.isLoading.value);
+const errorMessage = computed(() => {
+  const error = employeeQuery.error.value;
+  if (!error) {
+    return null;
+  }
+  return error instanceof Error ? error.message : '직원 정보를 불러오는 중 오류가 발생했습니다.';
+});
+
+const isResigning = computed(() => resignMutation.isPending.value);
 const resignError = ref<string | null>(null);
 const resignSuccess = ref<string | null>(null);
-const isTakingLeave = ref(false);
+const isTakingLeave = computed(() => takeLeaveMutation.isPending.value);
 const takeLeaveError = ref<string | null>(null);
 const takeLeaveSuccess = ref<string | null>(null);
-const isActivating = ref(false);
+const isActivating = computed(() => activateMutation.isPending.value);
 const activateError = ref<string | null>(null);
 const activateSuccess = ref<string | null>(null);
-const isDeleting = ref(false);
+const isDeleting = computed(() => deleteMutation.isPending.value);
+
 const employeeInitials = computed(() => {
   const name = employee.value?.name ?? '';
   return name.trim().slice(0, 2).toUpperCase() || '??';
@@ -197,64 +229,47 @@ const employeeInitials = computed(() => {
 
 const isEmployeeUpdateDialogOpen = ref(false);
 const isPromotionDialogOpen = ref(false);
-const departmentOptions = ref<{ label: string; value: number }[]>([]);
-const statusOptions = ref<EmployeeFilterOption[]>([]);
-const typeOptions = ref<EmployeeFilterOption[]>([]);
-const gradeOptions = ref<EmployeeFilterOption[]>([]);
-const positionOptions = ref<EmployeeFilterOption[]>([]);
 
-watch(
-  () => route.params.employeeId,
-  (next) => {
-    if (typeof next === 'string' && next.trim().length > 0) {
-      resignError.value = null;
-      resignSuccess.value = null;
-      takeLeaveError.value = null;
-      takeLeaveSuccess.value = null;
-      activateError.value = null;
-      activateSuccess.value = null;
-      isResigning.value = false;
-      isTakingLeave.value = false;
-      isActivating.value = false;
-      const employeeId = Number(next);
-      if (!isNaN(employeeId)) {
-        fetchEmployee(employeeId);
+const departmentOptions = computed<{ label: string; value: number }[]>(() => {
+  const chart = departmentChartQuery.data.value ?? [];
+  const map = new Map<number, string>();
+
+  const traverse = (nodes: DepartmentChartNode[]) => {
+    nodes.forEach((node) => {
+      if (!map.has(node.departmentId)) {
+        map.set(node.departmentId, node.departmentName);
       }
-    }
-  },
-  { immediate: true },
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        traverse(node.children);
+      }
+    });
+  };
+
+  traverse(chart);
+  return Array.from(map.entries()).map(([id, name]) => ({ label: name, value: id }));
+});
+
+const typeOptions = computed<EmployeeFilterOption[]>(
+  () => employeeTypesQuery.data.value ?? getEmployeeTypeOptions(),
 );
+const gradeOptions = computed<EmployeeFilterOption[]>(
+  () => employeeGradesQuery.data.value ?? getEmployeeGradeOptions(),
+);
+const positionOptions = computed<EmployeeFilterOption[]>(
+  () => employeePositionsQuery.data.value ?? getEmployeePositionOptions(),
+);
+
+watch(employeeId, () => {
+  resignError.value = null;
+  resignSuccess.value = null;
+  takeLeaveError.value = null;
+  takeLeaveSuccess.value = null;
+  activateError.value = null;
+  activateSuccess.value = null;
+});
 
 function resolveErrorMessage(error: unknown, fallback: string) {
   return error instanceof HttpError ? error.message : fallback;
-}
-
-async function fetchEmployee(employeeId: number, options: { showLoading?: boolean } = {}) {
-  const { showLoading = true } = options;
-
-  if (showLoading) {
-    isLoading.value = true;
-    errorMessage.value = null;
-    employee.value = null;
-  }
-
-  try {
-    const result = await repository.findById(employeeId);
-    employee.value = result;
-    return result;
-  } catch (error) {
-    const message = resolveErrorMessage(error, '직원 정보를 불러오는 중 오류가 발생했습니다.');
-    if (showLoading) {
-      errorMessage.value = message;
-      employee.value = null;
-      return null;
-    }
-    throw error instanceof Error ? error : new Error(message);
-  } finally {
-    if (showLoading) {
-      isLoading.value = false;
-    }
-  }
 }
 
 function goToDepartment() {
@@ -269,21 +284,18 @@ async function handleResign(resignationDate: string) {
     return;
   }
 
-  isResigning.value = true;
   resignError.value = null;
   resignSuccess.value = null;
   takeLeaveSuccess.value = null;
   activateSuccess.value = null;
 
   try {
-    await repository.resign(employee.value.employeeId, resignationDate);
-    await fetchEmployee(employee.value.employeeId, { showLoading: false });
+    await resignMutation.mutateAsync({ employeeId: employee.value.employeeId, resignationDate });
+    await employeeQuery.refetch();
     resignSuccess.value = '퇴사 처리가 완료되었습니다.';
   } catch (error) {
     const message = resolveErrorMessage(error, '퇴사 처리 중 오류가 발생했습니다.');
     resignError.value = message;
-  } finally {
-    isResigning.value = false;
   }
 }
 
@@ -292,21 +304,18 @@ async function handleTakeLeave() {
     return;
   }
 
-  isTakingLeave.value = true;
   takeLeaveError.value = null;
   takeLeaveSuccess.value = null;
   resignSuccess.value = null;
   activateSuccess.value = null;
 
   try {
-    await repository.takeLeave(employee.value.employeeId);
-    await fetchEmployee(employee.value.employeeId, { showLoading: false });
+    await takeLeaveMutation.mutateAsync(employee.value.employeeId);
+    await employeeQuery.refetch();
     takeLeaveSuccess.value = '휴직 처리가 완료되었습니다.';
   } catch (error) {
     const message = resolveErrorMessage(error, '휴직 처리 중 오류가 발생했습니다.');
     takeLeaveError.value = message;
-  } finally {
-    isTakingLeave.value = false;
   }
 }
 
@@ -315,21 +324,18 @@ async function handleActivate() {
     return;
   }
 
-  isActivating.value = true;
   activateError.value = null;
   activateSuccess.value = null;
   resignSuccess.value = null;
   takeLeaveSuccess.value = null;
 
   try {
-    await repository.activate(employee.value.employeeId);
-    await fetchEmployee(employee.value.employeeId, { showLoading: false });
+    await activateMutation.mutateAsync(employee.value.employeeId);
+    await employeeQuery.refetch();
     activateSuccess.value = '재직 처리가 완료되었습니다.';
   } catch (error) {
     const message = resolveErrorMessage(error, '재직 처리 중 오류가 발생했습니다.');
     activateError.value = message;
-  } finally {
-    isActivating.value = false;
   }
 }
 
@@ -344,42 +350,6 @@ function formatDate(value?: string | null) {
   return parsed.toLocaleDateString();
 }
 
-async function loadOptions() {
-  try {
-    const [chart, statuses, types, grades, positions] = await Promise.all([
-      departmentRepository.fetchOrganizationChart(),
-      repository.fetchStatuses(),
-      repository.fetchTypes(),
-      repository.fetchGrades(),
-      repository.fetchPositions(),
-    ]);
-
-    const map = new Map<number, string>();
-    const traverse = (nodes: DepartmentChartNode[]) => {
-      nodes.forEach((node) => {
-        if (!map.has(node.departmentId)) {
-          map.set(node.departmentId, node.departmentName);
-        }
-        if (Array.isArray(node.children) && node.children.length > 0) {
-          traverse(node.children);
-        }
-      });
-    };
-    traverse(chart);
-    departmentOptions.value = Array.from(map.entries()).map(([id, name]) => ({
-      label: name,
-      value: id,
-    }));
-
-    statusOptions.value = statuses;
-    typeOptions.value = types;
-    gradeOptions.value = grades;
-    positionOptions.value = positions;
-  } catch (error) {
-    console.error('옵션 정보를 불러오지 못했습니다.', error);
-  }
-}
-
 function openEditDialog() {
   isEmployeeUpdateDialogOpen.value = true;
 }
@@ -388,36 +358,26 @@ function openPromotionDialog() {
   isPromotionDialogOpen.value = true;
 }
 
-function handleEmployeeUpdated() {
+async function handleEmployeeUpdated() {
   isEmployeeUpdateDialogOpen.value = false;
-  if (employee.value?.employeeId) {
-    fetchEmployee(employee.value.employeeId, { showLoading: false });
-  }
+  await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
+  await employeeQuery.refetch();
 }
 
-function handleEmployeePromoted() {
+async function handleEmployeePromoted() {
   isPromotionDialogOpen.value = false;
-  if (employee.value?.employeeId) {
-    fetchEmployee(employee.value.employeeId, { showLoading: false });
-  }
+  await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
+  await employeeQuery.refetch();
 }
 
 async function handleDelete() {
   if (!employee.value?.employeeId) return;
 
-  isDeleting.value = true;
   try {
-    await repository.delete(employee.value.employeeId);
+    await deleteMutation.mutateAsync(employee.value.employeeId);
     router.push('/employees');
-  } catch (error) {
-    const message = resolveErrorMessage(error, '직원 삭제 중 오류가 발생했습니다.');
-    errorMessage.value = message;
-  } finally {
-    isDeleting.value = false;
+  } catch {
+    // Error state is surfaced by query/mutation error handling and toast in caller scope.
   }
 }
-
-onMounted(() => {
-  loadOptions();
-});
 </script>

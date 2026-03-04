@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -101,73 +101,38 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Pencil, Trash2 } from 'lucide-vue-next';
-import { appContainer } from '@/core/di/container';
-import ProjectRepository from '@/features/project/repository/ProjectRepository';
-import type { ProjectDetail } from '@/features/project/models/projectDetail';
-import HttpError from '@/core/http/HttpError';
 import ProjectDetailHeader from '@/features/project/components/ProjectDetailHeader.vue';
 import ProjectOverviewPanel from '@/features/project/components/ProjectOverviewPanel.vue';
 import ProjectAssignmentPanel from '@/features/project/components/ProjectAssignmentPanel.vue';
 import ProjectRevenuePlanPanel from '@/features/project/components/ProjectRevenuePlanPanel.vue';
 import ProjectUpdateDialog from '@/features/project/components/ProjectUpdateDialog.vue';
+import { useDeleteProjectMutation, useProjectDetailQuery } from '@/features/project/queries/useProjectQueries';
+import { projectKeys, queryClient } from '@/core/query';
 
 defineOptions({ name: 'ProjectDetailView' });
 
 const route = useRoute();
 const router = useRouter();
+const projectId = computed(() => {
+  const raw = route.params.projectId;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+});
 
-const repository = appContainer.resolve(ProjectRepository);
-
-const project = ref<ProjectDetail | null>(null);
-const isLoading = ref(true);
-const errorMessage = ref<string | null>(null);
 const isProjectUpdateDialogOpen = ref(false);
-const isDeleting = ref(false);
+const projectQuery = useProjectDetailQuery(projectId);
+const deleteProjectMutation = useDeleteProjectMutation();
 
-watch(
-  () => route.params.projectId,
-  (next) => {
-    if (typeof next === 'string' && next.trim().length > 0) {
-      const projectId = Number(next);
-      if (!isNaN(projectId)) {
-        fetchProject(projectId);
-      }
-    }
-  },
-  { immediate: true },
-);
-
-function resolveErrorMessage(error: unknown, fallback: string) {
-  return error instanceof HttpError ? error.message : fallback;
-}
-
-async function fetchProject(projectId: number, options: { showLoading?: boolean } = {}) {
-  const { showLoading = true } = options;
-
-  if (showLoading) {
-    isLoading.value = true;
-    errorMessage.value = null;
-    project.value = null;
+const project = computed(() => projectQuery.data.value ?? null);
+const isLoading = computed(() => projectQuery.isLoading.value);
+const errorMessage = computed(() => {
+  const error = projectQuery.error.value;
+  if (!error) {
+    return null;
   }
-
-  try {
-    const result = await repository.find(projectId);
-    project.value = result;
-    return result;
-  } catch (error) {
-    const message = resolveErrorMessage(error, '프로젝트 정보를 불러오는 중 오류가 발생했습니다.');
-    if (showLoading) {
-      errorMessage.value = message;
-      project.value = null;
-      return null;
-    }
-    throw error instanceof Error ? error : new Error(message);
-  } finally {
-    if (showLoading) {
-      isLoading.value = false;
-    }
-  }
-}
+  return error instanceof Error ? error.message : '프로젝트 정보를 불러오는 중 오류가 발생했습니다.';
+});
+const isDeleting = computed(() => deleteProjectMutation.isPending.value);
 
 function goToParty() {
   const id = project.value?.partyId;
@@ -196,25 +161,21 @@ function openEditDialog() {
   isProjectUpdateDialogOpen.value = true;
 }
 
-function handleProjectUpdated() {
+async function handleProjectUpdated() {
   isProjectUpdateDialogOpen.value = false;
-  if (project.value?.projectId) {
-    fetchProject(project.value.projectId, { showLoading: false });
+  if (projectId.value > 0) {
+    await queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId.value) });
   }
 }
 
 async function handleDelete() {
   if (!project.value?.projectId) return;
 
-  isDeleting.value = true;
   try {
-    await repository.delete(project.value.projectId);
+    await deleteProjectMutation.mutateAsync(project.value.projectId);
     router.push('/projects');
-  } catch (error) {
-    const message = resolveErrorMessage(error, '프로젝트 삭제 중 오류가 발생했습니다.');
-    errorMessage.value = message;
-  } finally {
-    isDeleting.value = false;
+  } catch {
+    // Error state is surfaced by query/mutation error handling and toast in caller scope.
   }
 }
 </script>

@@ -173,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   getCoreRowModel,
@@ -214,7 +214,6 @@ import {
 import { valueUpdater } from '@/components/ui/table/utils';
 import { appContainer } from '@/core/di/container';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import { createEmployeeTableColumns } from '@/features/employee/configs/tableColumns';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
@@ -245,6 +244,16 @@ import { useEmployeeDeletion } from '@/features/employee/composables/useEmployee
 import { getExcelErrorMessage } from '@/core/utils/excel';
 import type { DepartmentChartNode } from '@/features/department/models/department';
 import { useEmployeeQuerySync } from '@/features/employee/composables/useEmployeeQuerySync.ts';
+import { useDepartmentOrganizationChartQuery } from '@/features/department/queries/useDepartmentQueries';
+import {
+  useEmployeeDetailQuery,
+  useEmployeeGradesQuery,
+  useEmployeePositionsQuery,
+  useEmployeesQuery,
+  useEmployeeStatusesQuery,
+  useEmployeeTypesQuery,
+} from '@/features/employee/queries/useEmployeeQueries';
+import { employeeKeys, queryClient } from '@/core/query';
 
 interface DepartmentOption {
   label: string;
@@ -252,29 +261,19 @@ interface DepartmentOption {
 }
 
 const employeeRepository = appContainer.resolve(EmployeeRepository);
-const departmentRepository = appContainer.resolve(DepartmentRepository);
 const router = useRouter();
 const route = useRoute();
 
-const employees = ref<EmployeeListItem[]>([]);
-const allEmployees = ref<EmployeeListItem[]>([]);
 const tableRenderKey = ref(0);
-const isLoading = ref(false);
 const page = ref(1);
 const pageSize = ref(10);
-const totalPages = ref(1);
-const totalElements = ref(0);
 
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({});
 const rowSelection = ref<RowSelectionState>({});
+const editingEmployeeId = ref<number | null>(null);
 
-const departmentOptions = ref<DepartmentOption[]>([]);
-const statusOptions = ref<EmployeeFilterOption[]>(getEmployeeStatusOptions());
-const typeOptions = ref<EmployeeFilterOption[]>(getEmployeeTypeOptions());
-const gradeOptions = ref<EmployeeFilterOption[]>(getEmployeeGradeOptions());
-const positionOptions = ref<EmployeeFilterOption[]>(getEmployeePositionOptions());
 const isDepartmentSelectOpen = ref(false);
 const isEmployeeCreateDialogOpen = ref(false);
 const isEmployeeUpdateDialogOpen = ref(false);
@@ -283,29 +282,12 @@ const isLoadingEmployee = ref(false);
 const isExcelUploadDialogOpen = ref(false);
 const isDownloadingExcel = ref(false);
 const isDownloadingSample = ref(false);
+
 const deletion = useEmployeeDeletion(async () => {
-  await loadEmployees();
+  await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 });
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
-
-const employeeSummary = useEmployeeSummary({ employees: allEmployees });
-
-const selectedDepartmentId = computed(() => {
-  const filter = columnFilters.value.find((item) => item.id === 'departmentId');
-  const value = Array.isArray(filter?.value) ? filter?.value[0] : filter?.value;
-  return value ? Number(value) : null;
-});
-
-const selectedDepartmentName = computed(() => {
-  if (!selectedDepartmentId.value) {
-    return null;
-  }
-  const match = departmentOptions.value.find(
-    (option) => option.value === selectedDepartmentId.value,
-  );
-  return match?.label ?? `부서 #${selectedDepartmentId.value}`;
-});
 
 // 테이블 컬럼 정의 (EmployeeTableColumns.ts로 분리됨)
 const columns = createEmployeeTableColumns({
@@ -316,8 +298,38 @@ const columns = createEmployeeTableColumns({
   onNavigateToDepartment: navigateToDepartment,
 });
 
+// URL 쿼리 동기화 Composable 초기화
+const { buildSearchParams, applyRouteQuery } = useEmployeeQuerySync({
+  page,
+  pageSize,
+  sorting,
+  columnFilters,
+});
+
+const employeeSearchParams = computed(() => buildSearchParams());
+const employeeSummarySearchParams = computed(() => ({
+  ...buildSearchParams(),
+  page: 1,
+  size: 10000,
+}));
+
+const employeesQuery = useEmployeesQuery(employeeSearchParams);
+const summaryEmployeesQuery = useEmployeesQuery(employeeSummarySearchParams);
+const departmentChartQuery = useDepartmentOrganizationChartQuery();
+const employeeStatusesQuery = useEmployeeStatusesQuery();
+const employeeTypesQuery = useEmployeeTypesQuery();
+const employeeGradesQuery = useEmployeeGradesQuery();
+const employeePositionsQuery = useEmployeePositionsQuery();
+const employeeDetailQuery = useEmployeeDetailQuery(editingEmployeeId);
+
+const employees = computed(() => employeesQuery.data.value?.content ?? []);
+const allEmployees = computed(() => summaryEmployeesQuery.data.value?.content ?? []);
+const totalPages = computed(() => Math.max(employeesQuery.data.value?.totalPages ?? 1, 1));
+const totalElements = computed(() => employeesQuery.data.value?.totalElements ?? 0);
+const isLoading = computed(() => employeesQuery.isLoading.value || employeesQuery.isFetching.value);
+
 const table = useVueTable({
-  data: computed(() => employees.value),
+  data: employees,
   columns,
   manualPagination: true,
   manualFiltering: true,
@@ -347,64 +359,66 @@ const table = useVueTable({
   getFacetedUniqueValues: getFacetedUniqueValues(),
 });
 
-let requestToken = 0;
+const statusOptions = computed<EmployeeFilterOption[]>(
+  () => employeeStatusesQuery.data.value ?? getEmployeeStatusOptions(),
+);
+const typeOptions = computed<EmployeeFilterOption[]>(
+  () => employeeTypesQuery.data.value ?? getEmployeeTypeOptions(),
+);
+const gradeOptions = computed<EmployeeFilterOption[]>(
+  () => employeeGradesQuery.data.value ?? getEmployeeGradeOptions(),
+);
+const positionOptions = computed<EmployeeFilterOption[]>(
+  () => employeePositionsQuery.data.value ?? getEmployeePositionOptions(),
+);
 
-async function loadDepartments() {
-  try {
-    const chart = await departmentRepository.fetchOrganizationChart();
-    const map = new Map<number, string>();
+const departmentOptions = computed<DepartmentOption[]>(() => {
+  const chart = departmentChartQuery.data.value ?? [];
+  const map = new Map<number, string>();
 
-    const traverse = (nodes: DepartmentChartNode[]) => {
-      nodes.forEach((node) => {
-        if (!map.has(node.departmentId)) {
-          map.set(node.departmentId, node.departmentName);
-        }
-        if (Array.isArray(node.children) && node.children.length > 0) {
-          traverse(node.children);
-        }
-      });
-    };
-
-    traverse(chart);
-    departmentOptions.value = Array.from(map.entries()).map(([value, label]) => ({ value, label }));
-  } catch (error) {
-    console.error('부서 정보를 불러오지 못했습니다.', error);
-    departmentOptions.value = [];
-  }
-}
-
-async function loadEmployeeOptions() {
-  try {
-    const shouldFetchOptions =
-      !getEmployeeStatusOptions().length ||
-      !getEmployeeTypeOptions().length ||
-      !getEmployeeGradeOptions().length ||
-      !getEmployeePositionOptions().length;
-
-    if (shouldFetchOptions) {
-      await Promise.all([
-        employeeRepository.fetchStatuses(),
-        employeeRepository.fetchTypes(),
-        employeeRepository.fetchGrades(),
-        employeeRepository.fetchPositions(),
-      ]);
-    }
-
-    statusOptions.value = getEmployeeStatusOptions();
-    typeOptions.value = getEmployeeTypeOptions();
-    gradeOptions.value = getEmployeeGradeOptions();
-    positionOptions.value = getEmployeePositionOptions();
-
-    if (employees.value.length && shouldFetchOptions) {
-      loadEmployees();
-    }
-  } catch (error) {
-    const message = error instanceof HttpError ? error.message : '필터 정보를 불러오지 못했습니다.';
-    toast.error('필터 정보를 불러오지 못했습니다.', {
-      description: message,
+  const traverse = (nodes: DepartmentChartNode[]) => {
+    nodes.forEach((node) => {
+      if (!map.has(node.departmentId)) {
+        map.set(node.departmentId, node.departmentName);
+      }
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        traverse(node.children);
+      }
     });
+  };
+
+  traverse(chart);
+  return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+});
+
+const selectedDepartmentId = computed(() => {
+  const filter = columnFilters.value.find((item) => item.id === 'departmentId');
+  const value = Array.isArray(filter?.value) ? filter?.value[0] : filter?.value;
+  return value ? Number(value) : null;
+});
+
+const selectedDepartmentName = computed(() => {
+  if (!selectedDepartmentId.value) {
+    return null;
   }
-}
+  const match = departmentOptions.value.find(
+    (option) => option.value === selectedDepartmentId.value,
+  );
+  return match?.label ?? `부서 #${selectedDepartmentId.value}`;
+});
+
+const employeeSummary = useEmployeeSummary({ employees: allEmployees });
+
+watch(totalPages, (nextTotalPages) => {
+  if (nextTotalPages > 0 && page.value > nextTotalPages) {
+    page.value = nextTotalPages;
+  }
+});
+
+watch(employees, () => {
+  rowSelection.value = {};
+  tableRenderKey.value += 1;
+});
 
 function openExcelUploadDialog() {
   isExcelUploadDialogOpen.value = true;
@@ -469,7 +483,7 @@ async function handleExcelSampleDownload() {
 
 async function uploadExcelFile(file: File, onProgress: (progress: number) => void) {
   await employeeRepository.uploadExcel(file, onProgress);
-  await loadEmployees();
+  await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 }
 
 function handleExcelUploadSuccess() {
@@ -483,55 +497,6 @@ function handleExcelDialogError(message: string) {
 function handleExcelSampleSuccess() {
   toast.success('샘플 파일을 다운로드했습니다.');
 }
-
-async function loadEmployees() {
-  const token = ++requestToken;
-  isLoading.value = true;
-
-  try {
-    const params = buildSearchParams();
-    // 현재 페이지 데이터(목록용)와 전체 데이터(통계용)를 병렬로 조회
-    const [response, allResponse] = await Promise.all([
-      employeeRepository.search(params),
-      employeeRepository.search({ ...params, page: 1, size: 10000 }),
-    ]);
-
-    if (token !== requestToken) {
-      return;
-    }
-
-    if (response.totalPages > 0 && page.value > response.totalPages) {
-      page.value = response.totalPages;
-      return;
-    }
-
-    employees.value = response.content;
-    totalElements.value = response.totalElements;
-    totalPages.value = Math.max(response.totalPages, 1);
-    allEmployees.value = allResponse.content;
-    rowSelection.value = {};
-    tableRenderKey.value += 1;
-  } catch (error) {
-    console.error('직원 목록을 불러오지 못했습니다.', error);
-    employees.value = [];
-    allEmployees.value = [];
-    totalElements.value = 0;
-    totalPages.value = 1;
-  } finally {
-    if (token === requestToken) {
-      isLoading.value = false;
-    }
-  }
-}
-
-// URL 쿼리 동기화 Composable 초기화
-const { buildSearchParams, applyRouteQuery } = useEmployeeQuerySync({
-  page,
-  pageSize,
-  sorting,
-  columnFilters,
-  onLoadEmployees: loadEmployees,
-});
 
 function handlePageChange(nextPage: number) {
   if (nextPage < 1) {
@@ -555,20 +520,17 @@ function openCreateDialog() {
   isEmployeeCreateDialogOpen.value = true;
 }
 
-function handleEmployeeCreated() {
+async function handleEmployeeCreated() {
   isEmployeeCreateDialogOpen.value = false;
   if (page.value !== 1) {
     page.value = 1;
-    // page가 변경되면 Composable의 watch가 자동으로 loadEmployees 호출
-  } else {
-    // page가 1이면 직접 호출
-    loadEmployees();
   }
+  await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 }
 
-function handleEmployeeUpdated() {
+async function handleEmployeeUpdated() {
   isEmployeeUpdateDialogOpen.value = false;
-  loadEmployees();
+  await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 }
 
 async function handleEditEmployee(row: EmployeeListItem) {
@@ -576,7 +538,12 @@ async function handleEditEmployee(row: EmployeeListItem) {
   isLoadingEmployee.value = true;
   const loadingToast = toast.loading('직원 정보를 불러오는 중입니다.');
   try {
-    const detail = await employeeRepository.findById(row.employeeId);
+    editingEmployeeId.value = row.employeeId;
+    const result = await employeeDetailQuery.refetch();
+    const detail = result.data;
+    if (!detail) {
+      throw new Error('직원 정보를 불러오지 못했습니다.');
+    }
     editingEmployee.value = detail;
     isEmployeeUpdateDialogOpen.value = true;
     toast.dismiss(loadingToast);
@@ -653,13 +620,9 @@ function getColumnLabel(columnId: string): string {
   return columnLabelMap[columnId] ?? columnId;
 }
 
-onMounted(async () => {
-  loadDepartments();
-  await loadEmployeeOptions();
+onMounted(() => {
   if (Object.keys(route.query).length > 0) {
     applyRouteQuery({ ...route.query });
-  } else {
-    await loadEmployees();
   }
 });
 </script>

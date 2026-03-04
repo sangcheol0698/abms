@@ -66,15 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { appContainer } from '@/core/di/container';
-import {
-  DashboardRepository,
-  type DashboardSummary,
-} from '@/features/dashboard/repository/DashboardRepository';
 import DashboardMonthlyFinancialPanel from '@/features/dashboard/components/DashboardMonthlyFinancialPanel.vue';
 import DashboardDepartmentFinancialPanel from '@/features/dashboard/components/DashboardDepartmentFinancialPanel.vue';
 import DashboardProjectStatusPanel from '@/features/dashboard/components/DashboardProjectStatusPanel.vue';
@@ -83,24 +78,16 @@ import DashboardEmployeeDistributionPanel from '@/features/dashboard/components/
 import DashboardEmployeeStatusPanel from '@/features/dashboard/components/DashboardEmployeeStatusPanel.vue';
 import DashboardJobLevelPanel from '@/features/dashboard/components/DashboardJobLevelPanel.vue';
 import { useNotificationsStore } from '@/core/stores/notifications.store';
+import { useDashboardSummaryQuery } from '@/features/dashboard/queries/useDashboardQueries';
 
-const repository = appContainer.resolve(DashboardRepository);
 const notificationsStore = useNotificationsStore();
 const { sorted: allNotifications } = storeToRefs(notificationsStore);
+const summaryQuery = useDashboardSummaryQuery();
 
-const summary = ref<DashboardSummary | null>(null);
-const isLoading = ref(true);
+const summary = computed(() => summaryQuery.data.value ?? null);
+const isLoading = computed(() => summaryQuery.isLoading.value);
 
 const notifications = computed(() => allNotifications.value.slice(0, 5));
-
-async function fetchDashboardData() {
-  isLoading.value = true;
-  try {
-    summary.value = await repository.fetchSummary();
-  } finally {
-    isLoading.value = false;
-  }
-}
 
 function formatRelative(isoString: string) {
   const created = new Date(isoString);
@@ -122,7 +109,6 @@ function formatRelative(isoString: string) {
 }
 
 onMounted(() => {
-  void fetchDashboardData();
   void notificationsStore.fetchAll();
 });
 </script>

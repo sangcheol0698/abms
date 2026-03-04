@@ -6,7 +6,6 @@
 
 import { nextTick, watch, type Ref } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
-import { useDebounceFn } from '@vueuse/core';
 import type { ColumnFiltersState, SortingState } from '@tanstack/vue-table';
 import type { ProjectSearchParams } from '@/features/project/models/projectListItem';
 import {
@@ -34,12 +33,10 @@ export interface UseProjectQuerySyncOptions {
   columnFilters: Ref<ColumnFiltersState>;
   /** 날짜 필터 */
   dateRange: Ref<DateRange | null>;
-  /** 프로젝트 목록 로딩 함수 */
-  onLoadProjects: () => Promise<void>;
 }
 
 export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
-  const { page, pageSize, sorting, columnFilters, dateRange, onLoadProjects } = options;
+  const { page, pageSize, sorting, columnFilters, dateRange } = options;
 
   const route = useRoute();
   const router = useRouter();
@@ -156,7 +153,6 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
     nextTick(() => {
       isApplyingRoute = false;
       updateRouteFromState();
-      onLoadProjects();
     });
   }
 
@@ -261,10 +257,6 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
     return [{ id: mappedId, desc: first.desc }];
   }
 
-  const triggerFilterFetch = useDebounceFn(() => {
-    onLoadProjects();
-  }, 300);
-
   watch(
     columnFilters,
     () => {
@@ -273,7 +265,6 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
       }
       page.value = 1;
       updateRouteFromState();
-      triggerFilterFetch();
     },
     { deep: true },
   );
@@ -286,7 +277,6 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
       }
       page.value = 1;
       updateRouteFromState();
-      triggerFilterFetch();
     },
     { deep: true },
   );
@@ -299,7 +289,6 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
       }
       page.value = 1;
       updateRouteFromState();
-      onLoadProjects();
     },
     { deep: true },
   );
@@ -309,7 +298,6 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
       return;
     }
     updateRouteFromState();
-    onLoadProjects();
   });
 
   watch(pageSize, () => {
@@ -318,7 +306,6 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
     }
     page.value = 1;
     updateRouteFromState();
-    onLoadProjects();
   });
 
   watch(

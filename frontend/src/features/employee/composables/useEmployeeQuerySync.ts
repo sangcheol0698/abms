@@ -7,7 +7,6 @@
 
 import { nextTick, watch, type Ref } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
-import { useDebounceFn } from '@vueuse/core';
 import type { ColumnFiltersState, SortingState } from '@tanstack/vue-table';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
 import {
@@ -28,8 +27,6 @@ export interface UseEmployeeQuerySyncOptions {
   sorting: Ref<SortingState>;
   /** 컬럼 필터 상태 */
   columnFilters: Ref<ColumnFiltersState>;
-  /** 직원 목록 로딩 함수 */
-  onLoadEmployees: () => Promise<void>;
 }
 
 /**
@@ -45,7 +42,6 @@ export interface UseEmployeeQuerySyncOptions {
  *   pageSize,
  *   sorting,
  *   columnFilters,
- *   onLoadEmployees: loadEmployees,
  * });
  *
  * // 마운트 시 URL에서 상태 복원
@@ -57,7 +53,7 @@ export interface UseEmployeeQuerySyncOptions {
  * ```
  */
 export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
-  const { page, pageSize, sorting, columnFilters, onLoadEmployees } = options;
+  const { page, pageSize, sorting, columnFilters } = options;
 
   const route = useRoute();
   const router = useRouter();
@@ -224,7 +220,6 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
     nextTick(() => {
       isApplyingRoute = false;
       updateRouteFromState();
-      onLoadEmployees();
     });
   }
 
@@ -296,11 +291,6 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
     return [];
   }
 
-  // 필터 변경 시 데이터 로딩 (디바운스)
-  const triggerFilterFetch = useDebounceFn(() => {
-    onLoadEmployees();
-  }, 300);
-
   // 필터 변경 감지
   watch(
     columnFilters,
@@ -310,7 +300,6 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
       }
       page.value = 1;
       updateRouteFromState();
-      triggerFilterFetch();
     },
     { deep: true },
   );
@@ -324,7 +313,6 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
       }
       page.value = 1;
       updateRouteFromState();
-      onLoadEmployees();
     },
     { deep: true },
   );
@@ -335,7 +323,6 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
       return;
     }
     updateRouteFromState();
-    onLoadEmployees();
   });
 
   // 페이지 크기 변경 감지
@@ -345,7 +332,6 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
     }
     page.value = 1;
     updateRouteFromState();
-    onLoadEmployees();
   });
 
   // 라우트 쿼리 변경 감지 (뒤로가기/앞으로가기)

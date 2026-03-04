@@ -227,55 +227,55 @@ describe('EmployeeRepository.fetch filter options', () => {
 
   it('상태 옵션을 API 응답으로 변환한다', async () => {
     httpGet.mockResolvedValueOnce([
-      { name: 'ACTIVE', description: '재직' },
-      { name: 'RESIGNED', description: '퇴사' },
+      { code: 'ACTIVE', description: '재직', level: 1 },
+      { code: 'RESIGNED', description: '퇴사', level: 2 },
     ]);
 
     const result = await repository.fetchStatuses();
 
     expect(result).toEqual<EmployeeFilterOption[]>([
-      { value: 'ACTIVE', label: '재직' },
-      { value: 'RESIGNED', label: '퇴사' },
+      { value: 'ACTIVE', label: '재직', level: 1 },
+      { value: 'RESIGNED', label: '퇴사', level: 2 },
     ]);
   });
 
   it('등급 옵션을 level 순으로 정렬한다', async () => {
     httpGet.mockResolvedValueOnce([
-      { name: 'SENIOR', description: '고급', level: 3 },
-      { name: 'JUNIOR', description: '초급', level: 1 },
-      { name: 'MID', description: '중급', level: 2 },
+      { code: 'SENIOR', description: '고급', level: 3 },
+      { code: 'JUNIOR', description: '초급', level: 1 },
+      { code: 'MID_LEVEL', description: '중급', level: 2 },
     ]);
 
     const result = await repository.fetchGrades();
 
     expect(result).toEqual<EmployeeFilterOption[]>([
-      { value: 'JUNIOR', label: '초급' },
-      { value: 'MID', label: '중급' },
-      { value: 'SENIOR', label: '고급' },
+      { value: 'JUNIOR', label: '초급', level: 1 },
+      { value: 'MID_LEVEL', label: '중급', level: 2 },
+      { value: 'SENIOR', label: '고급', level: 3 },
     ]);
   });
 
-  it('직책 옵션을 rank 순으로 정렬한다', async () => {
+  it('직책 옵션을 level 순으로 정렬한다', async () => {
     httpGet.mockResolvedValueOnce([
-      { name: 'DIRECTOR', description: '이사', rank: 4 },
-      { name: 'STAFF', description: '선임', rank: 2 },
-      { name: 'ASSOCIATE', description: '사원', rank: 1 },
+      { code: 'DIRECTOR', description: '이사', level: 4 },
+      { code: 'STAFF', description: '선임', level: 2 },
+      { code: 'ASSOCIATE', description: '사원', level: 1 },
     ]);
 
     const result = await repository.fetchPositions();
 
     expect(result).toEqual<EmployeeFilterOption[]>([
-      { value: 'ASSOCIATE', label: '사원' },
-      { value: 'STAFF', label: '선임' },
-      { value: 'DIRECTOR', label: '이사' },
+      { value: 'ASSOCIATE', label: '사원', level: 1 },
+      { value: 'STAFF', label: '선임', level: 2 },
+      { value: 'DIRECTOR', label: '이사', level: 4 },
     ]);
   });
 
   it('아바타 옵션을 API 응답과 정적 프리셋으로 병합한다', async () => {
     httpGet.mockResolvedValueOnce([
-      { code: 'AQUA_SPLASH', displayName: 'Aqua Splash Custom' },
-      { code: 'SKY_GLOW', displayName: 'Sky Glow Custom' },
-      { code: 'UNKNOWN', displayName: '미정' },
+      { code: 'AQUA_SPLASH', description: 'Aqua Splash Custom', level: 1 },
+      { code: 'SKY_GLOW', description: 'Sky Glow Custom', level: 2 },
+      { code: 'UNKNOWN', description: '미정', level: 3 },
     ]);
 
     const result = await repository.fetchAvatars();

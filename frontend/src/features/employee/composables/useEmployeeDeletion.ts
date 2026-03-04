@@ -1,11 +1,14 @@
 import { ref, computed } from 'vue';
 import { toast } from 'vue-sonner';
 import HttpError from '@/core/http/HttpError';
-import { appContainer } from '@/core/di/container';
-import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
+import {
+  useDeleteEmployeeMutation,
+  useRestoreEmployeeMutation,
+} from '@/features/employee/queries/useEmployeeQueries';
 
 export function useEmployeeDeletion(onDeleted: () => Promise<void> | void) {
-  const employeeRepository = appContainer.resolve(EmployeeRepository);
+  const deleteEmployeeMutation = useDeleteEmployeeMutation();
+  const restoreEmployeeMutation = useRestoreEmployeeMutation();
 
   const isDialogOpen = ref(false);
   const candidateId = ref<number | null>(null);
@@ -41,7 +44,7 @@ export function useEmployeeDeletion(onDeleted: () => Promise<void> | void) {
     isProcessing.value = true;
 
     try {
-      await employeeRepository.delete(id);
+      await deleteEmployeeMutation.mutateAsync(id);
 
       toast.success('직원을 삭제했습니다.', {
         description: name ?? undefined,
@@ -49,7 +52,7 @@ export function useEmployeeDeletion(onDeleted: () => Promise<void> | void) {
           label: '되돌리기',
           onClick: async () => {
             try {
-              await employeeRepository.restore(id);
+              await restoreEmployeeMutation.mutateAsync(id);
               toast.success('삭제를 취소했습니다.', {
                 description: name ?? undefined,
               });

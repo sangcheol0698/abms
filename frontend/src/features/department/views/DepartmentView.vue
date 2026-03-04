@@ -97,21 +97,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
-import { appContainer } from '@/core/di/container';
-import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import type {
   DepartmentChartNode,
-  DepartmentDetail,
   DepartmentSummary,
 } from '@/features/department/models/department';
 import DepartmentTree from '@/features/department/components/DepartmentTree.vue';
 import DepartmentDetailPanel from '@/features/department/components/DepartmentDetailPanel.vue';
-import HttpError from '@/core/http/HttpError';
-import { toast } from 'vue-sonner';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -123,23 +118,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Menu, Slash } from 'lucide-vue-next';
+import {
+  useDepartmentDetailQuery,
+  useDepartmentOrganizationChartQuery,
+} from '@/features/department/queries/useDepartmentQueries';
+import { departmentKeys, queryClient } from '@/core/query';
+import { toast } from 'vue-sonner';
 
-const repository = appContainer.resolve(DepartmentRepository);
-const chart = ref<DepartmentChartNode[]>([]);
-const isLoading = ref(true);
+const chartQuery = useDepartmentOrganizationChartQuery();
+const chart = computed(() => chartQuery.data.value ?? []);
+const isLoading = computed(() => chartQuery.isLoading.value);
+
 const selectedDepartmentId = ref<number | undefined>();
-const departmentDetail = ref<DepartmentDetail | null>(null);
-const isDepartmentLoading = ref(false);
-
 const router = useRouter();
 const route = useRoute();
 
-// URL 파라미터와 부서 ID 동기화
 watch(
   () => route.params.departmentId,
   (newId) => {
     if (newId) {
-      selectedDepartmentId.value = Number(newId);
+      const parsed = Number(newId);
+      selectedDepartmentId.value = Number.isFinite(parsed) ? parsed : undefined;
     } else {
       selectedDepartmentId.value = undefined;
     }
@@ -180,19 +179,24 @@ const headerBreadcrumbs = computed<HeaderBreadcrumb[]>(() => {
   return crumbs;
 });
 
-let detailRequestToken = 0;
+const departmentDetailQuery = useDepartmentDetailQuery(
+  computed(() => selectedDepartmentId.value ?? null),
+);
+const isDepartmentLoading = computed(
+  () => departmentDetailQuery.isLoading.value || departmentDetailQuery.isFetching.value,
+);
 
 const selectedDepartment = computed(() => {
   if (!selectedDepartmentId.value) {
     return null;
   }
+
   const node = findDepartment(chart.value, selectedDepartmentId.value);
   if (!node) {
     return null;
   }
 
-  const detail = departmentDetail.value;
-
+  const detail = departmentDetailQuery.data.value;
   const employees = detail?.employees ?? [];
   const employeeCount = detail?.employeeCount ?? node.employeeCount ?? employees.length;
 
@@ -208,104 +212,42 @@ const selectedDepartment = computed(() => {
   } satisfies DepartmentSummary;
 });
 
-async function loadOrganizationChart() {
-  isLoading.value = true;
-
-  try {
-    chart.value = await repository.fetchOrganizationChart();
-    ensureSelectedDepartmentExists();
-  } catch (error) {
-    const message = error instanceof HttpError ? error.message : '부서 정보를 불러오지 못했습니다.';
+watch(
+  () => chartQuery.error.value,
+  (error) => {
+    if (!error) {
+      return;
+    }
+    const message = error instanceof Error ? error.message : '부서 정보를 불러오지 못했습니다.';
     toast.error('부서 정보를 불러오지 못했습니다.', {
       description: message,
     });
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-async function loadDepartmentDetail(departmentId: number) {
-  const token = ++detailRequestToken;
-  isDepartmentLoading.value = true;
-
-  try {
-    const detail = await repository.fetchDepartmentDetail(departmentId);
-
-    if (token !== detailRequestToken) {
-      return;
-    }
-
-    departmentDetail.value = detail;
-  } catch (error) {
-    if (token !== detailRequestToken) {
-      return;
-    }
-
-    departmentDetail.value = null;
-    if (error instanceof HttpError) {
-      console.warn('부서 상세 정보를 불러오지 못했습니다.', error.message);
-    } else {
-      console.warn('부서 상세 정보를 불러오는 중 오류가 발생했습니다.', error);
-    }
-  } finally {
-    if (token === detailRequestToken) {
-      isDepartmentLoading.value = false;
-    }
-  }
-}
-
-onMounted(() => {
-  void loadOrganizationChart();
-});
+  },
+);
 
 watch(chart, (nodes) => {
   if (!nodes.length) {
     selectedDepartmentId.value = undefined;
-    departmentDetail.value = null;
     return;
   }
 
-  // ensureSelectedDepartmentExists()가 이미 처리하므로 여기서는 체크만
   if (selectedDepartmentId.value) {
     const exists = findDepartment(nodes, selectedDepartmentId.value);
     if (!exists) {
-      // URL에 있는 부서 ID가 실제로 존재하지 않으면 undefined로 설정
       selectedDepartmentId.value = undefined;
     }
   }
+
+  ensureSelectedDepartmentExists();
 });
-
-watch(
-  selectedDepartmentId,
-  (next, previous) => {
-    if (!next) {
-      departmentDetail.value = null;
-      return;
-    }
-
-    if (next === previous && departmentDetail.value) {
-      return;
-    }
-
-    const node = findDepartment(chart.value, next);
-    if (!node) {
-      departmentDetail.value = null;
-      return;
-    }
-
-    departmentDetail.value = null;
-    void loadDepartmentDetail(next);
-  },
-  { immediate: false },
-);
 
 function handleTreeSelection(departmentId: number, pane?: FeatureSplitPaneContext) {
   if (!departmentId) {
     return;
   }
-  
+
   router.push({ name: 'department', params: { departmentId } });
-  
+
   if (pane && !pane.isLargeScreen.value) {
     pane.closeSidebar();
   }
@@ -313,18 +255,15 @@ function handleTreeSelection(departmentId: number, pane?: FeatureSplitPaneContex
 
 function ensureSelectedDepartmentExists() {
   if (!selectedDepartmentId.value) {
-    // URL에 파라미터가 없으면 첫 번째 부서 선택
     if (chart.value[0]?.departmentId) {
-       router.replace({ name: 'department', params: { departmentId: chart.value[0].departmentId } });
+      router.replace({ name: 'department', params: { departmentId: chart.value[0].departmentId } });
     }
     return;
   }
 
   const exists = findDepartment(chart.value, selectedDepartmentId.value);
-  if (!exists) {
-     if (chart.value[0]?.departmentId) {
-        router.replace({ name: 'department', params: { departmentId: chart.value[0].departmentId } });
-     }
+  if (!exists && chart.value[0]?.departmentId) {
+    router.replace({ name: 'department', params: { departmentId: chart.value[0].departmentId } });
   }
 }
 
@@ -378,9 +317,14 @@ function buildDepartmentPath(
 }
 
 function handleRefresh() {
-  void loadOrganizationChart();
+  void queryClient.invalidateQueries({ queryKey: departmentKeys.organizationChart() });
   if (selectedDepartmentId.value) {
-    void loadDepartmentDetail(selectedDepartmentId.value);
+    void queryClient.invalidateQueries({
+      queryKey: departmentKeys.detail(selectedDepartmentId.value),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: departmentKeys.employeesRoot(selectedDepartmentId.value),
+    });
   }
 }
 </script>

@@ -82,11 +82,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
-import { appContainer } from '@/core/di/container';
-import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import {
   Dialog,
@@ -108,6 +105,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Check, Loader2, Search } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
+import { useAssignDepartmentLeaderMutation } from '@/features/department/queries/useDepartmentQueries';
+import { useEmployeesQuery } from '@/features/employee/queries/useEmployeeQueries';
 
 const props = defineProps<{
   open: boolean;
@@ -120,14 +119,29 @@ const emit = defineEmits<{
   (event: 'assigned'): void;
 }>();
 
-const employeeRepository = appContainer.resolve(EmployeeRepository);
-const organizationRepository = appContainer.resolve(DepartmentRepository);
-
 const searchQuery = ref('');
-const employees = ref<EmployeeListItem[]>([]);
+const debouncedQuery = ref('');
 const selectedEmployee = ref<EmployeeListItem | null>(null);
-const isLoading = ref(false);
-const isSubmitting = ref(false);
+const assignMutation = useAssignDepartmentLeaderMutation();
+
+const employeeSearchParams = computed(() => ({
+  page: 1,
+  size: 20,
+  name: debouncedQuery.value || undefined,
+  sort: 'name,asc',
+}));
+const employeesQuery = useEmployeesQuery(employeeSearchParams);
+
+const isLoading = computed(
+  () => !!debouncedQuery.value && (employeesQuery.isLoading.value || employeesQuery.isFetching.value),
+);
+const employees = computed(() => {
+  if (!debouncedQuery.value) {
+    return [];
+  }
+  return employeesQuery.data.value?.content ?? [];
+});
+const isSubmitting = computed(() => assignMutation.isPending.value);
 
 const handleSearch = (e: Event) => {
   const value = (e.target as HTMLInputElement).value;
@@ -135,25 +149,11 @@ const handleSearch = (e: Event) => {
   debouncedSearch(value);
 };
 
-const debouncedSearch = useDebounceFn(async (query: string) => {
-  if (!query.trim()) {
-    employees.value = [];
-    return;
-  }
-
-  isLoading.value = true;
-  try {
-    const response = await employeeRepository.search({
-      page: 1,
-      size: 20,
-      name: query,
-      sort: 'name,asc',
-    });
-    employees.value = response.content;
-  } catch (error) {
-    console.error('Failed to search employees:', error);
-  } finally {
-    isLoading.value = false;
+const debouncedSearch = useDebounceFn((query: string) => {
+  const trimmed = query.trim();
+  debouncedQuery.value = trimmed;
+  if (!trimmed) {
+    selectedEmployee.value = null;
   }
 }, 300);
 
@@ -174,28 +174,24 @@ function close() {
 
 function resetState() {
   searchQuery.value = '';
-  employees.value = [];
+  debouncedQuery.value = '';
   selectedEmployee.value = null;
 }
 
 async function confirmAssignment() {
   if (!selectedEmployee.value) return;
 
-  isSubmitting.value = true;
   try {
-    await organizationRepository.assignTeamLeader(
-      props.departmentId,
-      selectedEmployee.value.employeeId,
-    );
+    await assignMutation.mutateAsync({
+      departmentId: props.departmentId,
+      employeeId: selectedEmployee.value.employeeId,
+    });
 
     toast.success(`${selectedEmployee.value.name}님이 리더로 임명되었습니다.`);
     emit('assigned');
     close();
-  } catch (error) {
-    console.error('Failed to assign leader:', error);
+  } catch {
     toast.error('리더 임명에 실패했습니다.');
-  } finally {
-    isSubmitting.value = false;
   }
 }
 
@@ -203,6 +199,4 @@ function getInitials(name?: string) {
   if (!name) return '';
   return name.slice(0, 2).toUpperCase();
 }
-
-// Initial load (optional, maybe showing recent employees or empty state is fine)
 </script>

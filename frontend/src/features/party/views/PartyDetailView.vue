@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -82,73 +82,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { appContainer } from '@/core/di/container';
-import PartyRepository from '@/features/party/repository/PartyRepository';
-import type { PartyDetail } from '@/features/party/models/partyDetail';
-import HttpError from '@/core/http/HttpError';
 import PartyDetailHeader from '@/features/party/components/PartyDetailHeader.vue';
 import PartyOverviewPanel from '@/features/party/components/PartyOverviewPanel.vue';
 import PartyProjectsPanel from '@/features/party/components/PartyProjectsPanel.vue';
 import PartyFormDialog from '@/features/party/components/PartyFormDialog.vue';
+import { useDeletePartyMutation, usePartyDetailQuery } from '@/features/party/queries/usePartyQueries';
+import { partyKeys, queryClient } from '@/core/query';
 
 defineOptions({ name: 'PartyDetailView' });
 
 const route = useRoute();
 const router = useRouter();
+const partyId = computed(() => {
+  const raw = route.params.partyId;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+});
 
-const repository = appContainer.resolve(PartyRepository);
-
-const party = ref<PartyDetail | null>(null);
-const isLoading = ref(true);
-const errorMessage = ref<string | null>(null);
 const isFormDialogOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
-const isDeleting = ref(false);
+const partyQuery = usePartyDetailQuery(partyId);
+const deletePartyMutation = useDeletePartyMutation();
 
-watch(
-  () => route.params.partyId,
-  (next) => {
-    if (typeof next === 'string' && next.trim().length > 0) {
-      const partyId = Number(next);
-      if (!isNaN(partyId)) {
-        fetchParty(partyId);
-      }
-    }
-  },
-  { immediate: true },
-);
-
-function resolveErrorMessage(error: unknown, fallback: string) {
-  return error instanceof HttpError ? error.message : fallback;
-}
-
-async function fetchParty(partyId: number, options: { showLoading?: boolean } = {}) {
-  const { showLoading = true } = options;
-
-  if (showLoading) {
-    isLoading.value = true;
-    errorMessage.value = null;
-    party.value = null;
+const party = computed(() => partyQuery.data.value ?? null);
+const isLoading = computed(() => partyQuery.isLoading.value);
+const errorMessage = computed(() => {
+  const error = partyQuery.error.value;
+  if (!error) {
+    return null;
   }
-
-  try {
-    const result = await repository.find(partyId);
-    party.value = result;
-    return result;
-  } catch (error) {
-    const message = resolveErrorMessage(error, '협력사 정보를 불러오는 중 오류가 발생했습니다.');
-    if (showLoading) {
-      errorMessage.value = message;
-      party.value = null;
-      return null;
-    }
-    throw error instanceof Error ? error : new Error(message);
-  } finally {
-    if (showLoading) {
-      isLoading.value = false;
-    }
-  }
-}
+  return error instanceof Error ? error.message : '협력사 정보를 불러오는 중 오류가 발생했습니다.';
+});
+const isDeleting = computed(() => deletePartyMutation.isPending.value);
 
 function openEditDialog() {
   isFormDialogOpen.value = true;
@@ -158,25 +123,21 @@ function openDeleteDialog() {
   isDeleteDialogOpen.value = true;
 }
 
-function handlePartyUpdated() {
+async function handlePartyUpdated() {
   isFormDialogOpen.value = false;
-  if (party.value?.partyId) {
-    fetchParty(party.value.partyId, { showLoading: false });
+  if (partyId.value > 0) {
+    await queryClient.invalidateQueries({ queryKey: partyKeys.detail(partyId.value) });
   }
 }
 
 async function handleDelete() {
   if (!party.value?.partyId) return;
 
-  isDeleting.value = true;
   try {
-    await repository.delete(party.value.partyId);
+    await deletePartyMutation.mutateAsync(party.value.partyId);
     router.push('/parties');
-  } catch (error) {
-    const message = resolveErrorMessage(error, '협력사 삭제 중 오류가 발생했습니다.');
-    errorMessage.value = message;
-  } finally {
-    isDeleting.value = false;
+  } catch {
+    // Error state is surfaced by query/mutation error handling and toast in caller scope.
   }
 }
 </script>

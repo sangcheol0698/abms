@@ -1,16 +1,27 @@
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { defineStore } from 'pinia';
-import { appContainer } from '@/core/di/container';
-import NotificationRepository from '@/features/notification/repository/NotificationRepository';
+import {
+  useClearNotificationsMutation,
+  useCreateNotificationMutation,
+  useMarkAllNotificationsAsReadMutation,
+  useMarkNotificationAsReadMutation,
+  useNotificationsQuery,
+} from '@/features/notification/queries/useNotificationQueries';
 import type { NotificationItem, NotificationType } from '@/features/notification/models/notification';
 
 export type { NotificationItem, NotificationType };
 
 export const useNotificationsStore = defineStore('notifications', () => {
-  const repository = appContainer.resolve(NotificationRepository);
+  const notificationsQuery = useNotificationsQuery();
+  const markAsReadMutation = useMarkNotificationAsReadMutation();
+  const markAllAsReadMutation = useMarkAllNotificationsAsReadMutation();
+  const createMutation = useCreateNotificationMutation();
+  const clearMutation = useClearNotificationsMutation();
 
-  const items = ref<NotificationItem[]>([]);
-  const isLoading = ref(false);
+  const items = computed<NotificationItem[]>(() => notificationsQuery.data.value ?? []);
+  const isLoading = computed(
+    () => notificationsQuery.isFetching.value || markAsReadMutation.isPending.value,
+  );
 
   const unreadCount = computed(() => items.value.filter((item) => !item.read).length);
   const sorted = computed(() =>
@@ -20,18 +31,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
   );
 
   async function fetchAll() {
-    if (isLoading.value) {
-      return;
-    }
-
-    isLoading.value = true;
-    try {
-      items.value = await repository.fetchAll();
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-    } finally {
-      isLoading.value = false;
-    }
+    await notificationsQuery.refetch();
   }
 
   async function markAsRead(id: number) {
@@ -40,8 +40,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
       return;
     }
 
-    await repository.markAsRead(id);
-    target.read = true;
+    await markAsReadMutation.mutateAsync(id);
   }
 
   async function markAllAsRead() {
@@ -49,8 +48,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
       return;
     }
 
-    await repository.markAllAsRead();
-    items.value = items.value.map((item) => ({ ...item, read: true }));
+    await markAllAsReadMutation.mutateAsync();
   }
 
   async function add(
@@ -59,14 +57,12 @@ export const useNotificationsStore = defineStore('notifications', () => {
       read?: boolean;
     },
   ) {
-    const created = await repository.create({
+    await createMutation.mutateAsync({
       title: notification.title,
       description: notification.description,
       type: notification.type,
       link: notification.link,
     });
-
-    items.value = [created, ...items.value];
   }
 
   async function clearAll() {
@@ -74,8 +70,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
       return;
     }
 
-    await repository.clearAll();
-    items.value = [];
+    await clearMutation.mutateAsync();
   }
 
   return {

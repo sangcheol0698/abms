@@ -70,13 +70,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { appContainer } from '@/core/di/container';
 import HttpError from '@/core/http/HttpError';
-import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { useConfirmRegistrationMutation } from '@/features/auth/queries/useAuthQueries';
 
 const route = useRoute();
 const router = useRouter();
-const authRepository = appContainer.resolve(AuthRepository);
+const confirmRegistrationMutation = useConfirmRegistrationMutation();
 
 const password = ref('');
 const passwordConfirm = ref('');
@@ -119,7 +118,7 @@ async function submitConfirmation() {
 
   isSubmitting.value = true;
   try {
-    await authRepository.confirmRegistration({
+    await confirmRegistrationMutation.mutateAsync({
       token: token.value,
       password: password.value,
     });

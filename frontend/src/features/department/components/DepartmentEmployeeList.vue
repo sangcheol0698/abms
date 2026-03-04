@@ -88,12 +88,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { appContainer } from '@/core/di/container';
 import { useQuerySync } from '@/core/composables/useQuerySync';
 import { toast } from 'vue-sonner';
 import HttpError from '@/core/http/HttpError';
-import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
-import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import { createEmployeeTableColumns } from '@/features/employee/configs/tableColumns';
@@ -104,10 +101,21 @@ import type { EmployeeFilterOption } from '@/features/employee/models/employeeFi
 import {
   getEmployeeGradeOptions,
   getEmployeePositionOptions,
-  getEmployeeStatusOptions,
   getEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
 import type { DepartmentChartNode } from '@/features/department/models/department';
+import {
+  useDepartmentEmployeesQuery,
+  useDepartmentOrganizationChartQuery,
+} from '@/features/department/queries/useDepartmentQueries';
+import {
+  useEmployeeDetailQuery,
+  useEmployeeGradesQuery,
+  useEmployeePositionsQuery,
+  useEmployeeStatusesQuery,
+  useEmployeeTypesQuery,
+} from '@/features/employee/queries/useEmployeeQueries';
+import { departmentKeys, employeeKeys, queryClient } from '@/core/query';
 
 interface DepartmentOption {
   label: string;
@@ -118,29 +126,17 @@ const props = defineProps<{
   departmentId: number;
 }>();
 
-const repository = appContainer.resolve(DepartmentRepository);
-const employeeRepository = appContainer.resolve(EmployeeRepository);
 const router = useRouter();
 
 // 상태
-const employees = ref<EmployeeListItem[]>([]);
-const isLoading = ref(false);
 const page = ref(1);
 const pageSize = ref(5);
-const totalPages = ref(1);
-const totalElements = ref(0);
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
 const rowSelection = ref<RowSelectionState>({});
+const editingEmployeeId = ref<number | null>(null);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
-
-// 부서 옵션 및 필터 옵션
-const departmentOptions = ref<DepartmentOption[]>([]);
-const statusOptions = ref<EmployeeFilterOption[]>(getEmployeeStatusOptions());
-const typeOptions = ref<EmployeeFilterOption[]>(getEmployeeTypeOptions());
-const gradeOptions = ref<EmployeeFilterOption[]>(getEmployeeGradeOptions());
-const positionOptions = ref<EmployeeFilterOption[]>(getEmployeePositionOptions());
 
 // 직원 수정 다이얼로그 상태
 const isEmployeeUpdateDialogOpen = ref(false);
@@ -149,11 +145,11 @@ const isLoadingEmployee = ref(false);
 
 // 직원 삭제 Composable
 const deletion = useEmployeeDeletion(async () => {
-  await loadEmployees();
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: departmentKeys.employeesRoot(props.departmentId) }),
+    queryClient.invalidateQueries({ queryKey: employeeKeys.all }),
+  ]);
 });
-
-// EnumResponse 로드 완료 플래그
-const isEnumLoaded = ref(false);
 
 // 컬럼 라벨 매핑 (DataTableToolbar용)
 function getColumnLabel(columnId: string): string {
@@ -205,7 +201,6 @@ useQuerySync({
   },
 });
 
-// URL 동기화 - 페이지
 useQuerySync({
   state: page,
   queryKey: 'page',
@@ -220,7 +215,6 @@ useQuerySync({
   defaultValue: 1,
 });
 
-// URL 동기화 - 정렬
 const sortQuery = computed({
   get: () => {
     const sort = sorting.value[0];
@@ -251,6 +245,59 @@ useQuerySync({
   },
 });
 
+const departmentEmployeesParams = computed(() => ({
+  departmentId: props.departmentId,
+  page: page.value,
+  size: pageSize.value,
+  name: searchNameForQuery.value.trim() || undefined,
+  sort: sortQuery.value || undefined,
+}));
+
+const departmentEmployeesQuery = useDepartmentEmployeesQuery(departmentEmployeesParams);
+const departmentChartQuery = useDepartmentOrganizationChartQuery();
+useEmployeeStatusesQuery();
+const employeeTypesQuery = useEmployeeTypesQuery();
+const employeeGradesQuery = useEmployeeGradesQuery();
+const employeePositionsQuery = useEmployeePositionsQuery();
+const employeeDetailQuery = useEmployeeDetailQuery(editingEmployeeId);
+
+// 부서 옵션 및 필터 옵션
+const typeOptions = computed<EmployeeFilterOption[]>(
+  () => employeeTypesQuery.data.value ?? getEmployeeTypeOptions(),
+);
+const gradeOptions = computed<EmployeeFilterOption[]>(
+  () => employeeGradesQuery.data.value ?? getEmployeeGradeOptions(),
+);
+const positionOptions = computed<EmployeeFilterOption[]>(
+  () => employeePositionsQuery.data.value ?? getEmployeePositionOptions(),
+);
+
+const departmentOptions = computed<DepartmentOption[]>(() => {
+  const chart = departmentChartQuery.data.value ?? [];
+  const map = new Map<number, string>();
+
+  const traverse = (nodes: DepartmentChartNode[]) => {
+    nodes.forEach((node) => {
+      if (!map.has(node.departmentId)) {
+        map.set(node.departmentId, node.departmentName);
+      }
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        traverse(node.children);
+      }
+    });
+  };
+
+  traverse(chart);
+  return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+});
+
+const employees = computed(() => departmentEmployeesQuery.data.value?.content ?? []);
+const isLoading = computed(
+  () => departmentEmployeesQuery.isLoading.value || departmentEmployeesQuery.isFetching.value,
+);
+const totalPages = computed(() => Math.max(departmentEmployeesQuery.data.value?.totalPages ?? 1, 1));
+const totalElements = computed(() => departmentEmployeesQuery.data.value?.totalElements ?? 0);
+
 // 이벤트 핸들러
 function handleViewEmployee(employee: EmployeeListItem) {
   router.push({
@@ -265,7 +312,13 @@ async function handleEditEmployee(employee: EmployeeListItem) {
   const loadingToast = toast.loading('직원 정보를 불러오는 중입니다.');
 
   try {
-    editingEmployee.value = await employeeRepository.findById(employee.employeeId);
+    editingEmployeeId.value = employee.employeeId;
+    const result = await employeeDetailQuery.refetch();
+    const detail = result.data;
+    if (!detail) {
+      throw new Error('직원 정보를 불러오지 못했습니다.');
+    }
+    editingEmployee.value = detail;
     isEmployeeUpdateDialogOpen.value = true;
     toast.dismiss(loadingToast);
   } catch (error) {
@@ -298,9 +351,12 @@ function handleDeleteEmployee(employee: EmployeeListItem) {
   deletion.open(employee.employeeId, employee.name);
 }
 
-function handleEmployeeUpdated() {
+async function handleEmployeeUpdated() {
   isEmployeeUpdateDialogOpen.value = false;
-  loadEmployees();
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: departmentKeys.employeesRoot(props.departmentId) }),
+    queryClient.invalidateQueries({ queryKey: employeeKeys.all }),
+  ]);
 }
 
 function handleNavigateToDepartment(departmentId?: number) {
@@ -319,13 +375,13 @@ const columns = createEmployeeTableColumns(
   },
   {
     excludeDepartmentColumn: true,
-    excludeSelection: false, // 체크박스 포함
+    excludeSelection: false,
   },
 );
 
 // 테이블 인스턴스
 const table = useVueTable({
-  data: computed(() => employees.value),
+  data: employees,
   columns,
   manualPagination: true,
   manualFiltering: true,
@@ -348,83 +404,6 @@ const table = useVueTable({
   getCoreRowModel: getCoreRowModel(),
 });
 
-// API 호출
-async function loadDepartments() {
-  try {
-    const chart = await repository.fetchOrganizationChart();
-    const map = new Map<number, string>();
-
-    const traverse = (nodes: DepartmentChartNode[]) => {
-      nodes.forEach((node) => {
-        if (!map.has(node.departmentId)) {
-          map.set(node.departmentId, node.departmentName);
-        }
-        if (Array.isArray(node.children) && node.children.length > 0) {
-          traverse(node.children);
-        }
-      });
-    };
-
-    traverse(chart);
-    departmentOptions.value = Array.from(map.entries()).map(([value, label]) => ({ value, label }));
-  } catch (error) {
-    console.error('부서 정보를 불러오지 못했습니다.', error);
-    departmentOptions.value = [];
-  }
-}
-
-async function loadEmployees() {
-  if (!props.departmentId) return;
-
-  // EnumResponse 로드 대기
-  if (!isEnumLoaded.value) {
-    try {
-      await Promise.all([
-        employeeRepository.fetchStatuses(),
-        employeeRepository.fetchTypes(),
-        employeeRepository.fetchGrades(),
-        employeeRepository.fetchPositions(),
-        loadDepartments(),
-      ]);
-
-      // 옵션 값 업데이트
-      statusOptions.value = getEmployeeStatusOptions();
-      typeOptions.value = getEmployeeTypeOptions();
-      gradeOptions.value = getEmployeeGradeOptions();
-      positionOptions.value = getEmployeePositionOptions();
-
-      isEnumLoaded.value = true;
-    } catch (error) {
-      console.error('Enum 옵션을 불러오지 못했습니다.', error);
-    }
-  }
-
-  isLoading.value = true;
-  try {
-    const name = searchNameForQuery.value.trim() || undefined;
-    const sort = sortQuery.value;
-
-    const response = await repository.fetchDepartmentEmployees(props.departmentId, {
-      page: page.value,
-      size: pageSize.value,
-      name,
-      sort,
-    });
-
-    employees.value = response.content;
-    totalPages.value = response.totalPages;
-    totalElements.value = response.totalElements;
-  } catch (error) {
-    console.error('부서 직원 목록을 불러오지 못했습니다.', error);
-    toast.error('직원 목록을 불러오는데 실패했습니다.');
-    employees.value = [];
-    totalElements.value = 0;
-    totalPages.value = 1;
-  } finally {
-    isLoading.value = false;
-  }
-}
-
 // 이벤트 핸들러
 function handlePageChange(newPage: number) {
   page.value = newPage;
@@ -441,29 +420,22 @@ let previousDepartmentId: number | undefined;
 watch(
   () => props.departmentId,
   (newDeptId, oldDeptId) => {
-    // 초기 로드인지 부서 변경인지 구분
     const isDepartmentChange = previousDepartmentId !== undefined && newDeptId !== oldDeptId;
     previousDepartmentId = newDeptId;
 
     if (isDepartmentChange) {
-      // 실제 부서가 변경된 경우에만 검색 조건 초기화
       page.value = 1;
       columnFilters.value = [];
       sorting.value = [];
       rowSelection.value = {};
     }
-
-    // 항상 직원 목록 로드
-    loadEmployees();
   },
   { immediate: true },
 );
 
-// 감시자 - URL 쿼리 파라미터 변경 시 (검색어, 페이지, 정렬)
-watch([searchNameForQuery, page, pageSize, sortQuery], () => {
-  // departmentId가 있을 때만 로드
-  if (props.departmentId) {
-    loadEmployees();
+watch(totalPages, (nextTotalPages) => {
+  if (nextTotalPages > 0 && page.value > nextTotalPages) {
+    page.value = nextTotalPages;
   }
 });
 </script>

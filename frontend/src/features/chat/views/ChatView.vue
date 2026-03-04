@@ -297,14 +297,21 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { sanitizeAssistantLinks } from '@/features/chat/utils/linkSanitizer';
 import { toast } from 'vue-sonner';
+import {
+  invalidateChatSessions,
+  useChatFavoriteSessionsQuery,
+  useChatRecentSessionsQuery,
+  useChatSessionDetailQuery,
+  useDeleteChatSessionMutation,
+  useRenameChatSessionMutation,
+  useToggleChatFavoriteMutation,
+} from '@/features/chat/queries/useChatQueries';
 
 const repository: ChatRepository = useChatRepository();
 const route = useRoute();
 const router = useRouter();
 
 // State
-const favorites = ref<ChatSession[]>([]);
-const recentSessions = ref<ChatSession[]>([]);
 const currentSessionId = ref<string | null>(null);
 const currentSession = ref<ChatSession | null>(null);
 const searchQuery = ref('');
@@ -316,16 +323,37 @@ const isStopRequested = ref(false);
 const skipNextRouteSyncSessionId = ref<string | null>(null);
 const pendingRouteSessionId = ref<string | null>(null);
 const sessionsReloadTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
-const isLoading = ref(false);
 const isDragging = ref(false);
 const isRenameDialogOpen = ref(false);
 const renameTargetSession = ref<ChatSession | null>(null);
 const renameTitle = ref('');
 const isDeleteDialogOpen = ref(false);
 const deleteTargetSession = ref<ChatSession | null>(null);
-const isSessionActionProcessing = ref(false);
 const chatWidgetRef = ref<any>(null);
 let dragCounter = 0;
+
+const favoritesQuery = useChatFavoriteSessionsQuery();
+const recentSessionsQuery = useChatRecentSessionsQuery();
+const sessionDetailQuery = useChatSessionDetailQuery(currentSessionId);
+const renameSessionMutation = useRenameChatSessionMutation();
+const deleteSessionMutation = useDeleteChatSessionMutation();
+const toggleFavoriteMutation = useToggleChatFavoriteMutation();
+
+const favorites = computed(() => favoritesQuery.data.value ?? []);
+const recentSessions = computed(() => recentSessionsQuery.data.value ?? []);
+const isLoading = computed(
+  () =>
+    favoritesQuery.isLoading.value ||
+    recentSessionsQuery.isLoading.value ||
+    favoritesQuery.isFetching.value ||
+    recentSessionsQuery.isFetching.value,
+);
+const isSessionActionProcessing = computed(
+  () =>
+    renameSessionMutation.isPending.value ||
+    deleteSessionMutation.isPending.value ||
+    toggleFavoriteMutation.isPending.value,
+);
 
 // Computed
 const infoText = computed(() =>
@@ -426,24 +454,19 @@ async function resetToNewChatState() {
 
 // Data loading
 async function loadSessions() {
-  isLoading.value = true;
-  try {
-    const [favs, recent] = await Promise.all([
-      repository.getFavoriteSessions(),
-      repository.getRecentSessions(20),
-    ]);
-    favorites.value = favs;
-    recentSessions.value = recent;
-  } catch (error) {
-    console.error('Failed to load sessions:', error);
-  } finally {
-    isLoading.value = false;
-  }
+  await Promise.all([favoritesQuery.refetch(), recentSessionsQuery.refetch()]);
 }
 
 async function loadSessionDetail(sessionId: string) {
   try {
-    const detail = await repository.getSessionDetail(sessionId);
+    currentSessionId.value = sessionId;
+    const result = await sessionDetailQuery.refetch();
+    const detail = result.data;
+    if (!detail) {
+      currentSession.value = null;
+      messages.value = [];
+      return;
+    }
     const sanitizedMessages = detail.messages.map((message) =>
       message.role === 'assistant'
         ? {
@@ -567,9 +590,11 @@ async function handleRenameSession() {
     return;
   }
 
-  isSessionActionProcessing.value = true;
   try {
-    await repository.updateSessionTitle(renameTargetSession.value.sessionId, normalizedTitle);
+    await renameSessionMutation.mutateAsync({
+      sessionId: renameTargetSession.value.sessionId,
+      title: normalizedTitle,
+    });
     await loadSessions();
 
     if (currentSessionId.value === renameTargetSession.value.sessionId && currentSession.value) {
@@ -584,8 +609,6 @@ async function handleRenameSession() {
   } catch (error) {
     console.error('Failed to rename session:', error);
     toast.error('세션명 변경에 실패했습니다.');
-  } finally {
-    isSessionActionProcessing.value = false;
   }
 }
 
@@ -594,10 +617,9 @@ async function handleDeleteSession() {
     return;
   }
 
-  isSessionActionProcessing.value = true;
   try {
     const targetSessionId = deleteTargetSession.value.sessionId;
-    await repository.deleteSession(targetSessionId);
+    await deleteSessionMutation.mutateAsync(targetSessionId);
     await loadSessions();
 
     if (currentSessionId.value === targetSessionId) {
@@ -614,8 +636,6 @@ async function handleDeleteSession() {
   } catch (error) {
     console.error('Failed to delete session:', error);
     toast.error('세션 삭제에 실패했습니다.');
-  } finally {
-    isSessionActionProcessing.value = false;
   }
 }
 
@@ -623,7 +643,7 @@ async function handleToggleFavorite() {
   if (!currentSessionId.value || isResponding.value) return;
 
   try {
-    await repository.toggleFavorite(currentSessionId.value);
+    await toggleFavoriteMutation.mutateAsync(currentSessionId.value);
     // Reload sessions to reflect the change
     await loadSessions();
     // Update current session
@@ -643,7 +663,7 @@ async function handleToggleFavoriteForSession(session: ChatSession) {
     return;
   }
   try {
-    await repository.toggleFavorite(session.sessionId);
+    await toggleFavoriteMutation.mutateAsync(session.sessionId);
     await loadSessions();
     if (currentSessionId.value === session.sessionId && currentSession.value) {
       currentSession.value = {
@@ -793,6 +813,7 @@ async function handleSubmit(content: string) {
       await router.replace({ name: 'assistant-session', params: { sessionId: streamedSessionId } });
     }
 
+    await invalidateChatSessions(streamedSessionId ?? currentSessionId.value);
     // Reload sessions to get the new/updated session
     await loadSessions();
 

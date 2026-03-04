@@ -80,51 +80,40 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, toRef } from 'vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { appContainer } from '@/core/di/container';
-import HttpError from '@/core/http/HttpError';
-import PartyRepository from '@/features/party/repository/PartyRepository';
 import type { ProjectListItem } from '@/features/project/models/projectListItem';
 import { formatCurrency, formatProjectPeriod } from '@/features/project/models/projectListItem';
+import { usePartyProjectsQuery } from '@/features/party/queries/usePartyQueries';
 
 interface Props {
   partyId: number;
 }
 
 const props = defineProps<Props>();
-
-const repository = appContainer.resolve(PartyRepository);
-
-const projects = ref<ProjectListItem[]>([]);
-const isLoading = ref(false);
-const errorMessage = ref<string | null>(null);
+const partyId = toRef(props, 'partyId');
+const projectsQuery = usePartyProjectsQuery(partyId);
+const projects = computed(() => projectsQuery.data.value ?? []);
+const isLoading = computed(() => projectsQuery.isLoading.value);
+const errorMessage = computed(() => {
+  const error = projectsQuery.error.value;
+  if (!error) {
+    return null;
+  }
+  return error instanceof Error ? error.message : '프로젝트 정보를 불러오는 중 오류가 발생했습니다.';
+});
 
 const ongoingStatuses = new Set(['SCHEDULED', 'IN_PROGRESS', 'ON_HOLD']);
 const completedStatuses = new Set(['COMPLETED', 'CANCELLED']);
 
-const ongoingProjects = computed(() => sortProjects(
-  projects.value.filter((project) => ongoingStatuses.has(project.status)),
-));
+const ongoingProjects = computed(() =>
+  sortProjects(projects.value.filter((project) => ongoingStatuses.has(project.status))),
+);
 
-const completedProjects = computed(() => sortProjects(
-  projects.value.filter((project) => completedStatuses.has(project.status)),
-));
-
-watch(
-  () => props.partyId,
-  (next) => {
-    if (Number.isFinite(next) && next > 0) {
-      loadProjects(next);
-      return;
-    }
-    projects.value = [];
-    errorMessage.value = null;
-    isLoading.value = false;
-  },
-  { immediate: true },
+const completedProjects = computed(() =>
+  sortProjects(projects.value.filter((project) => completedStatuses.has(project.status))),
 );
 
 function sortProjects(items: ProjectListItem[]) {
@@ -158,21 +147,4 @@ function toContractAmount(project: ProjectListItem) {
   return formatCurrency(project.contractAmount);
 }
 
-function resolveErrorMessage(error: unknown, fallback: string) {
-  return error instanceof HttpError ? error.message : fallback;
-}
-
-async function loadProjects(partyId: number) {
-  isLoading.value = true;
-  errorMessage.value = null;
-
-  try {
-    projects.value = await repository.fetchProjects(partyId);
-  } catch (error) {
-    projects.value = [];
-    errorMessage.value = resolveErrorMessage(error, '프로젝트 정보를 불러오는 중 오류가 발생했습니다.');
-  } finally {
-    isLoading.value = false;
-  }
-}
 </script>

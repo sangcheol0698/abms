@@ -1,6 +1,7 @@
 import { appContainer } from '@/core/di/container';
 import type { AuthMeResponse } from '@/features/auth/repository/AuthRepository';
 import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { authKeys, queryClient } from '@/core/query';
 
 const USER_STORAGE_KEY = 'user';
 const EMPLOYEE_STORAGE_KEY = 'employee';
@@ -76,8 +77,11 @@ export async function ensureServerSessionValid(): Promise<boolean> {
 
   if (!validatingPromise) {
     const authRepository = appContainer.resolve(AuthRepository);
-    validatingPromise = authRepository
-      .fetchMe()
+    validatingPromise = queryClient
+      .fetchQuery({
+        queryKey: authKeys.me(),
+        queryFn: () => authRepository.fetchMe(),
+      })
       .then((me) => {
         setStoredUser(me);
         return true;

@@ -195,7 +195,6 @@ import ProjectUpdateDialog from '@/features/project/components/ProjectUpdateDial
 import ProjectRowActions from '@/features/project/components/ProjectRowActions.vue';
 import ProjectSummaryCards from '@/features/project/components/ProjectSummaryCards.vue';
 import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
-import PartyRepository from '@/features/party/repository/PartyRepository';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -206,7 +205,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { ProjectListItem } from '@/features/project/models/projectListItem';
+import type { ProjectListItem, ProjectSearchParams } from '@/features/project/models/projectListItem';
 import { formatCurrency, formatProjectPeriod } from '@/features/project/models/projectListItem';
 import type { ProjectDetail } from '@/features/project/models/projectDetail';
 import { valueUpdater } from '@/components/ui/table/utils';
@@ -214,20 +213,22 @@ import { toast } from 'vue-sonner';
 import { useProjectQuerySync } from '@/features/project/composables/useProjectQuerySync';
 import { projectSummaryCards } from '@/features/project/data';
 import { useProjectDeletion } from '@/features/project/composables/useProjectDeletion';
+import { usePartyOptionsQuery } from '@/features/party/queries/usePartyQueries';
+import {
+  useProjectDetailQuery,
+  useProjectListQuery,
+  useProjectStatusesQuery,
+} from '@/features/project/queries/useProjectQueries';
+import { projectKeys, queryClient } from '@/core/query';
 
 defineOptions({ name: 'ProjectListView' });
 
 const router = useRouter();
 const route = useRoute();
 const repository = appContainer.resolve(ProjectRepository);
-const partyRepository = appContainer.resolve(PartyRepository);
 
-const projects = ref<ProjectListItem[]>([]);
-const isLoading = ref(false);
 const page = ref(1);
 const pageSize = ref(10);
-const totalPages = ref(1);
-const totalElements = ref(0);
 
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
@@ -235,14 +236,13 @@ const rowSelection = ref<RowSelectionState>({});
 const isProjectCreateDialogOpen = ref(false);
 const isProjectUpdateDialogOpen = ref(false);
 const editingProject = ref<ProjectDetail | null>(null);
+const editingProjectId = ref<number | null>(null);
 const isPartySelectOpen = ref(false);
 
 const isDownloadingExcel = ref(false);
 const isExcelUploadDialogOpen = ref(false);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
-const statusFilterOptions = ref<{ value: string; label: string; icon?: any }[]>([]);
-const partyOptions = ref<{ value: number; label: string }[]>([]);
 const selectedPartyId = computed(() => {
   const filter = columnFilters.value.find((item) => item.id === 'partyId');
   const value = Array.isArray(filter?.value) ? filter?.value[0] : filter?.value;
@@ -393,8 +393,31 @@ const columns: ColumnDef<ProjectListItem>[] = [
   },
 ];
 
+const { applyRouteQuery } = useProjectQuerySync({
+  page,
+  pageSize,
+  sorting,
+  columnFilters,
+  dateRange,
+});
+
+const searchParams = computed(() => getSearchParams());
+const projectsQuery = useProjectListQuery(searchParams);
+const projectStatusesQuery = useProjectStatusesQuery();
+const partyOptionsQuery = usePartyOptionsQuery();
+const projectDetailQuery = useProjectDetailQuery(editingProjectId);
+
+const projects = computed(() => projectsQuery.data.value?.content ?? []);
+const totalPages = computed(() => Math.max(projectsQuery.data.value?.totalPages ?? 1, 1));
+const totalElements = computed(() => projectsQuery.data.value?.totalElements ?? 0);
+const isLoading = computed(() => projectsQuery.isLoading.value || projectsQuery.isFetching.value);
+const statusFilterOptions = computed(
+  () => projectStatusesQuery.data.value ?? ([] as { value: string; label: string; icon?: any }[]),
+);
+const partyOptions = computed(() => partyOptionsQuery.data.value ?? []);
+
 const table = useVueTable({
-  data: computed(() => projects.value),
+  data: projects,
   columns,
   manualPagination: true,
   manualSorting: true,
@@ -420,21 +443,12 @@ const table = useVueTable({
   getFacetedUniqueValues: getFacetedUniqueValues(),
 });
 
-const { applyRouteQuery } = useProjectQuerySync({
-  page,
-  pageSize,
-  sorting,
-  columnFilters,
-  dateRange,
-  onLoadProjects: loadProjects,
-});
-
 const deletion = useProjectDeletion(async () => {
   if (page.value !== 1) {
     page.value = 1;
     return;
   }
-  await loadProjects();
+  await queryClient.invalidateQueries({ queryKey: projectKeys.all });
 });
 
 function getSearchParams(): ProjectSearchParams {
@@ -473,29 +487,12 @@ function getSearchParams(): ProjectSearchParams {
 
   if (sorting.value.length > 0) {
     const s = sorting.value[0];
-    params.sort = `${s.id},${s.desc ? 'desc' : 'asc'}`;
+    if (s) {
+      params.sort = `${s.id},${s.desc ? 'desc' : 'asc'}`;
+    }
   }
 
   return params;
-}
-
-async function loadProjects() {
-  isLoading.value = true;
-  try {
-    const response = await repository.search(getSearchParams());
-
-    projects.value = response.content;
-    totalPages.value = response.totalPages;
-    totalElements.value = response.totalElements;
-    rowSelection.value = {};
-  } catch (error) {
-    console.error('프로젝트 목록을 불러오지 못했습니다.', error);
-    projects.value = [];
-    totalElements.value = 0;
-    totalPages.value = 1;
-  } finally {
-    isLoading.value = false;
-  }
 }
 
 function handleViewProject(project: ProjectListItem) {
@@ -518,15 +515,22 @@ function handleCreateProject() {
   isProjectCreateDialogOpen.value = true;
 }
 
-function handleProjectCreated() {
+async function handleProjectCreated() {
   isProjectCreateDialogOpen.value = false;
-  loadProjects();
+  if (page.value !== 1) {
+    page.value = 1;
+  }
+  await queryClient.invalidateQueries({ queryKey: projectKeys.all });
 }
 
 async function handleEditProject(project: ProjectListItem) {
   try {
-    // 백엔드에서 최신 프로젝트 상세 정보 조회
-    const projectDetail = await repository.find(project.projectId);
+    editingProjectId.value = project.projectId;
+    const result = await projectDetailQuery.refetch();
+    const projectDetail = result.data;
+    if (!projectDetail) {
+      throw new Error('프로젝트 정보를 불러오지 못했습니다.');
+    }
     editingProject.value = projectDetail;
     isProjectUpdateDialogOpen.value = true;
   } catch {
@@ -534,10 +538,10 @@ async function handleEditProject(project: ProjectListItem) {
   }
 }
 
-function handleProjectUpdated() {
+async function handleProjectUpdated() {
   isProjectUpdateDialogOpen.value = false;
   editingProject.value = null;
-  loadProjects();
+  await queryClient.invalidateQueries({ queryKey: projectKeys.all });
 }
 
 async function handleExcelDownload() {
@@ -574,7 +578,7 @@ function openExcelUploadDialog() {
 
 async function handleExcelUpload(file: File, onProgress: (percent: number) => void) {
   await repository.uploadExcel(file, onProgress);
-  await loadProjects();
+  await queryClient.invalidateQueries({ queryKey: projectKeys.all });
 }
 
 function handleExcelUploadSuccess() {
@@ -613,21 +617,9 @@ function handleDeleteProject(project: ProjectListItem) {
   deletion.open(project.projectId, project.name);
 }
 
-onMounted(async () => {
-  try {
-    const [statuses, parties] = await Promise.all([
-      repository.fetchStatuses(),
-      partyRepository.fetchAll(),
-    ]);
-    statusFilterOptions.value = statuses;
-    partyOptions.value = parties;
-  } catch (error) {
-    console.error('Failed to fetch project filter options:', error);
-  }
+onMounted(() => {
   if (Object.keys(route.query).length > 0) {
     applyRouteQuery({ ...route.query });
-  } else {
-    await loadProjects();
   }
 });
 </script>

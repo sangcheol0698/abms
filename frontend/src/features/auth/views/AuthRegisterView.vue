@@ -65,13 +65,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { appContainer } from '@/core/di/container';
 import HttpError from '@/core/http/HttpError';
-import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { useRequestRegistrationMutation } from '@/features/auth/queries/useAuthQueries';
 
 const COMPANY_EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@iabacus\.co\.kr$/;
 
-const authRepository = appContainer.resolve(AuthRepository);
+const requestRegistrationMutation = useRequestRegistrationMutation();
 
 const email = ref('');
 const requestedEmail = ref('');
@@ -100,7 +99,7 @@ async function submitRequest() {
 
   isSubmitting.value = true;
   try {
-    await authRepository.requestRegistration({ email: normalizedEmail });
+    await requestRegistrationMutation.mutateAsync({ email: normalizedEmail });
     requestedEmail.value = normalizedEmail;
     isSent.value = true;
     toast.success('회원가입 링크를 발송했습니다.');

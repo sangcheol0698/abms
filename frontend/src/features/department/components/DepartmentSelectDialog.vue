@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
   Dialog,
   DialogContent,
@@ -50,10 +50,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import DepartmentTree from '@/features/department/components/DepartmentTree.vue';
-import { appContainer } from '@/core/di/container';
-import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
 import type { DepartmentChartNode } from '@/features/department/models/department';
 import { toast } from 'vue-sonner';
+import { useDepartmentOrganizationChartQuery } from '@/features/department/queries/useDepartmentQueries';
 
 interface Props {
   open: boolean;
@@ -67,10 +66,8 @@ const emit = defineEmits<{
   (event: 'select', payload: { departmentId: number; departmentName: string }): void;
 }>();
 
-const repository = appContainer.resolve(DepartmentRepository);
-
-const loading = ref(false);
-const nodes = ref<DepartmentChartNode[]>([]);
+const organizationChartQuery = useDepartmentOrganizationChartQuery();
+const nodes = computed(() => organizationChartQuery.data.value ?? []);
 const selectedNodeId = ref<number | undefined>();
 const treeRenderKey = ref(0);
 
@@ -85,24 +82,29 @@ const selectedNodeSummary = computed(() => {
   return node.departmentName;
 });
 
-onMounted(() => {
-  if (props.open) {
-    loadChart();
-    treeRenderKey.value += 1;
-  }
-});
+watch(
+  () => organizationChartQuery.error.value,
+  (error) => {
+    if (!error) {
+      return;
+    }
+    toast.error('부서 목록을 불러오지 못했습니다.', {
+      description: '네트워크 상태를 확인한 뒤 다시 시도해 주세요.',
+    });
+  },
+);
 
 watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
       selectedNodeId.value = props.selectedDepartmentId;
-      loadChart();
       treeRenderKey.value += 1;
     } else {
       selectedNodeId.value = undefined;
     }
   },
+  { immediate: true },
 );
 
 watch(
@@ -113,20 +115,6 @@ watch(
     }
   },
 );
-
-async function loadChart() {
-  loading.value = true;
-  try {
-    nodes.value = await repository.fetchOrganizationChart();
-  } catch (error) {
-    console.warn('부서 목록 불러오기 중 오류가 발생했습니다.', error);
-    toast.error('부서 목록을 불러오지 못했습니다.', {
-      description: '네트워크 상태를 확인한 뒤 다시 시도해 주세요.',
-    });
-  } finally {
-    loading.value = false;
-  }
-}
 
 function handleTreeSelect(departmentId: number) {
   if (!departmentId) {

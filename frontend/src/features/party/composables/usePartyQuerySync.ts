@@ -6,7 +6,6 @@
 
 import { nextTick, watch, type Ref } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
-import { useDebounceFn } from '@vueuse/core';
 import type { ColumnFiltersState, SortingState } from '@tanstack/vue-table';
 import type { PartySearchParams } from '@/features/party/models/partyListItem';
 import {
@@ -25,12 +24,10 @@ export interface UsePartyQuerySyncOptions {
   sorting: Ref<SortingState>;
   /** 컬럼 필터 상태 */
   columnFilters: Ref<ColumnFiltersState>;
-  /** 협력사 목록 로딩 함수 */
-  onLoadParties: () => Promise<void>;
 }
 
 export function usePartyQuerySync(options: UsePartyQuerySyncOptions) {
-  const { page, pageSize, sorting, columnFilters, onLoadParties } = options;
+  const { page, pageSize, sorting, columnFilters } = options;
 
   const route = useRoute();
   const router = useRouter();
@@ -94,7 +91,6 @@ export function usePartyQuerySync(options: UsePartyQuerySyncOptions) {
     nextTick(() => {
       isApplyingRoute = false;
       updateRouteFromState();
-      onLoadParties();
     });
   }
 
@@ -144,10 +140,6 @@ export function usePartyQuerySync(options: UsePartyQuerySyncOptions) {
     return true;
   }
 
-  const triggerFilterFetch = useDebounceFn(() => {
-    onLoadParties();
-  }, 300);
-
   watch(
     columnFilters,
     () => {
@@ -156,7 +148,6 @@ export function usePartyQuerySync(options: UsePartyQuerySyncOptions) {
       }
       page.value = 1;
       updateRouteFromState();
-      triggerFilterFetch();
     },
     { deep: true },
   );
@@ -169,7 +160,6 @@ export function usePartyQuerySync(options: UsePartyQuerySyncOptions) {
       }
       page.value = 1;
       updateRouteFromState();
-      onLoadParties();
     },
     { deep: true },
   );
@@ -179,7 +169,6 @@ export function usePartyQuerySync(options: UsePartyQuerySyncOptions) {
       return;
     }
     updateRouteFromState();
-    onLoadParties();
   });
 
   watch(pageSize, () => {
@@ -188,7 +177,6 @@ export function usePartyQuerySync(options: UsePartyQuerySyncOptions) {
     }
     page.value = 1;
     updateRouteFromState();
-    onLoadParties();
   });
 
   watch(

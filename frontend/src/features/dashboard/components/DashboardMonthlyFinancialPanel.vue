@@ -77,19 +77,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { appContainer } from '@/core/di/container';
-import DashboardRevenueRepository, {
-  type MonthlyRevenueSummaryResponse,
-} from '@/features/dashboard/repository/DashboardRevenueRepository';
+import { useDashboardMonthlyRevenueSummaryQuery } from '@/features/dashboard/queries/useDashboardQueries';
 
-const repository = appContainer.resolve(DashboardRevenueRepository);
-const items = ref<MonthlyRevenueSummaryResponse[]>([]);
-const isLoading = ref(false);
+const monthlyRevenueQuery = useDashboardMonthlyRevenueSummaryQuery();
+const isLoading = computed(() => monthlyRevenueQuery.isLoading.value);
 
 const data = computed(() => {
-  return items.value.map((item) => {
+  return (monthlyRevenueQuery.data.value ?? []).map((item) => {
     const date = new Date(item.targetMonth);
     return {
       month: `${date.getMonth() + 1}월`,
@@ -110,15 +106,4 @@ function formatAmount(value: number) {
   if (value >= 1000000) return `${(value / 1000000).toFixed(0)}백만`;
   return value.toLocaleString();
 }
-
-onMounted(async () => {
-  isLoading.value = true;
-  try {
-    items.value = await repository.fetchMonthlyRevenueSummary();
-  } catch (error) {
-    console.error('Failed to fetch monthly revenue summary:', error);
-  } finally {
-    isLoading.value = false;
-  }
-});
 </script>

@@ -116,33 +116,33 @@ import {
   DataTableToolbar,
 } from '@/components/business';
 import { valueUpdater } from '@/components/ui/table/utils';
-import { appContainer } from '@/core/di/container';
 import PartyFormDialog from '@/features/party/components/PartyFormDialog.vue';
 import PartySummaryCards from '@/features/party/components/PartySummaryCards.vue';
 import { partySummaryCards } from '@/features/party/data';
 import type { PartyDetail } from '@/features/party/models/partyDetail';
 import type { PartyListItem } from '@/features/party/models/partyListItem';
-import PartyRepository from '@/features/party/repository/PartyRepository';
 import { usePartyQuerySync } from '@/features/party/composables/usePartyQuerySync';
 import { toast } from 'vue-sonner';
+import {
+  useDeletePartyMutation,
+  usePartyDetailQuery,
+  usePartyListQuery,
+} from '@/features/party/queries/usePartyQueries';
+import { partyKeys, queryClient } from '@/core/query';
 
 defineOptions({ name: 'PartyListView' });
 
 const route = useRoute();
 const router = useRouter();
-const repository = appContainer.resolve(PartyRepository);
 
-const parties = ref<PartyListItem[]>([]);
-const isLoading = ref(false);
 const page = ref(1);
 const pageSize = ref(10);
-const totalPages = ref(1);
-const totalElements = ref(0);
 
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({});
 const rowSelection = ref<RowSelectionState>({});
+const editingPartyId = ref<number | null>(null);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 
@@ -271,8 +271,25 @@ const columns: ColumnDef<PartyListItem>[] = [
   },
 ];
 
+const { buildSearchParams, applyRouteQuery } = usePartyQuerySync({
+  page,
+  pageSize,
+  sorting,
+  columnFilters,
+});
+
+const searchParams = computed(() => buildSearchParams());
+const partiesQuery = usePartyListQuery(searchParams);
+const partyDetailQuery = usePartyDetailQuery(editingPartyId);
+const deletePartyMutation = useDeletePartyMutation();
+
+const parties = computed(() => partiesQuery.data.value?.content ?? []);
+const totalPages = computed(() => Math.max(partiesQuery.data.value?.totalPages ?? 1, 1));
+const totalElements = computed(() => partiesQuery.data.value?.totalElements ?? 0);
+const isLoading = computed(() => partiesQuery.isLoading.value || partiesQuery.isFetching.value);
+
 const table = useVueTable({
-  data: computed(() => parties.value),
+  data: parties,
   columns,
   manualPagination: true,
   manualFiltering: true,
@@ -300,31 +317,6 @@ const table = useVueTable({
   getFacetedRowModel: getFacetedRowModel(),
   getFacetedUniqueValues: getFacetedUniqueValues(),
 });
-
-const { buildSearchParams, applyRouteQuery } = usePartyQuerySync({
-  page,
-  pageSize,
-  sorting,
-  columnFilters,
-  onLoadParties: loadParties,
-});
-
-async function loadParties() {
-  isLoading.value = true;
-  try {
-    const response = await repository.list(buildSearchParams());
-    parties.value = response.content;
-    totalPages.value = response.totalPages;
-    totalElements.value = response.totalElements;
-  } catch (error) {
-    console.error('협력사 목록을 불러오지 못했습니다.', error);
-    parties.value = [];
-    totalPages.value = 1;
-    totalElements.value = 0;
-  } finally {
-    isLoading.value = false;
-  }
-}
 
 function handlePageChange(nextPage: number) {
   if (nextPage < 1) {
@@ -360,7 +352,7 @@ const editingParty = ref<PartyDetail | null>(null);
 
 const isDeleteDialogOpen = ref(false);
 const deletingParty = ref<PartyListItem | null>(null);
-const isDeleting = ref(false);
+const isDeleting = computed(() => deletePartyMutation.isPending.value);
 
 function handleViewParty(party: PartyListItem) {
   router.push({ name: 'party-detail', params: { partyId: party.partyId } });
@@ -374,7 +366,12 @@ function handleCreateParty() {
 
 async function handleEditParty(party: PartyListItem) {
   try {
-    const detail = await repository.find(party.partyId);
+    editingPartyId.value = party.partyId;
+    const result = await partyDetailQuery.refetch();
+    const detail = result.data;
+    if (!detail) {
+      throw new Error('협력사 정보를 불러오지 못했습니다.');
+    }
     formDialogMode.value = 'edit';
     editingParty.value = detail;
     isFormDialogOpen.value = true;
@@ -383,16 +380,19 @@ async function handleEditParty(party: PartyListItem) {
   }
 }
 
-function handlePartyCreated() {
+async function handlePartyCreated() {
   isFormDialogOpen.value = false;
   toast.success('협력사가 등록되었습니다.');
-  loadParties();
+  if (page.value !== 1) {
+    page.value = 1;
+  }
+  await queryClient.invalidateQueries({ queryKey: partyKeys.all });
 }
 
-function handlePartyUpdated() {
+async function handlePartyUpdated() {
   isFormDialogOpen.value = false;
   toast.success('협력사 정보가 수정되었습니다.');
-  loadParties();
+  await queryClient.invalidateQueries({ queryKey: partyKeys.all });
 }
 
 function handleDeleteParty(party: PartyListItem) {
@@ -403,25 +403,19 @@ function handleDeleteParty(party: PartyListItem) {
 async function confirmDelete() {
   if (!deletingParty.value) return;
 
-  isDeleting.value = true;
   try {
-    await repository.delete(deletingParty.value.partyId);
+    await deletePartyMutation.mutateAsync(deletingParty.value.partyId);
     toast.success('협력사가 삭제되었습니다.');
     isDeleteDialogOpen.value = false;
     deletingParty.value = null;
-    loadParties();
   } catch {
     toast.error('협력사 삭제에 실패했습니다.');
-  } finally {
-    isDeleting.value = false;
   }
 }
 
 onMounted(() => {
   if (Object.keys(route.query).length > 0) {
     applyRouteQuery({ ...route.query });
-  } else {
-    loadParties();
   }
 });
 </script>
