@@ -173,8 +173,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   getCoreRowModel,
   getFacetedRowModel,
@@ -262,7 +262,6 @@ interface DepartmentOption {
 
 const employeeRepository = appContainer.resolve(EmployeeRepository);
 const router = useRouter();
-const route = useRoute();
 
 const tableRenderKey = ref(0);
 const page = ref(1);
@@ -299,7 +298,7 @@ const columns = createEmployeeTableColumns({
 });
 
 // URL 쿼리 동기화 Composable 초기화
-const { buildSearchParams, applyRouteQuery } = useEmployeeQuerySync({
+const { buildSearchParams } = useEmployeeQuerySync({
   page,
   pageSize,
   sorting,
@@ -324,7 +323,10 @@ const employeeDetailQuery = useEmployeeDetailQuery(editingEmployeeId);
 
 const employees = computed(() => employeesQuery.data.value?.content ?? []);
 const allEmployees = computed(() => summaryEmployeesQuery.data.value?.content ?? []);
-const totalPages = computed(() => Math.max(employeesQuery.data.value?.totalPages ?? 1, 1));
+const totalPages = computed(() => {
+  const value = employeesQuery.data.value?.totalPages;
+  return typeof value === 'number' && value > 0 ? value : 1;
+});
 const totalElements = computed(() => employeesQuery.data.value?.totalElements ?? 0);
 const isLoading = computed(() => employeesQuery.isLoading.value || employeesQuery.isFetching.value);
 
@@ -409,11 +411,17 @@ const selectedDepartmentName = computed(() => {
 
 const employeeSummary = useEmployeeSummary({ employees: allEmployees });
 
-watch(totalPages, (nextTotalPages) => {
-  if (nextTotalPages > 0 && page.value > nextTotalPages) {
-    page.value = nextTotalPages;
-  }
-});
+watch(
+  () => employeesQuery.data.value?.totalPages,
+  (nextTotalPages) => {
+    if (typeof nextTotalPages !== 'number' || nextTotalPages < 1) {
+      return;
+    }
+    if (page.value > nextTotalPages) {
+      page.value = nextTotalPages;
+    }
+  },
+);
 
 watch(employees, () => {
   rowSelection.value = {};
@@ -620,9 +628,4 @@ function getColumnLabel(columnId: string): string {
   return columnLabelMap[columnId] ?? columnId;
 }
 
-onMounted(() => {
-  if (Object.keys(route.query).length > 0) {
-    applyRouteQuery({ ...route.query });
-  }
-});
 </script>

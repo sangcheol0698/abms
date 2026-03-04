@@ -60,6 +60,8 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
 
   let isApplyingRoute = false;
   let isUpdatingRoute = false;
+  let pendingRouteQuery: LocationQuery | null = null;
+  let hasPendingStateSync = false;
 
   /**
    * 현재 상태를 API 요청 파라미터로 변환
@@ -219,6 +221,15 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
     // 상태 적용 후 데이터 로딩
     nextTick(() => {
       isApplyingRoute = false;
+      if (pendingRouteQuery) {
+        const queuedQuery = pendingRouteQuery;
+        pendingRouteQuery = null;
+        applyRouteQuery(queuedQuery);
+        return;
+      }
+      if (hasPendingStateSync) {
+        hasPendingStateSync = false;
+      }
       updateRouteFromState();
     });
   }
@@ -241,7 +252,25 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
     isUpdatingRoute = true;
     router.replace({ query: nextQuery }).finally(() => {
       isUpdatingRoute = false;
+      if (pendingRouteQuery) {
+        const queuedQuery = pendingRouteQuery;
+        pendingRouteQuery = null;
+        applyRouteQuery(queuedQuery);
+        return;
+      }
+      if (hasPendingStateSync) {
+        hasPendingStateSync = false;
+        updateRouteFromState();
+      }
     });
+  }
+
+  function scheduleRouteSyncFromState() {
+    if (isApplyingRoute || isUpdatingRoute) {
+      hasPendingStateSync = true;
+      return;
+    }
+    updateRouteFromState();
   }
 
   /**
@@ -291,15 +320,19 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
     return [];
   }
 
+  if (Object.keys(route.query).length > 0) {
+    applyRouteQuery({ ...route.query });
+  }
+
   // 필터 변경 감지
   watch(
     columnFilters,
     () => {
-      if (isUpdatingRoute || isApplyingRoute) {
+      if (isApplyingRoute || isUpdatingRoute) {
         return;
       }
       page.value = 1;
-      updateRouteFromState();
+      scheduleRouteSyncFromState();
     },
     { deep: true },
   );
@@ -308,42 +341,41 @@ export function useEmployeeQuerySync(options: UseEmployeeQuerySyncOptions) {
   watch(
     sorting,
     () => {
-      if (isUpdatingRoute || isApplyingRoute) {
+      if (isApplyingRoute || isUpdatingRoute) {
         return;
       }
       page.value = 1;
-      updateRouteFromState();
+      scheduleRouteSyncFromState();
     },
     { deep: true },
   );
 
   // 페이지 변경 감지
   watch(page, () => {
-    if (isUpdatingRoute || isApplyingRoute) {
+    if (isApplyingRoute) {
       return;
     }
-    updateRouteFromState();
+    scheduleRouteSyncFromState();
   });
 
   // 페이지 크기 변경 감지
   watch(pageSize, () => {
-    if (isUpdatingRoute || isApplyingRoute) {
+    if (isApplyingRoute || isUpdatingRoute) {
       return;
     }
     page.value = 1;
-    updateRouteFromState();
+    scheduleRouteSyncFromState();
   });
 
   // 라우트 쿼리 변경 감지 (뒤로가기/앞으로가기)
   watch(
     () => route.query,
-    (newQuery, oldQuery) => {
-      if (isUpdatingRoute || isApplyingRoute) {
+    (newQuery) => {
+      if (isApplyingRoute || isUpdatingRoute) {
+        pendingRouteQuery = { ...newQuery };
         return;
       }
-      if (JSON.stringify(newQuery) !== JSON.stringify(oldQuery)) {
-        applyRouteQuery(newQuery);
-      }
+      applyRouteQuery(newQuery);
     },
     { deep: true },
   );

@@ -1,5 +1,5 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
-import { useMutation, useQuery } from '@tanstack/vue-query';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/vue-query';
 import { appContainer } from '@/core/di/container';
 import { partyKeys, projectKeys, queryClient } from '@/core/query';
 import PartyRepository from '@/features/party/repository/PartyRepository';
@@ -29,6 +29,7 @@ export function usePartyListQuery(paramsRef: MaybeRefOrGetter<PartySearchParams>
       partyKeys.list((params.value ?? {}) as unknown as Record<string, unknown>),
     ),
     queryFn: () => repository.list(params.value),
+    placeholderData: keepPreviousData,
   });
 }
 

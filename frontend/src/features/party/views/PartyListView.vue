@@ -73,8 +73,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, h, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -132,7 +132,6 @@ import { partyKeys, queryClient } from '@/core/query';
 
 defineOptions({ name: 'PartyListView' });
 
-const route = useRoute();
 const router = useRouter();
 
 const page = ref(1);
@@ -271,7 +270,7 @@ const columns: ColumnDef<PartyListItem>[] = [
   },
 ];
 
-const { buildSearchParams, applyRouteQuery } = usePartyQuerySync({
+const { buildSearchParams } = usePartyQuerySync({
   page,
   pageSize,
   sorting,
@@ -413,9 +412,4 @@ async function confirmDelete() {
   }
 }
 
-onMounted(() => {
-  if (Object.keys(route.query).length > 0) {
-    applyRouteQuery({ ...route.query });
-  }
-});
 </script>

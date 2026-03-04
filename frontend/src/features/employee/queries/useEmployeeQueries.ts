@@ -1,5 +1,5 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
-import { useMutation, useQuery } from '@tanstack/vue-query';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/vue-query';
 import { appContainer } from '@/core/di/container';
 import { employeeKeys, departmentKeys, dashboardKeys, queryClient } from '@/core/query';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
@@ -29,6 +29,7 @@ export function useEmployeesQuery(paramsRef: MaybeRefOrGetter<EmployeeSearchPara
       employeeKeys.list((params.value ?? {}) as unknown as Record<string, unknown>),
     ),
     queryFn: () => repository.search(params.value),
+    placeholderData: keepPreviousData,
   });
 }
 

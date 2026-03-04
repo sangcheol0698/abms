@@ -1,5 +1,5 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
-import { useMutation, useQuery } from '@tanstack/vue-query';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/vue-query';
 import { appContainer } from '@/core/di/container';
 import { departmentKeys, queryClient } from '@/core/query';
 import DepartmentRepository from '@/features/department/repository/DepartmentRepository';
@@ -64,6 +64,7 @@ export function useDepartmentEmployeesQuery(
         positions: params.value.positions,
       }),
     enabled: computed(() => departmentId.value > 0),
+    placeholderData: keepPreviousData,
   });
 }
 

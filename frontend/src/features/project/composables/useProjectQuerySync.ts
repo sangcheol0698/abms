@@ -43,6 +43,8 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
 
   let isApplyingRoute = false;
   let isUpdatingRoute = false;
+  let pendingRouteQuery: LocationQuery | null = null;
+  let hasPendingStateSync = false;
 
   function buildSearchParams(): ProjectSearchParams {
     const params: ProjectSearchParams = {
@@ -152,6 +154,15 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
 
     nextTick(() => {
       isApplyingRoute = false;
+      if (pendingRouteQuery) {
+        const queuedQuery = pendingRouteQuery;
+        pendingRouteQuery = null;
+        applyRouteQuery(queuedQuery);
+        return;
+      }
+      if (hasPendingStateSync) {
+        hasPendingStateSync = false;
+      }
       updateRouteFromState();
     });
   }
@@ -171,7 +182,25 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
     isUpdatingRoute = true;
     router.replace({ query: nextQuery }).finally(() => {
       isUpdatingRoute = false;
+      if (pendingRouteQuery) {
+        const queuedQuery = pendingRouteQuery;
+        pendingRouteQuery = null;
+        applyRouteQuery(queuedQuery);
+        return;
+      }
+      if (hasPendingStateSync) {
+        hasPendingStateSync = false;
+        updateRouteFromState();
+      }
     });
+  }
+
+  function scheduleRouteSyncFromState() {
+    if (isApplyingRoute || isUpdatingRoute) {
+      hasPendingStateSync = true;
+      return;
+    }
+    updateRouteFromState();
   }
 
   function getRouteQueryRecord(): Record<string, string> {
@@ -257,14 +286,18 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
     return [{ id: mappedId, desc: first.desc }];
   }
 
+  if (Object.keys(route.query).length > 0) {
+    applyRouteQuery({ ...route.query });
+  }
+
   watch(
     columnFilters,
     () => {
-      if (isUpdatingRoute || isApplyingRoute) {
+      if (isApplyingRoute || isUpdatingRoute) {
         return;
       }
       page.value = 1;
-      updateRouteFromState();
+      scheduleRouteSyncFromState();
     },
     { deep: true },
   );
@@ -272,11 +305,11 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
   watch(
     dateRange,
     () => {
-      if (isUpdatingRoute || isApplyingRoute) {
+      if (isApplyingRoute || isUpdatingRoute) {
         return;
       }
       page.value = 1;
-      updateRouteFromState();
+      scheduleRouteSyncFromState();
     },
     { deep: true },
   );
@@ -284,39 +317,38 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
   watch(
     sorting,
     () => {
-      if (isUpdatingRoute || isApplyingRoute) {
+      if (isApplyingRoute || isUpdatingRoute) {
         return;
       }
       page.value = 1;
-      updateRouteFromState();
+      scheduleRouteSyncFromState();
     },
     { deep: true },
   );
 
   watch(page, () => {
-    if (isUpdatingRoute || isApplyingRoute) {
+    if (isApplyingRoute) {
       return;
     }
-    updateRouteFromState();
+    scheduleRouteSyncFromState();
   });
 
   watch(pageSize, () => {
-    if (isUpdatingRoute || isApplyingRoute) {
+    if (isApplyingRoute || isUpdatingRoute) {
       return;
     }
     page.value = 1;
-    updateRouteFromState();
+    scheduleRouteSyncFromState();
   });
 
   watch(
     () => route.query,
-    (newQuery, oldQuery) => {
-      if (isUpdatingRoute || isApplyingRoute) {
+    (newQuery) => {
+      if (isApplyingRoute || isUpdatingRoute) {
+        pendingRouteQuery = { ...newQuery };
         return;
       }
-      if (JSON.stringify(newQuery) !== JSON.stringify(oldQuery)) {
-        applyRouteQuery(newQuery);
-      }
+      applyRouteQuery(newQuery);
     },
     { deep: true },
   );

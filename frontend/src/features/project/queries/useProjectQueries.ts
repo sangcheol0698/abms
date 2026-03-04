@@ -1,5 +1,5 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
-import { useMutation, useQuery } from '@tanstack/vue-query';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/vue-query';
 import { appContainer } from '@/core/di/container';
 import { dashboardKeys, projectKeys, queryClient } from '@/core/query';
 import ProjectRepository from '@/features/project/repository/ProjectRepository';
@@ -34,6 +34,7 @@ export function useProjectListQuery(paramsRef: MaybeRefOrGetter<ProjectSearchPar
       projectKeys.list((params.value ?? {}) as unknown as Record<string, unknown>),
     ),
     queryFn: () => repository.search(params.value),
+    placeholderData: keepPreviousData,
   });
 }
 
