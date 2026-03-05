@@ -329,9 +329,9 @@ router.beforeEach(async (to) => {
   const isWhitelistedAuthPage =
     typeof to.name === 'string' && AUTH_ROUTE_WHITELIST.has(to.name);
 
-  await ensureCsrfInitialized();
-  // if (authPage || isLoggedIn) {
-  // }
+  if (authPage || isLoggedIn) {
+    await ensureCsrfInitialized();
+  }
 
   if (authPage) {
     if (!isLoggedIn || isWhitelistedAuthPage) {
