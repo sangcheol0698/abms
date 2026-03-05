@@ -27,6 +27,9 @@ export default class AxiosHttpClient {
     this.client = axios.create({
       baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080',
       timeout: Number(import.meta.env.VITE_API_BASE_TIMEOUT ?? 10000),
+      xsrfCookieName: 'XSRF-TOKEN',
+      xsrfHeaderName: 'X-XSRF-TOKEN',
+      withXSRFToken: true,
     });
 
     this.client.interceptors.response.use(
