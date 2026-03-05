@@ -44,6 +44,7 @@ spy.log
 /AGENTS.md
 /frontend/docs/
 /frontend/AGENTS.md
+/frontend/coverage/
 
 .env
 /.env.*
