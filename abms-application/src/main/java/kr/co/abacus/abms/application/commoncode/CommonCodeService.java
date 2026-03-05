@@ -11,29 +11,25 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import kr.co.abacus.abms.application.commoncode.dto.CommonCodeInfo;
-import kr.co.abacus.abms.application.commoncode.outbound.CommonCodeDetailRepository;
-import kr.co.abacus.abms.domain.commoncode.CommonCodeDetail;
+import kr.co.abacus.abms.application.commoncode.outbound.CommonCodeGroupRepository;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommonCodeService {
 
-    private final CommonCodeDetailRepository commonCodeDetailRepository;
+    private final CommonCodeGroupRepository commonCodeGroupRepository;
 
     @Cacheable(cacheNames = "commonCode", key = "#groupCode")
     public List<CommonCodeInfo> findByGroupCode(String groupCode) {
         log.info("[공통코드 조회] groupCode: {}", groupCode);
 
-        return commonCodeDetailRepository.findByGroupCode(groupCode).stream()
-                .map(CommonCodeInfo::from)
-                .toList();
+        return commonCodeGroupRepository.findDetailsByGroupCode(groupCode);
     }
 
     @Cacheable(cacheNames = "commonCode", key = "#groupCode + '_' + #code")
     public @Nullable CommonCodeInfo findByCode(String groupCode, String code) {
-        @Nullable CommonCodeDetail detail = commonCodeDetailRepository.findByCode(groupCode, code);
-        return detail != null ? CommonCodeInfo.from(detail) : null;
+        return commonCodeGroupRepository.findDetailByCode(groupCode, code);
     }
 
     @CacheEvict(cacheNames = "commonCode", key = "#groupCode")

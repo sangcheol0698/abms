@@ -2,6 +2,7 @@ package kr.co.abacus.abms.domain.commoncode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -49,9 +50,23 @@ public class CommonCodeGroup extends BaseEntity {
         this.details.forEach(detail -> detail.softDelete(deletedBy));
     }
 
-    public void addDetail(CommonCodeDetail detail) {
+    public CommonCodeDetail addDetail(String code, String name, int sortOrder) {
+        validateDuplicateCode(code);
+        CommonCodeDetail detail = CommonCodeDetail.create(groupCode, code, name, sortOrder);
         this.details.add(detail);
         detail.setGroup(this);
+        return detail;
+    }
+
+    private void validateDuplicateCode(String code) {
+        String targetCode = Objects.requireNonNull(code);
+        boolean duplicated = details.stream()
+                .map(CommonCodeDetail::getId)
+                .map(CommonCodeDetailId::getCode)
+                .anyMatch(targetCode::equals);
+        if (duplicated) {
+            throw new IllegalArgumentException("이미 존재하는 공통코드입니다. groupCode=" + groupCode + ", code=" + targetCode);
+        }
     }
 
 }

@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import kr.co.abacus.abms.application.commoncode.outbound.CommonCodeDetailRepository;
+import kr.co.abacus.abms.application.commoncode.outbound.CommonCodeGroupRepository;
 import kr.co.abacus.abms.domain.commoncode.CommonCodeGroup;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
@@ -22,7 +22,7 @@ class CommonCodeServiceIntegrationTest extends IntegrationTestBase {
     private CommonCodeService commonCodeService;
 
     @MockitoSpyBean
-    private CommonCodeDetailRepository commonCodeDetailRepository;
+    private CommonCodeGroupRepository commonCodeGroupRepository;
 
     @Autowired
     private CacheManager cacheManager;
@@ -54,7 +54,7 @@ class CommonCodeServiceIntegrationTest extends IntegrationTestBase {
         commonCodeService.findByGroupCode(groupCode);
 
         // then
-        verify(commonCodeDetailRepository, times(1)).findByGroupCode(groupCode);
+        verify(commonCodeGroupRepository, times(1)).findDetailsByGroupCode(groupCode);
     }
 
     @Test
@@ -65,7 +65,7 @@ class CommonCodeServiceIntegrationTest extends IntegrationTestBase {
         commonCodeService.findByCode(groupCode, code);
 
         // then
-        verify(commonCodeDetailRepository, times(1)).findByCode(groupCode, code);
+        verify(commonCodeGroupRepository, times(1)).findDetailByCode(groupCode, code);
     }
 
     @Test
@@ -73,14 +73,14 @@ class CommonCodeServiceIntegrationTest extends IntegrationTestBase {
     void clearCache_RemovesCache() {
         // given
         commonCodeService.findByGroupCode(groupCode); // 캐시 채우기
-        verify(commonCodeDetailRepository, times(1)).findByGroupCode(groupCode);
+        verify(commonCodeGroupRepository, times(1)).findDetailsByGroupCode(groupCode);
 
         // when
         commonCodeService.clearCache(groupCode);
 
         // then
         commonCodeService.findByGroupCode(groupCode);
-        verify(commonCodeDetailRepository, times(2)).findByGroupCode(groupCode);
+        verify(commonCodeGroupRepository, times(2)).findDetailsByGroupCode(groupCode);
     }
 
 }

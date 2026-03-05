@@ -1,5 +1,7 @@
 package kr.co.abacus.abms.domain.commoncode;
 
+import java.util.Objects;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -10,7 +12,6 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -35,11 +36,16 @@ public class CommonCodeDetail extends BaseEntity {
 
     private int sortOrder;
 
-    @Builder
     private CommonCodeDetail(CommonCodeDetailId id, String name, int sortOrder) {
-        this.id = id;
-        this.name = name;
+        this.id = Objects.requireNonNull(id);
+        this.name = Objects.requireNonNull(name);
         this.sortOrder = sortOrder;
+    }
+
+    static CommonCodeDetail create(String groupCode, String code, String name, int sortOrder) {
+        CommonCodeDetailId detailId = new CommonCodeDetailId(groupCode, code);
+        
+        return new CommonCodeDetail(detailId, name, sortOrder);
     }
 
     protected void setGroup(CommonCodeGroup group) {
