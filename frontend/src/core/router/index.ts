@@ -3,6 +3,7 @@ import type { RouteLocationRaw } from 'vue-router';
 import AuthLayout from '@/core/layouts/AuthLayout.vue';
 import SidebarLayout from '@/core/layouts/SidebarLayout.vue';
 import { ensureServerSessionValid, hasStoredUser } from '@/features/auth/session';
+import AxiosHttpClient from '@/core/http/AxiosHttpClient';
 
 const routes = [
   {
@@ -304,12 +305,33 @@ function resolveLoginRedirect(fullPath: string): RouteLocationRaw {
 }
 
 const AUTH_ROUTE_WHITELIST = new Set(['auth-registration-confirm', 'auth-session-expired', 'auth-forbidden']);
+const csrfHttpClient = new AxiosHttpClient();
+let isCsrfInitialized = false;
+
+async function ensureCsrfInitialized(): Promise<void> {
+  if (isCsrfInitialized) {
+    return;
+  }
+  try {
+    await csrfHttpClient.request<void>({
+      method: 'GET',
+      path: '/api/csrf',
+    });
+    isCsrfInitialized = true;
+  } catch {
+    // Retry on next navigation when initialization fails.
+  }
+}
 
 router.beforeEach(async (to) => {
   const isLoggedIn = hasStoredUser();
   const authPage = isAuthRoute(to.path);
   const isWhitelistedAuthPage =
     typeof to.name === 'string' && AUTH_ROUTE_WHITELIST.has(to.name);
+
+  await ensureCsrfInitialized();
+  // if (authPage || isLoggedIn) {
+  // }
 
   if (authPage) {
     if (!isLoggedIn || isWhitelistedAuthPage) {
