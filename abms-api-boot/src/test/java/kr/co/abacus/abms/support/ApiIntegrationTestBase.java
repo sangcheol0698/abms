@@ -1,6 +1,8 @@
 package kr.co.abacus.abms.support;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,7 @@ public abstract class ApiIntegrationTestBase extends IntegrationTestBase {
         restTestClient = RestTestClient.bindToApplicationContext(applicationContext).build();
         mockMvc = MockMvcBuilders.webAppContextSetup(applicationContext)
                 .apply(springSecurity())
+                .defaultRequest(get("/").with(csrf().asHeader()))
                 .build();
     }
 
