@@ -1,0 +1,83 @@
+import { test, expect } from '@playwright/test';
+import { mockAuthenticatedSession } from './support/auth';
+
+const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:5173';
+
+test.describe('프로젝트 목록 필터', () => {
+  test('검색어 입력 후 Enter를 누르면 name 필터로 조회한다', async ({ page }) => {
+    await mockAuthenticatedSession(page);
+
+    const requestedProjectUrls: string[] = [];
+
+    await page.route('**/api/projects?**', async (route) => {
+      requestedProjectUrls.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          content: [
+            {
+              projectId: 1,
+              partyId: 100,
+              partyName: '협력사A',
+              code: 'P-001',
+              name: 'ABMS 리뉴얼',
+              status: 'IN_PROGRESS',
+              statusLabel: '진행 중',
+              contractAmount: 1000000,
+              startDate: '2024-01-01',
+              endDate: '2024-12-31',
+            },
+          ],
+          number: 0,
+          size: 10,
+          totalPages: 1,
+          totalElements: 1,
+        }),
+      });
+    });
+
+    await page.route('**/api/projects/statuses', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ name: 'IN_PROGRESS', description: '진행 중' }]),
+      }),
+    );
+
+    await page.route('**/api/parties?**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          content: [
+            {
+              partyId: 100,
+              name: '협력사A',
+              ceoName: '대표',
+              salesRepName: '담당자',
+              salesRepPhone: '010-0000-0000',
+              salesRepEmail: 'rep@partya.co.kr',
+            },
+          ],
+          number: 0,
+          size: 1000,
+          totalPages: 1,
+          totalElements: 1,
+        }),
+      }),
+    );
+
+    await page.goto(`${BASE_URL}/projects`);
+
+    await expect(page.getByText('ABMS 리뉴얼')).toBeVisible();
+
+    const searchInput = page.getByPlaceholder('프로젝트명 또는 코드를 입력하세요');
+    await searchInput.fill('ABMS');
+    await searchInput.press('Enter');
+
+    await expect
+      .poll(() => requestedProjectUrls.some((url) => url.includes('name=ABMS')))
+      .toBeTruthy();
+  });
+});

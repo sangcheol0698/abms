@@ -12,7 +12,10 @@
     "typecheck": "vue-tsc --noEmit",
     "format": "prettier \"src/**/*.{ts,tsx,vue,js,json,css,scss,md}\" --check",
     "format:write": "prettier \"src/**/*.{ts,tsx,vue,js,json,css,scss,md}\" --write",
-    "test": "vitest"
+    "test": "vitest",
+    "test:unit": "vitest --run",
+    "test:e2e": "playwright test",
+    "test:all": "npm run test:unit && npm run test:e2e"
   },
   "dependencies": {
     "@internationalized/date": "^3.9.0",
@@ -26,7 +29,7 @@
     "@vee-validate/zod": "^4.15.1",
     "@vueuse/core": "^11.3.0",
     "@vueuse/integrations": "^13.9.0",
-    "axios": "^1.9.0",
+    "axios": "1.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-vue": "^8.6.0",
@@ -60,7 +63,9 @@
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.44.0",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/coverage-v8": "^3.2.4",
     "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.8.1",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
@@ -68,7 +73,7 @@
     "happy-dom": "^20.7.0",
     "prettier": "^3.6.2",
     "typescript": "~5.8.3",
-    "vite": "^7.1.6",
+    "vite": "7.1.11",
     "vite-plugin-vue-devtools": "^8.0.5",
     "vitest": "^3.2.4",
     "vue-tsc": "^3.0.7"
