@@ -155,8 +155,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, h, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { Building, ChevronDown, Download, FileSpreadsheet, Plus, Upload, X } from 'lucide-vue-next';
 import {
   type ColumnDef,
@@ -224,7 +224,6 @@ import { projectKeys, queryClient } from '@/core/query';
 defineOptions({ name: 'ProjectListView' });
 
 const router = useRouter();
-const route = useRoute();
 const repository = appContainer.resolve(ProjectRepository);
 
 const page = ref(1);
@@ -393,7 +392,7 @@ const columns: ColumnDef<ProjectListItem>[] = [
   },
 ];
 
-const { applyRouteQuery } = useProjectQuerySync({
+useProjectQuerySync({
   page,
   pageSize,
   sorting,
@@ -617,9 +616,4 @@ function handleDeleteProject(project: ProjectListItem) {
   deletion.open(project.projectId, project.name);
 }
 
-onMounted(() => {
-  if (Object.keys(route.query).length > 0) {
-    applyRouteQuery({ ...route.query });
-  }
-});
 </script>

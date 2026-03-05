@@ -295,7 +295,10 @@ const employees = computed(() => departmentEmployeesQuery.data.value?.content ??
 const isLoading = computed(
   () => departmentEmployeesQuery.isLoading.value || departmentEmployeesQuery.isFetching.value,
 );
-const totalPages = computed(() => Math.max(departmentEmployeesQuery.data.value?.totalPages ?? 1, 1));
+const totalPages = computed(() => {
+  const value = departmentEmployeesQuery.data.value?.totalPages;
+  return typeof value === 'number' && value > 0 ? value : 1;
+});
 const totalElements = computed(() => departmentEmployeesQuery.data.value?.totalElements ?? 0);
 
 // 이벤트 핸들러
@@ -433,9 +436,15 @@ watch(
   { immediate: true },
 );
 
-watch(totalPages, (nextTotalPages) => {
-  if (nextTotalPages > 0 && page.value > nextTotalPages) {
-    page.value = nextTotalPages;
-  }
-});
+watch(
+  () => departmentEmployeesQuery.data.value?.totalPages,
+  (nextTotalPages) => {
+    if (typeof nextTotalPages !== 'number' || nextTotalPages < 1) {
+      return;
+    }
+    if (page.value > nextTotalPages) {
+      page.value = nextTotalPages;
+    }
+  },
+);
 </script>

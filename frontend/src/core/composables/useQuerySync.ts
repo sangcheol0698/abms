@@ -49,6 +49,9 @@ export function useQuerySync<TState>(options: UseQuerySyncOptions<TState>) {
 
   let isApplyingRoute = false;
   let isUpdatingRoute = false;
+  const NO_PENDING = Symbol('no-pending');
+  let pendingRouteValue: unknown | typeof NO_PENDING = NO_PENDING;
+  let pendingStateValue: TState | typeof NO_PENDING = NO_PENDING;
 
   // 초기값: URL에서 상태 복원
   const initialValue = deserialize(route.query[queryKey]);
@@ -62,7 +65,8 @@ export function useQuerySync<TState>(options: UseQuerySyncOptions<TState>) {
   watch(
     state,
     (newValue) => {
-      if (isApplyingRoute) {
+      if (isApplyingRoute || isUpdatingRoute) {
+        pendingStateValue = newValue;
         return;
       }
 
@@ -75,23 +79,12 @@ export function useQuerySync<TState>(options: UseQuerySyncOptions<TState>) {
   watch(
     () => route.query[queryKey],
     (value) => {
-      if (isUpdatingRoute) {
+      if (isApplyingRoute || isUpdatingRoute) {
+        pendingRouteValue = value;
         return;
       }
 
-      const newValue = deserialize(value);
-
-      if (newValue === state.value) {
-        return;
-      }
-
-      isApplyingRoute = true;
-      if (newValue !== undefined) {
-        state.value = newValue;
-      } else if (defaultValue !== undefined) {
-        state.value = defaultValue;
-      }
-      isApplyingRoute = false;
+      applyRouteValue(value);
     },
   );
 
@@ -119,10 +112,50 @@ export function useQuerySync<TState>(options: UseQuerySyncOptions<TState>) {
       .replace({ query: nextQuery })
       .finally(() => {
         isUpdatingRoute = false;
+        if (pendingRouteValue !== NO_PENDING) {
+          const queuedRouteValue = pendingRouteValue;
+          pendingRouteValue = NO_PENDING;
+          applyRouteValue(queuedRouteValue);
+          return;
+        }
+        if (pendingStateValue !== NO_PENDING) {
+          const queuedStateValue = pendingStateValue as TState;
+          pendingStateValue = NO_PENDING;
+          updateRouteQuery(queuedStateValue);
+        }
       })
       .catch((error) => {
         console.warn(`URL 쿼리 업데이트 실패 (${queryKey}):`, error);
       });
+  }
+
+  function applyRouteValue(value: unknown) {
+    const newValue = deserialize(value);
+
+    if (newValue === state.value) {
+      return;
+    }
+
+    isApplyingRoute = true;
+    if (newValue !== undefined) {
+      state.value = newValue;
+    } else if (defaultValue !== undefined) {
+      state.value = defaultValue;
+    }
+    isApplyingRoute = false;
+
+    if (pendingRouteValue !== NO_PENDING) {
+      const queuedRouteValue = pendingRouteValue;
+      pendingRouteValue = NO_PENDING;
+      applyRouteValue(queuedRouteValue);
+      return;
+    }
+
+    if (pendingStateValue !== NO_PENDING) {
+      const queuedStateValue = pendingStateValue as TState;
+      pendingStateValue = NO_PENDING;
+      updateRouteQuery(queuedStateValue);
+    }
   }
 
   return {
