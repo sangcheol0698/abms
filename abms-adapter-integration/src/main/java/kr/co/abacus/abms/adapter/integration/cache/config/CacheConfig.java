@@ -18,6 +18,12 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
 
+        cacheManager.registerCustomCache("organizationChart",
+                Caffeine.newBuilder()
+                        .expireAfterWrite(10, MINUTES)
+                        .maximumSize(100)
+                        .build());
+
         cacheManager.registerCustomCache("commonCache",
                 Caffeine.newBuilder()
                         .expireAfterWrite(1, HOURS)

@@ -3,6 +3,7 @@ package kr.co.abacus.abms.application.employee;
 import java.time.LocalDate;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.department.event.OrganizationChartInvalidationRequestedEvent;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -34,6 +36,7 @@ public class EmployeeModifyService implements EmployeeManager {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionHistoryRepository positionHistoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Long create(EmployeeCreateCommand command) {
@@ -54,6 +57,8 @@ public class EmployeeModifyService implements EmployeeManager {
                 employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);
+        
+        requestOrganizationChartCacheInvalidation();
 
         return id;
     }
@@ -77,7 +82,11 @@ public class EmployeeModifyService implements EmployeeManager {
                 command.avatar(),
                 command.memo());
 
-        return employeeRepository.save(employee).getIdOrThrow();
+        Long updatedEmployeeId = employeeRepository.save(employee).getIdOrThrow();
+        
+        requestOrganizationChartCacheInvalidation();
+        
+        return updatedEmployeeId;
     }
 
     @Override
@@ -87,6 +96,8 @@ public class EmployeeModifyService implements EmployeeManager {
         employee.resign(resignationDate);
 
         employeeRepository.save(employee);
+        
+        requestOrganizationChartCacheInvalidation();
     }
 
     @Override
@@ -96,6 +107,8 @@ public class EmployeeModifyService implements EmployeeManager {
         employee.takeLeave();
 
         employeeRepository.save(employee);
+
+        requestOrganizationChartCacheInvalidation();
     }
 
     @Override
@@ -105,6 +118,8 @@ public class EmployeeModifyService implements EmployeeManager {
         employee.activate();
 
         employeeRepository.save(employee);
+
+        requestOrganizationChartCacheInvalidation();
     }
 
     @Override
@@ -125,6 +140,8 @@ public class EmployeeModifyService implements EmployeeManager {
                 employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);
+        
+        requestOrganizationChartCacheInvalidation();
     }
 
     @Override
@@ -145,6 +162,8 @@ public class EmployeeModifyService implements EmployeeManager {
                 employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);
+        
+        requestOrganizationChartCacheInvalidation();
     }
 
     @Override
@@ -154,6 +173,8 @@ public class EmployeeModifyService implements EmployeeManager {
         employee.softDelete(deleteBy);
 
         employeeRepository.save(employee);
+        
+        requestOrganizationChartCacheInvalidation();
     }
 
     @Override
@@ -163,6 +184,12 @@ public class EmployeeModifyService implements EmployeeManager {
         employee.restore();
 
         employeeRepository.save(employee);
+        
+        requestOrganizationChartCacheInvalidation();
+    }
+
+    private void requestOrganizationChartCacheInvalidation() {
+        eventPublisher.publishEvent(new OrganizationChartInvalidationRequestedEvent());
     }
 
     private Employee find(Long id) {

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -12,9 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.SimpleKey;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
+import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
+import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
@@ -36,6 +43,12 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private DepartmentManager departmentManager;
+
+    @Autowired
+    private EmployeeManager employeeManager;
 
     @Autowired
     private CacheManager cacheManager;
@@ -130,6 +143,82 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
 
         // then: 3 employees in each team
         assertThat(employeeCount).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("직원 변경 시 도메인 이벤트로 조직도 캐시가 무효화된다")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    void employeeChange_invalidatesOrganizationChartCacheByDomainEvent() {
+        Department company = createDepartment("COMP_CACHE_01", "Cache Corp", DepartmentType.COMPANY, null, null);
+        departmentRepository.save(company);
+        departmentFinder.clearOrganizationChartCache();
+
+        Cache cache = Objects.requireNonNull(cacheManager.getCache("organizationChart"));
+
+        List<OrganizationChartDetail> chartsBefore = departmentFinder.getOrganizationChart();
+        OrganizationChartDetail companyChartBefore = chartsBefore.stream()
+                .filter(chart -> chart.departmentId().equals(company.getIdOrThrow()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("테스트 부서를 찾을 수 없습니다."));
+        assertThat(companyChartBefore.employeeCount()).isEqualTo(0);
+        assertThat(cache.get(SimpleKey.EMPTY)).isNotNull();
+
+        employeeManager.create(EmployeeCreateCommand.builder()
+                .departmentId(company.getIdOrThrow())
+                .email("cache-event-test@abms.co")
+                .name("캐시테스트")
+                .joinDate(LocalDate.of(2024, 1, 1))
+                .birthDate(LocalDate.of(1994, 1, 1))
+                .position(EmployeePosition.TEAM_LEADER)
+                .type(EmployeeType.FULL_TIME)
+                .grade(EmployeeGrade.SENIOR)
+                .avatar(EmployeeAvatar.SKY_GLOW)
+                .memo("cache invalidation event test")
+                .build());
+
+        assertThat(cache.get(SimpleKey.EMPTY)).isNull();
+
+        List<OrganizationChartDetail> chartsAfter = departmentFinder.getOrganizationChart();
+        OrganizationChartDetail companyChartAfter = chartsAfter.stream()
+                .filter(chart -> chart.departmentId().equals(company.getIdOrThrow()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("테스트 부서를 찾을 수 없습니다."));
+        assertThat(companyChartAfter.employeeCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("리더 변경 시 도메인 이벤트로 조직도 캐시가 무효화된다")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    void assignLeader_invalidatesOrganizationChartCacheByDomainEvent() {
+        Department company = createDepartment("COMP_CACHE_02", "Leader Cache Corp", DepartmentType.COMPANY, null, null);
+        departmentRepository.save(company);
+
+        Employee leader = employeeRepository.save(createEmployee(company.getId(), "leader-cache-event-test@abms.co"));
+        departmentFinder.clearOrganizationChartCache();
+
+        Cache cache = Objects.requireNonNull(cacheManager.getCache("organizationChart"));
+
+        List<OrganizationChartDetail> chartsBefore = departmentFinder.getOrganizationChart();
+        OrganizationChartDetail companyChartBefore = chartsBefore.stream()
+                .filter(chart -> chart.departmentId().equals(company.getIdOrThrow()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("테스트 부서를 찾을 수 없습니다."));
+        assertThat(companyChartBefore.leader()).isNull();
+        assertThat(cache.get(SimpleKey.EMPTY)).isNotNull();
+
+        departmentManager.assignLeader(company.getIdOrThrow(), leader.getIdOrThrow());
+
+        assertThat(cache.get(SimpleKey.EMPTY)).isNull();
+
+        List<OrganizationChartDetail> chartsAfter = departmentFinder.getOrganizationChart();
+        OrganizationChartDetail companyChartAfter = chartsAfter.stream()
+                .filter(chart -> chart.departmentId().equals(company.getIdOrThrow()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("테스트 부서를 찾을 수 없습니다."));
+        assertThat(companyChartAfter.leader()).isNotNull();
+        assertThat(companyChartAfter.leader().leaderEmployeeId()).isEqualTo(leader.getIdOrThrow());
     }
 
     private Employee createEmployee(Long departmentId, String email) {
