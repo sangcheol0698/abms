@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:5173';
+const API_ROUTE = /^https?:\/\/[^/]+\/api(?:\/.*)?(?:\?.*)?$/;
 
 test.describe('로그인 플로우', () => {
   test('로그인 후 대시보드로 이동한다', async ({ page }) => {
-    await page.route('**/api/**', async (route) => {
+    await page.route(API_ROUTE, async (route) => {
       const request = route.request();
       const url = new URL(request.url());
       const path = url.pathname;

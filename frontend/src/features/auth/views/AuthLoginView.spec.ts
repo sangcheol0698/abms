@@ -162,7 +162,7 @@ describe('AuthLoginView', () => {
   });
 
   it('로그인 요청 중에는 버튼 텍스트가 "로그인 중..."으로 바뀐다', async () => {
-    let resolveLogin: (() => void) | null = null;
+    let resolveLogin: () => void = () => {};
     mutateAsyncMock.mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
@@ -178,7 +178,7 @@ describe('AuthLoginView', () => {
 
     expect(wrapper.text()).toContain('로그인 중...');
 
-    resolveLogin?.();
+    resolveLogin();
     await Promise.resolve();
     await Promise.resolve();
 

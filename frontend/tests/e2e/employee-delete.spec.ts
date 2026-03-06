@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { mockAuthenticatedSession } from './support/auth';
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:5173';
+const API_ROUTE = /^https?:\/\/[^/]+\/api(?:\/.*)?(?:\?.*)?$/;
 
 const employeeId = 1;
 
@@ -33,41 +34,91 @@ test.describe('직원 삭제', () => {
     await mockAuthenticatedSession(page);
 
     let deleteCalled = false;
+    let employeeListRequestCount = 0;
 
-    await page.route('**/api/employees?**', async (route) => {
-      const body = deleteCalled
-        ? { ...employeeListResponse, content: [], totalElements: 0 }
-        : employeeListResponse;
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(body),
-      });
-    });
+    await page.route(API_ROUTE, async (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      const path = url.pathname.endsWith('/') && url.pathname !== '/'
+        ? url.pathname.slice(0, -1)
+        : url.pathname;
 
-    await page.route('**/api/employees/statuses', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
-    await page.route('**/api/employees/types', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
-    await page.route('**/api/employees/grades', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
-    await page.route('**/api/employees/positions', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
+      if (path === '/api/csrf') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true }),
+        });
+        return;
+      }
 
-    await page.route(`**/api/employees/${employeeId}`, async (route) => {
-      if (route.request().method() === 'DELETE') {
+      if (path === '/api/auth/me') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터' }),
+        });
+        return;
+      }
+
+      if (path === '/api/employees') {
+        employeeListRequestCount += 1;
+        const body = deleteCalled
+          ? { ...employeeListResponse, content: [], totalElements: 0 }
+          : employeeListResponse;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(body),
+        });
+        return;
+      }
+
+      if (
+        path === '/api/employees/statuses' ||
+        path === '/api/employees/types' ||
+        path === '/api/employees/grades' ||
+        path === '/api/employees/positions' ||
+        path === '/api/departments/organization-chart' ||
+        path === '/api/notifications'
+      ) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+        return;
+      }
+
+      if (path === `/api/employees/${employeeId}` && request.method() === 'DELETE') {
         deleteCalled = true;
         await route.fulfill({ status: 204, contentType: 'application/json', body: '' });
         return;
       }
-      await route.continue();
+
+      if (path.startsWith('/api/v1/chat/')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+        return;
+      }
+
+      if (request.method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+        return;
+      }
+
+      await route.fulfill({ status: 204, contentType: 'application/json', body: '' });
     });
 
     await page.goto(`${BASE_URL}/employees`);
+    await expect.poll(() => employeeListRequestCount).toBeGreaterThan(0);
 
     const row = page.getByRole('row', { name: /박지훈/ });
     await expect(row).toBeVisible();

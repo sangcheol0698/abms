@@ -1,4 +1,4 @@
-import { computed, defineComponent, h, nextTick, ref } from 'vue';
+import { defineComponent, h, nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import DepartmentView from '@/features/department/views/DepartmentView.vue';

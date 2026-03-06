@@ -3,44 +3,93 @@ import type { Page } from '@playwright/test';
 import { mockAuthenticatedSession } from './support/auth';
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:5173';
+const API_ROUTE = /^https?:\/\/[^/]+\/api(?:\/.*)?(?:\?.*)?$/;
 
 async function mockDashboardApis(page: Page) {
-  await page.route('**/api/dashboards/summary', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        totalEmployeesCount: 42,
-        activeProjectsCount: 9,
-        newEmployeesCount: 3,
-        onLeaveEmployeesCount: 2,
-      }),
-    }),
-  );
+  await page.route(API_ROUTE, async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const path = url.pathname;
 
-  await page.route('**/api/monthlyRevenueSummary/sixMonthTrend', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([]),
-    }),
-  );
+    if (path === '/api/csrf') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true }),
+      });
+      return;
+    }
 
-  await page.route('**/api/notifications', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([]),
-    }),
-  );
+    if (path === '/api/auth/me') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터' }),
+      });
+      return;
+    }
 
-  await page.route('**/api/departments/organization-chart', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([]),
-    }),
-  );
+    if (path === '/api/dashboards/summary') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          totalEmployeesCount: 42,
+          activeProjectsCount: 9,
+          newEmployeesCount: 3,
+          onLeaveEmployeesCount: 2,
+        }),
+      });
+      return;
+    }
+
+    if (path === '/api/monthlyRevenueSummary/sixMonthTrend') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+      return;
+    }
+
+    if (path === '/api/notifications') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+      return;
+    }
+
+    if (path === '/api/departments/organization-chart') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+      return;
+    }
+
+    if (path.startsWith('/api/v1/chat/')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+      return;
+    }
+
+    if (request.method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+      return;
+    }
+
+    await route.fulfill({ status: 204, contentType: 'application/json', body: '' });
+  });
 }
 
 test.describe('대시보드 화면', () => {

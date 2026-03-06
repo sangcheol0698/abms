@@ -107,6 +107,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { useSidebar } from '@/components/ui/sidebar';
 import { appContainer } from '@/core/di/container';
 import AuthRepository from '@/features/auth/repository/AuthRepository';
 import { clearStoredUser } from '@/features/auth/session';
@@ -130,11 +131,15 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const router = useRouter();
+const sidebar = useSidebar();
 const authRepository = appContainer.resolve(AuthRepository);
 const isLogoutDialogOpen = ref(false);
 const isLoggingOut = ref(false);
 
 function openProfileDialog() {
+  if (sidebar.isMobile.value) {
+    sidebar.setOpenMobile(false);
+  }
   props.onOpenProfileDialog();
 }
 

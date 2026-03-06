@@ -15,6 +15,11 @@ interface RegistrationConfirmPayload {
   password: string;
 }
 
+interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface AuthMeResponse {
   name: string;
   email: string;
@@ -48,6 +53,13 @@ export default class AuthRepository {
   async logout(): Promise<void> {
     await this.httpRepository.post<void>({
       path: '/api/auth/logout',
+    });
+  }
+
+  async changePassword(payload: ChangePasswordPayload): Promise<void> {
+    await this.httpRepository.patch<void>({
+      path: '/api/auth/password',
+      data: payload,
     });
   }
 

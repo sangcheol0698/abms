@@ -7,6 +7,7 @@ export interface RenderOptions {
   route?: string;
   routes?: RouteRecordRaw[];
   queryClient?: QueryClient;
+  props?: MountingOptions<any>['props'];
   global?: MountingOptions<any>['global'];
 }
 
@@ -51,6 +52,7 @@ export async function renderWithProviders<T extends Component>(
   await router.isReady();
 
   const wrapper = mount(component as any, {
+    props: options.props,
     global: {
       plugins: [router, [VueQueryPlugin, { queryClient }]],
       ...(options.global ?? {}),

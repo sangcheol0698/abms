@@ -6,14 +6,17 @@ import AuthRepository from '@/features/auth/repository/AuthRepository';
 describe('AuthRepository', () => {
   let httpPost: ReturnType<typeof vi.fn>;
   let httpGet: ReturnType<typeof vi.fn>;
+  let httpPatch: ReturnType<typeof vi.fn>;
   let repository: AuthRepository;
 
   beforeEach(() => {
     httpPost = vi.fn().mockResolvedValue(undefined);
     httpGet = vi.fn().mockResolvedValue(undefined);
+    httpPatch = vi.fn().mockResolvedValue(undefined);
     repository = new AuthRepository({
       post: httpPost,
       get: httpGet,
+      patch: httpPatch,
     } as unknown as HttpRepository);
   });
 
@@ -65,6 +68,21 @@ describe('AuthRepository', () => {
 
     expect(httpPost).toHaveBeenCalledWith({
       path: '/api/auth/logout',
+    });
+  });
+
+  it('비밀번호 변경 API를 호출한다', async () => {
+    await repository.changePassword({
+      currentPassword: 'CurrentPassword123!',
+      newPassword: 'NewPassword123!',
+    });
+
+    expect(httpPatch).toHaveBeenCalledWith({
+      path: '/api/auth/password',
+      data: {
+        currentPassword: 'CurrentPassword123!',
+        newPassword: 'NewPassword123!',
+      },
     });
   });
 

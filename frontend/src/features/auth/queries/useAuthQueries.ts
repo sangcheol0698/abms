@@ -36,6 +36,15 @@ export function useLogoutMutation() {
   });
 }
 
+export function useChangePasswordMutation() {
+  const repository = appContainer.resolve(AuthRepository);
+
+  return useMutation({
+    mutationFn: (payload: { currentPassword: string; newPassword: string }) =>
+      repository.changePassword(payload),
+  });
+}
+
 export function useRequestRegistrationMutation() {
   const repository = appContainer.resolve(AuthRepository);
 

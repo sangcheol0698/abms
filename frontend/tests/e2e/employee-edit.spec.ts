@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { mockAuthenticatedSession } from './support/auth';
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:5173';
+const API_ROUTE = /^https?:\/\/[^/]+\/api(?:\/.*)?(?:\?.*)?$/;
 
 const employeeListResponse = {
   content: [
@@ -44,41 +45,91 @@ const employeeDetailResponse = {
 test.describe('직원 수정 다이얼로그', () => {
   test('기존 입사일과 생년월일을 그대로 표시한다', async ({ page }) => {
     await mockAuthenticatedSession(page);
+    let employeeListRequestCount = 0;
 
-    await page.route('**/api/employees?**', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(employeeListResponse),
-      }),
-    );
+    await page.route(API_ROUTE, async (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      const path = url.pathname.endsWith('/') && url.pathname !== '/'
+        ? url.pathname.slice(0, -1)
+        : url.pathname;
 
-    await page.route('**/api/employees/statuses', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
-    await page.route('**/api/employees/types', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
-    await page.route('**/api/employees/grades', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
-    await page.route('**/api/employees/positions', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
+      if (path === '/api/csrf') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true }),
+        });
+        return;
+      }
 
-    await page.route('**/api/departments/organization-chart', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
-    );
+      if (path === '/api/auth/me') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터' }),
+        });
+        return;
+      }
 
-    await page.route('**/api/employees/1', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(employeeDetailResponse),
-      }),
-    );
+      if (path === '/api/employees') {
+        employeeListRequestCount += 1;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(employeeListResponse),
+        });
+        return;
+      }
+
+      if (
+        path === '/api/employees/statuses' ||
+        path === '/api/employees/types' ||
+        path === '/api/employees/grades' ||
+        path === '/api/employees/positions' ||
+        path === '/api/departments/organization-chart' ||
+        path === '/api/notifications'
+      ) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+        return;
+      }
+
+      if (path === '/api/employees/1') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(employeeDetailResponse),
+        });
+        return;
+      }
+
+      if (path.startsWith('/api/v1/chat/')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+        return;
+      }
+
+      if (request.method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+        return;
+      }
+
+      await route.fulfill({ status: 204, contentType: 'application/json', body: '' });
+    });
 
     await page.goto(`${BASE_URL}/employees`);
+    await expect.poll(() => employeeListRequestCount).toBeGreaterThan(0);
 
     await expect(page.getByRole('row', { name: /박지훈/ })).toBeVisible();
 
