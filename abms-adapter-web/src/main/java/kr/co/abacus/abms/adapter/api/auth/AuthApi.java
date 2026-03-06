@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.api.auth.dto.AuthMeResponse;
+import kr.co.abacus.abms.adapter.api.auth.dto.ChangePasswordRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.LoginRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationConfirmRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationRequest;
@@ -56,6 +58,14 @@ public class AuthApi {
     @GetMapping("/api/auth/me")
     public AuthMeResponse me(Authentication authentication) {
         return AuthMeResponse.from(authFinder.getCurrentUser(authentication.getName()));
+    }
+
+    @PatchMapping("/api/auth/password")
+    public void changePassword(
+            Authentication authentication,
+            @RequestBody @Valid ChangePasswordRequest request
+    ) {
+        authManager.changePassword(request.toCommand(authentication.getName()));
     }
 
 }

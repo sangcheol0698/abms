@@ -58,4 +58,9 @@ public class Account extends AbstractEntity {
         return account;
     }
 
+    public void changePassword(String newPassword) {
+        this.password = Objects.requireNonNull(newPassword);
+        this.passwordChangedAt = LocalDateTime.now();
+    }
+
 }

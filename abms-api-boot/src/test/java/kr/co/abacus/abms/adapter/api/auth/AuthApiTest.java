@@ -1,10 +1,12 @@
 package kr.co.abacus.abms.adapter.api.auth;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
@@ -111,6 +114,99 @@ class AuthApiTest extends ApiIntegrationTestBase {
                                 "password", "WrongPassword!"
                         ))))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("로그인한 사용자는 현재 비밀번호 확인 후 비밀번호를 변경할 수 있다")
+    void should_changePassword_whenCurrentPasswordMatches() throws Exception {
+        Account account = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
+        LocalDateTime oldPasswordChangedAt = LocalDateTime.of(2025, 1, 1, 0, 0);
+        ReflectionTestUtils.setField(account, "passwordChangedAt", oldPasswordChangedAt);
+        accountRepository.save(account);
+        flushAndClear();
+
+        mockMvc.perform(patch("/api/auth/password")
+                        .with(user(USERNAME))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "currentPassword", PASSWORD,
+                                "newPassword", "ChangedPassword123!"
+                        ))))
+                .andExpect(status().isOk());
+
+        flushAndClear();
+
+        Account changed = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
+        assertThat(passwordEncoder.matches("ChangedPassword123!", changed.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches(PASSWORD, changed.getPassword())).isFalse();
+        assertThat(changed.getPasswordChangedAt()).isAfter(oldPasswordChangedAt);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", "ChangedPassword123!"
+                        ))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", PASSWORD
+                        ))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("로그인하지 않으면 비밀번호를 변경할 수 없다")
+    void should_requireAuthentication_whenChangingPassword() throws Exception {
+        mockMvc.perform(patch("/api/auth/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "currentPassword", PASSWORD,
+                                "newPassword", "ChangedPassword123!"
+                        ))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("현재 비밀번호가 틀리면 비밀번호 변경에 실패한다")
+    void should_failChangePassword_whenCurrentPasswordIsWrong() throws Exception {
+        mockMvc.perform(patch("/api/auth/password")
+                        .with(user(USERNAME))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "currentPassword", "WrongPassword123!",
+                                "newPassword", "ChangedPassword123!"
+                        ))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("새 비밀번호가 정책에 맞지 않으면 비밀번호 변경에 실패한다")
+    void should_failChangePassword_whenNewPasswordIsWeak() throws Exception {
+        mockMvc.perform(patch("/api/auth/password")
+                        .with(user(USERNAME))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "currentPassword", PASSWORD,
+                                "newPassword", "password1234"
+                        ))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("새 비밀번호가 현재 비밀번호와 같으면 비밀번호 변경에 실패한다")
+    void should_failChangePassword_whenNewPasswordMatchesCurrentPassword() throws Exception {
+        mockMvc.perform(patch("/api/auth/password")
+                        .with(user(USERNAME))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "currentPassword", PASSWORD,
+                                "newPassword", PASSWORD
+                        ))))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

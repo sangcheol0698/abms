@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.auth.dto.ChangePasswordCommand;
 import kr.co.abacus.abms.application.auth.dto.LoginCommand;
 import kr.co.abacus.abms.application.auth.dto.RegistrationConfirmCommand;
 import kr.co.abacus.abms.application.auth.dto.RegistrationRequestCommand;
@@ -21,6 +22,9 @@ import kr.co.abacus.abms.application.auth.outbound.RegistrationTokenRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.account.Account;
 import kr.co.abacus.abms.domain.account.AccountAlreadyExistsException;
+import kr.co.abacus.abms.domain.account.AccountNotFoundException;
+import kr.co.abacus.abms.domain.account.InvalidCurrentPasswordException;
+import kr.co.abacus.abms.domain.account.SamePasswordException;
 import kr.co.abacus.abms.domain.auth.InvalidRegistrationTokenException;
 import kr.co.abacus.abms.domain.auth.RegistrationToken;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -87,6 +91,23 @@ public class AuthCommandService implements AuthManager {
     @Override
     public void login(LoginCommand command) {
         credentialAuthenticator.authenticate(command.username(), command.password());
+    }
+
+    @Override
+    public void changePassword(ChangePasswordCommand command) {
+        Email email = new Email(command.username());
+        Account account = accountRepository.findByUsername(email)
+                .orElseThrow(() -> new AccountNotFoundException("계정을 찾을 수 없습니다: " + email.address()));
+
+        if (!passwordEncoder.matches(command.currentPassword(), account.getPassword())) {
+            throw new InvalidCurrentPasswordException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        if (passwordEncoder.matches(command.newPassword(), account.getPassword())) {
+            throw new SamePasswordException("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+        }
+
+        account.changePassword(Objects.requireNonNull(passwordEncoder.encode(command.newPassword())));
     }
 
     private void validateAlreadyRegistered(Email email) {
