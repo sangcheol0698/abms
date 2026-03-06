@@ -7,20 +7,15 @@ import { renderWithProviders } from '@/test-utils';
 import { toast } from 'vue-sonner';
 
 const mutateAsyncMock = vi.fn();
-const logoutMock = vi.fn();
+const logoutMutateAsyncMock = vi.fn();
 
 vi.mock('@/features/auth/queries/useAuthQueries', () => ({
   useChangePasswordMutation: () => ({
     mutateAsync: mutateAsyncMock,
   }),
-}));
-
-vi.mock('@/core/di/container', () => ({
-  appContainer: {
-    resolve: () => ({
-      logout: logoutMock,
-    }),
-  },
+  useLogoutMutation: () => ({
+    mutateAsync: logoutMutateAsyncMock,
+  }),
 }));
 
 vi.mock('vue-sonner', () => ({
@@ -109,7 +104,7 @@ describe('ProfileDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mutateAsyncMock.mockResolvedValue(undefined);
-    logoutMock.mockResolvedValue(undefined);
+    logoutMutateAsyncMock.mockResolvedValue(undefined);
   });
 
   it('현재 비밀번호가 비어 있으면 검증 메시지를 보여준다', async () => {
@@ -207,5 +202,23 @@ describe('ProfileDialog', () => {
     expect(toast.error).toHaveBeenCalledWith('비밀번호 변경에 실패했습니다.', {
       description: '현재 비밀번호가 일치하지 않습니다.',
     });
+  });
+
+  it('다시 열면 마지막 섹션은 유지되고 비밀번호 입력값은 초기화된다', async () => {
+    const { wrapper } = await mountProfileDialog();
+    await switchToSecuritySection(wrapper);
+
+    await wrapper.find('#currentPassword').setValue('CurrentPassword123!');
+    await wrapper.find('#newPassword').setValue('NewPassword123!');
+    await wrapper.find('#newPasswordConfirm').setValue('NewPassword123!');
+
+    await wrapper.setProps({ open: false });
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+
+    expect(wrapper.find('[data-test="security-section"]').exists()).toBe(true);
+    expect((wrapper.find('#currentPassword').element as HTMLInputElement).value).toBe('');
+    expect((wrapper.find('#newPassword').element as HTMLInputElement).value).toBe('');
+    expect((wrapper.find('#newPasswordConfirm').element as HTMLInputElement).value).toBe('');
   });
 });

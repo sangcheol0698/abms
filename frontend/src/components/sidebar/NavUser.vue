@@ -108,8 +108,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useSidebar } from '@/components/ui/sidebar';
-import { appContainer } from '@/core/di/container';
-import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { useLogoutMutation } from '@/features/auth/queries/useAuthQueries';
 import { clearStoredUser } from '@/features/auth/session';
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from 'lucide-vue-next';
 import { ref } from 'vue';
@@ -132,7 +131,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const router = useRouter();
 const sidebar = useSidebar();
-const authRepository = appContainer.resolve(AuthRepository);
+const logoutMutation = useLogoutMutation();
 const isLogoutDialogOpen = ref(false);
 const isLoggingOut = ref(false);
 
@@ -160,7 +159,7 @@ async function confirmLogout() {
   }
   isLoggingOut.value = true;
   try {
-    await authRepository.logout();
+    await logoutMutation.mutateAsync();
   } catch (error) {
     console.error('Logout error:', error);
   } finally {

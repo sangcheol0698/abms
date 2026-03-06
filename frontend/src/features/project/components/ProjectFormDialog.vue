@@ -303,7 +303,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { z } from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
 import {
@@ -336,14 +336,17 @@ import {
 } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Separator } from '@/components/ui/separator';
-import { appContainer } from '@/core/di/container';
-import ProjectRepository from '@/features/project/repository/ProjectRepository';
-import PartyRepository from '@/features/party/repository/PartyRepository';
 import { MoneyInput } from '@/components/business';
 import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
 import { Building } from 'lucide-vue-next';
 import HttpError from '@/core/http/HttpError';
 import type { ProjectDetail } from '@/features/project/models/projectDetail';
+import {
+  useCreateProjectMutation,
+  useProjectStatusesQuery,
+  useUpdateProjectMutation,
+} from '@/features/project/queries/useProjectQueries';
+import { usePartyOptionsQuery } from '@/features/party/queries/usePartyQueries';
 import { toast } from 'vue-sonner';
 
 const props = withDefaults(
@@ -363,9 +366,6 @@ const emit = defineEmits<{
   (event: 'created'): void;
   (event: 'updated'): void;
 }>();
-
-const repository = appContainer.resolve(ProjectRepository);
-const partyRepository = appContainer.resolve(PartyRepository);
 
 const schema = z.object({
   partyId: z.number({ required_error: '협력사를 선택하세요.' }).min(1, '협력사를 선택하세요.'),
@@ -410,8 +410,12 @@ const errorMessage = ref<string | null>(null);
 const isPartySelectOpen = ref(false);
 const selectedPartyIdForDialog = ref<number | undefined>();
 const applyPartySelection = ref<((value: number) => void) | null>(null);
-const statusOptions = ref<{ value: string; label: string }[]>([]);
-const partyOptions = ref<{ value: number; label: string }[]>([]);
+const projectStatusesQuery = useProjectStatusesQuery();
+const partyOptionsQuery = usePartyOptionsQuery();
+const createProjectMutation = useCreateProjectMutation();
+const updateProjectMutation = useUpdateProjectMutation();
+const statusOptions = computed(() => projectStatusesQuery.data.value ?? []);
+const partyOptions = computed(() => partyOptionsQuery.data.value ?? []);
 
 const isEditMode = computed(() => props.mode === 'edit');
 const dialogTitle = computed(() => (isEditMode.value ? '프로젝트 편집' : '프로젝트 추가'));
@@ -453,22 +457,6 @@ watch(isPartySelectOpen, (next) => {
   }
 });
 
-onMounted(async () => {
-  try {
-    const [statuses, parties] = await Promise.all([
-      repository.fetchStatuses(),
-      partyRepository.fetchAll(),
-    ]);
-    statusOptions.value = statuses;
-    partyOptions.value = parties;
-  } catch (error) {
-    console.error('Failed to fetch options:', error);
-    // Fallback to empty array
-    statusOptions.value = [];
-    partyOptions.value = [];
-  }
-});
-
 function resetForm() {
   errorMessage.value = null;
   setFormInitialValues(initialValues);
@@ -504,11 +492,14 @@ async function onSubmit(rawValues: Record<string, unknown>) {
 
   try {
     if (isEditMode.value && props.project?.projectId) {
-      await repository.update(props.project.projectId, payload);
+      await updateProjectMutation.mutateAsync({
+        projectId: props.project.projectId,
+        data: payload,
+      });
       toast.success('프로젝트 정보를 업데이트했습니다.');
       emit('updated');
     } else {
-      await repository.create(payload);
+      await createProjectMutation.mutateAsync(payload);
       toast.success('프로젝트를 성공적으로 추가했습니다.');
       emit('created');
     }

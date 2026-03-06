@@ -63,9 +63,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PhoneNumberInput } from '@/components/business';
-import { appContainer } from '@/core/di/container';
-import PartyRepository from '@/features/party/repository/PartyRepository';
 import type { PartyDetail } from '@/features/party/models/partyDetail';
+import {
+  useCreatePartyMutation,
+  useUpdatePartyMutation,
+} from '@/features/party/queries/usePartyQueries';
 import { toast } from 'vue-sonner';
 
 interface Props {
@@ -83,8 +85,8 @@ const emit = defineEmits<{
   created: [];
   updated: [];
 }>();
-
-const repository = appContainer.resolve(PartyRepository);
+const createPartyMutation = useCreatePartyMutation();
+const updatePartyMutation = useUpdatePartyMutation();
 
 const form = reactive({
   name: '',
@@ -133,10 +135,10 @@ async function handleSubmit() {
     };
 
     if (props.mode === 'create') {
-      await repository.create(data);
+      await createPartyMutation.mutateAsync(data);
       emit('created');
     } else if (props.party?.partyId) {
-      await repository.update(props.party.partyId, data);
+      await updatePartyMutation.mutateAsync({ partyId: props.party.partyId, data });
       emit('updated');
     }
   } catch {

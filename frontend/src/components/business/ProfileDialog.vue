@@ -1,31 +1,27 @@
 <template>
   <Dialog :open="open" @update:open="handleOpenChange">
     <DialogContent
-      class="max-h-[calc(100vh-1rem)] w-[calc(100%-1rem)] overflow-hidden p-0 md:max-h-[560px] md:max-w-[760px] lg:max-w-[860px]"
-    >
+      class="max-h-[calc(100vh-1rem)] w-[calc(100%-1rem)] overflow-hidden p-0 md:max-h-[560px] md:max-w-[760px] lg:max-w-[860px]">
       <DialogTitle class="sr-only">내 계정</DialogTitle>
       <DialogDescription class="sr-only">
         계정 정보를 확인하고 비밀번호를 변경할 수 있습니다.
       </DialogDescription>
 
       <SidebarProvider class="items-start">
-        <Sidebar collapsible="none" class="hidden border-r bg-muted/20 md:flex">
-          <SidebarContent class="p-3">
+        <Sidebar
+          collapsible="none"
+          class="hidden border-r bg-muted/20 md:flex [--sidebar-width:13rem]"
+        >
+          <SidebarContent class="p-2">
             <div class="px-2 py-3">
               <p class="text-sm font-semibold text-foreground">내 계정</p>
-              <p class="mt-1 text-xs text-muted-foreground">
-                계정, 알림, 환경 설정을 확인하고 관리합니다.
-              </p>
             </div>
 
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem v-for="item in navigationItems" :key="item.key">
-                    <SidebarMenuButton
-                      :is-active="activeSection === item.key"
-                      @click="activeSection = item.key"
-                    >
+                    <SidebarMenuButton :is-active="activeSection === item.key" @click="activeSection = item.key">
                       <component :is="item.icon" />
                       <span>{{ item.label }}</span>
                     </SidebarMenuButton>
@@ -36,12 +32,8 @@
           </SidebarContent>
         </Sidebar>
 
-        <main
-          class="flex max-h-[calc(100vh-5rem)] min-h-0 flex-1 flex-col overflow-hidden md:h-[520px] md:max-h-none"
-        >
-          <header
-            class="flex min-h-16 shrink-0 items-center border-b border-border bg-background px-4 py-3 pr-12"
-          >
+        <main class="flex max-h-[calc(100vh-5rem)] min-h-0 flex-1 flex-col overflow-hidden md:h-[520px] md:max-h-none">
+          <header class="flex min-h-16 shrink-0 items-center border-b border-border bg-background px-4 py-3 pr-12">
             <div class="flex min-w-0 flex-1 flex-col gap-3">
               <Breadcrumb>
                 <BreadcrumbList>
@@ -55,20 +47,10 @@
                 </BreadcrumbList>
               </Breadcrumb>
 
-              <ToggleGroup
-                class="w-full overflow-x-auto md:hidden"
-                type="single"
-                variant="outline"
-                size="sm"
-                :model-value="activeSection"
-                @update:model-value="handleSectionChange"
-              >
-                <ToggleGroupItem
-                  v-for="item in navigationItems"
-                  :key="`mobile-${item.key}`"
-                  :value="item.key"
-                  class="min-w-fit px-3 text-xs"
-                >
+              <ToggleGroup class="w-full overflow-x-auto md:hidden" type="single" variant="outline" size="sm"
+                :model-value="activeSection" @update:model-value="handleSectionChange">
+                <ToggleGroupItem v-for="item in navigationItems" :key="`mobile-${item.key}`" :value="item.key"
+                  class="min-w-fit px-3 text-xs">
                   {{ item.label }}
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -76,11 +58,8 @@
           </header>
 
           <div class="flex-1 overflow-y-auto">
-            <section
-              v-if="activeSection === 'profile'"
-              class="flex flex-col gap-5 p-4 md:p-6"
-              data-test="profile-section"
-            >
+            <section v-if="activeSection === 'profile'" class="flex flex-col gap-5 p-4 md:p-6"
+              data-test="profile-section">
               <div class="flex items-center gap-4 rounded-xl border border-border/60 bg-muted/20 p-4">
                 <Avatar class="h-14 w-14">
                   <AvatarImage :src="user.avatar ?? ''" :alt="user.name" />
@@ -116,16 +95,12 @@
               </article>
             </section>
 
-            <section
-              v-else-if="activeSection === 'security'"
-              class="flex flex-col gap-5 p-4 md:p-6"
-              data-test="security-section"
-            >
+            <section v-else-if="activeSection === 'security'" class="flex flex-col gap-5 p-4 md:p-6"
+              data-test="security-section">
               <div class="rounded-xl border border-border/60 bg-muted/20 p-4">
                 <div class="flex items-start gap-3">
                   <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
-                  >
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Lock class="h-4 w-4" />
                   </div>
                   <div class="space-y-2">
@@ -138,45 +113,25 @@
                 </div>
               </div>
 
-              <form
-                id="change-password-form"
+              <form id="change-password-form"
                 class="grid gap-4 rounded-xl border border-border/60 bg-background p-4 shadow-sm"
-                @submit.prevent="submitPasswordChange"
-              >
+                @submit.prevent="submitPasswordChange">
                 <div class="space-y-2">
                   <Label for="currentPassword">현재 비밀번호</Label>
-                  <Input
-                    id="currentPassword"
-                    v-model="currentPassword"
-                    type="password"
-                    autocomplete="current-password"
-                    :disabled="isChangingPassword"
-                    required
-                  />
+                  <Input id="currentPassword" v-model="currentPassword" type="password" autocomplete="current-password"
+                    :disabled="isChangingPassword" required />
                 </div>
 
                 <div class="space-y-2">
                   <Label for="newPassword">새 비밀번호</Label>
-                  <Input
-                    id="newPassword"
-                    v-model="newPassword"
-                    type="password"
-                    autocomplete="new-password"
-                    :disabled="isChangingPassword"
-                    required
-                  />
+                  <Input id="newPassword" v-model="newPassword" type="password" autocomplete="new-password"
+                    :disabled="isChangingPassword" required />
                 </div>
 
                 <div class="space-y-2">
                   <Label for="newPasswordConfirm">새 비밀번호 확인</Label>
-                  <Input
-                    id="newPasswordConfirm"
-                    v-model="newPasswordConfirm"
-                    type="password"
-                    autocomplete="new-password"
-                    :disabled="isChangingPassword"
-                    required
-                  />
+                  <Input id="newPasswordConfirm" v-model="newPasswordConfirm" type="password"
+                    autocomplete="new-password" :disabled="isChangingPassword" required />
                 </div>
 
                 <Alert v-if="passwordErrorMessage" variant="destructive">
@@ -185,37 +140,22 @@
                 </Alert>
 
                 <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-between">
-                  <Button
-                    variant="destructive"
-                    type="button"
-                    size="sm"
-                    class="sm:w-auto"
-                    @click="openLogoutDialog"
-                  >
+                  <Button variant="destructive" type="button" size="sm" class="sm:w-auto" @click="openLogoutDialog">
                     로그아웃
                   </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    class="sm:w-auto"
-                    :disabled="isChangingPassword"
-                  >
+                  <Button type="submit" size="sm" class="sm:w-auto" :disabled="isChangingPassword">
                     {{ isChangingPassword ? '변경 중...' : '비밀번호 변경' }}
                   </Button>
                 </div>
               </form>
             </section>
 
-            <section
-              v-else-if="activeSection === 'notifications'"
-              class="flex flex-col gap-5 p-4 md:p-6"
-              data-test="notifications-section"
-            >
+            <section v-else-if="activeSection === 'notifications'" class="flex flex-col gap-5 p-4 md:p-6"
+              data-test="notifications-section">
               <div class="rounded-xl border border-border/60 bg-muted/20 p-4">
                 <div class="flex items-start gap-3">
                   <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
-                  >
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Bell class="h-4 w-4" />
                   </div>
                   <div class="space-y-2">
@@ -260,16 +200,12 @@
               </article>
             </section>
 
-            <section
-              v-else-if="activeSection === 'preferences'"
-              class="flex flex-col gap-5 p-4 md:p-6"
-              data-test="preferences-section"
-            >
+            <section v-else-if="activeSection === 'preferences'" class="flex flex-col gap-5 p-4 md:p-6"
+              data-test="preferences-section">
               <div class="rounded-xl border border-border/60 bg-muted/20 p-4">
                 <div class="flex items-start gap-3">
                   <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
-                  >
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Paintbrush class="h-4 w-4" />
                   </div>
                   <div class="space-y-2">
@@ -332,12 +268,8 @@
         <AlertDialogCancel :disabled="isLoggingOut" @click="handleLogoutDialogOpenChange(false)">
           취소
         </AlertDialogCancel>
-        <AlertDialogAction
-          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          :disabled="isLoggingOut"
-          @pointerdown.prevent
-          @click="confirmLogout"
-        >
+        <AlertDialogAction class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          :disabled="isLoggingOut" @pointerdown.prevent @click="confirmLogout">
           {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
         </AlertDialogAction>
       </AlertDialogFooter>
@@ -347,7 +279,7 @@
 
 <script setup lang="ts">
 import type { AcceptableValue } from 'reka-ui';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Bell, Lock, Paintbrush, UserRound } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
@@ -390,10 +322,8 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { appContainer } from '@/core/di/container';
 import HttpError from '@/core/http/HttpError';
-import { useChangePasswordMutation } from '@/features/auth/queries/useAuthQueries';
-import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { useChangePasswordMutation, useLogoutMutation } from '@/features/auth/queries/useAuthQueries';
 import { clearStoredUser } from '@/features/auth/session';
 
 defineOptions({ name: 'ProfileDialog' });
@@ -405,27 +335,27 @@ const navigationItems: Array<{
   label: string;
   icon: typeof UserRound;
 }> = [
-  {
-    key: 'profile',
-    label: '계정 정보',
-    icon: UserRound,
-  },
-  {
-    key: 'security',
-    label: '보안',
-    icon: Lock,
-  },
-  {
-    key: 'notifications',
-    label: '알림 설정',
-    icon: Bell,
-  },
-  {
-    key: 'preferences',
-    label: '환경 설정',
-    icon: Paintbrush,
-  },
-];
+    {
+      key: 'profile',
+      label: '계정 정보',
+      icon: UserRound,
+    },
+    {
+      key: 'security',
+      label: '보안',
+      icon: Lock,
+    },
+    {
+      key: 'notifications',
+      label: '알림 설정',
+      icon: Bell,
+    },
+    {
+      key: 'preferences',
+      label: '환경 설정',
+      icon: Paintbrush,
+    },
+  ];
 
 const props = withDefaults(
   defineProps<{
@@ -447,8 +377,8 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-const authRepository = appContainer.resolve(AuthRepository);
 const changePasswordMutation = useChangePasswordMutation();
+const logoutMutation = useLogoutMutation();
 const activeSection = ref<ProfileSection>('profile');
 const isLogoutDialogOpen = ref(false);
 const isLoggingOut = ref(false);
@@ -474,11 +404,6 @@ function resetPasswordForm() {
 }
 
 function handleOpenChange(value: boolean) {
-  if (!value) {
-    isLogoutDialogOpen.value = false;
-    activeSection.value = 'profile';
-    resetPasswordForm();
-  }
   emit('update:open', value);
 }
 
@@ -522,6 +447,17 @@ function validatePasswordChange(): string | null {
   return null;
 }
 
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (!isOpen) {
+      isLogoutDialogOpen.value = false;
+      resetPasswordForm();
+    }
+  },
+  { immediate: true },
+);
+
 async function submitPasswordChange() {
   passwordErrorMessage.value = null;
   const validationError = validatePasswordChange();
@@ -554,7 +490,7 @@ async function confirmLogout() {
   }
   isLoggingOut.value = true;
   try {
-    await authRepository.logout();
+    await logoutMutation.mutateAsync();
   } catch (error) {
     console.error('Logout error:', error);
   } finally {

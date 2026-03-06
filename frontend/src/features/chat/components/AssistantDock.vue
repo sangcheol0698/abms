@@ -130,14 +130,16 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ChatWidget from '@/features/chat/components/ChatWidget.vue';
 import { createChatMessage, type ChatMessage } from '@/features/chat/entity/ChatMessage';
-import { RemoteChatRepository } from '@/features/chat/repository/RemoteChatRepository';
+import { useChatSessionDetailQuery } from '@/features/chat/queries/useChatQueries';
+import { useChatRepository } from '@/features/chat/repository/useChatRepository';
 import { sanitizeAssistantLinks } from '@/features/chat/utils/linkSanitizer';
 import { useAssistantDockStore } from '@/features/chat/stores/assistantDock.store';
 import { toast } from 'vue-sonner';
 
-const repository = new RemoteChatRepository();
+const repository = useChatRepository();
 const dockStore = useAssistantDockStore();
 const { activeSessionId, isDockOpen, isMobileOpen } = storeToRefs(dockStore);
+const sessionDetailQuery = useChatSessionDetailQuery(activeSessionId);
 
 const route = useRoute();
 const router = useRouter();
@@ -220,7 +222,16 @@ function resetDockToNewChat() {
 
 async function loadSessionDetail(sessionId: string) {
   try {
-    const detail = await repository.getSessionDetail(sessionId);
+    if (activeSessionId.value !== sessionId) {
+      return;
+    }
+    const result = await sessionDetailQuery.refetch();
+    const detail = result.data;
+    if (!detail) {
+      sessionTitle.value = '새 채팅';
+      messages.value = [];
+      return;
+    }
     const nextTitle = detail.title?.trim() || '새 채팅';
     if (sessionTitle.value !== nextTitle) {
       sessionTitle.value = nextTitle;
@@ -250,7 +261,14 @@ async function loadSessionDetail(sessionId: string) {
 
 async function refreshSessionTitle(sessionId: string) {
   try {
-    const detail = await repository.getSessionDetail(sessionId);
+    if (activeSessionId.value !== sessionId) {
+      return;
+    }
+    const result = await sessionDetailQuery.refetch();
+    const detail = result.data;
+    if (!detail) {
+      return;
+    }
     sessionTitle.value = detail.title?.trim() || '새 채팅';
   } catch {
     // Ignore title refresh failures

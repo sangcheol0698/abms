@@ -132,15 +132,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
-import { appContainer } from '@/core/di/container';
-import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import type { PositionHistory } from '@/features/employee/models/positionHistory';
 import { getEmployeePositionOptions } from '@/features/employee/models/employeeFilters';
+import { useEmployeePositionHistoryQuery } from '@/features/employee/queries/useEmployeeQueries';
 
 interface TimelineEvent {
   id: string;
@@ -170,32 +169,13 @@ const emit = defineEmits<{
   activate: [];
 }>();
 
-const repository = appContainer.resolve(EmployeeRepository);
-
 const today = computed(() => new Date().toISOString().slice(0, 10));
 const resignationDate = ref<string>(today.value);
-const positionHistories = ref<PositionHistory[]>([]);
-const isLoadingHistory = ref(false);
-
-watch(
-  () => props.employee?.employeeId,
-  async (newId) => {
-    resignationDate.value = today.value;
-    if (newId) {
-      isLoadingHistory.value = true;
-      try {
-        positionHistories.value = await repository.fetchPositionHistory(newId);
-      } catch (e) {
-        console.error('직급 이력 조회 실패', e);
-        positionHistories.value = [];
-      } finally {
-        isLoadingHistory.value = false;
-      }
-    } else {
-      positionHistories.value = [];
-    }
-  },
-  { immediate: true },
+const employeeId = computed(() => props.employee?.employeeId);
+const positionHistoryQuery = useEmployeePositionHistoryQuery(employeeId);
+const positionHistories = computed<PositionHistory[]>(() => positionHistoryQuery.data.value ?? []);
+const isLoadingHistory = computed(
+  () => positionHistoryQuery.isLoading.value || positionHistoryQuery.isFetching.value,
 );
 
 function getPositionLabel(code: string) {

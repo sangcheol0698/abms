@@ -84,10 +84,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'vue-sonner';
-import { appContainer } from '@/core/di/container';
-import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
+import HttpError from '@/core/http/HttpError';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
+import { usePromoteEmployeeMutation } from '@/features/employee/queries/useEmployeeQueries';
 
 const props = defineProps<{
   open: boolean;
@@ -101,7 +101,7 @@ const emit = defineEmits<{
   (event: 'promoted'): void;
 }>();
 
-const repository = appContainer.resolve(EmployeeRepository);
+const promoteMutation = usePromoteEmployeeMutation();
 const isSubmitting = ref(false);
 
 const form = reactive({
@@ -139,18 +139,19 @@ async function handleSubmit() {
 
   isSubmitting.value = true;
   try {
-    await repository.promote(
-      props.employee.employeeId,
-      form.positionCode,
-      form.gradeCode || undefined,
-    );
+    await promoteMutation.mutateAsync({
+      employeeId: props.employee.employeeId,
+      position: form.positionCode,
+      grade: form.gradeCode || undefined,
+    });
 
     toast.success('승진 처리가 완료되었습니다.');
     emit('promoted');
     emit('update:open', false);
   } catch (error) {
     console.error(error);
-    toast.error('승진 처리 중 오류가 발생했습니다.');
+    const message = error instanceof HttpError ? error.message : '승진 처리 중 오류가 발생했습니다.';
+    toast.error('승진 처리 중 오류가 발생했습니다.', { description: message });
   } finally {
     isSubmitting.value = false;
   }

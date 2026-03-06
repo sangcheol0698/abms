@@ -413,7 +413,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { z } from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
 import {
@@ -449,8 +449,6 @@ import {
 import { Building2 } from 'lucide-vue-next';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Separator } from '@/components/ui/separator';
-import { appContainer } from '@/core/di/container';
-import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import HttpError from '@/core/http/HttpError';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import {
@@ -458,6 +456,11 @@ import {
   getEmployeePositionOptions,
   getEmployeeTypeOptions,
 } from '@/features/employee/models/employeeFilters';
+import {
+  useCreateEmployeeMutation,
+  useEmployeeAvatarsQuery,
+  useUpdateEmployeeMutation,
+} from '@/features/employee/queries/useEmployeeQueries';
 import { toast } from 'vue-sonner';
 import DepartmentSelectDialog from '@/features/department/components/DepartmentSelectDialog.vue';
 import EmployeeAvatarSelectDialog from '@/features/employee/components/EmployeeAvatarSelectDialog.vue';
@@ -499,8 +502,6 @@ const emit = defineEmits<{
   (event: 'created'): void;
   (event: 'updated'): void;
 }>();
-
-const repository = appContainer.resolve(EmployeeRepository);
 
 const schema = z.object({
   departmentId: z
@@ -550,16 +551,22 @@ const departmentOptions = computed(() => props.departmentOptions ?? []);
 const isDepartmentSelectOpen = ref(false);
 const selectedDepartmentIdForDialog = ref<number | undefined>();
 const applyDepartmentSelection = ref<((value: number) => void) | null>(null);
+const employeeAvatarsQuery = useEmployeeAvatarsQuery();
+const createEmployeeMutation = useCreateEmployeeMutation();
+const updateEmployeeMutation = useUpdateEmployeeMutation();
 
 const gradeOptions = computed(() => props.gradeOptions ?? getEmployeeGradeOptions());
 const positionOptions = computed(() => props.positionOptions ?? getEmployeePositionOptions());
 const typeOptions = computed(() => props.typeOptions ?? getEmployeeTypeOptions());
-const avatarOptions = ref<EmployeeAvatarOption[]>(getEmployeeAvatarOptions());
-const isLoadingAvatars = ref(false);
+const avatarOptions = computed<EmployeeAvatarOption[]>(
+  () => employeeAvatarsQuery.data.value ?? getEmployeeAvatarOptions(),
+);
+const isLoadingAvatars = computed(
+  () => employeeAvatarsQuery.isLoading.value || employeeAvatarsQuery.isFetching.value,
+);
 const isAvatarSelectOpen = ref(false);
 const avatarSelectionResolver = ref<((value: string) => void) | null>(null);
 const selectedAvatarCodeForDialog = ref(defaultEmployeeAvatar);
-let hasLoadedAvatarOptions = false;
 
 const isEditMode = computed(() => props.mode === 'edit');
 const dialogTitle = computed(() => (isEditMode.value ? '직원 편집' : '직원 추가'));
@@ -575,8 +582,6 @@ watch(
     if (!open) {
       return;
     }
-
-    ensureAvatarOptionsLoaded();
 
     if (isEditMode.value && !employee) {
       return;
@@ -608,29 +613,6 @@ watch(isAvatarSelectOpen, (next) => {
     avatarSelectionResolver.value = null;
   }
 });
-
-onMounted(() => {
-  ensureAvatarOptionsLoaded();
-});
-
-async function ensureAvatarOptionsLoaded() {
-  if (hasLoadedAvatarOptions) {
-    return;
-  }
-  isLoadingAvatars.value = true;
-  try {
-    const options = await repository.fetchAvatars();
-    if (Array.isArray(options) && options.length > 0) {
-      avatarOptions.value = options;
-    }
-    selectedAvatarCodeForDialog.value = resolveAvatarCode(selectedAvatarCodeForDialog.value);
-  } catch {
-    // ignore and fallback to bundled avatars
-  } finally {
-    hasLoadedAvatarOptions = true;
-    isLoadingAvatars.value = false;
-  }
-}
 
 function resolveAvatarCode(candidate?: string | null): EmployeeAvatarCode {
   if (typeof candidate === 'string' && candidate.length > 0) {
@@ -745,11 +727,14 @@ async function onSubmit(rawValues: Record<string, unknown>) {
 
   try {
     if (isEditMode.value && props.employee?.employeeId) {
-      await repository.update(props.employee.employeeId, payload);
+      await updateEmployeeMutation.mutateAsync({
+        employeeId: props.employee.employeeId,
+        payload,
+      });
       toast.success('직원 정보를 업데이트했습니다.');
       emit('updated');
     } else {
-      await repository.create(payload);
+      await createEmployeeMutation.mutateAsync(payload);
       toast.success('직원을 성공적으로 추가했습니다.');
       emit('created');
     }

@@ -53,18 +53,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { appContainer } from '@/core/di/container';
-import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
+import { computed, toRef } from 'vue';
 import { type PositionHistory, PositionLabel } from '@/features/employee/models/positionHistory';
+import { useEmployeePositionHistoryQuery } from '@/features/employee/queries/useEmployeeQueries';
 
 const props = defineProps<{
   employeeId: number;
 }>();
 
-const repository = appContainer.resolve(EmployeeRepository);
-const histories = ref<PositionHistory[]>([]);
-const isLoading = ref(false);
+const employeeId = toRef(props, 'employeeId');
+const positionHistoryQuery = useEmployeePositionHistoryQuery(employeeId);
+const histories = computed<PositionHistory[]>(() => positionHistoryQuery.data.value ?? []);
+const isLoading = computed(
+  () => positionHistoryQuery.isLoading.value || positionHistoryQuery.isFetching.value,
+);
 
 // 최신순(시작일 내림차순) 정렬
 const sortedHistories = computed(() => {
@@ -78,27 +80,4 @@ function formatDate(dateString: string) {
   const date = new Date(dateString);
   return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}.`;
 }
-
-async function fetchHistory() {
-  if (!props.employeeId) return;
-
-  isLoading.value = true;
-  try {
-    const data = await repository.fetchPositionHistory(props.employeeId);
-    histories.value = data;
-  } catch (error) {
-    console.error('직급 이력 조회 실패:', error);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-// employeeId가 변경될 때마다 데이터 다시 조회
-watch(
-  () => props.employeeId,
-  (newId) => {
-    if (newId) fetchHistory();
-  },
-  { immediate: true },
-);
 </script>

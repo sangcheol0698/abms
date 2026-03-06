@@ -1,3 +1,4 @@
+import { inject, singleton } from 'tsyringe';
 import type { ChatRepository, ChatStreamOptions } from './ChatRepository';
 import type {
   ChatRequest,
@@ -8,9 +9,13 @@ import type {
 import { normalizeChatSession, normalizeChatSessionDetail } from '../entity/ChatMessage';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { emitAuthHttpError } from '@/features/auth/http-auth-error';
+import HttpRepository from '@/core/http/HttpRepository';
 
+@singleton()
 export class RemoteChatRepository implements ChatRepository {
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  private readonly baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+
+  constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 
   private notifyAuthorizationError(status: number): void {
     if (status === 401 || status === 403) {
@@ -18,27 +23,37 @@ export class RemoteChatRepository implements ChatRepository {
     }
   }
 
-  private throwHttpError(status: number): never {
-    this.notifyAuthorizationError(status);
-    throw new Error(`Server responded with status ${status}`);
+  private getXsrfToken(): string | null {
+    if (typeof document === 'undefined') {
+      return null;
+    }
+
+    const tokenPair = document.cookie
+      .split('; ')
+      .find((cookie) => cookie.startsWith('XSRF-TOKEN='));
+
+    if (!tokenPair) {
+      return null;
+    }
+
+    const encodedToken = tokenPair.slice('XSRF-TOKEN='.length);
+    if (!encodedToken) {
+      return null;
+    }
+
+    try {
+      return decodeURIComponent(encodedToken);
+    } catch {
+      return encodedToken;
+    }
   }
 
   async sendMessage(request: ChatRequest): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/message`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
+    const response = await this.httpRepository.post<{ content: string }>({
+      path: '/api/v1/chat/message',
+      data: request,
     });
-
-    if (!response.ok) {
-      this.throwHttpError(response.status);
-    }
-
-    const data = await response.json();
-    return data.content;
+    return response.content;
   }
 
   async streamMessage(
@@ -97,6 +112,7 @@ export class RemoteChatRepository implements ChatRepository {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          ...(this.getXsrfToken() ? { 'X-XSRF-TOKEN': this.getXsrfToken() as string } : {}),
         },
         body: JSON.stringify(request),
         signal: ctrl.signal,
@@ -168,78 +184,43 @@ export class RemoteChatRepository implements ChatRepository {
   }
 
   async getRecentSessions(limit = 20): Promise<ChatSession[]> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions?limit=${limit}`, {
-      credentials: 'include',
+    const data = await this.httpRepository.get<ChatSessionResponse[]>({
+      path: '/api/v1/chat/sessions',
+      params: { limit },
     });
-
-    if (!response.ok) {
-      this.throwHttpError(response.status);
-    }
-
-    const data: ChatSessionResponse[] = await response.json();
     return data.map(normalizeChatSession);
   }
 
   async getFavoriteSessions(): Promise<ChatSession[]> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/favorites`, {
-      credentials: 'include',
+    const data = await this.httpRepository.get<ChatSessionResponse[]>({
+      path: '/api/v1/chat/sessions/favorites',
     });
-
-    if (!response.ok) {
-      this.throwHttpError(response.status);
-    }
-
-    const data: ChatSessionResponse[] = await response.json();
     return data.map(normalizeChatSession);
   }
 
   async getSessionDetail(sessionId: string): Promise<ChatSessionDetail> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}`, {
-      credentials: 'include',
+    const data = await this.httpRepository.get<ChatSessionResponse>({
+      path: `/api/v1/chat/sessions/${sessionId}`,
     });
-
-    if (!response.ok) {
-      this.throwHttpError(response.status);
-    }
-
-    const data: ChatSessionResponse = await response.json();
     return normalizeChatSessionDetail(data);
   }
 
   async toggleFavorite(sessionId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}/favorite`, {
-      method: 'POST',
-      credentials: 'include',
+    await this.httpRepository.post<void>({
+      path: `/api/v1/chat/sessions/${sessionId}/favorite`,
     });
-
-    if (!response.ok) {
-      this.throwHttpError(response.status);
-    }
   }
 
   async updateSessionTitle(sessionId: string, title: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}/title`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ title }),
+    await this.httpRepository.patch<void>({
+      path: `/api/v1/chat/sessions/${sessionId}/title`,
+      data: { title },
     });
-
-    if (!response.ok) {
-      this.throwHttpError(response.status);
-    }
   }
 
   async deleteSession(sessionId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/chat/sessions/${sessionId}`, {
-      method: 'DELETE',
-      credentials: 'include',
+    await this.httpRepository.delete<void>({
+      path: `/api/v1/chat/sessions/${sessionId}`,
     });
-
-    if (!response.ok) {
-      this.throwHttpError(response.status);
-    }
   }
 }

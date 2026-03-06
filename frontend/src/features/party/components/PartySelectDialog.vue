@@ -109,9 +109,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { appContainer } from '@/core/di/container';
-import PartyRepository from '@/features/party/repository/PartyRepository';
 import type { PartyListItem } from '@/features/party/models/partyListItem';
+import { usePartyListQuery } from '@/features/party/queries/usePartyQueries';
 import { toast } from 'vue-sonner';
 
 interface Props {
@@ -126,16 +125,21 @@ const emit = defineEmits<{
   (event: 'select', payload: { partyId: number; partyName: string }): void;
 }>();
 
-const repository = appContainer.resolve(PartyRepository);
-
-const loading = ref(false);
-const parties = ref<PartyListItem[]>([]);
 const selectedPartyIdValue = ref<number | undefined>();
 const searchQuery = ref('');
+const appliedSearchQuery = ref('');
 const page = ref(1);
 const pageSize = ref(10);
-const totalPages = ref(1);
-const totalElements = ref(0);
+const searchParams = computed(() => ({
+  page: page.value,
+  size: pageSize.value,
+  name: appliedSearchQuery.value || undefined,
+}));
+const partiesQuery = usePartyListQuery(searchParams);
+const loading = computed(() => partiesQuery.isLoading.value || partiesQuery.isFetching.value);
+const parties = computed<PartyListItem[]>(() => partiesQuery.data.value?.content ?? []);
+const totalPages = computed(() => partiesQuery.data.value?.totalPages ?? 1);
+const totalElements = computed(() => partiesQuery.data.value?.totalElements ?? 0);
 
 const selectedPartySummary = computed(() => {
   if (!selectedPartyIdValue.value) {
@@ -151,11 +155,12 @@ watch(
     if (isOpen) {
       selectedPartyIdValue.value = props.selectedPartyId;
       searchQuery.value = '';
+      appliedSearchQuery.value = '';
       page.value = 1;
-      loadParties();
     } else {
       selectedPartyIdValue.value = undefined;
       searchQuery.value = '';
+      appliedSearchQuery.value = '';
       page.value = 1;
     }
   },
@@ -170,26 +175,18 @@ watch(
   },
 );
 
-async function loadParties() {
-  loading.value = true;
-  try {
-    const response = await repository.list({ 
-      page: page.value, 
-      size: pageSize.value,
-      name: searchQuery.value || undefined,
-    });
-    parties.value = response.content;
-    totalPages.value = response.totalPages;
-    totalElements.value = response.totalElements;
-  } catch (error) {
+watch(
+  () => partiesQuery.error.value,
+  (error) => {
+    if (!error || !props.open) {
+      return;
+    }
     console.warn('협력사 목록 불러오기 중 오류가 발생했습니다.', error);
     toast.error('협력사 목록을 불러오지 못했습니다.', {
       description: '네트워크 상태를 확인한 뒤 다시 시도해 주세요.',
     });
-  } finally {
-    loading.value = false;
-  }
-}
+  },
+);
 
 function handleSelect(party: PartyListItem) {
   selectedPartyIdValue.value = party.partyId;
@@ -215,20 +212,18 @@ function confirmSelection() {
 
 function handleSearch() {
   page.value = 1;
-  loadParties();
+  appliedSearchQuery.value = searchQuery.value.trim();
 }
 
 function handlePreviousPage() {
   if (page.value > 1) {
     page.value--;
-    loadParties();
   }
 }
 
 function handleNextPage() {
   if (page.value < totalPages.value) {
     page.value++;
-    loadParties();
   }
 }
 </script>
