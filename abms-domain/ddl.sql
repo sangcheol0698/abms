@@ -145,6 +145,92 @@ CREATE TABLE IF NOT EXISTS `tb_account` (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `tb_permission` (
+    `id`          BIGINT       NOT NULL AUTO_INCREMENT,
+    `code`        VARCHAR(255) NOT NULL,
+    `name`        VARCHAR(255) NOT NULL,
+    `description` VARCHAR(255) NOT NULL,
+
+    `created_at`  DATETIME(6)  NOT NULL,
+    `updated_at`  DATETIME(6)  NOT NULL,
+    `created_by`  VARCHAR(255) NULL,
+    `updated_by`  VARCHAR(255) NULL,
+    `deleted`     TINYINT(1)   NOT NULL,
+    `deleted_at`  DATETIME(6)  NULL,
+    `deleted_by`  VARCHAR(255) NULL,
+
+    PRIMARY KEY (`id`),
+    CONSTRAINT `UK_PERMISSION_CODE` UNIQUE (`code`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tb_permission_group` (
+    `id`          BIGINT       NOT NULL AUTO_INCREMENT,
+    `name`        VARCHAR(255) NOT NULL,
+    `description` VARCHAR(255) NOT NULL,
+    `group_type`  VARCHAR(255) NOT NULL,
+
+    `created_at`  DATETIME(6)  NOT NULL,
+    `updated_at`  DATETIME(6)  NOT NULL,
+    `created_by`  VARCHAR(255) NULL,
+    `updated_by`  VARCHAR(255) NULL,
+    `deleted`     TINYINT(1)   NOT NULL,
+    `deleted_at`  DATETIME(6)  NULL,
+    `deleted_by`  VARCHAR(255) NULL,
+
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tb_account_group_assignment` (
+    `id`                  BIGINT       NOT NULL AUTO_INCREMENT,
+    `account_id`          BIGINT       NOT NULL,
+    `permission_group_id` BIGINT       NOT NULL,
+
+    `created_at`          DATETIME(6)  NOT NULL,
+    `updated_at`          DATETIME(6)  NOT NULL,
+    `created_by`          VARCHAR(255) NULL,
+    `updated_by`          VARCHAR(255) NULL,
+    `deleted`             TINYINT(1)   NOT NULL,
+    `deleted_at`          DATETIME(6)  NULL,
+    `deleted_by`          VARCHAR(255) NULL,
+
+    PRIMARY KEY (`id`),
+    CONSTRAINT `UK_ACCOUNT_GROUP_ASSIGNMENT` UNIQUE (`account_id`, `permission_group_id`),
+    INDEX `IDX_ACCOUNT_GROUP_ASSIGNMENT_ACCOUNT_ID` (`account_id`),
+    INDEX `IDX_ACCOUNT_GROUP_ASSIGNMENT_PERMISSION_GROUP_ID` (`permission_group_id`),
+    CONSTRAINT `FK_ACCOUNT_GROUP_ASSIGNMENT_ACCOUNT_ID` FOREIGN KEY (`account_id`) REFERENCES `tb_account` (`id`),
+    CONSTRAINT `FK_ACCOUNT_GROUP_ASSIGNMENT_PERMISSION_GROUP_ID` FOREIGN KEY (`permission_group_id`) REFERENCES `tb_permission_group` (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tb_group_permission_grant` (
+    `id`                  BIGINT       NOT NULL AUTO_INCREMENT,
+    `permission_group_id` BIGINT       NOT NULL,
+    `permission_id`       BIGINT       NOT NULL,
+    `scope`               VARCHAR(255) NOT NULL,
+
+    `created_at`          DATETIME(6)  NOT NULL,
+    `updated_at`          DATETIME(6)  NOT NULL,
+    `created_by`          VARCHAR(255) NULL,
+    `updated_by`          VARCHAR(255) NULL,
+    `deleted`             TINYINT(1)   NOT NULL,
+    `deleted_at`          DATETIME(6)  NULL,
+    `deleted_by`          VARCHAR(255) NULL,
+
+    PRIMARY KEY (`id`),
+    CONSTRAINT `UK_GROUP_PERMISSION_GRANT` UNIQUE (`permission_group_id`, `permission_id`, `scope`),
+    INDEX `IDX_GROUP_PERMISSION_GRANT_PERMISSION_GROUP_ID` (`permission_group_id`),
+    INDEX `IDX_GROUP_PERMISSION_GRANT_PERMISSION_ID` (`permission_id`),
+    CONSTRAINT `FK_GROUP_PERMISSION_GRANT_PERMISSION_GROUP_ID` FOREIGN KEY (`permission_group_id`) REFERENCES `tb_permission_group` (`id`),
+    CONSTRAINT `FK_GROUP_PERMISSION_GRANT_PERMISSION_ID` FOREIGN KEY (`permission_id`) REFERENCES `tb_permission` (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `tb_registration_token` (
     `id`          BIGINT       NOT NULL AUTO_INCREMENT,
     `employee_id` BIGINT       NOT NULL,
