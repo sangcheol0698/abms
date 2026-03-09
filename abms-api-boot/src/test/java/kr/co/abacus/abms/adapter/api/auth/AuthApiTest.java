@@ -106,7 +106,7 @@ class AuthApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
         assertThat(session).isNotNull();
 
-        mockMvc.perform(get("/api/employees/positions").session(session))
+        mockMvc.perform(get("/api/auth/me").session(session))
                 .andExpect(status().isOk());
     }
 
