@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
@@ -34,8 +35,8 @@ public class EmployeeExcelService {
     private final EmployeeExcelExporter employeeExcelExporter;
     private final EmployeeExcelImporter employeeExcelImporter;
 
-    public byte[] download(EmployeeSearchCondition condition) {
-        List<Employee> employees = employeeRepository.search(condition);
+    public byte[] download(EmployeeSearchCondition condition, EmployeeReadScope scope) {
+        List<Employee> employees = employeeRepository.search(condition, scope);
 
         Map<Long, String> departmentNames = loadDepartmentNameMap();
 
