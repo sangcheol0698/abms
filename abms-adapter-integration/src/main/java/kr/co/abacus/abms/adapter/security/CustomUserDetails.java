@@ -11,12 +11,18 @@ import kr.co.abacus.abms.domain.account.Account;
 
 public class CustomUserDetails implements UserDetails {
 
+    private final Long accountId;
     private final String username;
     private final String password;
 
     public CustomUserDetails(Account account) {
+        this.accountId = account.getIdOrThrow();
         this.username = account.getUsername().address();
         this.password = account.getPassword();
+    }
+
+    public Long getAccountId() {
+        return accountId;
     }
 
     @Override

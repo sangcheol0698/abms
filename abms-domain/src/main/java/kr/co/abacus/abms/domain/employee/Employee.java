@@ -174,7 +174,7 @@ public class Employee extends AbstractEntity {
     }
 
     @Override
-    public void softDelete(String deletedBy) {
+    public void softDelete(@Nullable Long deletedBy) {
         state(!isDeleted(), "이미 삭제된 직원입니다.");
 
         super.softDelete(deletedBy);

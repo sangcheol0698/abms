@@ -229,7 +229,7 @@ public class ChatCommandService {
 
     public void deleteSession(Long accountId, String sessionId) {
         ChatSession session = findOwnedSession(accountId, sessionId);
-        session.softDelete("system");
+        session.softDelete(accountId);
         chatSessionRepository.save(session);
         chatMemoryRepository.deleteByConversationId(sessionId);
     }

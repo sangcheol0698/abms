@@ -8,6 +8,7 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -40,6 +42,7 @@ import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateResponse;
+import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.employee.EmployeeExcelService;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
@@ -58,11 +61,10 @@ import kr.co.abacus.abms.domain.employee.EmployeeType;
 @RestController
 public class EmployeeApi {
 
-    private static final String SYSTEM_DELETER = "SYSTEM"; // TODO: 추후 인증/인가 기능 도입 시 수정 필요
-
     private final EmployeeManager employeeManager;
     private final EmployeeFinder employeeFinder;
     private final EmployeeExcelService employeeExcelService;
+    private final AuthFinder authFinder;
 
     @PostMapping("/api/employees")
     public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request) {
@@ -99,8 +101,8 @@ public class EmployeeApi {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/api/employees/{id}")
-    public void delete(@PathVariable Long id) {
-        employeeManager.delete(id, SYSTEM_DELETER);
+    public void delete(@PathVariable Long id, @Nullable Authentication authentication) {
+        employeeManager.delete(id, resolveAccountId(authentication));
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -199,6 +201,15 @@ public class EmployeeApi {
         } catch (IOException ex) {
             throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
         }
+    }
+
+    @Nullable
+    private Long resolveAccountId(@Nullable Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        }
+
+        return authFinder.getCurrentAccountId(authentication.getName());
     }
 
 }

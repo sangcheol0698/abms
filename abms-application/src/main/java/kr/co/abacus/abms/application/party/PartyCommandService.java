@@ -42,7 +42,7 @@ public class PartyCommandService implements PartyManager {
     @Override
     public void delete(Long partyId) {
         Party party = findById(partyId);
-        party.softDelete("system");
+        party.softDelete(null);
     }
 
 }

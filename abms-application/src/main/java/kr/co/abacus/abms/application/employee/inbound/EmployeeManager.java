@@ -28,7 +28,7 @@ public interface EmployeeManager {
 
     void promote(Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade, LocalDate promotedDate);
 
-    void delete(Long id, String deleteBy);
+    void delete(Long id, @Nullable Long deleteBy);
 
     void restore(Long id);
 
