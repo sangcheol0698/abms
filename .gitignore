@@ -36,8 +36,9 @@ out/
 ### VS Code ###
 .vscode/
 
-# Claude-specific files
+# AI files
 .claude/
+.codex*
 
 # Logs
 spy.log
