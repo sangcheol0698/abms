@@ -9,6 +9,7 @@ import kr.co.abacus.abms.application.auth.dto.AuthenticatedUserInfo;
 import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.permission.inbound.PermissionFinder;
 import kr.co.abacus.abms.domain.account.Account;
 import kr.co.abacus.abms.domain.account.AccountNotFoundException;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -21,6 +22,7 @@ public class AuthQueryService implements AuthFinder {
 
     private final AccountRepository accountRepository;
     private final EmployeeRepository employeeRepository;
+    private final PermissionFinder permissionFinder;
 
     @Override
     public AuthenticatedUserInfo getCurrentUser(String username) {
@@ -43,7 +45,8 @@ public class AuthQueryService implements AuthFinder {
         return employeeRepository.findById(account.getEmployeeId())
                 .map(employee -> new AuthenticatedUserInfo(
                         employee.getName(),
-                        employee.getEmail().address()
+                        employee.getEmail().address(),
+                        permissionFinder.findPermissions(account.getIdOrThrow()).permissions()
                 ))
                 .orElseGet(() -> fallbackUserInfo(account.getUsername().address()));
     }
@@ -51,7 +54,7 @@ public class AuthQueryService implements AuthFinder {
     private AuthenticatedUserInfo fallbackUserInfo(String email) {
         String localPart = email.split("@")[0];
         String normalizedName = localPart.isBlank() ? email : localPart;
-        return new AuthenticatedUserInfo(normalizedName, email);
+        return new AuthenticatedUserInfo(normalizedName, email, java.util.List.of());
     }
 
 }

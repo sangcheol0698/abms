@@ -15,12 +15,15 @@ import kr.co.abacus.abms.application.auth.dto.LoginCommand;
 import kr.co.abacus.abms.application.auth.dto.RegistrationConfirmCommand;
 import kr.co.abacus.abms.application.auth.dto.RegistrationRequestCommand;
 import kr.co.abacus.abms.application.auth.inbound.AuthManager;
+import kr.co.abacus.abms.application.auth.outbound.AccountPermissionGroupRepository;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.auth.outbound.CredentialAuthenticator;
+import kr.co.abacus.abms.application.auth.outbound.DefaultPermissionGroupRepository;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationLinkSender;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationTokenRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.account.Account;
+import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
 import kr.co.abacus.abms.domain.account.AccountAlreadyExistsException;
 import kr.co.abacus.abms.domain.account.AccountNotFoundException;
 import kr.co.abacus.abms.domain.account.InvalidCurrentPasswordException;
@@ -29,6 +32,8 @@ import kr.co.abacus.abms.domain.auth.InvalidRegistrationTokenException;
 import kr.co.abacus.abms.domain.auth.RegistrationToken;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroup;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType;
 import kr.co.abacus.abms.domain.shared.Email;
 
 @RequiredArgsConstructor
@@ -42,6 +47,8 @@ public class AuthCommandService implements AuthManager {
     private final RegistrationTokenRepository registrationTokenRepository;
     private final RegistrationLinkSender registrationLinkSender;
     private final PasswordEncoder passwordEncoder;
+    private final DefaultPermissionGroupRepository defaultPermissionGroupRepository;
+    private final AccountPermissionGroupRepository accountPermissionGroupRepository;
 
     @Override
     public void requestRegistration(RegistrationRequestCommand command) {
@@ -80,11 +87,12 @@ public class AuthCommandService implements AuthManager {
         validateAlreadyRegistered(email);
         String encodedPassword = Objects.requireNonNull(passwordEncoder.encode(command.password()));
 
-        accountRepository.save(Account.create(
+        Account account = accountRepository.save(Account.create(
                 registrationToken.getEmployeeId(),
                 email.address(),
                 encodedPassword
         ));
+        assignDefaultPermissionGroup(account);
         registrationTokenRepository.delete(registrationToken);
     }
 
@@ -114,6 +122,27 @@ public class AuthCommandService implements AuthManager {
         if (accountRepository.findByUsername(email).isPresent()) {
             throw new AccountAlreadyExistsException("이미 가입된 계정입니다: " + email.address());
         }
+    }
+
+    private void assignDefaultPermissionGroup(Account account) {
+        PermissionGroup defaultPermissionGroup = defaultPermissionGroupRepository.findByGroupTypeAndNameAndDeletedFalse(
+                PermissionGroupType.SYSTEM,
+                DefaultPermissionGroupInitializer.DEFAULT_PERMISSION_GROUP_NAME
+        ).orElseThrow(() -> new DefaultPermissionGroupNotConfiguredException(
+                "기본 권한 그룹이 설정되지 않았습니다: " + DefaultPermissionGroupInitializer.DEFAULT_PERMISSION_GROUP_NAME
+        ));
+
+        if (accountPermissionGroupRepository.existsByAccountIdAndPermissionGroupIdAndDeletedFalse(
+                account.getIdOrThrow(),
+                defaultPermissionGroup.getIdOrThrow()
+        )) {
+            return;
+        }
+
+        accountPermissionGroupRepository.save(AccountGroupAssignment.create(
+                account.getIdOrThrow(),
+                defaultPermissionGroup.getIdOrThrow()
+        ));
     }
 
 }

@@ -8,7 +8,8 @@ import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
 
 public interface AccountGroupAssignmentRepository
         extends Repository<AccountGroupAssignment, Long>,
-        kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentRepository {
+        kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentRepository,
+        kr.co.abacus.abms.application.auth.outbound.AccountPermissionGroupRepository {
 
     @Override
     AccountGroupAssignment save(AccountGroupAssignment assignment);
@@ -18,5 +19,8 @@ public interface AccountGroupAssignmentRepository
 
     @Override
     List<AccountGroupAssignment> findAllByAccountIdAndDeletedFalse(Long accountId);
+
+    @Override
+    boolean existsByAccountIdAndPermissionGroupIdAndDeletedFalse(Long accountId, Long permissionGroupId);
 
 }
