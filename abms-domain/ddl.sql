@@ -9,11 +9,11 @@ CREATE TABLE IF NOT EXISTS `tb_common_code_group` (
 
     `created_at`  DATETIME(6)  NOT NULL,
     `updated_at`  DATETIME(6)  NOT NULL,
-    `created_by`  VARCHAR(255) NULL,
-    `updated_by`  VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`     TINYINT(1)   NOT NULL,
     `deleted_at`  DATETIME(6)  NULL,
-    `deleted_by`  VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`group_code`)
 ) ENGINE = InnoDB
@@ -30,11 +30,11 @@ CREATE TABLE IF NOT EXISTS `tb_department` (
 
     `created_at`           DATETIME(6)  NOT NULL,
     `updated_at`           DATETIME(6)  NOT NULL,
-    `created_by`           VARCHAR(255) NULL,
-    `updated_by`           VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`              TINYINT(1)   NOT NULL,
     `deleted_at`           DATETIME(6)  NULL,
-    `deleted_by`           VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_DEPARTMENT_CODE` UNIQUE (`department_code`),
@@ -57,11 +57,11 @@ CREATE TABLE IF NOT EXISTS `tb_party` (
 
     `created_at`      DATETIME(6)  NOT NULL,
     `updated_at`      DATETIME(6)  NOT NULL,
-    `created_by`      VARCHAR(255) NULL,
-    `updated_by`      VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`         TINYINT(1)   NOT NULL,
     `deleted_at`      DATETIME(6)  NULL,
-    `deleted_by`      VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_PARTY_NAME` UNIQUE (`party_name`)
@@ -78,11 +78,11 @@ CREATE TABLE IF NOT EXISTS `tb_chat_session` (
 
     `created_at` DATETIME(6)  NOT NULL,
     `updated_at` DATETIME(6)  NOT NULL,
-    `created_by` VARCHAR(255) NULL,
-    `updated_by` VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`    TINYINT(1)   NOT NULL,
     `deleted_at` DATETIME(6)  NULL,
-    `deleted_by` VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_CHAT_SESSION_ACCOUNT_SESSION_ID` UNIQUE (`account_id`, `session_id`)
@@ -107,11 +107,11 @@ CREATE TABLE IF NOT EXISTS `tb_employee` (
 
     `created_at`       DATETIME(6)  NOT NULL,
     `updated_at`       DATETIME(6)  NOT NULL,
-    `created_by`       VARCHAR(255) NULL,
-    `updated_by`       VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`          TINYINT(1)   NOT NULL,
     `deleted_at`       DATETIME(6)  NULL,
-    `deleted_by`       VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_EMPLOYEE_EMAIL_ADDRESS` UNIQUE (`email_address`),
@@ -131,11 +131,11 @@ CREATE TABLE IF NOT EXISTS `tb_account` (
     `login_fail_count`    INT          NOT NULL,
     `created_at`          DATETIME(6)  NOT NULL,
     `updated_at`          DATETIME(6)  NOT NULL,
-    `created_by`          VARCHAR(255) NULL,
-    `updated_by`          VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`             TINYINT(1)   NOT NULL,
     `deleted_at`          DATETIME(6)  NULL,
-    `deleted_by`          VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_ACCOUNT_USERNAME` UNIQUE (`username`),
@@ -153,11 +153,11 @@ CREATE TABLE IF NOT EXISTS `tb_permission` (
 
     `created_at`  DATETIME(6)  NOT NULL,
     `updated_at`  DATETIME(6)  NOT NULL,
-    `created_by`  VARCHAR(255) NULL,
-    `updated_by`  VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`     TINYINT(1)   NOT NULL,
     `deleted_at`  DATETIME(6)  NULL,
-    `deleted_by`  VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_PERMISSION_CODE` UNIQUE (`code`)
@@ -173,11 +173,11 @@ CREATE TABLE IF NOT EXISTS `tb_permission_group` (
 
     `created_at`  DATETIME(6)  NOT NULL,
     `updated_at`  DATETIME(6)  NOT NULL,
-    `created_by`  VARCHAR(255) NULL,
-    `updated_by`  VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`     TINYINT(1)   NOT NULL,
     `deleted_at`  DATETIME(6)  NULL,
-    `deleted_by`  VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
@@ -191,11 +191,11 @@ CREATE TABLE IF NOT EXISTS `tb_account_group_assignment` (
 
     `created_at`          DATETIME(6)  NOT NULL,
     `updated_at`          DATETIME(6)  NOT NULL,
-    `created_by`          VARCHAR(255) NULL,
-    `updated_by`          VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`             TINYINT(1)   NOT NULL,
     `deleted_at`          DATETIME(6)  NULL,
-    `deleted_by`          VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_ACCOUNT_GROUP_ASSIGNMENT` UNIQUE (`account_id`, `permission_group_id`),
@@ -215,11 +215,11 @@ CREATE TABLE IF NOT EXISTS `tb_group_permission_grant` (
 
     `created_at`          DATETIME(6)  NOT NULL,
     `updated_at`          DATETIME(6)  NOT NULL,
-    `created_by`          VARCHAR(255) NULL,
-    `updated_by`          VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`             TINYINT(1)   NOT NULL,
     `deleted_at`          DATETIME(6)  NULL,
-    `deleted_by`          VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_GROUP_PERMISSION_GRANT` UNIQUE (`permission_group_id`, `permission_id`, `scope`),
@@ -241,11 +241,11 @@ CREATE TABLE IF NOT EXISTS `tb_registration_token` (
     `used_at`     DATETIME(6)  NULL,
     `created_at`  DATETIME(6)  NOT NULL,
     `updated_at`  DATETIME(6)  NOT NULL,
-    `created_by`  VARCHAR(255) NULL,
-    `updated_by`  VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`     TINYINT(1)   NOT NULL,
     `deleted_at`  DATETIME(6)  NULL,
-    `deleted_by`  VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_REGISTRATION_TOKEN` UNIQUE (`token`),
@@ -263,11 +263,11 @@ CREATE TABLE IF NOT EXISTS `tb_chat_message` (
     `timestamp`       DATETIME(6)  NOT NULL,
     `created_at`      DATETIME(6)  NOT NULL,
     `updated_at`      DATETIME(6)  NOT NULL,
-    `created_by`      VARCHAR(255) NULL,
-    `updated_by`      VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`         TINYINT(1)   NOT NULL,
     `deleted_at`      DATETIME(6)  NULL,
-    `deleted_by`      VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     INDEX `IDX_CHAT_MESSAGE_CHAT_SESSION_ID` (`chat_session_id`),
@@ -285,11 +285,11 @@ CREATE TABLE IF NOT EXISTS `tb_chat_memory_message` (
 
     `created_at`      DATETIME(6)  NOT NULL,
     `updated_at`      DATETIME(6)  NOT NULL,
-    `created_by`      VARCHAR(255) NULL,
-    `updated_by`      VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`         TINYINT(1)   NOT NULL,
     `deleted_at`      DATETIME(6)  NULL,
-    `deleted_by`      VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
@@ -304,11 +304,11 @@ CREATE TABLE IF NOT EXISTS `tb_common_code_detail` (
 
     `created_at` DATETIME(6)  NOT NULL,
     `updated_at` DATETIME(6)  NOT NULL,
-    `created_by` VARCHAR(255) NULL,
-    `updated_by` VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`    TINYINT(1)   NOT NULL,
     `deleted_at` DATETIME(6)  NULL,
-    `deleted_by` VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`group_code`, `code`),
     INDEX `IDX_COMMON_CODE_DETAIL_GROUP_CODE` (`group_code`),
@@ -341,11 +341,11 @@ CREATE TABLE IF NOT EXISTS `tb_employee_monthly_cost` (
 
     `created_at`     DATETIME(6)    NOT NULL,
     `updated_at`     DATETIME(6)    NOT NULL,
-    `created_by`     VARCHAR(255)   NULL,
-    `updated_by`     VARCHAR(255)   NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`        TINYINT(1)     NOT NULL,
     `deleted_at`     DATETIME(6)    NULL,
-    `deleted_by`     VARCHAR(255)   NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_EMPLOYEE_MONTHLY_COST_EMPLOYEE_ID_COST_MONTH` UNIQUE (`employee_id`, `cost_month`),
@@ -366,11 +366,11 @@ CREATE TABLE IF NOT EXISTS `tb_notification` (
 
     `created_at`               DATETIME(6)  NOT NULL,
     `updated_at`               DATETIME(6)  NOT NULL,
-    `created_by`               VARCHAR(255) NULL,
-    `updated_by`               VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`                  TINYINT(1)   NOT NULL,
     `deleted_at`               DATETIME(6)  NULL,
-    `deleted_by`               VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `FK_NOTIFICATION_ACCOUNT_ID` FOREIGN KEY (`account_id`) REFERENCES `tb_account` (`id`),
@@ -388,11 +388,11 @@ CREATE TABLE IF NOT EXISTS `tb_payroll` (
 
     `created_at`    DATETIME(6)    NOT NULL,
     `updated_at`    DATETIME(6)    NOT NULL,
-    `created_by`    VARCHAR(255)   NULL,
-    `updated_by`    VARCHAR(255)   NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`       TINYINT(1)     NOT NULL,
     `deleted_at`    DATETIME(6)    NULL,
-    `deleted_by`    VARCHAR(255)   NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     INDEX `IDX_PAYROLL_EMPLOYEE_ID` (`employee_id`),
@@ -410,11 +410,11 @@ CREATE TABLE IF NOT EXISTS `tb_position_history` (
 
     `created_at`  DATETIME(6)  NOT NULL,
     `updated_at`  DATETIME(6)  NOT NULL,
-    `created_by`  VARCHAR(255) NULL,
-    `updated_by`  VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`     TINYINT(1)   NOT NULL,
     `deleted_at`  DATETIME(6)  NULL,
-    `deleted_by`  VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     INDEX `IDX_POSITION_HISTORY_EMPLOYEE_ID` (`employee_id`),
@@ -437,11 +437,11 @@ CREATE TABLE IF NOT EXISTS `tb_project` (
 
     `created_at`          DATETIME(6)    NOT NULL,
     `updated_at`          DATETIME(6)    NOT NULL,
-    `created_by`          VARCHAR(255)   NULL,
-    `updated_by`          VARCHAR(255)   NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`             TINYINT(1)     NOT NULL,
     `deleted_at`          DATETIME(6)    NULL,
-    `deleted_by`          VARCHAR(255)   NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_PROJECT_CODE` UNIQUE (`project_code`),
@@ -465,11 +465,11 @@ CREATE TABLE IF NOT EXISTS `tb_project_revenue_plan` (
 
     `created_at`    DATETIME(6)    NOT NULL,
     `updated_at`    DATETIME(6)    NOT NULL,
-    `created_by`    VARCHAR(255)   NULL,
-    `updated_by`    VARCHAR(255)   NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`       TINYINT(1)     NOT NULL,
     `deleted_at`    DATETIME(6)    NULL,
-    `deleted_by`    VARCHAR(255)   NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     INDEX `IDX_PROJECT_REVENUE_PLAN_PROJECT_ID` (`project_id`),
@@ -488,11 +488,11 @@ CREATE TABLE IF NOT EXISTS `tb_project_assignment` (
 
     `created_at`      DATETIME(6)  NOT NULL,
     `updated_at`      DATETIME(6)  NOT NULL,
-    `created_by`      VARCHAR(255) NULL,
-    `updated_by`      VARCHAR(255) NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`         TINYINT(1)   NOT NULL,
     `deleted_at`      DATETIME(6)  NULL,
-    `deleted_by`      VARCHAR(255) NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     INDEX `IDX_PROJECT_ASSIGNMENT_PROJECT_ID` (`project_id`),
@@ -518,11 +518,11 @@ CREATE TABLE IF NOT EXISTS `tb_monthly_revenue_summary` (
 
     `created_at`     DATETIME(6)    NOT NULL,
     `updated_at`     DATETIME(6)    NOT NULL,
-    `created_by`     VARCHAR(255)   NULL,
-    `updated_by`     VARCHAR(255)   NULL,
+    `created_by`  BIGINT       NULL,
+    `updated_by`  BIGINT       NULL,
     `deleted`        TINYINT(1)     NOT NULL,
     `deleted_at`     DATETIME(6)    NULL,
-    `deleted_by`     VARCHAR(255)   NULL,
+    `deleted_by`  BIGINT       NULL,
 
     PRIMARY KEY (`id`),
     INDEX `IDX_MONTHLY_REVENUE_SUMMARY_PROJECT_ID` (`project_id`),
