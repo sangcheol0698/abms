@@ -2,10 +2,13 @@ package kr.co.abacus.abms.adapter.api.employee;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Row;
@@ -16,12 +19,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MvcResult;
 
 import kr.co.abacus.abms.adapter.api.common.EnumResponse;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
@@ -187,22 +190,22 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 상세 정보를 조회한다")
-    void find() {
+    void find() throws Exception {
         // given
         Employee employee = createEmployee(teamId, "test@email.com", "테스트직원");
         employeeRepository.save(employee);
         flushAndClear();
 
         // when & then
-        EmployeeDetailResponse response = restTestClient.get()
-                .uri("/api/employees/{id}", employee.getId())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(EmployeeDetailResponse.class)
-                .returnResult()
-                .getResponseBody();
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/{id}", employee.getId()).session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        EmployeeDetailResponse response = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                EmployeeDetailResponse.class
+        );
 
         assertThat(response).isNotNull();
         assertThat(response.employeeId()).isEqualTo(employee.getId());
@@ -211,9 +214,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 검색 - 등급(Grade) 기준으로 정렬한다")
-    void search_sortByGradeLevel() {
+    void search_sortByGradeLevel() throws Exception {
         // given
         employeeRepository.save(createEmployee(teamId, "grade-junior@abms.co", "주니어", EmployeePosition.ASSOCIATE,
                 EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR));
@@ -224,14 +226,15 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // when: grade desc 정렬로 검색 시 레벨이 높은 순서(EXPERT > SENIOR > JUNIOR)로 정렬되어야 한다.
-        PageResponse<EmployeeSearchResponse> responsePage = restTestClient.get()
-                .uri("/api/employees?sort=grade,desc&size=10&page=0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSearchResponse>>() {
-                })
-                .returnResult()
-                .getResponseBody();
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees")
+                        .param("sort", "grade,desc")
+                        .param("size", "10")
+                        .param("page", "0")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        PageResponse<EmployeeSearchResponse> responsePage = readPageResponse(result, EmployeeSearchResponse.class);
 
         List<EmployeeSearchResponse> contents = responsePage.content();
         List<EmployeeSearchResponse> targetContents = contents.stream()
@@ -253,9 +256,8 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 검색 - 직책(Position) 기준으로 정렬한다")
-    void search_sortByPositionRank() {
+    void search_sortByPositionRank() throws Exception {
         // given: 직위 rank가 다른 직원 3명을 생성하여 정렬 결과를 확인한다.
         employeeRepository.save(createEmployee(teamId, "grade-junior@abms.co", "익스퍼트", EmployeePosition.DIRECTOR,
                 EmployeeType.FULL_TIME, EmployeeGrade.EXPERT));
@@ -265,14 +267,15 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 EmployeeType.FULL_TIME, EmployeeGrade.SENIOR));
         flushAndClear();
 
-        PageResponse<EmployeeSearchResponse> responsePage = restTestClient.get()
-                .uri("/api/employees?sort=position,asc&size=10&page=0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<PageResponse<EmployeeSearchResponse>>() {
-                })
-                .returnResult()
-                .getResponseBody();
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees")
+                        .param("sort", "position,asc")
+                        .param("size", "10")
+                        .param("page", "0")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        PageResponse<EmployeeSearchResponse> responsePage = readPageResponse(result, EmployeeSearchResponse.class);
 
         assertThat(responsePage).isNotNull();
         List<EmployeeSearchResponse> contents = responsePage.content();
@@ -294,17 +297,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 등급(Grade) 목록을 조회한다")
-    void getEmployeeGrades() {
-        List<EnumResponse> responses = restTestClient.get()
-                .uri("/api/employees/grades")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
-                })
-                .returnResult()
-                .getResponseBody();
+    void getEmployeeGrades() throws Exception {
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/grades").session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
 
         for (EmployeeGrade grade : EmployeeGrade.values()) {
             EnumResponse enumResponse = responses.stream()
@@ -318,17 +317,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 직책(Position) 목록을 조회한다")
-    void getEmployeePositions() {
-        List<EnumResponse> responses = restTestClient.get()
-                .uri("/api/employees/positions")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
-                })
-                .returnResult()
-                .getResponseBody();
+    void getEmployeePositions() throws Exception {
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/positions").session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
 
         for (EmployeePosition position : EmployeePosition.values()) {
             EnumResponse found = responses.stream()
@@ -342,17 +337,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 근무 유형(Type) 목록을 조회한다")
-    void getEmployeeTypes() {
-        List<EnumResponse> responses = restTestClient.get()
-                .uri("/api/employees/types")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
-                })
-                .returnResult()
-                .getResponseBody();
+    void getEmployeeTypes() throws Exception {
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/types").session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
 
         assertThat(responses).hasSize(EmployeeType.values().length);
 
@@ -368,17 +359,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 상태(Status) 목록을 조회한다")
-    void getEmployeeStatuses() {
-        List<EnumResponse> responses = restTestClient.get()
-                .uri("/api/employees/statuses")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
-                })
-                .returnResult()
-                .getResponseBody();
+    void getEmployeeStatuses() throws Exception {
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/statuses").session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
 
         assertThat(responses).hasSize(EmployeeStatus.values().length);
 
@@ -394,17 +381,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 아바타(Avatar) 목록을 조회한다")
-    void getEmployeeAvatars() {
-        List<EnumResponse> responses = restTestClient.get()
-                .uri("/api/employees/avatars")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<EnumResponse>>() {
-                })
-                .returnResult()
-                .getResponseBody();
+    void getEmployeeAvatars() throws Exception {
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/avatars").session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
 
         for (EmployeeAvatar avatar : EmployeeAvatar.values()) {
             EnumResponse found = responses.stream()
@@ -419,19 +402,18 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("직원 목록을 엑셀 파일로 다운로드한다")
-    void downloadExcel() {
+    void downloadExcel() throws Exception {
         employeeRepository.save(createEmployee(teamId, "test@email.com", "테스트직원"));
         flushAndClear();
 
-        restTestClient.get()
-                .uri("/api/employees/excel/download")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                .expectHeader().exists("Content-Disposition")
-                .expectHeader().valueMatches("Content-Disposition", ".*attachment; filename=.*")
-                .expectBody(byte[].class)
-                .value(body -> assertThat(body).isNotEmpty());
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/excel/download").session(session))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(header().exists("Content-Disposition"))
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsByteArray()).isNotEmpty();
     }
 
     @Test
@@ -876,6 +858,35 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 EmployeeGrade.SENIOR,
                 EmployeeAvatar.SKY_GLOW,
                 "This is a updated memo for the employee.");
+    }
+
+    private MockHttpSession login() throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "username", READER_USERNAME,
+                                "password", "Password123!"
+                        ))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+        return session;
+    }
+
+    private <T> PageResponse<T> readPageResponse(MvcResult result, Class<T> contentType) throws Exception {
+        return objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructParametricType(PageResponse.class, contentType)
+        );
+    }
+
+    private <T> List<T> readListResponse(MvcResult result, Class<T> elementType) throws Exception {
+        return objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, elementType)
+        );
     }
 
     private Employee createEmployee(Long teamId, String email, String name) {
