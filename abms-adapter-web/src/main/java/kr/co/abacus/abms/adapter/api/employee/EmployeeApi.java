@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,6 +74,8 @@ public class EmployeeApi {
         return EmployeeCreateResponse.of(employeeId);
     }
 
+    // 직원 조회 계열 API는 employee.read 권한으로 보호한다.
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/{id}")
     public EmployeeDetailResponse findEmployeeDetail(@PathVariable Long id) {
         EmployeeDetail detail = employeeFinder.findEmployeeDetail(id);
@@ -83,6 +86,7 @@ public class EmployeeApi {
         return EmployeeDetailResponse.of(detail);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees")
     public PageResponse<EmployeeSearchResponse> search(@Valid EmployeeSearchCondition condition, Pageable pageable) {
         Page<EmployeeSummary> employeeSummaries = employeeFinder.search(condition, pageable);
@@ -135,6 +139,7 @@ public class EmployeeApi {
         employeeManager.promote(id, request.position(), request.grade());
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/positions")
     public List<EnumResponse> getEmployeePositions() {
         return Arrays.stream(EmployeePosition.values())
@@ -142,6 +147,7 @@ public class EmployeeApi {
                 .toList();
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/grades")
     public List<EnumResponse> getEmployeeGrades() {
         return Arrays.stream(EmployeeGrade.values())
@@ -149,6 +155,7 @@ public class EmployeeApi {
                 .toList();
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/types")
     public List<EnumResponse> getEmployeeTypes() {
         return Arrays.stream(EmployeeType.values())
@@ -156,6 +163,7 @@ public class EmployeeApi {
                 .toList();
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/statuses")
     public List<EnumResponse> getEmployeeStatuses() {
         return Arrays.stream(EmployeeStatus.values())
@@ -163,6 +171,7 @@ public class EmployeeApi {
                 .toList();
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/avatars")
     public List<EnumResponse> getEmployeeAvatars() {
         return Arrays.stream(EmployeeAvatar.values())
