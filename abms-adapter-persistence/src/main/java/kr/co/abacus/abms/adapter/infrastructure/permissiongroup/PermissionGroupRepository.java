@@ -8,7 +8,8 @@ import kr.co.abacus.abms.domain.permissiongroup.PermissionGroup;
 
 public interface PermissionGroupRepository
         extends Repository<PermissionGroup, Long>,
-        kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository {
+        kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository,
+        kr.co.abacus.abms.application.auth.outbound.DefaultPermissionGroupRepository {
 
     @Override
     PermissionGroup save(PermissionGroup permissionGroup);
@@ -18,5 +19,11 @@ public interface PermissionGroupRepository
 
     @Override
     List<PermissionGroup> findAllByIdInAndDeletedFalse(List<Long> ids);
+
+    @Override
+    java.util.Optional<PermissionGroup> findByGroupTypeAndNameAndDeletedFalse(
+            kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType groupType,
+            String name
+    );
 
 }

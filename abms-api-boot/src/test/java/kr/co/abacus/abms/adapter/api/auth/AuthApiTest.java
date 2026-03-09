@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,15 +21,26 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
+import kr.co.abacus.abms.application.auth.outbound.DefaultPermissionGroupRepository;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationTokenRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentRepository;
+import kr.co.abacus.abms.application.permission.outbound.GroupPermissionGrantRepository;
+import kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository;
+import kr.co.abacus.abms.application.permission.outbound.PermissionRepository;
 import kr.co.abacus.abms.domain.account.Account;
+import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
 import kr.co.abacus.abms.domain.auth.RegistrationToken;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.grouppermissiongrant.GroupPermissionGrant;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
+import kr.co.abacus.abms.domain.permission.Permission;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroup;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType;
 import kr.co.abacus.abms.domain.shared.Email;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
@@ -49,6 +61,21 @@ class AuthApiTest extends ApiIntegrationTestBase {
 
     @Autowired
     private RegistrationTokenRepository registrationTokenRepository;
+
+    @Autowired
+    private DefaultPermissionGroupRepository defaultPermissionGroupRepository;
+
+    @Autowired
+    private AccountGroupAssignmentRepository accountGroupAssignmentRepository;
+
+    @Autowired
+    private PermissionGroupRepository permissionGroupRepository;
+
+    @Autowired
+    private GroupPermissionGrantRepository groupPermissionGrantRepository;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
 
     @BeforeEach
     void setUpAccount() {
@@ -101,7 +128,75 @@ class AuthApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(get("/api/auth/me").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(USERNAME))
-                .andExpect(jsonPath("$.name").value("인증사용자"));
+                .andExpect(jsonPath("$.name").value("인증사용자"))
+                .andExpect(jsonPath("$.permissions").isArray())
+                .andExpect(jsonPath("$.permissions").isEmpty());
+    }
+
+    @Test
+    @DisplayName("로그인 후 현재 사용자 권한 정보를 정렬된 형식으로 조회할 수 있다")
+    void should_getCurrentUserPermissions_whenAuthenticated() throws Exception {
+        Account account = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
+        Permission employeeReadPermission = permissionRepository.save(Permission.create(
+                "employee.read",
+                "직원 조회",
+                "직원 조회 권한"
+        ));
+        Permission employeeManagePermission = permissionRepository.save(Permission.create(
+                "employee.manage",
+                "직원 관리",
+                "직원 관리 권한"
+        ));
+
+        PermissionGroup readPermissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                "직원 조회 그룹",
+                "직원 조회 권한 그룹",
+                PermissionGroupType.CUSTOM
+        ));
+        PermissionGroup managePermissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                "직원 관리 그룹",
+                "직원 관리 권한 그룹",
+                PermissionGroupType.CUSTOM
+        ));
+
+        accountGroupAssignmentRepository.saveAll(List.of(
+                AccountGroupAssignment.create(account.getIdOrThrow(), readPermissionGroup.getIdOrThrow()),
+                AccountGroupAssignment.create(account.getIdOrThrow(), managePermissionGroup.getIdOrThrow())
+        ));
+        groupPermissionGrantRepository.saveAll(List.of(
+                GroupPermissionGrant.create(readPermissionGroup.getIdOrThrow(),
+                        employeeReadPermission.getIdOrThrow(),
+                        PermissionScope.SELF),
+                GroupPermissionGrant.create(managePermissionGroup.getIdOrThrow(),
+                        employeeReadPermission.getIdOrThrow(),
+                        PermissionScope.OWN_DEPARTMENT),
+                GroupPermissionGrant.create(managePermissionGroup.getIdOrThrow(),
+                        employeeManagePermission.getIdOrThrow(),
+                        PermissionScope.ALL)
+        ));
+        flushAndClear();
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", PASSWORD
+                        ))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+
+        mockMvc.perform(get("/api/auth/me").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(USERNAME))
+                .andExpect(jsonPath("$.name").value("인증사용자"))
+                .andExpect(jsonPath("$.permissions[0].code").value("employee.manage"))
+                .andExpect(jsonPath("$.permissions[0].scopes[0]").value("ALL"))
+                .andExpect(jsonPath("$.permissions[1].code").value("employee.read"))
+                .andExpect(jsonPath("$.permissions[1].scopes[0]").value("OWN_DEPARTMENT"))
+                .andExpect(jsonPath("$.permissions[1].scopes[1]").value("SELF"));
     }
 
     @Test
@@ -266,8 +361,19 @@ class AuthApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isOk());
         flushAndClear();
 
+        // 회원 가입 시 권한 그룹이 일반 그룹으로 기본 지정된다.
         Account account = accountRepository.findByUsername(new Email(email)).orElseThrow();
+        PermissionGroup defaultPermissionGroup = defaultPermissionGroupRepository.findByGroupTypeAndNameAndDeletedFalse(
+                PermissionGroupType.SYSTEM,
+                "일반 그룹"
+        ).orElseThrow();
+        List<AccountGroupAssignment> assignments =
+                accountGroupAssignmentRepository.findAllByAccountIdAndDeletedFalse(account.getIdOrThrow());
+
         assertThat(passwordEncoder.matches(newPassword, account.getPassword())).isTrue();
+        assertThat(assignments)
+                .extracting(AccountGroupAssignment::getPermissionGroupId)
+                .containsExactly(defaultPermissionGroup.getIdOrThrow());
         assertThat(registrationTokenRepository.findByToken(registrationToken.getToken())).isEmpty();
     }
 
