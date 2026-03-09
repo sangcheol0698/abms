@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.jspecify.annotations.Nullable;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -45,7 +47,7 @@ public class CommonCodeGroup extends BaseEntity {
     }
 
     @Override
-    public void softDelete(String deletedBy) {
+    public void softDelete(@Nullable Long deletedBy) {
         super.softDelete(deletedBy);
         this.details.forEach(detail -> detail.softDelete(deletedBy));
     }

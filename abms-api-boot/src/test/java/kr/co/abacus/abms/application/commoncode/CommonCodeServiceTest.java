@@ -72,7 +72,7 @@ class CommonCodeServiceTest extends IntegrationTestBase {
         entityManager.persist(group);
         entityManager.flush();
 
-        group.softDelete("tester");
+        group.softDelete(1L);
         flushAndClear();
 
         List<CommonCodeInfo> commonCodeDetails = commonCodeService.findByGroupCode(groupCode);
@@ -96,7 +96,7 @@ class CommonCodeServiceTest extends IntegrationTestBase {
         entityManager.persist(group);
         entityManager.flush();
 
-        detail.softDelete("tester");
+        detail.softDelete(1L);
         flushAndClear();
 
         List<CommonCodeInfo> commonCodeDetails = commonCodeService.findByGroupCode(groupCode);

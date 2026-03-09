@@ -71,7 +71,7 @@ class ProjectRepositoryTest extends IntegrationTestBase {
         flushAndClear();
 
         Project toDelete = projectRepository.findById(project.getId()).orElseThrow();
-        toDelete.softDelete("testUser");
+        toDelete.softDelete(1L);
         projectRepository.save(toDelete);
         flushAndClear();
 

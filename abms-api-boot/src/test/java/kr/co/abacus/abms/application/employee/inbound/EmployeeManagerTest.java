@@ -335,12 +335,12 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.delete(employee.getId(), "adminUser");
+        employeeManager.delete(employee.getId(), 1L);
         flushAndClear();
 
         Employee deletedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
         assertThat(deletedEmployee.isDeleted()).isTrue();
-        assertThat(deletedEmployee.getDeletedBy()).isEqualTo("adminUser");
+        assertThat(deletedEmployee.getDeletedBy()).isEqualTo(1L);
         assertThat(deletedEmployee.getEmail().address()).startsWith("deleted.");
         assertThat(deletedEmployee.getDeletedAt()).isNotNull();
     }
@@ -351,7 +351,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.delete(employee.getId(), "adminUser");
+        employeeManager.delete(employee.getId(), 1L);
         flushAndClear();
 
         employeeManager.restore(employee.getId());

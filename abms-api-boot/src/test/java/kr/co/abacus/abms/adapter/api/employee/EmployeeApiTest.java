@@ -411,10 +411,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 bos.toByteArray());
 
         var mvcResult = mockMvc.perform(
-                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                                .multipart("/api/employees/excel/upload")
-                                .with(user("employee-tester"))
-                                .file(mockFile))
+                                org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                        .multipart("/api/employees/excel/upload")
+                                        .with(user("employee-tester@abacus.co.kr"))
+                                        .file(mockFile))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
@@ -555,7 +555,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
         Employee deletedEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(deletedEmployee.isDeleted()).isTrue();
-        assertThat(deletedEmployee.getDeletedBy()).isEqualTo("SYSTEM");
+        assertThat(deletedEmployee.getDeletedBy()).isNull();
         assertThat(deletedEmployee.getDeletedAt()).isNotNull();
     }
 
@@ -564,7 +564,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void delete_alreadyDeleted() {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
 
-        employeeManager.delete(employeeId, "adminUser");
+        employeeManager.delete(employeeId, 1L);
         flushAndClear();
 
         restTestClient.delete()
@@ -578,7 +578,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void restore() {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
 
-        employeeManager.delete(employeeId, "adminUser");
+        employeeManager.delete(employeeId, 1L);
         flushAndClear();
 
         restTestClient.patch()

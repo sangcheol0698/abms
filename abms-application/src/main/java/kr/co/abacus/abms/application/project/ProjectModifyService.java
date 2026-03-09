@@ -64,7 +64,7 @@ public class ProjectModifyService implements ProjectManager {
     @Override
     public void delete(Long id) {
         Project project = projectFinder.find(id);
-        project.softDelete("system");
+        project.softDelete(null);
 
         projectRepository.save(project);
     }

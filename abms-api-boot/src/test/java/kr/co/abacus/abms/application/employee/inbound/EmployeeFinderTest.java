@@ -71,7 +71,7 @@ class EmployeeFinderTest extends IntegrationTestBase {
         flush();
 
         Employee savedEmployee = employeeFinder.find(employeeId);
-        savedEmployee.softDelete("testUser");
+        savedEmployee.softDelete(1L);
         flushAndClear();
 
         assertThatThrownBy(() -> employeeFinder.find(employeeId))

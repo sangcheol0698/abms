@@ -39,7 +39,7 @@ public class NotificationCommandService implements NotificationManager {
     @Override
     public void clearAll(Long accountId) {
         notificationRepository.findAllByAccountIdAndDeletedFalseOrderByCreatedAtDesc(accountId)
-                .forEach(notification -> notification.softDelete("system"));
+                .forEach(notification -> notification.softDelete(accountId));
     }
 
     protected Notification findById(Long accountId, Long notificationId) {

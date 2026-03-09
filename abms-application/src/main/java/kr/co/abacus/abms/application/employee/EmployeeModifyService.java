@@ -167,7 +167,7 @@ public class EmployeeModifyService implements EmployeeManager {
     }
 
     @Override
-    public void delete(Long id, String deleteBy) {
+    public void delete(Long id, @Nullable Long deleteBy) {
         Employee employee = find(id);
 
         employee.softDelete(deleteBy);

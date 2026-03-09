@@ -30,14 +30,12 @@ public abstract class BaseEntity {
     private LocalDateTime updatedAt;
 
     @CreatedBy
-    @Column(updatable = false, comment = "생성자")
-    @Nullable
-    private String createdBy;
+    @Column(updatable = false, comment = "생성자 계정 ID")
+    private Long createdBy;
 
     @LastModifiedBy
-    @Column(comment = "수정자")
-    @Nullable
-    private String updatedBy;
+    @Column(comment = "수정자 계정 ID")
+    private Long updatedBy;
 
     @Column(nullable = false, comment = "삭제여부")
     private Boolean deleted = false;
@@ -47,12 +45,12 @@ public abstract class BaseEntity {
     private LocalDateTime deletedAt;
 
     @Nullable
-    @Column(comment = "삭제자")
-    private String deletedBy;
+    @Column(comment = "삭제자 계정 ID")
+    private Long deletedBy;
 
-    public void softDelete(String deletedBy) {
+    public void softDelete(@Nullable Long deletedBy) {
         this.deleted = true;
-        this.deletedAt = LocalDateTime.now(ZoneId.systemDefault());
+        this.deletedAt = LocalDateTime.now();
         this.deletedBy = deletedBy;
     }
 
