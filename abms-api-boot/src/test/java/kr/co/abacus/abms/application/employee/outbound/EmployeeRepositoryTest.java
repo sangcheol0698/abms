@@ -67,7 +67,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         assertThat(foundEmployee).isEqualTo(savedEmployee);
 
         // 직원 소프트 삭제
-        foundEmployee.softDelete("testUser");
+        foundEmployee.softDelete(1L);
         employeeRepository.save(foundEmployee);
         flush();
 
@@ -89,7 +89,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         // 직원 소프트 삭제
         Employee foundEmployee = employeeRepository.findByIdAndDeletedFalse(savedEmployee.getId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 직원입니다"));
-        foundEmployee.softDelete("testUser");
+        foundEmployee.softDelete(1L);
         employeeRepository.save(foundEmployee);
         flushAndClear();
 
@@ -185,7 +185,7 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         flushAndClear();
 
         Employee toDelete = employeeRepository.findById(deletedEmployee.getId()).orElseThrow();
-        toDelete.softDelete("testUser");
+        toDelete.softDelete(1L);
         employeeRepository.save(toDelete);
         flushAndClear();
 

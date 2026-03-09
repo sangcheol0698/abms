@@ -227,11 +227,11 @@ class EmployeeTest {
         Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
 
         // when
-        employee.softDelete("adminUser");
+        employee.softDelete(1L);
 
         // then
         assertThat(employee.isDeleted()).isTrue();
-        assertThat(employee.getDeletedBy()).isEqualTo("adminUser");
+        assertThat(employee.getDeletedBy()).isEqualTo(1L);
         assertThat(employee.getEmail().address()).startsWith("deleted.");
         assertThat(employee.getDeletedAt()).isNotNull();
     }
@@ -243,10 +243,10 @@ class EmployeeTest {
         Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
 
         // when
-        employee.softDelete("adminUser");
+        employee.softDelete(1L);
 
         // then
-        assertThatThrownBy(() -> employee.softDelete("anotherUser"))
+        assertThatThrownBy(() -> employee.softDelete(2L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("이미 삭제된 직원입니다.");
     }

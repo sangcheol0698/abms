@@ -14,11 +14,11 @@ class BaseEntityTest {
         BaseEntity entity = new BaseEntity() {
         };
 
-        entity.softDelete("testUser");
+        entity.softDelete(1L);
 
         assertThat(entity.isDeleted()).isTrue();
         assertThat(entity.getDeletedAt()).isNotNull();
-        assertThat(entity.getDeletedBy()).isEqualTo("testUser");
+        assertThat(entity.getDeletedBy()).isEqualTo(1L);
     }
 
     @Test
@@ -26,7 +26,7 @@ class BaseEntityTest {
     void restore() {
         BaseEntity entity = new BaseEntity() {
         };
-        entity.softDelete("testUser");
+        entity.softDelete(1L);
         assertThat(entity.isDeleted()).isTrue();
 
         entity.restore();
