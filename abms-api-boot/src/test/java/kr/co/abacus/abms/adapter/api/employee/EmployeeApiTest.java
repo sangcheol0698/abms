@@ -6,6 +6,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -19,6 +20,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import kr.co.abacus.abms.adapter.api.common.EnumResponse;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
@@ -29,9 +32,16 @@ import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
+import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentRepository;
+import kr.co.abacus.abms.application.permission.outbound.GroupPermissionGrantRepository;
+import kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository;
+import kr.co.abacus.abms.application.permission.outbound.PermissionRepository;
+import kr.co.abacus.abms.domain.account.Account;
+import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -40,10 +50,17 @@ import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.grouppermissiongrant.GroupPermissionGrant;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
+import kr.co.abacus.abms.domain.permission.Permission;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroup;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 @DisplayName("직원 API (EmployeeApi)")
 class EmployeeApiTest extends ApiIntegrationTestBase {
+
+    private static final String READER_USERNAME = "employee-reader@abacus.co.kr";
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -52,7 +69,25 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     private EmployeeManager employeeManager;
 
     @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
+
+    @Autowired
+    private PermissionGroupRepository permissionGroupRepository;
+
+    @Autowired
+    private AccountGroupAssignmentRepository accountGroupAssignmentRepository;
+
+    @Autowired
+    private GroupPermissionGrantRepository groupPermissionGrantRepository;
 
     private Long companyId;
     private Long divisionId;
@@ -72,6 +107,33 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         companyId = company.getId();
         divisionId = division.getId();
         teamId = team.getId();
+
+        Employee reader = employeeRepository.save(createEmployee(teamId, READER_USERNAME, "권한조회자"));
+        Account account = accountRepository.save(Account.create(
+                reader.getIdOrThrow(),
+                READER_USERNAME,
+                passwordEncoder.encode("Password123!")
+        ));
+        Permission permission = permissionRepository.save(Permission.create(
+                "employee.read",
+                "직원 조회",
+                "직원 조회 권한"
+        ));
+        PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                "직원 조회 그룹",
+                "직원 조회 권한 그룹",
+                PermissionGroupType.CUSTOM
+        ));
+        accountGroupAssignmentRepository.save(AccountGroupAssignment.create(
+                account.getIdOrThrow(),
+                permissionGroup.getIdOrThrow()
+        ));
+        groupPermissionGrantRepository.save(GroupPermissionGrant.create(
+                permissionGroup.getIdOrThrow(),
+                permission.getIdOrThrow(),
+                PermissionScope.ALL
+        ));
+        flushAndClear();
     }
 
     @Test
@@ -125,6 +187,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 상세 정보를 조회한다")
     void find() {
         // given
@@ -148,6 +211,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 검색 - 등급(Grade) 기준으로 정렬한다")
     void search_sortByGradeLevel() {
         // given
@@ -170,18 +234,26 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 .getResponseBody();
 
         List<EmployeeSearchResponse> contents = responsePage.content();
+        List<EmployeeSearchResponse> targetContents = contents.stream()
+                .filter(response -> Set.of(
+                        "grade-junior@abms.co",
+                        "grade-expert@abms.co",
+                        "grade-senior@abms.co"
+                ).contains(response.email()))
+                .toList();
 
         // then: 응답이 200이며 content 배열이 등급 레벨 기준으로 정렬되었는지 확인한다.
-        assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).grade())
+        assertThat(targetContents).hasSize(3);
+        assertThat(targetContents.get(0).grade())
                 .isEqualTo(new EnumResponse(EmployeeGrade.EXPERT.name(), EmployeeGrade.EXPERT.getDescription(), EmployeeGrade.EXPERT.getLevel()));
-        assertThat(contents.get(1).grade())
+        assertThat(targetContents.get(1).grade())
                 .isEqualTo(new EnumResponse(EmployeeGrade.SENIOR.name(), EmployeeGrade.SENIOR.getDescription(), EmployeeGrade.SENIOR.getLevel()));
-        assertThat(contents.get(2).grade())
+        assertThat(targetContents.get(2).grade())
                 .isEqualTo(new EnumResponse(EmployeeGrade.JUNIOR.name(), EmployeeGrade.JUNIOR.getDescription(), EmployeeGrade.JUNIOR.getLevel()));
     }
 
     @Test
+    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 검색 - 직책(Position) 기준으로 정렬한다")
     void search_sortByPositionRank() {
         // given: 직위 rank가 다른 직원 3명을 생성하여 정렬 결과를 확인한다.
@@ -204,17 +276,25 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
         assertThat(responsePage).isNotNull();
         List<EmployeeSearchResponse> contents = responsePage.content();
+        List<EmployeeSearchResponse> targetContents = contents.stream()
+                .filter(response -> Set.of(
+                        "grade-junior@abms.co",
+                        "grade-expert@abms.co",
+                        "grade-senior@abms.co"
+                ).contains(response.email()))
+                .toList();
 
-        assertThat(contents).hasSize(3);
-        assertThat(contents.get(0).position()).isEqualTo(
+        assertThat(targetContents).hasSize(3);
+        assertThat(targetContents.get(0).position()).isEqualTo(
                 new EnumResponse(EmployeePosition.ASSOCIATE.name(), EmployeePosition.ASSOCIATE.getDescription(), EmployeePosition.ASSOCIATE.getLevel()));
-        assertThat(contents.get(1).position()).isEqualTo(
+        assertThat(targetContents.get(1).position()).isEqualTo(
                 new EnumResponse(EmployeePosition.DIRECTOR.name(), EmployeePosition.DIRECTOR.getDescription(), EmployeePosition.DIRECTOR.getLevel()));
-        assertThat(contents.get(2).position()).isEqualTo(new EnumResponse(EmployeePosition.VICE_PRESIDENT.name(),
+        assertThat(targetContents.get(2).position()).isEqualTo(new EnumResponse(EmployeePosition.VICE_PRESIDENT.name(),
                 EmployeePosition.VICE_PRESIDENT.getDescription(), EmployeePosition.VICE_PRESIDENT.getLevel()));
     }
 
     @Test
+    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 등급(Grade) 목록을 조회한다")
     void getEmployeeGrades() {
         List<EnumResponse> responses = restTestClient.get()
@@ -238,6 +318,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 직책(Position) 목록을 조회한다")
     void getEmployeePositions() {
         List<EnumResponse> responses = restTestClient.get()
@@ -261,6 +342,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 근무 유형(Type) 목록을 조회한다")
     void getEmployeeTypes() {
         List<EnumResponse> responses = restTestClient.get()
@@ -286,6 +368,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 상태(Status) 목록을 조회한다")
     void getEmployeeStatuses() {
         List<EnumResponse> responses = restTestClient.get()
@@ -311,6 +394,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @WithMockUser(username = READER_USERNAME)
     @DisplayName("직원 아바타(Avatar) 목록을 조회한다")
     void getEmployeeAvatars() {
         List<EnumResponse> responses = restTestClient.get()

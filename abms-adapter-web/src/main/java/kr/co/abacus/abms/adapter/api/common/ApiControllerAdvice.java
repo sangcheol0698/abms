@@ -5,6 +5,7 @@ import java.time.ZoneId;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -68,6 +69,11 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ProblemDetail handleAuthenticationException(AuthenticationException exception) {
         return getProblemDetail(HttpStatus.UNAUTHORIZED, exception);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDeniedException(AccessDeniedException exception) {
+        return getProblemDetail(HttpStatus.FORBIDDEN, exception);
     }
 
     private ProblemDetail getProblemDetail(HttpStatus httpStatus, Exception exception) {
