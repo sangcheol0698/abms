@@ -207,9 +207,8 @@ class EmployeeAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("SELF 범위 목록 조회는 본인만 반환한다")
-    void should_returnOnlySelfInSearch_whenGrantedSelfScope() throws Exception {
-        grantEmployeeReadPermission(PermissionScope.SELF);
+    @DisplayName("로그인하면 employee.read 권한이 없어도 직원 목록을 조회할 수 있다")
+    void should_allowEmployeeSearch_whenAuthenticatedWithoutEmployeeReadPermission() throws Exception {
         MockHttpSession session = login();
 
         mockMvc.perform(get("/api/employees")
@@ -217,16 +216,34 @@ class EmployeeAuthorizationApiTest extends ApiIntegrationTestBase {
                         .param("size", "20")
                         .session(session))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[*].email", contains(USERNAME)));
+                .andExpect(jsonPath("$.content[*].email", containsInAnyOrder(
+                        USERNAME,
+                        "same-department@abacus.co.kr",
+                        "child-department@abacus.co.kr",
+                        "outside-department@abacus.co.kr"
+                )));
     }
 
     @Test
-    @DisplayName("OWN_DEPARTMENT 범위 목록 조회는 같은 부서 직원만 반환한다")
-    void should_returnOnlyOwnDepartmentEmployeesInSearch_whenGrantedOwnDepartmentScope() throws Exception {
-        grantEmployeeReadPermission(PermissionScope.OWN_DEPARTMENT);
+    @DisplayName("직원 목록 응답에는 birthDate와 memo가 포함되지 않는다")
+    void should_notExposeSensitiveFieldsInEmployeeSearchResponse() throws Exception {
         MockHttpSession session = login();
 
         mockMvc.perform(get("/api/employees")
+                        .param("page", "0")
+                        .param("size", "20")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].birthDate").doesNotExist())
+                .andExpect(jsonPath("$.content[0].memo").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("로그인하면 employee.read 권한이 없어도 부서 직원 목록을 조회할 수 있다")
+    void should_allowDepartmentEmployeeSearch_whenAuthenticatedWithoutEmployeeReadPermission() throws Exception {
+        MockHttpSession session = login();
+
+        mockMvc.perform(get("/api/departments/{departmentId}/employees", ownDivisionId)
                         .param("page", "0")
                         .param("size", "20")
                         .session(session))
@@ -238,36 +255,26 @@ class EmployeeAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("OWN_DEPARTMENT_TREE 범위 목록 조회는 하위 부서를 포함한다")
-    void should_returnDepartmentTreeEmployeesInSearch_whenGrantedOwnDepartmentTreeScope() throws Exception {
-        grantEmployeeReadPermission(PermissionScope.OWN_DEPARTMENT_TREE);
+    @DisplayName("부서 직원 목록 응답에도 birthDate와 memo가 포함되지 않는다")
+    void should_notExposeSensitiveFieldsInDepartmentEmployeeSearchResponse() throws Exception {
         MockHttpSession session = login();
 
-        mockMvc.perform(get("/api/employees")
+        mockMvc.perform(get("/api/departments/{departmentId}/employees", ownDivisionId)
                         .param("page", "0")
                         .param("size", "20")
                         .session(session))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[*].email", containsInAnyOrder(
-                        USERNAME,
-                        "same-department@abacus.co.kr",
-                        "child-department@abacus.co.kr"
-                )));
+                .andExpect(jsonPath("$.content[0].birthDate").doesNotExist())
+                .andExpect(jsonPath("$.content[0].memo").doesNotExist());
     }
 
     @Test
-    @DisplayName("목록 조회의 부서 필터는 허용 범위와 교집합 처리한다")
-    void should_intersectRequestedDepartmentsWithAllowedRange_whenSearchingEmployees() throws Exception {
-        grantEmployeeReadPermission(PermissionScope.OWN_DEPARTMENT_TREE);
+    @DisplayName("로그인했지만 employee.read 권한이 없으면 직원 상세 조회는 403을 반환한다")
+    void should_returnForbidden_whenReadingEmployeeDetailWithoutEmployeeReadPermission() throws Exception {
         MockHttpSession session = login();
 
-        mockMvc.perform(get("/api/employees")
-                        .param("page", "0")
-                        .param("size", "20")
-                        .param("departmentIds", String.valueOf(outsideDivisionId))
-                        .session(session))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isEmpty());
+        mockMvc.perform(get("/api/employees/{id}", selfEmployeeId).session(session))
+                .andExpect(status().isForbidden());
     }
 
     @Test

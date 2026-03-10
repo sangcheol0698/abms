@@ -620,7 +620,6 @@ const columnLabelMap: Record<string, string> = {
   type: '유형',
   status: '상태',
   joinDate: '입사일',
-  birthDate: '생년월일',
   actions: '동작',
 };
 
