@@ -26,6 +26,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
@@ -44,6 +45,14 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
     @Override
     public Page<EmployeeSummary> search(EmployeeSearchCondition condition, Pageable pageable) {
+        return search(condition, null, pageable);
+    }
+
+    @Override
+    public Page<EmployeeSummary> search(
+            EmployeeSearchCondition condition,
+            @Nullable EmployeeReadScope scope,
+            Pageable pageable) {
         OrderSpecifier<?>[] orderSpecifiers = resolveSort(pageable);
 
         List<EmployeeSummary> content = queryFactory
@@ -70,6 +79,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                         inGrades(condition.grades()),
                         inDepartments(condition.departmentIds()),
                         inStatuses(condition.statuses()),
+                        scopeCondition(scope),
                         employee.deleted.isFalse())
                 .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
@@ -87,6 +97,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                         inGrades(condition.grades()),
                         inDepartments(condition.departmentIds()),
                         inStatuses(condition.statuses()),
+                        scopeCondition(scope),
                         employee.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
@@ -94,6 +105,11 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
     @Override
     public List<Employee> search(EmployeeSearchCondition request) {
+        return search(request, (EmployeeReadScope) null);
+    }
+
+    @Override
+    public List<Employee> search(EmployeeSearchCondition request, @Nullable EmployeeReadScope scope) {
         return queryFactory.select(employee)
                 .from(employee)
                 .where(
@@ -103,6 +119,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                         inGrades(request.grades()),
                         inDepartments(request.departmentIds()),
                         inStatuses(request.statuses()),
+                        scopeCondition(scope),
                         employee.deleted.isFalse())
                 .orderBy(defaultSort())
                 .fetch();
@@ -170,6 +187,19 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
             return null;
         }
         return employee.status.in(statuses);
+    }
+
+    private @Nullable BooleanExpression scopeCondition(@Nullable EmployeeReadScope scope) {
+        if (scope == null || scope.allAllowed()) {
+            return null;
+        }
+        if (scope.usesDepartmentScope()) {
+            return employee.departmentId.in(scope.allowedDepartmentIds());
+        }
+        if (scope.selfEmployeeId() != null) {
+            return employee.id.eq(scope.selfEmployeeId());
+        }
+        return employee.id.isNull();
     }
 
     private OrderSpecifier<?>[] resolveSort(Pageable pageable) {

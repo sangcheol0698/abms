@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,6 +46,8 @@ import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateResponse;
 import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.employee.EmployeeExcelService;
+import kr.co.abacus.abms.application.employee.authorization.EmployeeReadAuthorizationService;
+import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
@@ -66,6 +69,7 @@ public class EmployeeApi {
     private final EmployeeFinder employeeFinder;
     private final EmployeeExcelService employeeExcelService;
     private final AuthFinder authFinder;
+    private final EmployeeReadAuthorizationService employeeReadAuthorizationService;
 
     @PostMapping("/api/employees")
     public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request) {
@@ -77,10 +81,13 @@ public class EmployeeApi {
     // 직원 조회 계열 API는 employee.read 권한으로 보호한다.
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/{id}")
-    public EmployeeDetailResponse findEmployeeDetail(@PathVariable Long id) {
+    public EmployeeDetailResponse findEmployeeDetail(@PathVariable Long id, Authentication authentication) {
         EmployeeDetail detail = employeeFinder.findEmployeeDetail(id);
         if (detail == null) {
             throw new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id);
+        }
+        if (!resolveEmployeeReadScope(authentication).canRead(detail.employeeId(), detail.departmentId())) {
+            throw new AccessDeniedException("직원 조회 권한 범위를 벗어났습니다.");
         }
 
         return EmployeeDetailResponse.of(detail);
@@ -88,8 +95,14 @@ public class EmployeeApi {
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees")
-    public PageResponse<EmployeeSearchResponse> search(@Valid EmployeeSearchCondition condition, Pageable pageable) {
-        Page<EmployeeSummary> employeeSummaries = employeeFinder.search(condition, pageable);
+    public PageResponse<EmployeeSearchResponse> search(
+            @Valid EmployeeSearchCondition condition,
+            Pageable pageable,
+            Authentication authentication
+    ) {
+        EmployeeReadScope scope = resolveEmployeeReadScope(authentication)
+                .limitToRequestedDepartments(condition.departmentIds());
+        Page<EmployeeSummary> employeeSummaries = employeeFinder.search(condition, scope, pageable);
 
         Page<EmployeeSearchResponse> responses = employeeSummaries.map(EmployeeSearchResponse::of);
 
@@ -179,9 +192,15 @@ public class EmployeeApi {
                 .toList();
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/excel/download")
-    public ResponseEntity<Resource> downloadExcel(@Valid EmployeeSearchCondition request) {
-        byte[] content = employeeExcelService.download(request);
+    public ResponseEntity<Resource> downloadExcel(
+            @Valid EmployeeSearchCondition request,
+            Authentication authentication
+    ) {
+        EmployeeReadScope scope = resolveEmployeeReadScope(authentication)
+                .limitToRequestedDepartments(request.departmentIds());
+        byte[] content = employeeExcelService.download(request, scope);
         String filename = FilenameBuilder.build("employees");
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
@@ -219,6 +238,11 @@ public class EmployeeApi {
         }
 
         return authFinder.getCurrentAccountId(authentication.getName());
+    }
+
+    private EmployeeReadScope resolveEmployeeReadScope(Authentication authentication) {
+        Long accountId = authFinder.getCurrentAccountId(authentication.getName());
+        return employeeReadAuthorizationService.resolveScope(accountId);
     }
 
 }
