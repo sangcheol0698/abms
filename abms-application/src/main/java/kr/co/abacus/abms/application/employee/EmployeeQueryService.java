@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
@@ -38,11 +37,6 @@ public class EmployeeQueryService implements EmployeeFinder {
     @Override
     public Page<EmployeeSummary> search(EmployeeSearchCondition request, Pageable pageable) {
         return employeeRepository.search(request, pageable);
-    }
-
-    @Override
-    public Page<EmployeeSummary> search(EmployeeSearchCondition request, EmployeeReadScope scope, Pageable pageable) {
-        return employeeRepository.search(request, scope, pageable);
     }
 
 }

@@ -2,8 +2,6 @@ package kr.co.abacus.abms.adapter.api.employee.dto;
 
 import java.time.LocalDate;
 
-import org.jspecify.annotations.Nullable;
-
 import lombok.Builder;
 
 import kr.co.abacus.abms.adapter.api.common.EnumResponse;
@@ -17,13 +15,11 @@ public record EmployeeSearchResponse(
         String name,
         String email,
         LocalDate joinDate,
-        LocalDate birthDate,
         EnumResponse position,
         EnumResponse status,
         EnumResponse grade,
         EnumResponse type,
-        EnumResponse avatar,
-        @Nullable String memo) {
+        EnumResponse avatar) {
 
     public static EmployeeSearchResponse of(EmployeeSummary summary) {
         return EmployeeSearchResponse.builder()
@@ -33,13 +29,11 @@ public record EmployeeSearchResponse(
                 .name(summary.name())
                 .email(summary.email().address())
                 .joinDate(summary.joinDate())
-                .birthDate(summary.birthDate())
                 .position(new EnumResponse(summary.position().name(), summary.position().getDescription(), summary.position().getLevel()))
                 .status(new EnumResponse(summary.status().name(), summary.status().getDescription(), summary.status().ordinal()))
                 .grade(new EnumResponse(summary.grade().name(), summary.grade().getDescription(), summary.grade().getLevel()))
                 .type(new EnumResponse(summary.type().name(), summary.type().getDescription(), summary.type().ordinal()))
                 .avatar(new EnumResponse(summary.avatar().name(), summary.avatar().getDescription(), summary.avatar().ordinal()))
-                .memo(summary.memo())
                 .build();
     }
 

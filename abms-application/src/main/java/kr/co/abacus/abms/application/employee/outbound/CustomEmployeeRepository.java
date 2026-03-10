@@ -16,14 +16,9 @@ public interface CustomEmployeeRepository {
 
     Page<EmployeeSummary> search(EmployeeSearchCondition condition, Pageable pageable);
 
-    Page<EmployeeSummary> search(
-            EmployeeSearchCondition condition,
-            @Nullable EmployeeReadScope scope,
-            Pageable pageable);
-
     List<Employee> search(EmployeeSearchCondition condition);
 
-    List<Employee> search(EmployeeSearchCondition condition, @Nullable EmployeeReadScope scope);
+    List<Employee> search(EmployeeSearchCondition condition, EmployeeReadScope scope);
 
     @Nullable
     EmployeeDetail findEmployeeDetail(Long id);

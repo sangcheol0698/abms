@@ -65,9 +65,7 @@ export interface EmployeeListItem {
   avatarCode: string;
   avatarLabel: string;
   avatarImageUrl: string;
-  memo: string;
   joinDate?: string;
-  birthDate?: string;
 }
 
 export function mapEmployeeListItem(input: any): EmployeeListItem {
@@ -77,7 +75,6 @@ export function mapEmployeeListItem(input: any): EmployeeListItem {
   const typeCode = extractEnumCode(input?.type);
   const positionCode = extractEnumCode(input?.position);
   const joinDate = toIsoDateString(input?.joinDate);
-  const birthDate = toIsoDateString(input?.birthDate);
 
   // Email handling: can be string or object { address: string }
   let email = '';
@@ -109,9 +106,7 @@ export function mapEmployeeListItem(input: any): EmployeeListItem {
     avatarCode: avatarOption.code,
     avatarLabel,
     avatarImageUrl: avatarOption.imageUrl,
-    memo: String(input?.memo ?? ''),
     joinDate,
-    birthDate,
   };
 }
 

@@ -113,9 +113,7 @@ describe('EmployeeRepository.search', () => {
           grade: 'JUNIOR',
           type: 'FULL_TIME',
           avatar: 'SKY_GLOW',
-          memo: '메모',
           joinDate: '2024-01-10',
-          birthDate: '1990-05-15',
         },
       ],
       number: 0,
@@ -150,7 +148,6 @@ describe('EmployeeRepository.search', () => {
     expect(item.gradeCode).toBe('JUNIOR');
     expect(item.positionCode).toBe('ASSOCIATE');
     expect(item.joinDate).toBe('2024-01-10');
-    expect(item.birthDate).toBe('1990-05-15');
     expect(item.avatarCode).toBe('SKY_GLOW');
     expect(item.avatarLabel).toBe('Sky Glow');
     expect(item.avatarImageUrl).toMatch(/(data:image\/svg\+xml|\.svg$)/);

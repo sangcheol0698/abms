@@ -256,19 +256,6 @@ export function createEmployeeTableColumns(
     meta: { skeleton: 'enum-badge' },
   });
 
-  // 생년월일 컬럼
-  columns.push({
-    id: 'birthDate',
-    accessorFn: (row) => row.birthDate ?? '',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '생년월일', align: 'left' }),
-    cell: ({ row }) =>
-      h('span', { class: 'text-sm text-foreground' }, formatDisplayDate(row.original.birthDate)),
-    enableSorting: true,
-    enableHiding: true,
-    size: 120,
-    meta: { skeleton: 'text-short' },
-  });
-
   // 입사일 컬럼
   columns.push({
     id: 'joinDate',

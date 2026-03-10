@@ -159,7 +159,6 @@ function getColumnLabel(columnId: string): string {
     grade: '등급',
     type: '유형',
     status: '상태',
-    birthDate: '생년월일',
     joinDate: '입사일',
   };
   return labels[columnId] ?? columnId;

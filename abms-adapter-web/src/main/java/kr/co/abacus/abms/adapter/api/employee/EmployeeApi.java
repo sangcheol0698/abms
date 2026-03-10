@@ -93,16 +93,9 @@ public class EmployeeApi {
         return EmployeeDetailResponse.of(detail);
     }
 
-    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees")
-    public PageResponse<EmployeeSearchResponse> search(
-            @Valid EmployeeSearchCondition condition,
-            Pageable pageable,
-            Authentication authentication
-    ) {
-        EmployeeReadScope scope = resolveEmployeeReadScope(authentication)
-                .limitToRequestedDepartments(condition.departmentIds());
-        Page<EmployeeSummary> employeeSummaries = employeeFinder.search(condition, scope, pageable);
+    public PageResponse<EmployeeSearchResponse> search(@Valid EmployeeSearchCondition condition, Pageable pageable) {
+        Page<EmployeeSummary> employeeSummaries = employeeFinder.search(condition, pageable);
 
         Page<EmployeeSearchResponse> responses = employeeSummaries.map(EmployeeSearchResponse::of);
 
