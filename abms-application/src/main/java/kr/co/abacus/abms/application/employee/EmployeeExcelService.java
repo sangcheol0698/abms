@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
+import kr.co.abacus.abms.application.employee.authorization.EmployeeWriteAuthorizationService;
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
@@ -34,6 +35,7 @@ public class EmployeeExcelService {
     private final EmployeeManager employeeManager;
     private final EmployeeExcelExporter employeeExcelExporter;
     private final EmployeeExcelImporter employeeExcelImporter;
+    private final EmployeeWriteAuthorizationService employeeWriteAuthorizationService;
 
     public byte[] download(EmployeeSearchCondition condition, EmployeeReadScope scope) {
         List<Employee> employees = employeeRepository.search(condition, scope);
@@ -48,9 +50,10 @@ public class EmployeeExcelService {
     }
 
     @Transactional
-    public EmployeeExcelUploadResult upload(InputStream inputStream) {
+    public EmployeeExcelUploadResult upload(InputStream inputStream, Long accountId) {
         Map<String, Long> departmentCodeMap = loadDepartmentCodeMap();
         List<EmployeeCreateCommand> commands = employeeExcelImporter.importEmployees(inputStream, departmentCodeMap);
+        employeeWriteAuthorizationService.assertCanUpload(accountId, commands);
 
         List<EmployeeExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
         int successCount = 0;

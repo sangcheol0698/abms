@@ -8,7 +8,6 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -48,6 +47,7 @@ import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.employee.EmployeeExcelService;
 import kr.co.abacus.abms.application.employee.authorization.EmployeeReadAuthorizationService;
 import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
+import kr.co.abacus.abms.application.employee.authorization.EmployeeWriteAuthorizationService;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
@@ -70,9 +70,12 @@ public class EmployeeApi {
     private final EmployeeExcelService employeeExcelService;
     private final AuthFinder authFinder;
     private final EmployeeReadAuthorizationService employeeReadAuthorizationService;
+    private final EmployeeWriteAuthorizationService employeeWriteAuthorizationService;
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @PostMapping("/api/employees")
-    public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request) {
+    public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request, Authentication authentication) {
+        employeeWriteAuthorizationService.assertCanCreate(resolveAccountId(authentication), request.departmentId());
         Long employeeId = employeeManager.create(request.toCommand());
 
         return EmployeeCreateResponse.of(employeeId);
@@ -102,46 +105,69 @@ public class EmployeeApi {
         return PageResponse.of(responses);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @PutMapping("/api/employees/{id}")
-    public EmployeeUpdateResponse update(@PathVariable Long id, @RequestBody @Valid EmployeeUpdateRequest request) {
+    public EmployeeUpdateResponse update(
+            @PathVariable Long id,
+            @RequestBody @Valid EmployeeUpdateRequest request,
+            Authentication authentication
+    ) {
+        employeeWriteAuthorizationService.assertCanUpdate(resolveAccountId(authentication), id, request.toCommand());
         Long employeeId = employeeManager.updateInfo(id, request.toCommand());
 
         return EmployeeUpdateResponse.of(employeeId);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/api/employees/{id}")
-    public void delete(@PathVariable Long id, @Nullable Authentication authentication) {
-        employeeManager.delete(id, resolveAccountId(authentication));
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        Long accountId = resolveAccountId(authentication);
+        employeeWriteAuthorizationService.assertCanManage(accountId, id);
+        employeeManager.delete(id, accountId);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/restore")
-    public void restore(@PathVariable Long id) {
+    public void restore(@PathVariable Long id, Authentication authentication) {
+        employeeWriteAuthorizationService.assertCanManageIncludingDeleted(resolveAccountId(authentication), id);
         employeeManager.restore(id);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/resign")
-    public void resign(@PathVariable Long id, @RequestParam LocalDate resignationDate) {
+    public void resign(@PathVariable Long id, @RequestParam LocalDate resignationDate, Authentication authentication) {
+        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
         employeeManager.resign(id, resignationDate);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/take-leave")
-    public void takeLeave(@PathVariable Long id) {
+    public void takeLeave(@PathVariable Long id, Authentication authentication) {
+        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
         employeeManager.takeLeave(id);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/activate")
-    public void activate(@PathVariable Long id) {
+    public void activate(@PathVariable Long id, Authentication authentication) {
+        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
         employeeManager.activate(id);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/promote")
-    public void promote(@PathVariable Long id, @RequestBody EmployeePositionUpdateRequest request) {
+    public void promote(
+            @PathVariable Long id,
+            @RequestBody EmployeePositionUpdateRequest request,
+            Authentication authentication
+    ) {
+        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
         employeeManager.promote(id, request.position(), request.grade());
     }
 
@@ -206,25 +232,21 @@ public class EmployeeApi {
                 .body(new ByteArrayResource(content));
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @PostMapping(value = "/api/employees/excel/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public EmployeeExcelUploadResponse uploadExcel(@RequestParam("file") MultipartFile file) {
+    public EmployeeExcelUploadResponse uploadExcel(@RequestParam("file") MultipartFile file, Authentication authentication) {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("업로드할 파일을 선택하세요.");
         }
         try (InputStream inputStream = file.getInputStream()) {
-            EmployeeExcelUploadResult result = employeeExcelService.upload(inputStream);
+            EmployeeExcelUploadResult result = employeeExcelService.upload(inputStream, resolveAccountId(authentication));
             return EmployeeExcelUploadResponse.of(result);
         } catch (IOException ex) {
             throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
         }
     }
 
-    @Nullable
-    private Long resolveAccountId(@Nullable Authentication authentication) {
-        if (authentication == null) {
-            return null;
-        }
-
+    private Long resolveAccountId(Authentication authentication) {
         return authFinder.getCurrentAccountId(authentication.getName());
     }
 

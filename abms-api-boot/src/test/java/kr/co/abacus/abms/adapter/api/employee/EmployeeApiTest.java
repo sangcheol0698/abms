@@ -19,7 +19,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
@@ -122,6 +121,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 "직원 조회",
                 "직원 조회 권한"
         ));
+        Permission writePermission = permissionRepository.save(Permission.create(
+                "employee.write",
+                "직원 쓰기",
+                "직원 쓰기 권한"
+        ));
         PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
                 "직원 조회 그룹",
                 "직원 조회 권한 그룹",
@@ -131,28 +135,37 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 account.getIdOrThrow(),
                 permissionGroup.getIdOrThrow()
         ));
-        groupPermissionGrantRepository.save(GroupPermissionGrant.create(
-                permissionGroup.getIdOrThrow(),
-                permission.getIdOrThrow(),
-                PermissionScope.ALL
+        groupPermissionGrantRepository.saveAll(List.of(
+                GroupPermissionGrant.create(
+                        permissionGroup.getIdOrThrow(),
+                        permission.getIdOrThrow(),
+                        PermissionScope.ALL
+                ),
+                GroupPermissionGrant.create(
+                        permissionGroup.getIdOrThrow(),
+                        writePermission.getIdOrThrow(),
+                        PermissionScope.ALL
+                )
         ));
         flushAndClear();
     }
 
     @Test
     @DisplayName("신규 직원을 등록한다")
-    void create() {
+    void create() throws Exception {
         EmployeeCreateRequest request = createEmployeeCreateRequest(companyId, "test@email.com", "홍길동");
-        String responseJson = objectMapper.writeValueAsString(request);
+        MockHttpSession session = login();
 
-        EmployeeCreateResponse response = restTestClient.post()
-                .uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
-                .body(responseJson)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(EmployeeCreateResponse.class)
-                .returnResult()
-                .getResponseBody();
+        MvcResult result = mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+        EmployeeCreateResponse response = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                EmployeeCreateResponse.class
+        );
 
         assertThat(response).isNotNull();
         Employee employee = employeeRepository.findById(response.employeeId()).orElseThrow();
@@ -165,28 +178,29 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("잘못된 이메일 형식으로 직원 등록 시 400 에러를 반환한다")
-    void create_invalidEmail() {
+    void create_invalidEmail() throws Exception {
         EmployeeCreateRequest request = createEmployeeCreateRequest(companyId, "invalid-email", "홍길동");
-        String responseJson = objectMapper.writeValueAsString(request);
+        MockHttpSession session = login();
 
-        restTestClient.post()
-                .uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
-                .body(responseJson)
-                .exchange()
-                .expectStatus().isBadRequest();
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("중복된 이메일로 직원 등록 시 400 에러를 반환한다")
-    void create_duplicateEmail() {
+    void create_duplicateEmail() throws Exception {
         employeeRepository.save(createEmployee(teamId, "test@email.com", "기존직원"));
         EmployeeCreateRequest request = createEmployeeCreateRequest(companyId, "test@email.com", "신규직원");
-        String responseJson = objectMapper.writeValueAsString(request);
+        MockHttpSession session = login();
 
-        restTestClient.post().uri("/api/employees").contentType(MediaType.APPLICATION_JSON)
-                .body(responseJson)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST);
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -476,12 +490,12 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 bos.toByteArray());
 
-        var mvcResult = mockMvc.perform(
-                                org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                                        .multipart("/api/employees/excel/upload")
-                                        .with(user("employee-tester@abacus.co.kr"))
-                                        .file(mockFile))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+        MockHttpSession session = login();
+
+        var mvcResult = mockMvc.perform(multipart("/api/employees/excel/upload")
+                        .file(mockFile)
+                        .session(session))
+                .andExpect(status().isOk())
                 .andReturn();
 
         EmployeeExcelUploadResponse response = objectMapper.readValue(
@@ -560,19 +574,18 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("직원 정보를 수정한다")
-    void update() {
+    void update() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "update-target@email.com", "업데이트 대상")).getId();
         flushAndClear();
 
         EmployeeUpdateRequest request = createEmployeeUpdateRequest(divisionId, "updated@email.com", "김수정");
-        String responseJson = objectMapper.writeValueAsString(request);
+        MockHttpSession session = login();
 
-        restTestClient.put()
-                .uri("/api/employees/{id}", employeeId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(responseJson)
-                .exchange()
-                .expectStatus().isOk();
+        mockMvc.perform(put("/api/employees/{id}", employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isOk());
         flushAndClear();
 
         Employee updatedEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -590,67 +603,70 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("이미 사용 중인 이메일로 수정 시 예외가 발생한다")
-    void update_duplicateEmail() {
+    void update_duplicateEmail() throws Exception {
         Long employeeId1 = employeeRepository.save(createEmployee(teamId, "dup1@email.com", "직원1")).getId();
         employeeRepository.save(createEmployee(teamId, "dup2@email.com", "직원2")).getId();
 
         flushAndClear();
 
         var request = createEmployeeUpdateRequest(teamId, "dup2@email.com", "직원1-수정");
-        String responseJson = objectMapper.writeValueAsString(request);
+        MockHttpSession session = login();
 
-        restTestClient.put()
-                .uri("/api/employees/{id}", employeeId1)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(responseJson)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST);
+        mockMvc.perform(put("/api/employees/{id}", employeeId1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("직원을 삭제(Soft Delete)한다")
-    void delete() {
+    void delete() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
         flushAndClear();
 
-        restTestClient.delete()
-                .uri("/api/employees/{id}", employeeId)
-                .exchange()
-                .expectStatus().isNoContent();
+        MockHttpSession session = login();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .delete("/api/employees/{id}", employeeId)
+                        .session(session))
+                .andExpect(status().isNoContent());
         flushAndClear();
 
         Employee deletedEmployee = employeeRepository.findById(employeeId).orElseThrow();
         assertThat(deletedEmployee.isDeleted()).isTrue();
-        assertThat(deletedEmployee.getDeletedBy()).isNull();
+        assertThat(deletedEmployee.getDeletedBy()).isNotNull();
         assertThat(deletedEmployee.getDeletedAt()).isNotNull();
     }
 
     @Test
     @DisplayName("이미 삭제된 직원을 삭제하려 할 때 예외가 발생한다")
-    void delete_alreadyDeleted() {
+    void delete_alreadyDeleted() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
 
         employeeManager.delete(employeeId, 1L);
         flushAndClear();
 
-        restTestClient.delete()
-                .uri("/api/employees/{id}", employeeId)
-                .exchange()
-                .expectStatus().isNotFound();
+        MockHttpSession session = login();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .delete("/api/employees/{id}", employeeId)
+                        .session(session))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("삭제된 직원을 복구한다")
-    void restore() {
+    void restore() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
 
         employeeManager.delete(employeeId, 1L);
         flushAndClear();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/restore", employeeId)
-                .exchange()
-                .expectStatus().isNoContent();
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/restore", employeeId).session(session))
+                .andExpect(status().isNoContent());
         flushAndClear();
 
         Employee restoredEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -662,20 +678,19 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("직원의 직급을 승진시킨다")
-    void promote() {
+    void promote() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "promote@email.com", "홍길동",
                 EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR)).getId();
         flushAndClear();
 
         EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE, null);
-        String requestJson = objectMapper.writeValueAsString(request);
+        MockHttpSession session = login();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/promote", employeeId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestJson)
-                .exchange()
-                .expectStatus().isNoContent();
+        mockMvc.perform(patch("/api/employees/{id}/promote", employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isNoContent());
         flushAndClear();
 
         Employee promotedEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -684,24 +699,23 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("직원의 직급를 현재 직급보다 낮은 직급로 승진시키려 할 때 예외가 발생한다.")
-    void promote_lowerPosition_throwsException() {
+    void promote_lowerPosition_throwsException() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.ASSOCIATE, null);
-        String requestJson = objectMapper.writeValueAsString(request);
+        MockHttpSession session = login();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/promote", employeeId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestJson)
-                .exchange()
-                .expectStatus().isBadRequest();
+        mockMvc.perform(patch("/api/employees/{id}/promote", employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("퇴사한 직원의 직급을 승진시킨다.")
-    void promote_resignedEmployee_throwsException() {
+    void promote_resignedEmployee_throwsException() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
@@ -709,27 +723,28 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE, null);
-        String requestJson = objectMapper.writeValueAsString(request);
+        MockHttpSession session = login();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/promote", employeeId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestJson)
-                .exchange()
-                .expectStatus().isBadRequest();
+        mockMvc.perform(patch("/api/employees/{id}/promote", employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("직원을 퇴사 처리한다")
-    void resign() {
+    void resign() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         LocalDate resignationDate = LocalDate.of(2025, 6, 30);
-        restTestClient.patch()
-                .uri("/api/employees/{id}/resign?resignationDate={date}", employeeId, resignationDate)
-                .exchange()
-                .expectStatus().isNoContent();
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/resign", employeeId)
+                        .param("resignationDate", resignationDate.toString())
+                        .session(session))
+                .andExpect(status().isNoContent());
         flushAndClear();
 
         Employee resignedEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -739,43 +754,46 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("퇴사일이 입사일 이전일 경우 예외가 발생한다.")
-    void resign_beforeJoinDate_throwsException() {
+    void resign_beforeJoinDate_throwsException() throws Exception {
         Long employeeId = employeeRepository
                 .save(createEmployee(teamId, "test@example.com", "홍길동", LocalDate.of(2024, 1, 1))).getId();
         flushAndClear();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/resign?resignationDate={date}",
-                        employeeId, LocalDate.of(2023, 12, 31))
-                .exchange()
-                .expectStatus().isBadRequest();
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/resign", employeeId)
+                        .param("resignationDate", LocalDate.of(2023, 12, 31).toString())
+                        .session(session))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("이미 퇴사한 직원을 다시 퇴사 처리하려 할 때 예외가 발생한다")
-    void resign_alreadyResigned_throwsException() {
+    void resign_alreadyResigned_throwsException() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/resign?resignationDate={date}", employeeId, LocalDate.of(2025, 1, 30))
-                .exchange()
-                .expectStatus().isBadRequest();
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/resign", employeeId)
+                        .param("resignationDate", LocalDate.of(2025, 1, 30).toString())
+                        .session(session))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("직원을 휴직 처리한다")
-    void takeLeave() {
+    void takeLeave() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/take-leave", employeeId)
-                .exchange()
-                .expectStatus().isNoContent();
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/take-leave", employeeId).session(session))
+                .andExpect(status().isNoContent());
         flushAndClear();
 
         Employee onLeaveEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -784,30 +802,30 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("재직중이 아닌 직원이 휴직처리 될 때 예외가 발생한다.")
-    void takeLeave_notActive_throwsException() {
+    void takeLeave_notActive_throwsException() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
         employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/take-leave", employeeId)
-                .exchange()
-                .expectStatus().isBadRequest();
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/take-leave", employeeId).session(session))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("직원을 휴직중에서 재직중으로 복직시킨다.")
-    void activate() {
+    void activate() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         employeeManager.takeLeave(employeeId);
         flushAndClear();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/activate", employeeId)
-                .exchange()
-                .expectStatus().isNoContent();
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/activate", employeeId).session(session))
+                .andExpect(status().isNoContent());
 
         flushAndClear();
         Employee activeEmployee = employeeRepository.findById(employeeId).orElseThrow();
@@ -816,14 +834,14 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("이미 재직중인 직원이 재활성화 될 때 예외가 발생한다.")
-    void activate_alreadyActive_throwsException() {
+    void activate_alreadyActive_throwsException() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        restTestClient.patch()
-                .uri("/api/employees/{id}/activate", employeeId)
-                .exchange()
-                .expectStatus().isBadRequest();
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/activate", employeeId).session(session))
+                .andExpect(status().isBadRequest());
     }
 
     private EmployeeCreateRequest createEmployeeCreateRequest(
