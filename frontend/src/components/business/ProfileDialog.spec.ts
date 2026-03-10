@@ -1,13 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Component } from 'vue';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { type RouteRecordRaw } from 'vue-router';
 import HttpError from '@/core/http/HttpError';
-import ProfileDialog from '@/components/business/ProfileDialog.vue';
 import { renderWithProviders } from '@/test-utils';
 import { toast } from 'vue-sonner';
 
 const mutateAsyncMock = vi.fn();
 const logoutMutateAsyncMock = vi.fn();
+const updateEmployeeMutateAsyncMock = vi.fn();
+let storage: Record<string, string> = {};
+let ProfileDialogComponent: Component;
 
 vi.mock('@/features/auth/queries/useAuthQueries', () => ({
   useChangePasswordMutation: () => ({
@@ -15,6 +18,52 @@ vi.mock('@/features/auth/queries/useAuthQueries', () => ({
   }),
   useLogoutMutation: () => ({
     mutateAsync: logoutMutateAsyncMock,
+  }),
+}));
+
+vi.mock('@/features/employee/queries/useEmployeeQueries', () => ({
+  useCurrentEmployeeProfileQuery: () => ({
+    data: {
+      value: {
+        employeeId: 1,
+        departmentId: 10,
+        departmentName: '개발팀',
+        employeeName: '테스터',
+        name: '테스터',
+        email: 'tester@iabacus.co.kr',
+        position: '사원',
+        positionCode: 'ASSOCIATE',
+        status: '재직',
+        statusCode: 'ACTIVE',
+        grade: '초급',
+        gradeCode: 'JUNIOR',
+        type: '정규직',
+        typeCode: 'FULL_TIME',
+        avatarCode: 'SKY_GLOW',
+        avatarLabel: 'Sky Glow',
+        avatarImageUrl: '',
+        memo: '',
+        joinDate: '2024-01-01',
+        birthDate: '1990-01-01',
+      },
+    },
+    isLoading: { value: false },
+    isFetching: { value: false },
+  }),
+  useEmployeeAvatarsQuery: () => ({
+    data: {
+      value: [
+        {
+          code: 'SKY_GLOW',
+          label: 'Sky Glow',
+          imageUrl: '',
+        },
+      ],
+    },
+  }),
+  useUpdateEmployeeMutation: () => ({
+    mutateAsync: updateEmployeeMutateAsyncMock,
+    isPending: { value: false },
   }),
 }));
 
@@ -31,7 +80,7 @@ const routes: RouteRecordRaw[] = [
 ];
 
 async function mountProfileDialog() {
-  return renderWithProviders(ProfileDialog, {
+  return renderWithProviders(ProfileDialogComponent, {
     routes,
     route: '/',
     props: {
@@ -76,6 +125,10 @@ async function mountProfileDialog() {
         Avatar: { template: '<div><slot /></div>' },
         AvatarFallback: { template: '<div><slot /></div>' },
         AvatarImage: { template: '<img />' },
+        EmployeeSelfProfileDialog: {
+          props: ['open'],
+          template: '<div data-test="self-profile-dialog">{{ String(open) }}</div>',
+        },
       },
     },
   });
@@ -101,10 +154,28 @@ async function switchSection(
 }
 
 describe('ProfileDialog', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key: string) => storage[key] ?? null),
+      setItem: vi.fn((key: string, value: string) => {
+        storage[key] = String(value);
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete storage[key];
+      }),
+      clear: vi.fn(() => {
+        storage = {};
+      }),
+    });
+    ProfileDialogComponent = (await import('@/components/business/ProfileDialog.vue')).default;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mutateAsyncMock.mockResolvedValue(undefined);
     logoutMutateAsyncMock.mockResolvedValue(undefined);
+    updateEmployeeMutateAsyncMock.mockResolvedValue(undefined);
+    storage = {};
   });
 
   it('현재 비밀번호가 비어 있으면 검증 메시지를 보여준다', async () => {
@@ -123,7 +194,6 @@ describe('ProfileDialog', () => {
     const { wrapper } = await mountProfileDialog();
 
     expect(wrapper.find('[data-test="profile-section"]').exists()).toBe(true);
-    expect(wrapper.text()).toContain('읽기 전용 정보');
     expect(wrapper.find('#currentPassword').exists()).toBe(false);
   });
 
@@ -133,7 +203,85 @@ describe('ProfileDialog', () => {
 
     expect(wrapper.find('[data-test="profile-section"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('tester@iabacus.co.kr');
-    expect(wrapper.text()).toContain('읽기 전용 정보');
+  });
+
+  it('employee.write 권한이 있으면 내 정보 수정 섹션이 표시된다', async () => {
+    storage.user = JSON.stringify({
+      name: '테스터',
+      email: 'tester@iabacus.co.kr',
+      permissions: [{ code: 'employee.write', scopes: ['ALL'] }],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountProfileDialog();
+
+    expect(wrapper.find('[data-test="self-profile-card"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('내 정보 수정');
+  });
+
+  it('openSelfProfileEditor가 true면 내 정보 수정 다이얼로그를 바로 연다', async () => {
+    storage.user = JSON.stringify({
+      name: '테스터',
+      email: 'tester@iabacus.co.kr',
+      permissions: [{ code: 'employee.write', scopes: ['ALL'] }],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await renderWithProviders(ProfileDialogComponent, {
+      routes,
+      route: '/',
+      props: {
+        open: true,
+        openSelfProfileEditor: true,
+        user: {
+          name: '테스터',
+          email: 'tester@iabacus.co.kr',
+          avatar: '',
+        },
+      },
+      global: {
+        stubs: {
+          Dialog: { template: '<div><slot /></div>' },
+          DialogContent: { template: '<div><slot /></div>' },
+          DialogDescription: { template: '<p><slot /></p>' },
+          DialogFooter: { template: '<div><slot /></div>' },
+          DialogHeader: { template: '<div><slot /></div>' },
+          DialogTitle: { template: '<h2><slot /></h2>' },
+          SidebarProvider: { template: '<div><slot /></div>' },
+          Sidebar: { template: '<aside><slot /></aside>' },
+          SidebarContent: { template: '<div><slot /></div>' },
+          SidebarGroup: { template: '<div><slot /></div>' },
+          SidebarGroupContent: { template: '<div><slot /></div>' },
+          SidebarMenu: { template: '<div><slot /></div>' },
+          SidebarMenuItem: { template: '<div><slot /></div>' },
+          SidebarMenuButton: { template: '<button type="button"><slot /></button>' },
+          Breadcrumb: { template: '<nav><slot /></nav>' },
+          BreadcrumbList: { template: '<div><slot /></div>' },
+          BreadcrumbItem: { template: '<span><slot /></span>' },
+          BreadcrumbPage: { template: '<span><slot /></span>' },
+          BreadcrumbSeparator: { template: '<span>/</span>' },
+          ToggleGroup: { template: '<div><slot /></div>' },
+          ToggleGroupItem: { template: '<button type="button"><slot /></button>' },
+          AlertDialog: { template: '<div><slot /></div>' },
+          AlertDialogContent: { template: '<div><slot /></div>' },
+          AlertDialogDescription: { template: '<div><slot /></div>' },
+          AlertDialogFooter: { template: '<div><slot /></div>' },
+          AlertDialogHeader: { template: '<div><slot /></div>' },
+          AlertDialogTitle: { template: '<div><slot /></div>' },
+          AlertDialogAction: { template: '<button type="button"><slot /></button>' },
+          AlertDialogCancel: { template: '<button type="button"><slot /></button>' },
+          Avatar: { template: '<div><slot /></div>' },
+          AvatarFallback: { template: '<div><slot /></div>' },
+          AvatarImage: { template: '<img />' },
+          EmployeeSelfProfileDialog: {
+            props: ['open'],
+            template: '<div data-test="self-profile-dialog">{{ String(open) }}</div>',
+          },
+        },
+      },
+    });
+
+    expect(wrapper.get('[data-test="self-profile-dialog"]').text()).toBe('true');
   });
 
   it('알림 설정 메뉴를 누르면 정보 섹션이 표시된다', async () => {

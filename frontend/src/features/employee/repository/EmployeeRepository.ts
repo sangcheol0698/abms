@@ -191,6 +191,26 @@ export class EmployeeRepository {
     return mapEmployeeSummary(response);
   }
 
+  async findCurrentByIdentity(name: string, email: string): Promise<EmployeeSummary> {
+    await this.ensureFilterOptionsLoaded();
+
+    const page = await this.search({
+      page: 1,
+      size: 200,
+      name,
+    });
+
+    const matched = page.content.find(
+      (item) => item.email.trim().toLowerCase() === email.trim().toLowerCase(),
+    );
+
+    if (!matched) {
+      throw new Error('현재 로그인한 직원 정보를 찾을 수 없습니다.');
+    }
+
+    return this.findById(matched.employeeId);
+  }
+
   async create(payload: EmployeeCreatePayload): Promise<EmployeeSummary> {
     await this.ensureFilterOptionsLoaded();
     const response = await this.httpRepository.post({ path: '/api/employees', data: payload });

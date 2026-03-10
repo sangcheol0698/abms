@@ -116,6 +116,12 @@ import {
   useEmployeeTypesQuery,
 } from '@/features/employee/queries/useEmployeeQueries';
 import { departmentKeys, employeeKeys, queryClient } from '@/core/query';
+import {
+  canEditOwnProfile,
+  canManageEmployees,
+  canViewEmployeeDetail,
+} from '@/features/employee/permissions';
+import { dispatchOpenProfileDialogEvent } from '@/features/auth/profileDialogEvents';
 
 interface DepartmentOption {
   label: string;
@@ -302,6 +308,9 @@ const totalElements = computed(() => departmentEmployeesQuery.data.value?.totalE
 
 // 이벤트 핸들러
 function handleViewEmployee(employee: EmployeeListItem) {
+  if (!canViewEmployeeDetail(employee.email)) {
+    return;
+  }
   router.push({
     name: 'employee-detail',
     params: { employeeId: employee.employeeId },
@@ -309,6 +318,13 @@ function handleViewEmployee(employee: EmployeeListItem) {
 }
 
 async function handleEditEmployee(employee: EmployeeListItem) {
+  if (!(canManageEmployees() || canEditOwnProfile(employee.email))) {
+    return;
+  }
+  if (!canManageEmployees() && canEditOwnProfile(employee.email)) {
+    dispatchOpenProfileDialogEvent({ openSelfProfileEditor: true });
+    return;
+  }
   editingEmployee.value = null;
   isLoadingEmployee.value = true;
   const loadingToast = toast.loading('직원 정보를 불러오는 중입니다.');
@@ -350,6 +366,9 @@ function handleCopyEmail(employee: EmployeeListItem) {
 }
 
 function handleDeleteEmployee(employee: EmployeeListItem) {
+  if (!canManageEmployees()) {
+    return;
+  }
   deletion.open(employee.employeeId, employee.name);
 }
 
@@ -374,6 +393,11 @@ const columns = createEmployeeTableColumns(
     onCopyEmail: handleCopyEmail,
     onDeleteEmployee: handleDeleteEmployee,
     onNavigateToDepartment: handleNavigateToDepartment,
+    canViewEmployee: (employee) => canViewEmployeeDetail(employee.email),
+    canEditEmployee: (employee) => canManageEmployees() || canEditOwnProfile(employee.email),
+    canDeleteEmployee: () => canManageEmployees(),
+    getEditActionLabel: (employee) =>
+      !canManageEmployees() && canEditOwnProfile(employee.email) ? '내 정보 수정' : '직원 편집',
   },
   {
     excludeDepartmentColumn: true,

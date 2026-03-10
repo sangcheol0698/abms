@@ -118,12 +118,12 @@ export function markSessionNeedsValidation(): void {
   isSessionValidated = false;
 }
 
-export async function ensureServerSessionValid(): Promise<boolean> {
+export async function ensureServerSessionValid(forceRefresh = false): Promise<boolean> {
   if (!hasStoredUser()) {
     return false;
   }
 
-  if (isSessionValidated) {
+  if (isSessionValidated && !forceRefresh) {
     return true;
   }
 

@@ -74,6 +74,7 @@
         :open="isProfileDialogOpen"
         @update:open="isProfileDialogOpen = $event"
         :user="user"
+        :open-self-profile-editor="openSelfProfileEditor"
       />
       <CommandPalette :open="isCommandPaletteOpen" @update:open="isCommandPaletteOpen = $event" />
       <NotificationsSheet
@@ -110,6 +111,7 @@ import ProfileDialog from '@/components/business/ProfileDialog.vue';
 import { useNotificationsStore } from '@/core/stores/notifications.store';
 import { storeToRefs } from 'pinia';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
+import { addOpenProfileDialogListener } from '@/features/auth/profileDialogEvents';
 
 const route = useRoute();
 
@@ -196,6 +198,8 @@ const paddingClass = computed(() => {
 const isProfileDialogOpen = ref(false);
 const isCommandPaletteOpen = ref(false);
 const isNotificationsOpen = ref(false);
+const openSelfProfileEditor = ref(false);
+let removeProfileDialogListener = () => {};
 const notificationsStore = useNotificationsStore();
 const { unreadCount } = storeToRefs(notificationsStore);
 
@@ -277,11 +281,16 @@ onMounted(() => {
   loadUserFromStorage();
   document.addEventListener('keydown', handleKeydown);
   window.addEventListener('storage', handleStorage);
+  removeProfileDialogListener = addOpenProfileDialogListener((detail) => {
+    openSelfProfileEditor.value = Boolean(detail?.openSelfProfileEditor);
+    openProfileDialog();
+  });
   void notificationsStore.fetchAll();
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeydown);
   window.removeEventListener('storage', handleStorage);
+  removeProfileDialogListener();
 });
 </script>

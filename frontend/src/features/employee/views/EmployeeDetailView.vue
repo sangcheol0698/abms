@@ -19,13 +19,17 @@
         @department-click="goToDepartment"
       >
         <template #actions>
-          <Button variant="outline" size="sm" @click="openPromotionDialog">
+          <Button v-if="canManageCurrentEmployee" variant="outline" size="sm" @click="openPromotionDialog">
             <TrendingUp class="mr-2 h-4 w-4" />
             승진
           </Button>
-          <Button variant="outline" size="sm" @click="openEditDialog">
+          <Button v-if="canManageCurrentEmployee" variant="outline" size="sm" @click="openEditDialog">
             <Pencil class="mr-2 h-4 w-4" />
             직원 편집
+          </Button>
+          <Button v-else-if="canOpenOwnProfileEdit" variant="outline" size="sm" @click="openOwnProfileDialog">
+            <Pencil class="mr-2 h-4 w-4" />
+            내 정보 수정
           </Button>
         </template>
       </EmployeeDetailHeader>
@@ -50,6 +54,7 @@
             <EmployeeEmploymentPanel
               :employee="employee"
               :format-date="formatDate"
+              :show-management-actions="canManageCurrentEmployee"
               :is-resigning="isResigning"
               :resign-error="resignError"
               :resign-success="resignSuccess"
@@ -73,7 +78,7 @@
         </div>
       </Tabs>
 
-      <div class="mt-8 flex justify-end">
+      <div v-if="canManageCurrentEmployee" class="mt-8 flex justify-end">
         <div
           class="flex w-full max-w-[400px] items-center justify-between rounded-lg border border-border p-4"
         >
@@ -182,6 +187,8 @@ import {
   useTakeLeaveEmployeeMutation,
 } from '@/features/employee/queries/useEmployeeQueries';
 import { employeeKeys, queryClient } from '@/core/query';
+import { canEditOwnProfile, canManageEmployees } from '@/features/employee/permissions';
+import { dispatchOpenProfileDialogEvent } from '@/features/auth/profileDialogEvents';
 
 const route = useRoute();
 const router = useRouter();
@@ -225,6 +232,13 @@ const isDeleting = computed(() => deleteMutation.isPending.value);
 const employeeInitials = computed(() => {
   const name = employee.value?.name ?? '';
   return name.trim().slice(0, 2).toUpperCase() || '??';
+});
+const canManageCurrentEmployee = computed(() => canManageEmployees());
+const canOpenOwnProfileEdit = computed(() => {
+  if (!employee.value?.email) {
+    return false;
+  }
+  return !canManageCurrentEmployee.value && canEditOwnProfile(employee.value.email);
 });
 
 const isEmployeeUpdateDialogOpen = ref(false);
@@ -356,6 +370,10 @@ function openEditDialog() {
 
 function openPromotionDialog() {
   isPromotionDialogOpen.value = true;
+}
+
+function openOwnProfileDialog() {
+  dispatchOpenProfileDialogEvent({ openSelfProfileEditor: true });
 }
 
 async function handleEmployeeUpdated() {

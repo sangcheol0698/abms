@@ -62,7 +62,7 @@ export interface EmployeeSummary {
   avatarCode: string;
   avatarLabel: string;
   avatarImageUrl: string;
-  memo: string;
+  memo: string | null;
   joinDate: string;
   birthDate: string;
 }
@@ -106,7 +106,7 @@ export function mapEmployeeSummary(input: any): EmployeeSummary {
     avatarCode: avatarOption.code,
     avatarLabel,
     avatarImageUrl: avatarOption.imageUrl,
-    memo: String(input?.memo ?? ''),
+    memo: input?.memo == null ? null : String(input.memo),
     joinDate: joinDate,
     birthDate: birthDate,
   };
