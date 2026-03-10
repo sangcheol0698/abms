@@ -67,7 +67,11 @@
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="w-48">
-              <DropdownMenuItem :disabled="isDownloadingExcel" @click="handleExcelDownload">
+              <DropdownMenuItem
+                v-if="canDownloadEmployees"
+                :disabled="isDownloadingExcel"
+                @click="handleExcelDownload"
+              >
                 <Download class="mr-2 h-4 w-4" />
                 <span>{{ isDownloadingExcel ? '다운로드 중...' : '현재 조건 다운로드' }}</span>
               </DropdownMenuItem>
@@ -75,14 +79,15 @@
                 <Download class="mr-2 h-4 w-4" />
                 <span>{{ isDownloadingSample ? '샘플 다운로드 중...' : '샘플 다운로드' }}</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem @click="openExcelUploadDialog">
+              <DropdownMenuSeparator v-if="canUploadEmployees" />
+              <DropdownMenuItem v-if="canUploadEmployees" @click="openExcelUploadDialog">
                 <Upload class="mr-2 h-4 w-4" />
                 <span>엑셀 업로드</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
+            v-if="canCreateEmployees"
             variant="default"
             size="sm"
             class="h-8 px-2 sm:px-3 gap-1"
@@ -254,6 +259,13 @@ import {
   useEmployeeTypesQuery,
 } from '@/features/employee/queries/useEmployeeQueries';
 import { employeeKeys, queryClient } from '@/core/query';
+import {
+  canEditOwnProfile,
+  canManageEmployees,
+  canReadEmployeeDetail,
+  canViewEmployeeDetail,
+} from '@/features/employee/permissions';
+import { dispatchOpenProfileDialogEvent } from '@/features/auth/profileDialogEvents';
 
 interface DepartmentOption {
   label: string;
@@ -287,6 +299,9 @@ const deletion = useEmployeeDeletion(async () => {
 });
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
+const canCreateEmployees = computed(() => canManageEmployees());
+const canUploadEmployees = computed(() => canManageEmployees());
+const canDownloadEmployees = computed(() => canReadEmployeeDetail());
 
 // 테이블 컬럼 정의 (EmployeeTableColumns.ts로 분리됨)
 const columns = createEmployeeTableColumns({
@@ -295,6 +310,11 @@ const columns = createEmployeeTableColumns({
   onCopyEmail: handleCopyEmail,
   onDeleteEmployee: handleDeleteEmployee,
   onNavigateToDepartment: navigateToDepartment,
+  canViewEmployee: (employee) => canViewEmployeeDetail(employee.email),
+  canEditEmployee: (employee) => canManageEmployees() || canEditOwnProfile(employee.email),
+  canDeleteEmployee: () => canManageEmployees(),
+  getEditActionLabel: (employee) =>
+    !canManageEmployees() && canEditOwnProfile(employee.email) ? '내 정보 수정' : '직원 편집',
 });
 
 // URL 쿼리 동기화 Composable 초기화
@@ -429,6 +449,9 @@ watch(employees, () => {
 });
 
 function openExcelUploadDialog() {
+  if (!canUploadEmployees.value) {
+    return;
+  }
   isExcelUploadDialogOpen.value = true;
 }
 
@@ -524,6 +547,9 @@ function handlePageSizeChange(nextSize: number) {
 }
 
 function openCreateDialog() {
+  if (!canCreateEmployees.value) {
+    return;
+  }
   editingEmployee.value = null;
   isEmployeeCreateDialogOpen.value = true;
 }
@@ -542,6 +568,13 @@ async function handleEmployeeUpdated() {
 }
 
 async function handleEditEmployee(row: EmployeeListItem) {
+  if (!(canManageEmployees() || canEditOwnProfile(row.email))) {
+    return;
+  }
+  if (!canManageEmployees() && canEditOwnProfile(row.email)) {
+    dispatchOpenProfileDialogEvent({ openSelfProfileEditor: true });
+    return;
+  }
   editingEmployee.value = null;
   isLoadingEmployee.value = true;
   const loadingToast = toast.loading('직원 정보를 불러오는 중입니다.');
@@ -581,10 +614,16 @@ async function handleCopyEmail(row: EmployeeListItem) {
 }
 
 function handleDeleteEmployee(row: EmployeeListItem) {
+  if (!canManageEmployees()) {
+    return;
+  }
   deletion.open(row.employeeId, row.name);
 }
 
 function handleViewEmployee(row: EmployeeListItem) {
+  if (!canViewEmployeeDetail(row.email)) {
+    return;
+  }
   router.push({ name: 'employee-detail', params: { employeeId: row.employeeId } }).catch(() => {
     /* 라우팅 오류는 무시 */
   });

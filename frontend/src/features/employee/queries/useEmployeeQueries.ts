@@ -1,10 +1,11 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/vue-query';
 import { appContainer } from '@/core/di/container';
-import { employeeKeys, departmentKeys, dashboardKeys, queryClient } from '@/core/query';
+import { authKeys, employeeKeys, departmentKeys, dashboardKeys, queryClient } from '@/core/query';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import type { EmployeeCreatePayload } from '@/features/employee/models/employee';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
+import AuthRepository from '@/features/auth/repository/AuthRepository';
 
 async function invalidateEmployeeSideEffects(employeeId?: number) {
   const tasks: Promise<unknown>[] = [
@@ -43,6 +44,25 @@ export function useEmployeeDetailQuery(
     queryKey: computed(() => employeeKeys.detail(employeeId.value)),
     queryFn: () => repository.findById(employeeId.value),
     enabled: computed(() => employeeId.value > 0),
+  });
+}
+
+export function useCurrentEmployeeProfileQuery(enabledRef: MaybeRefOrGetter<boolean> = true) {
+  const employeeRepository = appContainer.resolve(EmployeeRepository);
+  const authRepository = appContainer.resolve(AuthRepository);
+  const enabled = computed(() => Boolean(toValue(enabledRef)));
+
+  return useQuery({
+    queryKey: computed(() => employeeKeys.currentProfile()),
+    queryFn: async () => {
+      const me = await queryClient.fetchQuery({
+        queryKey: authKeys.me(),
+        queryFn: () => authRepository.fetchMe(),
+      });
+
+      return employeeRepository.findCurrentByIdentity(me.name, me.email);
+    },
+    enabled,
   });
 }
 

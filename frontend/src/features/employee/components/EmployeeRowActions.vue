@@ -1,5 +1,5 @@
 <template>
-  <DropdownMenu>
+  <DropdownMenu v-if="hasVisibleActions">
     <DropdownMenuTrigger as-child>
       <Button variant="ghost" size="icon" class="h-8 w-8 p-0 data-[state=open]:bg-muted">
         <MoreHorizontal class="h-4 w-4" />
@@ -7,16 +7,16 @@
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-[180px]">
-      <DropdownMenuItem @click="$emit('edit')">
+      <DropdownMenuItem v-if="showEdit" @click="$emit('edit')">
         <Pencil class="mr-2 h-4 w-4" />
-        직원 편집
+        {{ editLabel }}
       </DropdownMenuItem>
-      <DropdownMenuItem @click="$emit('copyEmail')">
+      <DropdownMenuItem v-if="showCopyEmail" @click="$emit('copyEmail')">
         <Copy class="mr-2 h-4 w-4" />
         이메일 복사
       </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem class="text-destructive" @click="$emit('delete')">
+      <DropdownMenuSeparator v-if="showDelete && (showEdit || showCopyEmail)" />
+      <DropdownMenuItem v-if="showDelete" class="text-destructive" @click="$emit('delete')">
         <Trash class="mr-2 h-4 w-4" />
         직원 삭제
       </DropdownMenuItem>
@@ -35,12 +35,29 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
+import { computed } from 'vue';
 
-defineProps<{ row: EmployeeListItem }>();
+const props = withDefaults(
+  defineProps<{
+    row: EmployeeListItem;
+    showEdit?: boolean;
+    showDelete?: boolean;
+    showCopyEmail?: boolean;
+    editLabel?: string;
+  }>(),
+  {
+    showEdit: true,
+    showDelete: true,
+    showCopyEmail: true,
+    editLabel: '직원 편집',
+  },
+);
 
 defineEmits<{
   edit: [];
   copyEmail: [];
   delete: [];
 }>();
+
+const hasVisibleActions = computed(() => props.showEdit || props.showDelete || props.showCopyEmail);
 </script>

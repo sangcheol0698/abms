@@ -26,6 +26,14 @@ export interface EmployeeTableHandlers {
   onDeleteEmployee: (employee: EmployeeListItem) => void;
   /** 부서로 이동 */
   onNavigateToDepartment: (departmentId?: number) => void;
+  /** 상세 보기 가능 여부 */
+  canViewEmployee?: (employee: EmployeeListItem) => boolean;
+  /** 수정 가능 여부 */
+  canEditEmployee?: (employee: EmployeeListItem) => boolean;
+  /** 삭제 가능 여부 */
+  canDeleteEmployee?: (employee: EmployeeListItem) => boolean;
+  /** 수정 액션 라벨 */
+  getEditActionLabel?: (employee: EmployeeListItem) => string;
 }
 
 /**
@@ -119,6 +127,7 @@ export function createEmployeeTableColumns(
       const name = row.original.name ?? '';
       const email = row.original.email ?? '';
       const initials = name.trim().slice(0, 2).toUpperCase() || '??';
+      const canView = handlers.canViewEmployee ? handlers.canViewEmployee(row.original) : true;
       return h('div', { class: 'flex items-center gap-3' }, [
         h(Avatar, { class: 'h-10 w-10 rounded-xl border border-border/60 bg-background' }, () => [
           h(AvatarImage, {
@@ -128,19 +137,21 @@ export function createEmployeeTableColumns(
           h(AvatarFallback, { class: 'rounded-xl text-sm font-semibold' }, () => initials),
         ]),
         h('div', { class: 'flex flex-col gap-0.5' }, [
-          h(
-            'button',
-            {
-              type: 'button',
-              class:
-                'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-              onClick: (event: MouseEvent) => {
-                event.stopPropagation();
-                handlers.onViewEmployee(row.original);
+          canView
+            ? h(
+              'button',
+              {
+                type: 'button',
+                class:
+                  'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+                onClick: (event: MouseEvent) => {
+                  event.stopPropagation();
+                  handlers.onViewEmployee(row.original);
+                },
               },
-            },
-            name,
-          ),
+              name,
+            )
+            : h('span', { class: 'font-medium text-foreground' }, name),
           h('span', { class: 'text-xs text-muted-foreground' }, email),
         ]),
       ]);
@@ -276,6 +287,10 @@ export function createEmployeeTableColumns(
     cell: ({ row }) =>
       h(EmployeeRowActions, {
         row: row.original,
+        showEdit: handlers.canEditEmployee ? handlers.canEditEmployee(row.original) : true,
+        showDelete: handlers.canDeleteEmployee ? handlers.canDeleteEmployee(row.original) : true,
+        showCopyEmail: true,
+        editLabel: handlers.getEditActionLabel ? handlers.getEditActionLabel(row.original) : '직원 편집',
         onEdit: () => handlers.onEditEmployee(row.original),
         onCopyEmail: () => handlers.onCopyEmail(row.original),
         onDelete: () => handlers.onDeleteEmployee(row.original),

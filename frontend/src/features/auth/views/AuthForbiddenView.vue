@@ -8,26 +8,37 @@
     </CardHeader>
 
     <CardContent class="space-y-3">
-      <Button class="w-full" @click="goBack">이전 페이지로</Button>
       <Button class="w-full" variant="outline" as-child>
         <RouterLink to="/">홈으로 이동</RouterLink>
+      </Button>
+      <Button class="w-full" variant="destructive" :disabled="isLoggingOut" @click="handleLogout">
+        {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
       </Button>
     </CardContent>
   </Card>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLogoutMutation } from '@/features/auth/queries/useAuthQueries';
+import { clearStoredUser } from '@/features/auth/session';
 
 const router = useRouter();
+const route = useRoute();
+const logoutMutation = useLogoutMutation();
+const isLoggingOut = computed(() => logoutMutation.isPending.value);
 
-async function goBack() {
-  if (window.history.length > 1) {
-    await router.back();
-    return;
+async function handleLogout() {
+  try {
+    await logoutMutation.mutateAsync();
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    clearStoredUser();
+    await router.replace('/auths/login');
   }
-  await router.push('/');
 }
 </script>

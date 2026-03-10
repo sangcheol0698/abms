@@ -1,9 +1,12 @@
 import { defineComponent, h, ref } from 'vue';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Component } from 'vue';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
-import EmployeeListView from '@/features/employee/views/EmployeeListView.vue';
 import { renderWithProviders, createMockQueryState } from '@/test-utils';
 import { toast } from 'vue-sonner';
+
+let storage: Record<string, string> = {};
+let EmployeeListViewComponent: Component;
 
 const repositoryMock = {
   downloadExcel: vi.fn(),
@@ -221,10 +224,10 @@ const EmployeeUpdateDialogStub = defineComponent({
 });
 
 async function mountEmployeeListView() {
-  return renderWithProviders(EmployeeListView, {
+  return renderWithProviders(EmployeeListViewComponent, {
     route: '/employees',
     routes: [
-      { path: '/employees', name: 'employees', component: EmployeeListView },
+      { path: '/employees', name: 'employees', component: EmployeeListViewComponent },
       { path: '/employees/:employeeId', name: 'employee-detail', component: { template: '<div />' } },
       { path: '/departments/:departmentId', name: 'department', component: { template: '<div />' } },
     ],
@@ -276,8 +279,25 @@ async function mountEmployeeListView() {
 }
 
 describe('EmployeeListView', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key: string) => storage[key] ?? null),
+      setItem: vi.fn((key: string, value: string) => {
+        storage[key] = String(value);
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete storage[key];
+      }),
+      clear: vi.fn(() => {
+        storage = {};
+      }),
+    });
+    EmployeeListViewComponent = (await import('@/features/employee/views/EmployeeListView.vue')).default;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    storage = {};
     tableActionHandlers = {};
     deletionState.isDialogOpen.value = false;
     repositoryMock.downloadExcel.mockResolvedValue(undefined);
@@ -287,6 +307,18 @@ describe('EmployeeListView', () => {
         name: '홍길동',
       },
     });
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      permissions: [
+        { code: 'employee.read', scopes: ['ALL'] },
+        { code: 'employee.write', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem(
+      'user',
+      storage.user,
+    );
   });
 
   it('직원 추가 버튼 클릭 시 생성 다이얼로그를 연다', async () => {
@@ -367,5 +399,19 @@ describe('EmployeeListView', () => {
 
     expect(deletionState.open).toHaveBeenCalledWith(1, '홍길동');
     expect(wrapper.get('[data-test="alert-open"]').text()).toContain('true');
+  });
+
+  it('employee.write 권한이 없으면 직원 추가 버튼이 보이지 않는다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      permissions: [{ code: 'employee.read', scopes: ['ALL'] }],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountEmployeeListView();
+    const createButton = wrapper.findAll('button').find((item) => item.text().includes('직원 추가'));
+
+    expect(createButton).toBeUndefined();
   });
 });

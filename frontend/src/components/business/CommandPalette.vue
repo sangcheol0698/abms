@@ -13,6 +13,7 @@ import {
   CommandShortcut,
 } from '@/components/ui/command';
 import { hasStoredPermission } from '@/features/auth/session';
+import { canReadEmployeeDetail } from '@/features/employee/permissions';
 
 interface NavigationCommand {
   label: string;
@@ -36,11 +37,14 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const canManagePermissionGroups = ref(hasStoredPermission('permission.group.manage'));
+const canReadEmployees = ref(canReadEmployeeDetail());
 
 const navigationCommands = computed<NavigationCommand[]>(() => [
   { label: '대시보드', to: '/', shortcut: '', icon: PieChart },
   { label: '부서', to: '/departments', shortcut: '', icon: Network },
-  { label: '직원', to: '/employees', shortcut: '', icon: UserCircle },
+  ...(canReadEmployees.value
+    ? [{ label: '직원', to: '/employees', shortcut: '', icon: UserCircle }]
+    : []),
   { label: '프로젝트', to: '/projects', shortcut: '', icon: Briefcase },
   { label: '협력사', to: '/parties', shortcut: '', icon: Handshake },
   { label: 'AI Assistant', to: '/assistant', shortcut: '', icon: Bot },
@@ -51,6 +55,7 @@ const navigationCommands = computed<NavigationCommand[]>(() => [
 
 function refreshPermissions() {
   canManagePermissionGroups.value = hasStoredPermission('permission.group.manage');
+  canReadEmployees.value = canReadEmployeeDetail();
 }
 
 function onStorage(event: StorageEvent) {

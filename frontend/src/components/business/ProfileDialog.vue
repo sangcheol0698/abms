@@ -86,12 +86,27 @@
                 </article>
               </div>
 
-              <article class="rounded-xl border border-dashed border-border/70 bg-muted/10 p-4">
-                <p class="text-sm font-semibold text-foreground">읽기 전용 정보</p>
-                <p class="mt-2 text-xs leading-5 text-muted-foreground">
-                  계정 이름과 이메일은 현재 직원 정보와 연동되어 있으며 이 화면에서는 수정하지
-                  않습니다.
-                </p>
+              <article
+                v-if="canEditSelfProfile"
+                class="rounded-xl border border-border/60 bg-background p-4 shadow-sm"
+                data-test="self-profile-card"
+              >
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="space-y-1">
+                    <p class="text-sm font-semibold text-foreground">내 정보 수정</p>
+                    <p class="text-xs leading-5 text-muted-foreground">
+                      이름, 생년월일, 아바타를 수정할 수 있습니다.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    :disabled="isResolvingCurrentEmployee"
+                    @click="isSelfProfileDialogOpen = true"
+                  >
+                    {{ isResolvingCurrentEmployee ? '불러오는 중...' : '내 정보 수정' }}
+                  </Button>
+                </div>
               </article>
             </section>
 
@@ -275,6 +290,16 @@
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
+
+  <EmployeeSelfProfileDialog
+    :open="isSelfProfileDialogOpen"
+    :employee="currentEmployee"
+    :avatar-options="avatarOptions"
+    :is-submitting="isSelfProfileSubmitting"
+    :error-message="selfProfileErrorMessage"
+    @update:open="handleSelfProfileDialogOpenChange"
+    @submit="submitSelfProfileUpdate"
+  />
 </template>
 
 <script setup lang="ts">
@@ -325,6 +350,14 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import HttpError from '@/core/http/HttpError';
 import { useChangePasswordMutation, useLogoutMutation } from '@/features/auth/queries/useAuthQueries';
 import { clearStoredUser } from '@/features/auth/session';
+import {
+  useCurrentEmployeeProfileQuery,
+  useEmployeeAvatarsQuery,
+  useUpdateEmployeeMutation,
+} from '@/features/employee/queries/useEmployeeQueries';
+import EmployeeSelfProfileDialog from '@/features/employee/components/EmployeeSelfProfileDialog.vue';
+import { canAccessOwnProfileEditor } from '@/features/employee/permissions';
+import { authKeys, queryClient } from '@/core/query';
 
 defineOptions({ name: 'ProfileDialog' });
 
@@ -360,6 +393,7 @@ const navigationItems: Array<{
 const props = withDefaults(
   defineProps<{
     open?: boolean;
+    openSelfProfileEditor?: boolean;
     user?: {
       name: string;
       email: string;
@@ -368,6 +402,7 @@ const props = withDefaults(
   }>(),
   {
     open: false,
+    openSelfProfileEditor: false,
     user: () => ({ name: 'User', email: 'user@example.com', avatar: '' }),
   },
 );
@@ -382,12 +417,19 @@ const logoutMutation = useLogoutMutation();
 const activeSection = ref<ProfileSection>('profile');
 const isLogoutDialogOpen = ref(false);
 const isLoggingOut = ref(false);
+const isSelfProfileDialogOpen = ref(false);
 const currentPassword = ref('');
 const newPassword = ref('');
 const newPasswordConfirm = ref('');
 const passwordErrorMessage = ref<string | null>(null);
+const selfProfileErrorMessage = ref<string | null>(null);
 const isChangingPassword = ref(false);
 const STRONG_PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/;
+const canEditSelfProfile = computed(() => canAccessOwnProfileEditor());
+
+const currentEmployeeQuery = useCurrentEmployeeProfileQuery(computed(() => props.open && canEditSelfProfile.value));
+const employeeAvatarsQuery = useEmployeeAvatarsQuery();
+const updateEmployeeMutation = useUpdateEmployeeMutation();
 
 const userInitials = computed(() => props.user.name?.charAt(0)?.toUpperCase() ?? 'U');
 const activeItem = computed(() => {
@@ -395,12 +437,25 @@ const activeItem = computed(() => {
   return found ?? navigationItems[0]!;
 });
 const activeSectionLabel = computed(() => activeItem.value.label);
+const currentEmployee = computed(() => currentEmployeeQuery.data.value ?? null);
+const avatarOptions = computed(() => employeeAvatarsQuery.data.value ?? []);
+const isResolvingCurrentEmployee = computed(
+  () => currentEmployeeQuery.isLoading.value || currentEmployeeQuery.isFetching.value,
+);
+const isSelfProfileSubmitting = computed(() => updateEmployeeMutation.isPending.value);
 
 function resetPasswordForm() {
   currentPassword.value = '';
   newPassword.value = '';
   newPasswordConfirm.value = '';
   passwordErrorMessage.value = null;
+}
+
+function handleSelfProfileDialogOpenChange(value: boolean) {
+  isSelfProfileDialogOpen.value = value;
+  if (!value) {
+    selfProfileErrorMessage.value = null;
+  }
 }
 
 function handleOpenChange(value: boolean) {
@@ -452,8 +507,22 @@ watch(
   (isOpen) => {
     if (!isOpen) {
       isLogoutDialogOpen.value = false;
+      isSelfProfileDialogOpen.value = false;
       resetPasswordForm();
     }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => [props.open, props.openSelfProfileEditor, canEditSelfProfile.value] as const,
+  ([isOpen, openSelfProfileEditor, canEdit]) => {
+    if (!isOpen || !openSelfProfileEditor || !canEdit) {
+      return;
+    }
+
+    activeSection.value = 'profile';
+    isSelfProfileDialogOpen.value = true;
   },
   { immediate: true },
 );
@@ -499,6 +568,46 @@ async function confirmLogout() {
     clearStoredUser();
     emit('update:open', false);
     await router.push('/auths/login');
+  }
+}
+
+async function submitSelfProfileUpdate(payload: { birthDate: string; avatar: string }) {
+  if (!currentEmployee.value?.employeeId) {
+    selfProfileErrorMessage.value = '현재 로그인한 직원 정보를 찾을 수 없습니다.';
+    return;
+  }
+
+  selfProfileErrorMessage.value = null;
+
+  try {
+    await updateEmployeeMutation.mutateAsync({
+      employeeId: currentEmployee.value.employeeId,
+      payload: {
+        departmentId: currentEmployee.value.departmentId,
+        name: currentEmployee.value.name,
+        email: currentEmployee.value.email,
+        joinDate: currentEmployee.value.joinDate,
+        birthDate: payload.birthDate,
+        position: currentEmployee.value.positionCode,
+        grade: currentEmployee.value.gradeCode,
+        type: currentEmployee.value.typeCode,
+        avatar: payload.avatar,
+        memo: currentEmployee.value.memo ?? undefined,
+      },
+    });
+
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: authKeys.me() }),
+      queryClient.invalidateQueries({ queryKey: ['employee', 'current-profile'] }),
+    ]);
+
+    toast.success('내 정보를 수정했습니다.');
+    isSelfProfileDialogOpen.value = false;
+  } catch (error) {
+    const message =
+      error instanceof HttpError ? error.message : '내 정보 수정 중 오류가 발생했습니다.';
+    selfProfileErrorMessage.value = message;
+    toast.error('내 정보 수정에 실패했습니다.', { description: message });
   }
 }
 </script>

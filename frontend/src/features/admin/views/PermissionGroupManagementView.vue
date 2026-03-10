@@ -286,6 +286,27 @@
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
+
+  <AlertDialog :open="isUnassignDialogOpen" @update:open="isUnassignDialogOpen = $event">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>그룹에서 해제할까요?</AlertDialogTitle>
+        <AlertDialogDescription>
+          {{ pendingUnassignAccount ? `${pendingUnassignAccount.employeeName} 계정을 현재 권한 그룹에서 해제합니다.` : '' }}
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel :disabled="unassignMutation.isPending.value">취소</AlertDialogCancel>
+        <AlertDialogAction
+          :disabled="unassignMutation.isPending.value"
+          @pointerdown.prevent
+          @click="confirmUnassign"
+        >
+          해제
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
@@ -328,6 +349,7 @@ import PermissionGroupAccountRowActions from '@/features/admin/components/Permis
 import PermissionGroupEditorDialog from '@/features/admin/components/PermissionGroupEditorDialog.vue';
 import type {
   PermissionGroupCatalog,
+  PermissionGroupAccountItem,
   PermissionGroupType,
   PermissionGroupUpsertPayload,
 } from '@/features/admin/models/permissionGroup';
@@ -361,6 +383,8 @@ const editorMode = ref<'create' | 'edit'>('create');
 const isAssignDialogOpen = ref(false);
 const assignSearchKeyword = ref('');
 const isDeleteDialogOpen = ref(false);
+const isUnassignDialogOpen = ref(false);
+const pendingUnassignAccount = ref<PermissionGroupAccountItem | null>(null);
 const grantSorting = ref<SortingState>([]);
 const accountSorting = ref<SortingState>([]);
 const grantColumnFilters = ref<ColumnFiltersState>([]);
@@ -548,7 +572,7 @@ const accountColumns: ColumnDef<(typeof accountRows.value)[number]>[] = [
       h(PermissionGroupAccountRowActions, {
         row: row.original,
         onCopyEmail: () => handleCopyAccountEmail(row.original.email),
-        onRemove: () => handleUnassign(row.original.accountId),
+        onRemove: () => openUnassignDialog(row.original),
       }),
   },
 ];
@@ -798,7 +822,16 @@ async function handleAssign(accountId: number) {
   }
 }
 
-async function handleUnassign(accountId: number) {
+function openUnassignDialog(account: PermissionGroupAccountItem) {
+  pendingUnassignAccount.value = account;
+  isUnassignDialogOpen.value = true;
+}
+
+async function confirmUnassign() {
+  if (!selectedGroupId.value || !pendingUnassignAccount.value) {
+    return;
+  }
+
   if (!selectedGroupId.value) {
     return;
   }
@@ -806,9 +839,11 @@ async function handleUnassign(accountId: number) {
   try {
     await unassignMutation.mutateAsync({
       permissionGroupId: selectedGroupId.value,
-      accountId,
+      accountId: pendingUnassignAccount.value.accountId,
     });
     toast.success('계정을 권한 그룹에서 해제했습니다.');
+    isUnassignDialogOpen.value = false;
+    pendingUnassignAccount.value = null;
   } catch (error: any) {
     toast.error('계정 해제에 실패했습니다.', {
       description: error?.message ?? '다시 시도해 주세요.',

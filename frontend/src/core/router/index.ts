@@ -3,7 +3,6 @@ import type { RouteLocationRaw } from 'vue-router';
 import AuthLayout from '@/core/layouts/AuthLayout.vue';
 import SidebarLayout from '@/core/layouts/SidebarLayout.vue';
 import { ensureServerSessionValid, hasStoredPermission, hasStoredUser } from '@/features/auth/session';
-import { showForbiddenToast } from '@/features/auth/showForbiddenToast';
 import AxiosHttpClient from '@/core/http/AxiosHttpClient';
 
 const routes = [
@@ -122,6 +121,7 @@ const routes = [
         meta: {
           title: '직원',
           layout: SidebarLayout,
+          requiredPermission: 'employee.read',
           breadcrumbs: [
             {
               title: '대시보드',
@@ -141,6 +141,7 @@ const routes = [
         meta: {
           title: '직원 상세',
           layout: SidebarLayout,
+          requiredPermission: 'employee.read',
           breadcrumbs: [
             {
               title: '대시보드',
@@ -349,7 +350,7 @@ async function ensureCsrfInitialized(): Promise<void> {
   }
 }
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
   const isLoggedIn = hasStoredUser();
   const authPage = isAuthRoute(to.path);
   const isWhitelistedAuthPage =
@@ -374,16 +375,22 @@ router.beforeEach(async (to) => {
     return resolveLoginRedirect(to.fullPath);
   }
 
-  const sessionValid = await ensureServerSessionValid();
+  const requiredPermission =
+    typeof to.meta?.requiredPermission === 'string' ? to.meta.requiredPermission : null;
+
+  const sessionValid = await ensureServerSessionValid(Boolean(requiredPermission));
   if (!sessionValid) {
     return resolveLoginRedirect(to.fullPath);
   }
-
-  const requiredPermission =
-    typeof to.meta?.requiredPermission === 'string' ? to.meta.requiredPermission : null;
   if (requiredPermission && !hasStoredPermission(requiredPermission)) {
-    showForbiddenToast();
-    return false;
+    const fallback = from.fullPath && from.fullPath !== to.fullPath ? from.fullPath : '/';
+    return {
+      name: 'auth-forbidden',
+      query: {
+        from: fallback,
+      },
+      replace: true,
+    };
   }
 
   return true;

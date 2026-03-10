@@ -28,6 +28,8 @@ export const employeeKeys = {
     [...EMPLOYEE_KEY, 'list', normalizeEmployeeSearchParams(params)] as const,
   detail: (employeeId: number | null | undefined) =>
     [...EMPLOYEE_KEY, 'detail', employeeId ?? 0] as const,
+  currentProfile: (email: string | null | undefined = '') =>
+    [...EMPLOYEE_KEY, 'current-profile', email ?? ''] as const,
   statuses: () => [...EMPLOYEE_KEY, 'statuses'] as const,
   types: () => [...EMPLOYEE_KEY, 'types'] as const,
   grades: () => [...EMPLOYEE_KEY, 'grades'] as const,

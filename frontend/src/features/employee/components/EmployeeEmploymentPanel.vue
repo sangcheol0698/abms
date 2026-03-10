@@ -36,7 +36,7 @@
     </section>
 
     <div class="flex flex-col gap-6">
-      <section class="rounded-lg border border-border/60 bg-background p-5">
+      <section v-if="props.showManagementActions !== false" class="rounded-lg border border-border/60 bg-background p-5">
         <h2 class="mb-4 text-sm font-semibold text-muted-foreground">관리 메모</h2>
         <p class="text-sm leading-relaxed text-muted-foreground">
           {{ employee.memo || '등록된 메모가 없습니다.' }}
@@ -152,6 +152,7 @@ interface TimelineEvent {
 const props = defineProps<{
   employee: EmployeeSummary | null;
   formatDate: (value?: string | null) => string;
+  showManagementActions?: boolean;
   isResigning: boolean;
   resignError: string | null;
   resignSuccess: string | null;

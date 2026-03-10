@@ -23,7 +23,7 @@
     </SidebarHeader>
 
     <SidebarContent>
-      <NavMain :items="data.navMain" label="업무" />
+      <NavMain :items="mainNavItems" label="업무" />
       <NavMain v-if="secondaryNavItems.length" :items="secondaryNavItems" label="시스템" />
     </SidebarContent>
 
@@ -61,6 +61,7 @@ import NavMain from './NavMain.vue';
 import NavUser from './NavUser.vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { hasStoredPermission } from '@/features/auth/session';
+import { canReadEmployeeDetail } from '@/features/employee/permissions';
 
 const props = withDefaults(
     defineProps<
@@ -81,12 +82,14 @@ const user = ref<{ name: string; email: string; avatar: string }>({
   avatar: '',
 });
 const canManagePermissionGroups = ref(false);
+const canReadEmployees = ref(false);
 
 function loadUserFromStorage() {
   try {
     const raw = localStorage.getItem('user');
     if (!raw) {
       canManagePermissionGroups.value = false;
+      canReadEmployees.value = false;
       return;
     }
     const parsed = JSON.parse(raw);
@@ -102,9 +105,11 @@ function loadUserFromStorage() {
 
     user.value = { name, email, avatar };
     canManagePermissionGroups.value = hasStoredPermission('permission.group.manage');
+    canReadEmployees.value = canReadEmployeeDetail();
   } catch (e) {
     console.warn('Failed to parse user from localStorage', e);
     canManagePermissionGroups.value = false;
+    canReadEmployees.value = false;
   }
 }
 
@@ -175,6 +180,9 @@ const data = {
 
 const secondaryNavItems = computed(() =>
   canManagePermissionGroups.value ? data.navSecondary : [],
+);
+const mainNavItems = computed(() =>
+  data.navMain.filter((item) => item.url !== '/employees' || canReadEmployees.value),
 );
 
 // 프로필 다이얼로그 열기
