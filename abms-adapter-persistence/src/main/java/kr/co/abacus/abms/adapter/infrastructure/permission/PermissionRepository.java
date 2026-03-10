@@ -19,4 +19,13 @@ public interface PermissionRepository
     @Override
     List<Permission> findAllByIdInAndDeletedFalse(List<Long> ids);
 
+    @Override
+    List<Permission> findAllByCodeInAndDeletedFalse(List<String> codes);
+
+    @Override
+    List<Permission> findAllByDeletedFalseOrderByCodeAsc();
+
+    @Override
+    java.util.Optional<Permission> findByCodeAndDeletedFalse(String code);
+
 }

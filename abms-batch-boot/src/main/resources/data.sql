@@ -418,7 +418,8 @@ INSERT INTO abms.tb_permission (id, code, name, description, created_at, updated
 VALUES (1, 'employee.read', '직원 상세 조회 및 엑셀 다운로드', '직원 상세 정보 조회와 범위 기반 엑셀 다운로드를 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (4, 'employee.write', '직원 생성 및 변경 관리', '직원 생성, 프로필 수정, 상태 변경, 삭제, 엑셀 업로드를 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (2, 'project.read', '프로젝트 목록 및 상세 조회', '프로젝트 목록, 상세 정보, 관련 조회 화면 접근을 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
-       (3, 'dashboard.read', '대시보드 지표 조회', '대시보드의 핵심 지표와 요약 정보를 조회할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL);
+       (3, 'dashboard.read', '대시보드 지표 조회', '대시보드의 핵심 지표와 요약 정보를 조회할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (5, 'permission.group.manage', '권한 그룹 관리', '권한 그룹과 그룹별 계정 할당을 조회하고 관리할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL);
 
 
 -- ---------------------------------------------------------
@@ -451,4 +452,5 @@ VALUES (1, 1, 1, 'SELF', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (5, 2, 1, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (6, 2, 2, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (7, 2, 3, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
-       (8, 2, 4, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL);
+       (8, 2, 4, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (9, 2, 5, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL);

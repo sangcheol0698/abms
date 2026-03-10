@@ -40,4 +40,13 @@ public class PermissionGroup extends AbstractEntity {
         return permissionGroup;
     }
 
+    public void updateInfo(String name, String description) {
+        this.name = requireNonNull(name);
+        this.description = requireNonNull(description);
+    }
+
+    public boolean isSystemGroup() {
+        return groupType == PermissionGroupType.SYSTEM;
+    }
+
 }

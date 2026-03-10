@@ -17,6 +17,26 @@ public interface GroupPermissionGrantRepository
     <S extends GroupPermissionGrant> List<S> saveAll(Iterable<S> grants);
 
     @Override
+    List<GroupPermissionGrant> findAllByPermissionGroupId(Long permissionGroupId);
+
+    @Override
+    List<GroupPermissionGrant> findAllByPermissionGroupIdAndDeletedFalse(Long permissionGroupId);
+
+    @Override
     List<GroupPermissionGrant> findAllByPermissionGroupIdInAndDeletedFalse(List<Long> permissionGroupIds);
+
+    @Override
+    java.util.Optional<GroupPermissionGrant> findByPermissionGroupIdAndPermissionIdAndScope(
+            Long permissionGroupId,
+            Long permissionId,
+            kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope scope
+    );
+
+    @Override
+    java.util.Optional<GroupPermissionGrant> findByPermissionGroupIdAndPermissionIdAndScopeAndDeletedFalse(
+            Long permissionGroupId,
+            Long permissionId,
+            kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope scope
+    );
 
 }
