@@ -599,9 +599,9 @@ VALUES (0, 1, 0, NOW(), NULL, 2, NOW(), NOW(), 'test2@iabacus.co.kr', 1, NULL,
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_permission (id, code, name, description, created_at, updated_at, created_by, updated_by,
                                 deleted, deleted_at, deleted_by)
-VALUES (1, 'employee.read', '직원 조회', '직원 조회 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
-       (2, 'project.read', '프로젝트 조회', '프로젝트 조회 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
-       (3, 'dashboard.read', '대시보드 조회', '대시보드 조회 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL);
+VALUES (1, 'employee.read', '직원 상세 조회 및 엑셀 다운로드', '직원 상세 정보 조회와 범위 기반 엑셀 다운로드를 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (2, 'project.read', '프로젝트 목록 및 상세 조회', '프로젝트 목록, 상세 정보, 관련 조회 화면 접근을 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (3, 'dashboard.read', '대시보드 지표 조회', '대시보드의 핵심 지표와 요약 정보를 조회할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL);
 
 
 -- ---------------------------------------------------------
