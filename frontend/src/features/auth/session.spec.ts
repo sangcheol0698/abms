@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { queryClient } from '@/core/query';
+import type { AuthMeResponse } from '@/features/auth/repository/AuthRepository';
 import {
   clearStoredUser,
+  ensureServerSessionValid,
   getStoredPermissions,
   getStoredUser,
   hasStoredPermission,
@@ -8,11 +11,24 @@ import {
   setStoredUser,
 } from '@/features/auth/session';
 
+const { fetchMeMock, resolveMock } = vi.hoisted(() => ({
+  fetchMeMock: vi.fn<() => Promise<AuthMeResponse>>(),
+  resolveMock: vi.fn(),
+}));
+
+vi.mock('@/core/di/container', () => ({
+  appContainer: {
+    resolve: resolveMock,
+  },
+}));
+
 describe('auth session', () => {
   const storage = new Map<string, string>();
 
   beforeEach(() => {
+    queryClient.clear();
     storage.clear();
+    vi.clearAllMocks();
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => {
@@ -24,6 +40,9 @@ describe('auth session', () => {
       clear: () => {
         storage.clear();
       },
+    });
+    resolveMock.mockReturnValue({
+      fetchMe: fetchMeMock,
     });
     clearStoredUser();
   });
@@ -81,5 +100,39 @@ describe('auth session', () => {
       permissions: [],
     });
     expect(getStoredPermissions()).toEqual([]);
+  });
+
+  it('미검증 사용자 정보는 다음 검증에서 /api/auth/me를 다시 조회한다', async () => {
+    fetchMeMock.mockResolvedValue({
+      email: 'user@abms.co.kr',
+      name: '사용자',
+      permissions: [
+        {
+          code: 'employee.read',
+          scopes: ['SELF'],
+        },
+      ],
+    });
+
+    setStoredUser(
+      {
+        email: 'user@abms.co.kr',
+        name: '사용자',
+        permissions: [],
+      },
+      { validated: false },
+    );
+
+    await expect(ensureServerSessionValid()).resolves.toBe(true);
+    expect(fetchMeMock).toHaveBeenCalledTimes(1);
+    expect(getStoredPermissions()).toEqual([
+      {
+        code: 'employee.read',
+        scopes: ['SELF'],
+      },
+    ]);
+
+    await expect(ensureServerSessionValid()).resolves.toBe(true);
+    expect(fetchMeMock).toHaveBeenCalledTimes(1);
   });
 });

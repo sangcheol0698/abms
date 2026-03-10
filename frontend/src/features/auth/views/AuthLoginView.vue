@@ -129,8 +129,8 @@ async function submitLogin() {
       password: password.value,
     });
 
-    let resolvedEmail = normalizedEmail;
-    let resolvedName = displayName;
+    const resolvedEmail = normalizedEmail;
+    const resolvedName = displayName;
     try {
       const meResult = await authMeQuery.refetch();
       const me = meResult.data;
@@ -147,7 +147,7 @@ async function submitLogin() {
       email: resolvedEmail,
       name: resolvedName,
       permissions: [],
-    });
+    }, { validated: false });
 
     await router.push(resolveRedirectPath());
   } catch (error) {

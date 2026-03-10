@@ -5,7 +5,13 @@
   >
     근무 이력을 불러올 직원이 없습니다.
   </div>
-  <div v-else class="grid gap-6 lg:grid-cols-[1fr_320px]">
+  <div
+    v-else
+    :class="[
+      'grid gap-6',
+      showManagementActions ? 'lg:grid-cols-[1fr_320px]' : undefined,
+    ]"
+  >
     <section class="rounded-lg border border-border/60 bg-background p-5">
       <h2 class="mb-4 text-sm font-semibold text-muted-foreground">근무 타임라인 (최신순)</h2>
 
@@ -35,8 +41,8 @@
       </ol>
     </section>
 
-    <div class="flex flex-col gap-6">
-      <section v-if="props.showManagementActions !== false" class="rounded-lg border border-border/60 bg-background p-5">
+    <div v-if="showManagementActions" class="flex flex-col gap-6">
+      <section class="rounded-lg border border-border/60 bg-background p-5">
         <h2 class="mb-4 text-sm font-semibold text-muted-foreground">관리 메모</h2>
         <p class="text-sm leading-relaxed text-muted-foreground">
           {{ employee.memo || '등록된 메모가 없습니다.' }}
@@ -171,6 +177,7 @@ const emit = defineEmits<{
 }>();
 
 const today = computed(() => new Date().toISOString().slice(0, 10));
+const showManagementActions = computed(() => props.showManagementActions !== false);
 const resignationDate = ref<string>(today.value);
 const employeeId = computed(() => props.employee?.employeeId);
 const positionHistoryQuery = useEmployeePositionHistoryQuery(employeeId);

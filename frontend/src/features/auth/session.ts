@@ -13,6 +13,10 @@ interface StoredUser {
   permissions: StoredPermission[];
 }
 
+interface SetStoredUserOptions {
+  validated?: boolean;
+}
+
 export interface StoredPermission {
   code: string;
   scopes: string[];
@@ -82,7 +86,10 @@ export function hasStoredUser(): boolean {
   return getStoredUser() !== null;
 }
 
-export function setStoredUser(user: AuthMeResponse | StoredUser): void {
+export function setStoredUser(
+  user: AuthMeResponse | StoredUser,
+  options: SetStoredUserOptions = {},
+): void {
   const normalized: StoredUser = {
     name: user.name?.trim() || 'User',
     email: user.email.trim(),
@@ -90,7 +97,7 @@ export function setStoredUser(user: AuthMeResponse | StoredUser): void {
     permissions: 'permissions' in user ? normalizePermissions(user.permissions) : [],
   };
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalized));
-  isSessionValidated = true;
+  isSessionValidated = options.validated ?? true;
 }
 
 export function getStoredPermissions(): StoredPermission[] {

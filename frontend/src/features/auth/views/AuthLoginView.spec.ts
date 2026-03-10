@@ -133,7 +133,7 @@ describe('AuthLoginView', () => {
       email: 'john.doe@abms.co.kr',
       name: 'John Doe',
       permissions: [],
-    });
+    }, { validated: false });
   });
 
   it('redirect가 절대 경로가 아니면 홈으로 이동한다', async () => {

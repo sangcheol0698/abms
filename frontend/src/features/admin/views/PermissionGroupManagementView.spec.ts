@@ -1,5 +1,5 @@
 import { computed, defineComponent, h, ref } from 'vue';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '@/test-utils';
 
 const listData = ref<any[]>([]);
@@ -32,6 +32,7 @@ const updateMutateAsync = vi.fn();
 const deleteMutateAsync = vi.fn();
 const assignMutateAsync = vi.fn();
 const unassignMutateAsync = vi.fn();
+let PermissionGroupManagementViewComponent: any;
 
 vi.mock('@/features/admin/queries/usePermissionGroupQueries', () => ({
   usePermissionGroupListQuery: () => ({
@@ -170,18 +171,7 @@ const InputStub = defineComponent({
 });
 
 async function mountView() {
-  vi.stubGlobal('localStorage', {
-    getItem: vi.fn(() => null),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-  });
-
-  const { default: PermissionGroupManagementView } = await import(
-    '@/features/admin/views/PermissionGroupManagementView.vue'
-  );
-
-  return renderWithProviders(PermissionGroupManagementView, {
+  return renderWithProviders(PermissionGroupManagementViewComponent, {
     global: {
       stubs: {
         Badge: PassThrough,
@@ -223,6 +213,20 @@ async function mountView() {
 }
 
 describe('PermissionGroupManagementView', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      key: vi.fn(() => null),
+      length: 0,
+    } as Storage);
+    PermissionGroupManagementViewComponent = (
+      await import('@/features/admin/views/PermissionGroupManagementView.vue')
+    ).default;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     listData.value = [];

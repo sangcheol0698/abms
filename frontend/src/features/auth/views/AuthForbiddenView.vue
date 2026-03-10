@@ -20,14 +20,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLogoutMutation } from '@/features/auth/queries/useAuthQueries';
 import { clearStoredUser } from '@/features/auth/session';
 
 const router = useRouter();
-const route = useRoute();
 const logoutMutation = useLogoutMutation();
 const isLoggingOut = computed(() => logoutMutation.isPending.value);
 
