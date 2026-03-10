@@ -284,6 +284,29 @@ const routes = [
           ],
         },
       },
+      {
+        path: 'system/permission-groups',
+        name: 'system-permission-groups',
+        component: () => import('@/features/admin/views/PermissionGroupManagementView.vue'),
+        meta: {
+          title: '권한 그룹 관리',
+          layout: SidebarLayout,
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '시스템',
+              disabled: true,
+            },
+            {
+              title: '권한 그룹 관리',
+              disabled: true,
+            },
+          ],
+        },
+      },
     ],
   },
 ];

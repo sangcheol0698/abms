@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { Bot, Briefcase, Handshake, Network, PieChart, UserCircle } from 'lucide-vue-next';
+import { Bot, Briefcase, Handshake, Network, PieChart, ShieldCheck, UserCircle } from 'lucide-vue-next';
 import {
   CommandDialog,
   CommandEmpty,
@@ -41,6 +41,7 @@ const navigationCommands: NavigationCommand[] = [
   { label: '프로젝트', to: '/projects', shortcut: '', icon: Briefcase },
   { label: '협력사', to: '/parties', shortcut: '', icon: Handshake },
   { label: 'AI Assistant', to: '/assistant', shortcut: '', icon: Bot },
+  { label: '권한 그룹 관리', to: '/system/permission-groups', shortcut: '', icon: ShieldCheck },
 ];
 
 function handleOpenChange(value: boolean) {

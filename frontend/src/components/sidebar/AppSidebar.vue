@@ -24,7 +24,7 @@
 
     <SidebarContent>
       <NavMain :items="data.navMain" label="업무" />
-      <NavMain v-if="data.navSecondary.length" :items="data.navSecondary" label="기타" />
+      <NavMain v-if="data.navSecondary.length" :items="data.navSecondary" label="시스템" />
     </SidebarContent>
 
     <SidebarFooter>
@@ -47,7 +47,16 @@ import {
   type SidebarProps,
   SidebarRail
 } from '@/components/ui/sidebar';
-import { Bot, Briefcase, GalleryVerticalEnd, Handshake, Network, PieChart, UserCircle } from 'lucide-vue-next';
+import {
+  Bot,
+  Briefcase,
+  GalleryVerticalEnd,
+  Handshake,
+  Network,
+  PieChart,
+  ShieldCheck,
+  UserCircle,
+} from 'lucide-vue-next';
 import NavMain from './NavMain.vue';
 import NavUser from './NavUser.vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
@@ -148,7 +157,13 @@ const data = {
       icon: Bot
     }
   ],
-  navSecondary: [],
+  navSecondary: [
+    {
+      title: '권한 그룹 관리',
+      url: '/system/permission-groups',
+      icon: ShieldCheck,
+    },
+  ],
 };
 
 // 프로필 다이얼로그 열기
