@@ -135,8 +135,9 @@ async function submitLogin() {
       const meResult = await authMeQuery.refetch();
       const me = meResult.data;
       if (me) {
-        resolvedEmail = me.email || normalizedEmail;
-        resolvedName = me.name || displayName;
+        setStoredUser(me);
+        await router.push(resolveRedirectPath());
+        return;
       }
     } catch {
       // Fallback to login input when /api/auth/me cannot be fetched.
@@ -145,6 +146,7 @@ async function submitLogin() {
     setStoredUser({
       email: resolvedEmail,
       name: resolvedName,
+      permissions: [],
     });
 
     await router.push(resolveRedirectPath());

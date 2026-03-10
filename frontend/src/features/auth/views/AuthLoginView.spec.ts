@@ -56,6 +56,12 @@ describe('AuthLoginView', () => {
       data: {
         email: 'user@abms.co.kr',
         name: '사용자',
+        permissions: [
+          {
+            code: 'employee.read',
+            scopes: ['SELF'],
+          },
+        ],
       },
     });
   });
@@ -104,6 +110,12 @@ describe('AuthLoginView', () => {
     expect(setStoredUser).toHaveBeenCalledWith({
       email: 'user@abms.co.kr',
       name: '사용자',
+      permissions: [
+        {
+          code: 'employee.read',
+          scopes: ['SELF'],
+        },
+      ],
     });
     expect(router.currentRoute.value.fullPath).toBe('/employees');
   });
@@ -120,6 +132,7 @@ describe('AuthLoginView', () => {
     expect(setStoredUser).toHaveBeenCalledWith({
       email: 'john.doe@abms.co.kr',
       name: 'John Doe',
+      permissions: [],
     });
   });
 

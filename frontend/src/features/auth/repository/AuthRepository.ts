@@ -23,6 +23,12 @@ interface ChangePasswordPayload {
 export interface AuthMeResponse {
   name: string;
   email: string;
+  permissions: AuthPermissionResponse[];
+}
+
+export interface AuthPermissionResponse {
+  code: string;
+  scopes: string[];
 }
 
 @singleton()

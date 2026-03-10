@@ -90,6 +90,12 @@ describe('AuthRepository', () => {
     httpGet.mockResolvedValueOnce({
       name: '인증사용자',
       email: 'auth-user@abacus.co.kr',
+      permissions: [
+        {
+          code: 'employee.read',
+          scopes: ['SELF'],
+        },
+      ],
     });
 
     const result = await repository.fetchMe();
@@ -100,6 +106,12 @@ describe('AuthRepository', () => {
     expect(result).toEqual({
       name: '인증사용자',
       email: 'auth-user@abacus.co.kr',
+      permissions: [
+        {
+          code: 'employee.read',
+          scopes: ['SELF'],
+        },
+      ],
     });
   });
 });
