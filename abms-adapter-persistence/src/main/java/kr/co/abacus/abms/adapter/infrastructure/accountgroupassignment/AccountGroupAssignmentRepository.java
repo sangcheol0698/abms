@@ -21,6 +21,24 @@ public interface AccountGroupAssignmentRepository
     List<AccountGroupAssignment> findAllByAccountIdAndDeletedFalse(Long accountId);
 
     @Override
+    List<AccountGroupAssignment> findAllByPermissionGroupId(Long permissionGroupId);
+
+    @Override
+    List<AccountGroupAssignment> findAllByPermissionGroupIdAndDeletedFalse(Long permissionGroupId);
+
+    @Override
+    List<AccountGroupAssignment> findAllByPermissionGroupIdInAndDeletedFalse(List<Long> permissionGroupIds);
+
+    @Override
+    java.util.Optional<AccountGroupAssignment> findByAccountIdAndPermissionGroupId(Long accountId, Long permissionGroupId);
+
+    @Override
+    java.util.Optional<AccountGroupAssignment> findByAccountIdAndPermissionGroupIdAndDeletedFalse(
+            Long accountId,
+            Long permissionGroupId
+    );
+
+    @Override
     boolean existsByAccountIdAndPermissionGroupIdAndDeletedFalse(Long accountId, Long permissionGroupId);
 
 }

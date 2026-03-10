@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Bot, Briefcase, Handshake, Network, PieChart, UserCircle } from 'lucide-vue-next';
+import { Bot, Briefcase, Handshake, Network, PieChart, ShieldCheck, UserCircle } from 'lucide-vue-next';
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,6 +12,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@/components/ui/command';
+import { hasStoredPermission } from '@/features/auth/session';
 
 interface NavigationCommand {
   label: string;
@@ -33,15 +35,38 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
+const canManagePermissionGroups = ref(hasStoredPermission('permission.group.manage'));
 
-const navigationCommands: NavigationCommand[] = [
+const navigationCommands = computed<NavigationCommand[]>(() => [
   { label: '대시보드', to: '/', shortcut: '', icon: PieChart },
   { label: '부서', to: '/departments', shortcut: '', icon: Network },
   { label: '직원', to: '/employees', shortcut: '', icon: UserCircle },
   { label: '프로젝트', to: '/projects', shortcut: '', icon: Briefcase },
   { label: '협력사', to: '/parties', shortcut: '', icon: Handshake },
   { label: 'AI Assistant', to: '/assistant', shortcut: '', icon: Bot },
-];
+  ...(canManagePermissionGroups.value
+    ? [{ label: '권한 그룹 관리', to: '/system/permission-groups', shortcut: '', icon: ShieldCheck }]
+    : []),
+]);
+
+function refreshPermissions() {
+  canManagePermissionGroups.value = hasStoredPermission('permission.group.manage');
+}
+
+function onStorage(event: StorageEvent) {
+  if (event.key === 'user') {
+    refreshPermissions();
+  }
+}
+
+onMounted(() => {
+  refreshPermissions();
+  window.addEventListener('storage', onStorage);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', onStorage);
+});
 
 function handleOpenChange(value: boolean) {
   emit('update:open', value);

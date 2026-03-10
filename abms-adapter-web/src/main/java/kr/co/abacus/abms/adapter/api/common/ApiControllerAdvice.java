@@ -26,6 +26,10 @@ import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
 import kr.co.abacus.abms.domain.notification.NotificationNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectCodeDuplicateException;
 import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
+import kr.co.abacus.abms.domain.permission.PermissionNotFoundException;
+import kr.co.abacus.abms.domain.permissiongroup.DuplicatePermissionGroupNameException;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupNotFoundException;
+import kr.co.abacus.abms.domain.permissiongroup.SystemPermissionGroupModificationDeniedException;
 
 @Slf4j
 @RestControllerAdvice
@@ -44,6 +48,8 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
             InvalidRegistrationTokenException.class,
             InvalidCurrentPasswordException.class,
             SamePasswordException.class,
+            DuplicatePermissionGroupNameException.class,
+            PermissionNotFoundException.class,
             IllegalArgumentException.class
     })
     public ProblemDetail handleDuplicateException(Exception exception) {
@@ -55,7 +61,8 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
             DepartmentNotFoundException.class,
             ProjectNotFoundException.class,
             AccountNotFoundException.class,
-            NotificationNotFoundException.class
+            NotificationNotFoundException.class,
+            PermissionGroupNotFoundException.class
     })
     public ProblemDetail handleNotFoundException(Exception exception) {
         return getProblemDetail(HttpStatus.NOT_FOUND, exception);
@@ -73,6 +80,13 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDeniedException(AccessDeniedException exception) {
+        return getProblemDetail(HttpStatus.FORBIDDEN, exception);
+    }
+
+    @ExceptionHandler(SystemPermissionGroupModificationDeniedException.class)
+    public ProblemDetail handlePermissionGroupAccessDeniedException(
+            SystemPermissionGroupModificationDeniedException exception
+    ) {
         return getProblemDetail(HttpStatus.FORBIDDEN, exception);
     }
 

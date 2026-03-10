@@ -21,7 +21,19 @@ public interface PermissionGroupRepository
     List<PermissionGroup> findAllByIdInAndDeletedFalse(List<Long> ids);
 
     @Override
+    List<PermissionGroup> findAllByDeletedFalse();
+
+    @Override
+    java.util.Optional<PermissionGroup> findByIdAndDeletedFalse(Long id);
+
+    @Override
     java.util.Optional<PermissionGroup> findByGroupTypeAndNameAndDeletedFalse(
+            kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType groupType,
+            String name
+    );
+
+    @Override
+    boolean existsByGroupTypeAndNameAndDeletedFalse(
             kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType groupType,
             String name
     );

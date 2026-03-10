@@ -24,7 +24,7 @@
 
     <SidebarContent>
       <NavMain :items="data.navMain" label="업무" />
-      <NavMain v-if="data.navSecondary.length" :items="data.navSecondary" label="기타" />
+      <NavMain v-if="secondaryNavItems.length" :items="secondaryNavItems" label="시스템" />
     </SidebarContent>
 
     <SidebarFooter>
@@ -47,10 +47,20 @@ import {
   type SidebarProps,
   SidebarRail
 } from '@/components/ui/sidebar';
-import { Bot, Briefcase, GalleryVerticalEnd, Handshake, Network, PieChart, UserCircle } from 'lucide-vue-next';
+import {
+  Bot,
+  Briefcase,
+  GalleryVerticalEnd,
+  Handshake,
+  Network,
+  PieChart,
+  ShieldCheck,
+  UserCircle,
+} from 'lucide-vue-next';
 import NavMain from './NavMain.vue';
 import NavUser from './NavUser.vue';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { hasStoredPermission } from '@/features/auth/session';
 
 const props = withDefaults(
     defineProps<
@@ -70,11 +80,15 @@ const user = ref<{ name: string; email: string; avatar: string }>({
   email: 'user@example.com',
   avatar: '',
 });
+const canManagePermissionGroups = ref(false);
 
 function loadUserFromStorage() {
   try {
     const raw = localStorage.getItem('user');
-    if (!raw) return;
+    if (!raw) {
+      canManagePermissionGroups.value = false;
+      return;
+    }
     const parsed = JSON.parse(raw);
 
     // 다양한 필드 네이밍을 고려한 안전 추출
@@ -87,8 +101,10 @@ function loadUserFromStorage() {
     const avatar = parsed.avatarUrl || parsed.avatar || '';
 
     user.value = { name, email, avatar };
+    canManagePermissionGroups.value = hasStoredPermission('permission.group.manage');
   } catch (e) {
     console.warn('Failed to parse user from localStorage', e);
+    canManagePermissionGroups.value = false;
   }
 }
 
@@ -148,8 +164,18 @@ const data = {
       icon: Bot
     }
   ],
-  navSecondary: [],
+  navSecondary: [
+    {
+      title: '권한 그룹 관리',
+      url: '/system/permission-groups',
+      icon: ShieldCheck,
+    },
+  ],
 };
+
+const secondaryNavItems = computed(() =>
+  canManagePermissionGroups.value ? data.navSecondary : [],
+);
 
 // 프로필 다이얼로그 열기
 function openProfileDialog() {

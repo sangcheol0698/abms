@@ -14,6 +14,7 @@ const PROJECT_KEY = ['project'] as const;
 const DASHBOARD_KEY = ['dashboard'] as const;
 const NOTIFICATION_KEY = ['notification'] as const;
 const CHAT_KEY = ['chat'] as const;
+const ADMIN_KEY = ['admin'] as const;
 
 export const authKeys = {
   all: AUTH_KEY,
@@ -89,4 +90,21 @@ export const chatKeys = {
   favorites: () => [...CHAT_KEY, 'sessions', 'favorites'] as const,
   sessionDetail: (sessionId: string | null | undefined) =>
     [...CHAT_KEY, 'session-detail', sessionId ?? ''] as const,
+};
+
+export const adminKeys = {
+  all: ADMIN_KEY,
+  permissionGroups: {
+    all: [...ADMIN_KEY, 'permission-groups'] as const,
+    list: (params: Record<string, unknown> = {}) =>
+      [...ADMIN_KEY, 'permission-groups', 'list', params] as const,
+    detail: (permissionGroupId: number | null | undefined) =>
+      [...ADMIN_KEY, 'permission-groups', 'detail', permissionGroupId ?? 0] as const,
+    catalog: () => [...ADMIN_KEY, 'permission-groups', 'catalog'] as const,
+  },
+  accounts: {
+    all: [...ADMIN_KEY, 'accounts'] as const,
+    assignable: (permissionGroupId: number | null | undefined, params: Record<string, unknown> = {}) =>
+      [...ADMIN_KEY, 'accounts', 'assignable', permissionGroupId ?? 0, params] as const,
+  },
 };
