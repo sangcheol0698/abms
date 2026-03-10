@@ -1,6 +1,7 @@
 import type { Router } from 'vue-router';
 import { AUTH_HTTP_ERROR_EVENT, type AuthHttpErrorDetail } from '@/features/auth/http-auth-error';
 import { clearStoredUser } from '@/features/auth/session';
+import { showForbiddenToast } from '@/features/auth/showForbiddenToast';
 
 let isRegistered = false;
 
@@ -30,8 +31,8 @@ export function registerAuthHttpErrorHandler(router: Router): void {
       return;
     }
 
-    if (status === 403 && route.name !== 'auth-forbidden') {
-      void router.push({ name: 'auth-forbidden' });
+    if (status === 403) {
+      showForbiddenToast();
     }
   });
 

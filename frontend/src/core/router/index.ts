@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteLocationRaw } from 'vue-router';
 import AuthLayout from '@/core/layouts/AuthLayout.vue';
 import SidebarLayout from '@/core/layouts/SidebarLayout.vue';
-import { ensureServerSessionValid, hasStoredUser } from '@/features/auth/session';
+import { ensureServerSessionValid, hasStoredPermission, hasStoredUser } from '@/features/auth/session';
+import { showForbiddenToast } from '@/features/auth/showForbiddenToast';
 import AxiosHttpClient from '@/core/http/AxiosHttpClient';
 
 const routes = [
@@ -291,6 +292,8 @@ const routes = [
         meta: {
           title: '권한 그룹 관리',
           layout: SidebarLayout,
+          padding: 'flush',
+          requiredPermission: 'permission.group.manage',
           breadcrumbs: [
             {
               title: '대시보드',
@@ -374,6 +377,13 @@ router.beforeEach(async (to) => {
   const sessionValid = await ensureServerSessionValid();
   if (!sessionValid) {
     return resolveLoginRedirect(to.fullPath);
+  }
+
+  const requiredPermission =
+    typeof to.meta?.requiredPermission === 'string' ? to.meta.requiredPermission : null;
+  if (requiredPermission && !hasStoredPermission(requiredPermission)) {
+    showForbiddenToast();
+    return false;
   }
 
   return true;
