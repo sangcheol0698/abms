@@ -411,7 +411,17 @@ VALUES (0, 1, 0, NOW(), NULL, 2, NOW(), NOW(), 'test2@iabacus.co.kr', 1, NULL,
 
 
 -- ---------------------------------------------------------
--- 14. 권한 그룹
+-- 14. 권한
+-- ---------------------------------------------------------
+INSERT INTO abms.tb_permission (id, code, name, description, created_at, updated_at, created_by, updated_by,
+                                deleted, deleted_at, deleted_by)
+VALUES (1, 'employee.read', '직원 조회', '직원 조회 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (2, 'project.read', '프로젝트 조회', '프로젝트 조회 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (3, 'dashboard.read', '대시보드 조회', '대시보드 조회 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL);
+
+
+-- ---------------------------------------------------------
+-- 15. 권한 그룹
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_permission_group (id, name, description, group_type, created_at, updated_at, created_by, updated_by,
                                       deleted, deleted_at, deleted_by)
@@ -420,8 +430,22 @@ VALUES (1, '일반 그룹', '신규 계정에 기본 부여되는 시스템 권�
 
 
 -- ---------------------------------------------------------
--- 15. 계정-권한 그룹 매핑
+-- 16. 계정-권한 그룹 매핑
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_account_group_assignment (id, account_id, permission_group_id, created_at, updated_at, created_by,
                                               updated_by, deleted, deleted_at, deleted_by)
-VALUES (1, 1, 2, NOW(), NOW(), 1, 1, 0, NULL, NULL);
+VALUES (1, 1, 2, NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (2, 2, 1, NOW(), NOW(), 1, 1, 0, NULL, NULL);
+
+
+-- ---------------------------------------------------------
+-- 17. 권한 그룹-권한 매핑
+-- ---------------------------------------------------------
+INSERT INTO abms.tb_group_permission_grant (id, permission_group_id, permission_id, scope, created_at, updated_at,
+                                            created_by, updated_by, deleted, deleted_at, deleted_by)
+VALUES (1, 1, 1, 'SELF', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (2, 1, 2, 'SELF', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (3, 1, 3, 'SELF', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (4, 2, 1, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (5, 2, 2, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (6, 2, 3, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL);

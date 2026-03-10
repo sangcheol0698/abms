@@ -143,18 +143,8 @@ class EmployeeAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("로그인했지만 employee.read 권한이 없으면 직원 조회 API는 403을 반환한다")
-    void should_returnForbidden_whenAuthenticatedWithoutEmployeeReadPermission() throws Exception {
-        MockHttpSession session = login();
-
-        mockMvc.perform(get("/api/employees/positions").session(session))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @DisplayName("employee.read SELF 권한이 있으면 enum 조회 API에 접근할 수 있다")
-    void should_allowEnumApis_whenGrantedSelfScope() throws Exception {
-        grantEmployeeReadPermission(PermissionScope.SELF);
+    @DisplayName("로그인하면 employee.read 권한이 없어도 enum 조회 API에 접근할 수 있다")
+    void should_allowEnumApis_whenAuthenticatedWithoutEmployeeReadPermission() throws Exception {
         MockHttpSession session = login();
 
         mockMvc.perform(get("/api/employees/positions").session(session))

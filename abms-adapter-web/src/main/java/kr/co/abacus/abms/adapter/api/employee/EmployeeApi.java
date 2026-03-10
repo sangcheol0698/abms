@@ -152,7 +152,6 @@ public class EmployeeApi {
         employeeManager.promote(id, request.position(), request.grade());
     }
 
-    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/positions")
     public List<EnumResponse> getEmployeePositions() {
         return Arrays.stream(EmployeePosition.values())
@@ -160,7 +159,6 @@ public class EmployeeApi {
                 .toList();
     }
 
-    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/grades")
     public List<EnumResponse> getEmployeeGrades() {
         return Arrays.stream(EmployeeGrade.values())
@@ -168,7 +166,6 @@ public class EmployeeApi {
                 .toList();
     }
 
-    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/types")
     public List<EnumResponse> getEmployeeTypes() {
         return Arrays.stream(EmployeeType.values())
@@ -176,7 +173,6 @@ public class EmployeeApi {
                 .toList();
     }
 
-    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/statuses")
     public List<EnumResponse> getEmployeeStatuses() {
         return Arrays.stream(EmployeeStatus.values())
@@ -184,7 +180,6 @@ public class EmployeeApi {
                 .toList();
     }
 
-    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/avatars")
     public List<EnumResponse> getEmployeeAvatars() {
         return Arrays.stream(EmployeeAvatar.values())
