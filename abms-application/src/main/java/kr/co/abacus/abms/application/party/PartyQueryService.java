@@ -7,11 +7,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.party.dto.PartyListItem;
+import kr.co.abacus.abms.application.party.dto.PartyOverviewSummary;
+import kr.co.abacus.abms.application.party.dto.PartySearchCondition;
 import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyNotFoundException;
-import org.jspecify.annotations.Nullable;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -21,8 +23,13 @@ public class PartyQueryService implements PartyFinder {
     private final PartyRepository partyRepository;
 
     @Override
-    public Page<Party> getParties(Pageable pageable, @Nullable String name) {
-        return partyRepository.search(pageable, name);
+    public Page<PartyListItem> getParties(Pageable pageable, PartySearchCondition condition) {
+        return partyRepository.search(pageable, condition);
+    }
+
+    @Override
+    public PartyOverviewSummary getOverviewSummary(PartySearchCondition condition) {
+        return partyRepository.summarize(condition);
     }
 
     public String getPartyName(Long partyId) {

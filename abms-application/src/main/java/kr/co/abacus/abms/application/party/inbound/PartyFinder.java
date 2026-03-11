@@ -2,12 +2,15 @@ package kr.co.abacus.abms.application.party.inbound;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.jspecify.annotations.Nullable;
 
-import kr.co.abacus.abms.domain.party.Party;
+import kr.co.abacus.abms.application.party.dto.PartyListItem;
+import kr.co.abacus.abms.application.party.dto.PartyOverviewSummary;
+import kr.co.abacus.abms.application.party.dto.PartySearchCondition;
 
 public interface PartyFinder {
 
-    Page<Party> getParties(Pageable pageable, @Nullable String name);
+    Page<PartyListItem> getParties(Pageable pageable, PartySearchCondition condition);
+
+    PartyOverviewSummary getOverviewSummary(PartySearchCondition condition);
 
 }

@@ -1,6 +1,6 @@
 <template>
   <section class="flex h-full flex-col gap-6">
-    <PartySummaryCards :cards="partySummaryCards" />
+    <PartySummaryCards :cards="partySummary.cards" />
 
     <div class="space-y-4">
       <DataTableToolbar
@@ -118,7 +118,7 @@ import {
 import { valueUpdater } from '@/components/ui/table/utils';
 import PartyFormDialog from '@/features/party/components/PartyFormDialog.vue';
 import PartySummaryCards from '@/features/party/components/PartySummaryCards.vue';
-import { partySummaryCards } from '@/features/party/data';
+import { usePartySummary } from '@/features/party/composables/usePartySummary';
 import type { PartyDetail } from '@/features/party/models/partyDetail';
 import type { PartyListItem } from '@/features/party/models/partyListItem';
 import { usePartyQuerySync } from '@/features/party/composables/usePartyQuerySync';
@@ -127,6 +127,7 @@ import {
   useDeletePartyMutation,
   usePartyDetailQuery,
   usePartyListQuery,
+  usePartyOverviewSummaryQuery,
 } from '@/features/party/queries/usePartyQueries';
 import { partyKeys, queryClient } from '@/core/query';
 
@@ -279,8 +280,14 @@ const { buildSearchParams } = usePartyQuerySync({
 
 const searchParams = computed(() => buildSearchParams());
 const partiesQuery = usePartyListQuery(searchParams);
+const partyOverviewSummaryQuery = usePartyOverviewSummaryQuery(
+  computed(() => ({ name: searchParams.value.name })),
+);
 const partyDetailQuery = usePartyDetailQuery(editingPartyId);
 const deletePartyMutation = useDeletePartyMutation();
+const partySummary = usePartySummary({
+  summary: computed(() => partyOverviewSummaryQuery.data.value),
+});
 
 const parties = computed(() => partiesQuery.data.value?.content ?? []);
 const totalPages = computed(() => Math.max(partiesQuery.data.value?.totalPages ?? 1, 1));

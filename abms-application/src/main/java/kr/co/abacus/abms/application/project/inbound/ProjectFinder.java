@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.domain.project.Project;
@@ -23,5 +24,7 @@ public interface ProjectFinder {
     List<Project> findAllByStatus(ProjectStatus status);
 
     Page<ProjectSummary> search(ProjectSearchCondition condition, Pageable pageable);
+
+    ProjectOverviewSummary getOverviewSummary(ProjectSearchCondition condition);
 
 }

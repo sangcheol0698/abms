@@ -20,6 +20,9 @@ import kr.co.abacus.abms.adapter.api.party.dto.PartyCreateApiRequest;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyResponse;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyUpdateApiRequest;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
+import kr.co.abacus.abms.application.party.dto.PartyListItem;
+import kr.co.abacus.abms.application.party.dto.PartyOverviewSummary;
+import kr.co.abacus.abms.application.party.dto.PartySearchCondition;
 import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.application.party.inbound.PartyManager;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
@@ -38,9 +41,14 @@ public class PartyApi {
 
     @GetMapping("/api/parties")
     public PageResponse<PartyResponse> getParties(Pageable pageable, @RequestParam(required = false) String name) {
-        Page<Party> parties = partyFinder.getParties(pageable, name);
+        Page<PartyListItem> parties = partyFinder.getParties(pageable, new PartySearchCondition(name));
 
         return PageResponse.of(parties.map(PartyResponse::from));
+    }
+
+    @GetMapping("/api/parties/summary")
+    public PartyOverviewSummary getOverviewSummary(@RequestParam(required = false) String name) {
+        return partyFinder.getOverviewSummary(new PartySearchCondition(name));
     }
 
     @GetMapping("/api/parties/{id}")

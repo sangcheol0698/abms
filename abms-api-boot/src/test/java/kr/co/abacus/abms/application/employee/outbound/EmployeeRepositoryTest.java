@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.domain.department.Department;
@@ -131,6 +132,41 @@ class EmployeeRepositoryTest extends IntegrationTestBase {
         assertThat(employees).hasSize(2)
                 .extracting(EmployeeSummary::name)
                 .containsExactlyInAnyOrder("홍길동", "김길동");
+    }
+
+    @Test
+    @DisplayName("직원 요약 정보를 집계한다")
+    void summarize() {
+        Long departmentId = departmentRepository.save(createDepartment()).getId();
+
+        employeeRepository.save(createEmployee("summary1@email.com", "요약 직원1", EmployeePosition.TEAM_LEADER,
+                EmployeeType.FULL_TIME, EmployeeGrade.SENIOR, departmentId));
+        employeeRepository.save(createEmployee("summary2@email.com", "요약 직원2", EmployeePosition.ASSOCIATE,
+                EmployeeType.FREELANCER, EmployeeGrade.JUNIOR, departmentId));
+        Employee onLeaveEmployee = createEmployee("summary3@email.com", "요약 직원3", EmployeePosition.DIRECTOR,
+                EmployeeType.OUTSOURCING, EmployeeGrade.MID_LEVEL, departmentId);
+        onLeaveEmployee.takeLeave();
+        employeeRepository.save(onLeaveEmployee);
+        employeeRepository.save(createEmployee("summary4@email.com", "요약 직원4", EmployeePosition.PRINCIPAL,
+                EmployeeType.PART_TIME, EmployeeGrade.EXPERT, departmentId));
+        flushAndClear();
+
+        EmployeeOverviewSummary summary = employeeRepository.summarize(new EmployeeSearchCondition(
+                "요약",
+                null,
+                null,
+                null,
+                null,
+                List.of(departmentId)
+        ));
+
+        assertThat(summary.totalCount()).isEqualTo(4);
+        assertThat(summary.activeCount()).isEqualTo(3);
+        assertThat(summary.onLeaveCount()).isEqualTo(1);
+        assertThat(summary.fullTimeCount()).isEqualTo(1);
+        assertThat(summary.freelancerCount()).isEqualTo(1);
+        assertThat(summary.outsourcingCount()).isEqualTo(1);
+        assertThat(summary.partTimeCount()).isEqualTo(1);
     }
 
     @Test

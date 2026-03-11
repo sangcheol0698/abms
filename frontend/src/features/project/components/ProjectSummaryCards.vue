@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { ProjectSummaryCard } from '@/features/project/data';
+import type { ProjectSummaryCard } from '@/features/project/composables/useProjectSummary';
 
 withDefaults(
   defineProps<{

@@ -34,6 +34,7 @@ import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
+import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
@@ -267,6 +268,39 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 .isEqualTo(new EnumResponse(EmployeeGrade.SENIOR.name(), EmployeeGrade.SENIOR.getDescription(), EmployeeGrade.SENIOR.getLevel()));
         assertThat(targetContents.get(2).grade())
                 .isEqualTo(new EnumResponse(EmployeeGrade.JUNIOR.name(), EmployeeGrade.JUNIOR.getDescription(), EmployeeGrade.JUNIOR.getLevel()));
+    }
+
+    @Test
+    @DisplayName("직원 요약 정보를 조회한다")
+    void overviewSummary() throws Exception {
+        employeeRepository.save(createEmployee(teamId, "summary-employee-1@abms.co", "요약 직원 1"));
+        employeeRepository.save(createEmployee(teamId, "summary-employee-2@abms.co", "요약 직원 2",
+                EmployeePosition.ASSOCIATE, EmployeeType.FREELANCER, EmployeeGrade.JUNIOR));
+        Employee onLeaveEmployee = createEmployee(teamId, "summary-employee-3@abms.co", "요약 직원 3",
+                EmployeePosition.PRINCIPAL, EmployeeType.OUTSOURCING, EmployeeGrade.SENIOR);
+        onLeaveEmployee.takeLeave();
+        employeeRepository.save(onLeaveEmployee);
+        flushAndClear();
+
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/summary")
+                        .param("name", "요약 직원")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        EmployeeOverviewSummary response = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                EmployeeOverviewSummary.class
+        );
+
+        assertThat(response.totalCount()).isEqualTo(3);
+        assertThat(response.activeCount()).isEqualTo(2);
+        assertThat(response.onLeaveCount()).isEqualTo(1);
+        assertThat(response.fullTimeCount()).isEqualTo(1);
+        assertThat(response.freelancerCount()).isEqualTo(1);
+        assertThat(response.outsourcingCount()).isEqualTo(1);
+        assertThat(response.partTimeCount()).isEqualTo(0);
     }
 
     @Test

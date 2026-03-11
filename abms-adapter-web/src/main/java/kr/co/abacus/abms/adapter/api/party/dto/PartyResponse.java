@@ -2,6 +2,7 @@ package kr.co.abacus.abms.adapter.api.party.dto;
 
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.application.party.dto.PartyListItem;
 import kr.co.abacus.abms.domain.party.Party;
 
 public record PartyResponse(
@@ -20,6 +21,16 @@ public record PartyResponse(
                 party.getSalesRepName(),
                 party.getSalesRepPhone(),
                 party.getSalesRepEmail());
+    }
+
+    public static PartyResponse from(PartyListItem party) {
+        return new PartyResponse(
+                party.partyId(),
+                party.name(),
+                party.ceo(),
+                party.manager(),
+                party.contact(),
+                party.email());
     }
 
 }

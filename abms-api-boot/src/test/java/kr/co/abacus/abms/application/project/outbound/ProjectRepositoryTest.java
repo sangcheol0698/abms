@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.domain.project.Project;
@@ -185,6 +186,38 @@ class ProjectRepositoryTest extends IntegrationTestBase {
         assertThat(projects).hasSize(1)
                 .extracting(ProjectSummary::code)
                 .containsExactly("PRJ-ALPHA-001");
+    }
+
+    @Test
+    @DisplayName("프로젝트 요약 정보를 집계한다")
+    void summarize() {
+        projectRepository.save(createProjectForSearch("PRJ-SUM-001", "요약 프로젝트 1", 1L, 1L, ProjectStatus.SCHEDULED,
+                LocalDate.of(2024, 1, 10)));
+        projectRepository.save(createProjectForSearch("PRJ-SUM-002", "요약 프로젝트 2", 1L, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 2, 10)));
+        projectRepository.save(createProjectForSearch("PRJ-SUM-003", "요약 프로젝트 3", 1L, 1L, ProjectStatus.COMPLETED,
+                LocalDate.of(2024, 3, 10)));
+        projectRepository.save(createProjectForSearch("PRJ-SUM-004", "요약 프로젝트 4", 1L, 1L, ProjectStatus.ON_HOLD,
+                LocalDate.of(2024, 4, 10)));
+        projectRepository.save(createProjectForSearch("PRJ-SUM-005", "요약 프로젝트 5", 2L, 1L, ProjectStatus.CANCELLED,
+                LocalDate.of(2024, 5, 10)));
+        flushAndClear();
+
+        ProjectOverviewSummary summary = projectRepository.summarize(new ProjectSearchCondition(
+                "요약",
+                null,
+                List.of(1L),
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 12, 31)
+        ));
+
+        assertThat(summary.totalCount()).isEqualTo(4);
+        assertThat(summary.scheduledCount()).isEqualTo(1);
+        assertThat(summary.inProgressCount()).isEqualTo(1);
+        assertThat(summary.completedCount()).isEqualTo(1);
+        assertThat(summary.onHoldCount()).isEqualTo(1);
+        assertThat(summary.cancelledCount()).isEqualTo(0);
+        assertThat(summary.totalContractAmount()).isEqualTo(400_000_000L);
     }
 
     private Project createProjectForSearch(String code, String name, Long partyId, Long leadDepartmentId, ProjectStatus status,

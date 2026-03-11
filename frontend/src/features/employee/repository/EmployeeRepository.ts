@@ -63,6 +63,25 @@ type EmployeePositionResponse = EnumResponse;
  */
 type EmployeeAvatarResponse = EnumResponse;
 
+export interface EmployeeOverviewSummary {
+  totalCount: number;
+  activeCount: number;
+  onLeaveCount: number;
+  fullTimeCount: number;
+  freelancerCount: number;
+  outsourcingCount: number;
+  partTimeCount: number;
+}
+
+export interface EmployeeOverviewSummaryParams {
+  name?: string;
+  statuses?: string[];
+  types?: string[];
+  grades?: string[];
+  positions?: string[];
+  departmentIds?: number[];
+}
+
 function buildRequestParams(params: EmployeeSearchParams): Record<string, string> {
   const query: Record<string, string> = {
     page: Math.max(params.page - 1, 0).toString(),
@@ -78,6 +97,31 @@ function buildRequestParams(params: EmployeeSearchParams): Record<string, string
   }
 
   const arrayFields: (keyof EmployeeSearchParams)[] = [
+    'statuses',
+    'types',
+    'grades',
+    'positions',
+    'departmentIds',
+  ];
+
+  arrayFields.forEach((field) => {
+    const value = params[field];
+    if (Array.isArray(value) && value.length > 0) {
+      query[field] = value.join(',');
+    }
+  });
+
+  return query;
+}
+
+function buildOverviewRequestParams(params: EmployeeOverviewSummaryParams): Record<string, string> {
+  const query: Record<string, string> = {};
+
+  if (params.name) {
+    query.name = params.name;
+  }
+
+  const arrayFields: (keyof EmployeeOverviewSummaryParams)[] = [
     'statuses',
     'types',
     'grades',
@@ -271,6 +315,23 @@ export class EmployeeRepository {
       params: buildRequestParams(params),
     });
     return PageResponse.fromPage(response, mapEmployeeListItem);
+  }
+
+  async fetchOverviewSummary(params: EmployeeOverviewSummaryParams): Promise<EmployeeOverviewSummary> {
+    const response = await this.httpRepository.get<EmployeeOverviewSummary>({
+      path: '/api/employees/summary',
+      params: buildOverviewRequestParams(params),
+    });
+
+    return {
+      totalCount: Number(response?.totalCount ?? 0),
+      activeCount: Number(response?.activeCount ?? 0),
+      onLeaveCount: Number(response?.onLeaveCount ?? 0),
+      fullTimeCount: Number(response?.fullTimeCount ?? 0),
+      freelancerCount: Number(response?.freelancerCount ?? 0),
+      outsourcingCount: Number(response?.outsourcingCount ?? 0),
+      partTimeCount: Number(response?.partTimeCount ?? 0),
+    };
   }
 
   async fetchStatuses(): Promise<EmployeeFilterOption[]> {

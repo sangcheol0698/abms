@@ -11,6 +11,7 @@ import kr.co.abacus.abms.application.project.ProjectExcelService;
 import kr.co.abacus.abms.application.project.ProjectQueryService;
 import kr.co.abacus.abms.application.project.dto.ProjectDetail;
 import kr.co.abacus.abms.application.project.dto.ProjectExcelUploadResult;
+import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
@@ -61,6 +62,11 @@ public class ProjectApi {
             String partyName = partyQueryService.getPartyName(project.partyId());
             return ProjectResponse.from(project, partyName);
         }));
+    }
+
+    @GetMapping("/api/projects/summary")
+    public ProjectOverviewSummary getOverviewSummary(@Valid ProjectSearchCondition condition) {
+        return projectFinder.getOverviewSummary(condition);
     }
 
     @GetMapping("/api/projects/{id}")

@@ -5,6 +5,7 @@ import { partyKeys, projectKeys, queryClient } from '@/core/query';
 import PartyRepository from '@/features/party/repository/PartyRepository';
 import type { PartySearchParams } from '@/features/party/models/partyListItem';
 import type { PartyCreateData, PartyUpdateData } from '@/features/party/models/partyDetail';
+import type { PartyOverviewSummaryParams } from '@/features/party/repository/PartyRepository';
 
 async function invalidatePartySideEffects(partyId?: number) {
   const tasks: Promise<unknown>[] = [
@@ -29,6 +30,19 @@ export function usePartyListQuery(paramsRef: MaybeRefOrGetter<PartySearchParams>
       partyKeys.list((params.value ?? {}) as unknown as Record<string, unknown>),
     ),
     queryFn: () => repository.list(params.value),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function usePartyOverviewSummaryQuery(
+  paramsRef: MaybeRefOrGetter<PartyOverviewSummaryParams>,
+) {
+  const repository = appContainer.resolve(PartyRepository);
+  const params = computed(() => toValue(paramsRef));
+
+  return useQuery({
+    queryKey: computed(() => partyKeys.summary(params.value ?? {})),
+    queryFn: () => repository.fetchOverviewSummary(params.value),
     placeholderData: keepPreviousData,
   });
 }

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
+import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.domain.employee.Employee;
 
@@ -19,5 +20,7 @@ public interface EmployeeFinder {
     @Nullable EmployeeDetail findEmployeeDetail(Long id);
 
     Page<EmployeeSummary> search(EmployeeSearchCondition condition, Pageable pageable);
+
+    EmployeeOverviewSummary getOverviewSummary(EmployeeSearchCondition condition);
 
 }

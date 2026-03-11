@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
+import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -15,6 +16,8 @@ import kr.co.abacus.abms.domain.employee.Employee;
 public interface CustomEmployeeRepository {
 
     Page<EmployeeSummary> search(EmployeeSearchCondition condition, Pageable pageable);
+
+    EmployeeOverviewSummary summarize(EmployeeSearchCondition condition);
 
     List<Employee> search(EmployeeSearchCondition condition);
 

@@ -18,6 +18,24 @@ import {
 } from '@/core/utils/excel';
 import { mapProjectDetail } from '@/features/project/models/projectDetail';
 
+export interface ProjectOverviewSummary {
+  totalCount: number;
+  scheduledCount: number;
+  inProgressCount: number;
+  completedCount: number;
+  onHoldCount: number;
+  cancelledCount: number;
+  totalContractAmount: number;
+}
+
+export interface ProjectOverviewSummaryParams {
+  name?: string;
+  statuses?: string[];
+  partyIds?: number[];
+  startDate?: string;
+  endDate?: string;
+}
+
 @singleton()
 export default class ProjectRepository {
   constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
@@ -40,6 +58,23 @@ export default class ProjectRepository {
    */
   async list(params: ProjectSearchParams): Promise<PageResponse<ProjectListItem>> {
     return this.search(params);
+  }
+
+  async fetchOverviewSummary(params: ProjectOverviewSummaryParams): Promise<ProjectOverviewSummary> {
+    const response = await this.httpRepository.get<ProjectOverviewSummary>({
+      path: '/api/projects/summary',
+      params: buildOverviewRequestParams(params),
+    });
+
+    return {
+      totalCount: Number(response?.totalCount ?? 0),
+      scheduledCount: Number(response?.scheduledCount ?? 0),
+      inProgressCount: Number(response?.inProgressCount ?? 0),
+      completedCount: Number(response?.completedCount ?? 0),
+      onHoldCount: Number(response?.onHoldCount ?? 0),
+      cancelledCount: Number(response?.cancelledCount ?? 0),
+      totalContractAmount: Number(response?.totalContractAmount ?? 0),
+    };
   }
 
   /**
@@ -216,6 +251,32 @@ function buildRequestParams(params: ProjectSearchParams): Record<string, string>
   }
 
   const arrayFields: (keyof ProjectSearchParams)[] = ['statuses', 'partyIds'];
+  arrayFields.forEach((field) => {
+    const value = params[field];
+    if (Array.isArray(value) && value.length > 0) {
+      query[field] = value.join(',');
+    }
+  });
+
+  return query;
+}
+
+function buildOverviewRequestParams(params: ProjectOverviewSummaryParams): Record<string, string> {
+  const query: Record<string, string> = {};
+
+  if (params.name) {
+    query.name = params.name;
+  }
+
+  if (params.startDate) {
+    query.startDate = params.startDate;
+  }
+
+  if (params.endDate) {
+    query.endDate = params.endDate;
+  }
+
+  const arrayFields: (keyof ProjectOverviewSummaryParams)[] = ['statuses', 'partyIds'];
   arrayFields.forEach((field) => {
     const value = params[field];
     if (Array.isArray(value) && value.length > 0) {

@@ -56,6 +56,18 @@ vi.mock('@/features/project/queries/useProjectQueries', () => ({
         totalElements: 1,
       },
     }),
+  useProjectOverviewSummaryQuery: () =>
+    createMockQueryState({
+      data: {
+        totalCount: 1,
+        scheduledCount: 0,
+        inProgressCount: 1,
+        completedCount: 0,
+        onHoldCount: 0,
+        cancelledCount: 0,
+        totalContractAmount: 1000000,
+      },
+    }),
   useProjectStatusesQuery: () =>
     createMockQueryState({
       data: [{ value: 'IN_PROGRESS', label: '진행 중' }],

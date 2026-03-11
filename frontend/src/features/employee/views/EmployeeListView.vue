@@ -253,6 +253,7 @@ import { useDepartmentOrganizationChartQuery } from '@/features/department/queri
 import {
   useEmployeeDetailQuery,
   useEmployeeGradesQuery,
+  useEmployeeOverviewSummaryQuery,
   useEmployeePositionsQuery,
   useEmployeesQuery,
   useEmployeeStatusesQuery,
@@ -326,14 +327,20 @@ const { buildSearchParams } = useEmployeeQuerySync({
 });
 
 const employeeSearchParams = computed(() => buildSearchParams());
-const employeeSummarySearchParams = computed(() => ({
-  ...buildSearchParams(),
-  page: 1,
-  size: 10000,
-}));
+const employeeSummaryParams = computed(() => {
+  const params = buildSearchParams();
+  return {
+    name: params.name,
+    statuses: params.statuses,
+    types: params.types,
+    grades: params.grades,
+    positions: params.positions,
+    departmentIds: params.departmentIds,
+  };
+});
 
 const employeesQuery = useEmployeesQuery(employeeSearchParams);
-const summaryEmployeesQuery = useEmployeesQuery(employeeSummarySearchParams);
+const employeeOverviewSummaryQuery = useEmployeeOverviewSummaryQuery(employeeSummaryParams);
 const departmentChartQuery = useDepartmentOrganizationChartQuery();
 const employeeStatusesQuery = useEmployeeStatusesQuery();
 const employeeTypesQuery = useEmployeeTypesQuery();
@@ -342,7 +349,6 @@ const employeePositionsQuery = useEmployeePositionsQuery();
 const employeeDetailQuery = useEmployeeDetailQuery(editingEmployeeId);
 
 const employees = computed(() => employeesQuery.data.value?.content ?? []);
-const allEmployees = computed(() => summaryEmployeesQuery.data.value?.content ?? []);
 const totalPages = computed(() => {
   const value = employeesQuery.data.value?.totalPages;
   return typeof value === 'number' && value > 0 ? value : 1;
@@ -429,7 +435,7 @@ const selectedDepartmentName = computed(() => {
   return match?.label ?? `부서 #${selectedDepartmentId.value}`;
 });
 
-const employeeSummary = useEmployeeSummary({ employees: allEmployees });
+const employeeSummary = useEmployeeSummary({ summary: computed(() => employeeOverviewSummaryQuery.data.value) });
 
 watch(
   () => employeesQuery.data.value?.totalPages,

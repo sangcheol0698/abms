@@ -6,6 +6,7 @@ import kr.co.abacus.abms.adapter.api.project.dto.ProjectDetailResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
+import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
@@ -142,6 +143,38 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         assertThat(response.content())
                 .extracting(ProjectResponse::code)
                 .containsExactly("PRJ-ALPHA-001");
+    }
+
+    @Test
+    @DisplayName("프로젝트 요약 정보를 조회한다")
+    void overviewSummary() {
+        Long partyId = createParty("요약 협력사");
+        projectRepository.save(createProject("PRJ-SUM-API-001", "요약 프로젝트 1", partyId, 1L, ProjectStatus.SCHEDULED,
+                LocalDate.of(2024, 1, 10)));
+        projectRepository.save(createProject("PRJ-SUM-API-002", "요약 프로젝트 2", partyId, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 2, 10)));
+        projectRepository.save(createProject("PRJ-SUM-API-003", "요약 프로젝트 3", partyId, 1L, ProjectStatus.COMPLETED,
+                LocalDate.of(2024, 3, 10)));
+        flushAndClear();
+
+        ProjectOverviewSummary response = restTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/projects/summary")
+                        .queryParam("name", "요약 프로젝트")
+                        .queryParam("partyIds", partyId)
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProjectOverviewSummary.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.totalCount()).isEqualTo(3);
+        assertThat(response.scheduledCount()).isEqualTo(1);
+        assertThat(response.inProgressCount()).isEqualTo(1);
+        assertThat(response.completedCount()).isEqualTo(1);
+        assertThat(response.totalContractAmount()).isEqualTo(300_000_000L);
     }
 
     // @Test

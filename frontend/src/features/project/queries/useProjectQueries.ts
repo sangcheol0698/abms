@@ -1,10 +1,11 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/vue-query';
 import { appContainer } from '@/core/di/container';
-import { dashboardKeys, projectKeys, queryClient } from '@/core/query';
+import { dashboardKeys, partyKeys, projectKeys, queryClient } from '@/core/query';
 import ProjectRepository from '@/features/project/repository/ProjectRepository';
 import type { ProjectSearchParams } from '@/features/project/models/projectListItem';
 import type { ProjectCreateData, ProjectUpdateData } from '@/features/project/models/projectDetail';
+import type { ProjectOverviewSummaryParams } from '@/features/project/repository/ProjectRepository';
 import ProjectRevenueRepository, {
   type ProjectRevenuePlanCreateRequest,
 } from '@/features/project/repository/ProjectRevenueRepository';
@@ -15,6 +16,7 @@ import ProjectAssignmentRepository, {
 async function invalidateProjectSideEffects(projectId?: number) {
   const tasks: Promise<unknown>[] = [
     queryClient.invalidateQueries({ queryKey: projectKeys.all }),
+    queryClient.invalidateQueries({ queryKey: partyKeys.all }),
     queryClient.invalidateQueries({ queryKey: dashboardKeys.summary() }),
   ];
 
@@ -34,6 +36,19 @@ export function useProjectListQuery(paramsRef: MaybeRefOrGetter<ProjectSearchPar
       projectKeys.list((params.value ?? {}) as unknown as Record<string, unknown>),
     ),
     queryFn: () => repository.search(params.value),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useProjectOverviewSummaryQuery(
+  paramsRef: MaybeRefOrGetter<ProjectOverviewSummaryParams>,
+) {
+  const repository = appContainer.resolve(ProjectRepository);
+  const params = computed(() => toValue(paramsRef));
+
+  return useQuery({
+    queryKey: computed(() => projectKeys.summary(params.value ?? {})),
+    queryFn: () => repository.fetchOverviewSummary(params.value),
     placeholderData: keepPreviousData,
   });
 }
