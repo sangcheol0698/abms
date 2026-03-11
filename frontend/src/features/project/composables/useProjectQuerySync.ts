@@ -74,10 +74,10 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
     const start = toIsoDateString(dateRange.value?.start);
     const end = toIsoDateString(dateRange.value?.end);
     if (start) {
-      params.startDate = start;
+      params.periodStart = start;
     }
     if (end) {
-      params.endDate = end;
+      params.periodEnd = end;
     }
 
     const sortState = sorting.value[0];
@@ -104,11 +104,11 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
     if (params.partyIds?.length) {
       query.partyIds = serializeArrayFilter(params.partyIds.map(String));
     }
-    if (params.startDate) {
-      query.startDate = params.startDate;
+    if (params.periodStart) {
+      query.periodStart = params.periodStart;
     }
-    if (params.endDate) {
-      query.endDate = params.endDate;
+    if (params.periodEnd) {
+      query.periodEnd = params.periodEnd;
     }
     if (params.sort) {
       query.sort = params.sort;
@@ -142,10 +142,10 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
       filters.push({ id: 'partyId', value: partyIds });
     }
 
-    const startDate = deserializeSingleFilter(rawQuery, 'startDate');
-    const endDate = deserializeSingleFilter(rawQuery, 'endDate');
-    if (startDate && endDate) {
-      dateRange.value = { start: startDate, end: endDate };
+    const periodStart = deserializeSingleFilter(rawQuery, 'periodStart');
+    const periodEnd = deserializeSingleFilter(rawQuery, 'periodEnd');
+    if (periodStart || periodEnd) {
+      dateRange.value = { start: periodStart ?? undefined, end: periodEnd ?? undefined };
     } else {
       dateRange.value = null;
     }
@@ -269,7 +269,7 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
 
   function mapSortId(id: string): string | null {
     if (id === 'period') {
-      return 'startDate';
+      return 'periodStart';
     }
     return id;
   }
@@ -282,7 +282,7 @@ export function useProjectQuerySync(options: UseProjectQuerySyncOptions) {
     if (!first?.id) {
       return [];
     }
-    const mappedId = first.id === 'startDate' || first.id === 'endDate' ? 'period' : first.id;
+    const mappedId = first.id === 'periodStart' || first.id === 'periodEnd' ? 'period' : first.id;
     return [{ id: mappedId, desc: first.desc }];
   }
 

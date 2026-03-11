@@ -5,19 +5,7 @@ import java.time.LocalDate;
 public class ProjectFixture {
 
     public static Project createProject() {
-        return Project.create(createProjectCreateRequest());
-    }
-
-    public static Project createProject(Long partyId) {
-        return Project.create(createProjectCreateRequest(partyId));
-    }
-
-    public static Project createProject(String code) {
-        return Project.create(createProjectCreateRequest(code));
-    }
-
-    public static ProjectCreateRequest createProjectCreateRequest() {
-        return new ProjectCreateRequest(
+        return Project.create(
                 1L,
                 1L,
                 "PRJ-001",
@@ -29,8 +17,8 @@ public class ProjectFixture {
                 LocalDate.of(2024, 12, 31));
     }
 
-    public static ProjectCreateRequest createProjectCreateRequest(Long partyId) {
-        return new ProjectCreateRequest(
+    public static Project createProject(Long partyId) {
+        return Project.create(
                 partyId,
                 1L,
                 "PRJ-001",
@@ -42,8 +30,8 @@ public class ProjectFixture {
                 LocalDate.of(2024, 12, 31));
     }
 
-    public static ProjectCreateRequest createProjectCreateRequest(String code) {
-        return new ProjectCreateRequest(
+    public static Project createProject(String code) {
+        return Project.create(
                 1L,
                 1L,
                 code,
@@ -55,8 +43,8 @@ public class ProjectFixture {
                 LocalDate.of(2024, 12, 31));
     }
 
-    public static ProjectCreateRequest createProjectCreateRequest(String code, String name, Long partyId, Long leadDepartmentId) {
-        return new ProjectCreateRequest(
+    public static Project createProject(String code, String name, Long partyId, Long leadDepartmentId) {
+        return Project.create(
                 partyId,
                 leadDepartmentId,
                 code,

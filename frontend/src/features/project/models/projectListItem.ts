@@ -21,8 +21,8 @@ export interface ProjectSearchParams {
   name?: string;
   statuses?: string[];
   partyIds?: number[];
-  startDate?: string;
-  endDate?: string;
+  periodStart?: string;
+  periodEnd?: string;
   sort?: string;
 }
 

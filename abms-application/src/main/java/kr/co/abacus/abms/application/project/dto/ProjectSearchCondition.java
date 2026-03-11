@@ -11,7 +11,7 @@ public record ProjectSearchCondition(
         @Nullable String name,
         @Nullable List<ProjectStatus> statuses,
         @Nullable List<Long> partyIds,
-        @Nullable LocalDate startDate,
-        @Nullable LocalDate endDate) {
+        @Nullable LocalDate periodStart,
+        @Nullable LocalDate periodEnd) {
 
 }

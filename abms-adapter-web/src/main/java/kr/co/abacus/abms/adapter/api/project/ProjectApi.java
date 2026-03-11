@@ -4,9 +4,14 @@ import jakarta.validation.Valid;
 
 import kr.co.abacus.abms.adapter.api.common.FilenameBuilder;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
-import kr.co.abacus.abms.adapter.api.project.dto.*;
-import kr.co.abacus.abms.application.department.DepartmentQueryService;
-import kr.co.abacus.abms.application.party.PartyQueryService;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectCreateApiRequest;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectCreateResponse;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectDetailResponse;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectExcelUploadResponse;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectStatusResponse;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateResponse;
 import kr.co.abacus.abms.application.project.ProjectExcelService;
 import kr.co.abacus.abms.application.project.ProjectQueryService;
 import kr.co.abacus.abms.application.project.dto.ProjectDetail;
@@ -16,7 +21,6 @@ import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
 import kr.co.abacus.abms.application.project.inbound.ProjectManager;
-import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 
 import lombok.RequiredArgsConstructor;
@@ -42,26 +46,20 @@ public class ProjectApi {
 
     private final ProjectManager projectManager;
     private final ProjectFinder projectFinder;
-    private final PartyQueryService partyQueryService;
     private final ProjectQueryService projectQueryService;
     private final ProjectExcelService projectExcelService;
 
     @PostMapping("/api/projects")
-    public ProjectResponse create(@RequestBody ProjectCreateApiRequest request) {
-        Project project = projectManager.create(request.toDomainRequest());
-        String partyName = partyQueryService.getPartyName(project.getPartyId());
-
-        return ProjectResponse.from(project, partyName);
+    public ProjectCreateResponse create(@RequestBody ProjectCreateApiRequest request) {
+        Long projectId = projectManager.create(request.toCommand());
+        return ProjectCreateResponse.of(projectId);
     }
 
     @GetMapping("/api/projects")
     public PageResponse<ProjectResponse> search(@Valid ProjectSearchCondition condition, Pageable pageable) {
         Page<ProjectSummary> projects = projectFinder.search(condition, pageable);
 
-        return PageResponse.of(projects.map(project -> {
-            String partyName = partyQueryService.getPartyName(project.partyId());
-            return ProjectResponse.from(project, partyName);
-        }));
+        return PageResponse.of(projects.map(ProjectResponse::from));
     }
 
     @GetMapping("/api/projects/summary")
@@ -76,27 +74,21 @@ public class ProjectApi {
     }
 
     @PutMapping("/api/projects/{id}")
-    public ProjectResponse update(@PathVariable Long id, @RequestBody ProjectUpdateApiRequest request) {
-        Project project = projectManager.update(id, request.toDomainRequest());
-        String partyName = partyQueryService.getPartyName(project.getPartyId());
-
-        return ProjectResponse.from(project, partyName);
+    public ProjectUpdateResponse update(@PathVariable Long id, @RequestBody ProjectUpdateApiRequest request) {
+        Long projectId = projectManager.update(id, request.toCommand());
+        return ProjectUpdateResponse.of(projectId);
     }
 
     @PatchMapping("/api/projects/{id}/complete")
-    public ProjectResponse complete(@PathVariable Long id) {
-        Project project = projectManager.complete(id);
-        String partyName = partyQueryService.getPartyName(project.getPartyId());
-
-        return ProjectResponse.from(project, partyName);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void complete(@PathVariable Long id) {
+        projectManager.complete(id);
     }
 
     @PatchMapping("/api/projects/{id}/cancel")
-    public ProjectResponse cancel(@PathVariable Long id) {
-        Project project = projectManager.cancel(id);
-        String partyName = partyQueryService.getPartyName(project.getPartyId());
-
-        return ProjectResponse.from(project, partyName);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancel(@PathVariable Long id) {
+        projectManager.cancel(id);
     }
 
     @DeleteMapping("/api/projects/{id}")

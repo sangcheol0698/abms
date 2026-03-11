@@ -137,8 +137,8 @@ export interface NormalizedProjectSearchParams {
   name: string | null;
   statuses: string[];
   partyIds: number[];
-  startDate: string | null;
-  endDate: string | null;
+  periodStart: string | null;
+  periodEnd: string | null;
   sort: string | null;
 }
 
@@ -149,8 +149,8 @@ export function normalizeProjectSearchParams(params: Record<string, unknown> = {
     name: toNullableString(params.name),
     statuses: toSortedUniqueStrings(params.statuses),
     partyIds: toSortedUniqueNumbers(params.partyIds),
-    startDate: toIsoDateString(params.startDate),
-    endDate: toIsoDateString(params.endDate),
+    periodStart: toIsoDateString(params.periodStart),
+    periodEnd: toIsoDateString(params.periodEnd),
     sort: toNullableString(params.sort),
   };
 }

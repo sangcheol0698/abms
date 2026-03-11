@@ -2,6 +2,8 @@ package kr.co.abacus.abms.domain.project;
 
 import static java.util.Objects.*;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -54,7 +56,7 @@ public class Project extends AbstractEntity {
 
     @Embedded
     @AttributeOverride(name = "startDate", column = @Column(name = "start_date", nullable = false))
-    @AttributeOverride(name = "endDate", column = @Column(name = "end_date", nullable = false))
+    @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
     private Period period;
 
     private Project(Long partyId, Long leadDepartmentId, String code, String name, @Nullable String description, ProjectStatus status,
@@ -69,26 +71,43 @@ public class Project extends AbstractEntity {
         this.period = period;
     }
 
-    public static Project create(ProjectCreateRequest request) {
+    public static Project create(
+            Long partyId,
+            Long leadDepartmentId,
+            String code,
+            String name,
+            @Nullable String description,
+            ProjectStatus status,
+            Long contractAmount,
+            LocalDate startDate,
+            @Nullable LocalDate endDate) {
         return new Project(
-                requireNonNull(request.partyId()),
-                requireNonNull(request.leadDepartmentId()),
-                requireNonNull(request.code()),
-                requireNonNull(request.name()),
-                request.description(),
-                requireNonNull(request.status()),
-                Money.wons(requireNonNull(request.contractAmount())),
-                new Period(requireNonNull(request.startDate()), requireNonNull(request.endDate())));
+                requireNonNull(partyId),
+                requireNonNull(leadDepartmentId),
+                requireNonNull(code),
+                requireNonNull(name),
+                description,
+                requireNonNull(status),
+                Money.wons(requireNonNull(contractAmount)),
+                new Period(requireNonNull(startDate), endDate));
     }
 
-    public void update(ProjectUpdateRequest request) {
-        this.partyId = requireNonNull(request.partyId());
-        this.leadDepartmentId = requireNonNull(request.leadDepartmentId());
-        this.name = requireNonNull(request.name());
-        this.description = request.description();
-        this.status = requireNonNull(request.status());
-        this.contractAmount = Money.wons(requireNonNull(request.contractAmount()));
-        this.period = new Period(requireNonNull(request.startDate()), request.endDate());
+    public void update(
+            Long partyId,
+            Long leadDepartmentId,
+            String name,
+            @Nullable String description,
+            ProjectStatus status,
+            Long contractAmount,
+            LocalDate startDate,
+            @Nullable LocalDate endDate) {
+        this.partyId = requireNonNull(partyId);
+        this.leadDepartmentId = requireNonNull(leadDepartmentId);
+        this.name = requireNonNull(name);
+        this.description = description;
+        this.status = requireNonNull(status);
+        this.contractAmount = Money.wons(requireNonNull(contractAmount));
+        this.period = new Period(requireNonNull(startDate), endDate);
     }
 
     public void complete() {

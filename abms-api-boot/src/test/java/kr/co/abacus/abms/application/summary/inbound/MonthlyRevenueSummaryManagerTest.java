@@ -24,7 +24,6 @@ import kr.co.abacus.abms.domain.employee.EmployeeCostPolicy;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.payroll.Payroll;
 import kr.co.abacus.abms.domain.project.Project;
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlanCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
@@ -248,17 +247,15 @@ class MonthlyRevenueSummaryManagerTest extends IntegrationTestBase {
         // 1. [프로젝트 A] (매출 O, 비용 O -> 흑자)
         Project projectA = projectRepository.save(
             Project.create(
-                new ProjectCreateRequest(
-                    1L,
-                    10L,
-                    "PRJ-0001",
-                    "차세대 빌링 구축",
-                    "차세대 빌링 구축 시스템입니다.",
-                    ProjectStatus.IN_PROGRESS,
-                    10_000_000L,
-                    LocalDate.of(2026, 1, 1),
-                    LocalDate.of(2026, 6, 30)
-                )
+                1L,
+                10L,
+                "PRJ-0001",
+                "차세대 빌링 구축",
+                "차세대 빌링 구축 시스템입니다.",
+                ProjectStatus.IN_PROGRESS,
+                10_000_000L,
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 6, 30)
             )
         );
 

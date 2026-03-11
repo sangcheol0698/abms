@@ -7,13 +7,13 @@ import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
 import kr.co.abacus.abms.application.project.inbound.ProjectManager;
+import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
+import kr.co.abacus.abms.application.project.dto.ProjectUpdateCommand;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.domain.party.PartyNotFoundException;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectCodeDuplicateException;
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
-import kr.co.abacus.abms.domain.project.ProjectUpdateRequest;
 
 @RequiredArgsConstructor
 @Transactional
@@ -25,40 +25,57 @@ public class ProjectModifyService implements ProjectManager {
     private final PartyRepository partyRepository;
 
     @Override
-    public Project create(ProjectCreateRequest request) {
-        if (projectRepository.existsByCode(request.code())) {
-            throw new ProjectCodeDuplicateException("이미 존재하는 프로젝트 코드입니다: " + request.code());
+    public Long create(ProjectCreateCommand command) {
+        if (projectRepository.existsByCode(command.code())) {
+            throw new ProjectCodeDuplicateException("이미 존재하는 프로젝트 코드입니다: " + command.code());
         }
-        validateActivePartyExists(request.partyId());
+        validateActivePartyExists(command.partyId());
 
-        Project project = Project.create(request);
+        Project project = Project.create(
+                command.partyId(),
+                command.leadDepartmentId(),
+                command.code(),
+                command.name(),
+                command.description(),
+                command.status(),
+                command.contractAmount(),
+                command.startDate(),
+                command.endDate());
 
-        return projectRepository.save(project);
+        return projectRepository.save(project).getIdOrThrow();
     }
 
     @Override
-    public Project update(Long id, ProjectUpdateRequest request) {
+    public Long update(Long id, ProjectUpdateCommand command) {
         Project project = projectFinder.find(id);
-        validateActivePartyExists(request.partyId());
-        project.update(request);
+        validateActivePartyExists(command.partyId());
+        project.update(
+                command.partyId(),
+                command.leadDepartmentId(),
+                command.name(),
+                command.description(),
+                command.status(),
+                command.contractAmount(),
+                command.startDate(),
+                command.endDate());
 
-        return projectRepository.save(project);
+        return projectRepository.save(project).getIdOrThrow();
     }
 
     @Override
-    public Project complete(Long id) {
+    public void complete(Long id) {
         Project project = projectFinder.find(id);
         project.complete();
 
-        return projectRepository.save(project);
+        projectRepository.save(project);
     }
 
     @Override
-    public Project cancel(Long id) {
+    public void cancel(Long id) {
         Project project = projectFinder.find(id);
         project.cancel();
 
-        return projectRepository.save(project);
+        projectRepository.save(project);
     }
 
     @Override

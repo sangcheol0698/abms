@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.application.project;
 
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
+import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 import kr.co.abacus.abms.application.project.dto.ProjectExcelUploadResult;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.inbound.ProjectManager;
@@ -9,7 +10,6 @@ import kr.co.abacus.abms.application.project.outbound.ProjectExcelImporter;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.project.Project;
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectExcelException;
 
 import lombok.RequiredArgsConstructor;
@@ -46,14 +46,14 @@ public class ProjectExcelService {
 
     @Transactional
     public ProjectExcelUploadResult upload(InputStream inputStream) {
-        List<ProjectCreateRequest> requests = projectExcelImporter.importProjects(inputStream, this::getPartyIdByName);
+        List<ProjectCreateCommand> commands = projectExcelImporter.importProjects(inputStream, this::getPartyIdByName);
 
         List<ProjectExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
         int successCount = 0;
 
-        for (int i = 0; i < requests.size(); i++) {
+        for (int i = 0; i < commands.size(); i++) {
             try {
-                projectManager.create(requests.get(i));
+                projectManager.create(commands.get(i));
                 successCount++;
             } catch (Exception ex) {
                 excelFailures.add(new ProjectExcelUploadResult.ExcelFailure(i + 2, resolveMessage(ex)));

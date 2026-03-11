@@ -13,10 +13,8 @@
         @reset="handleResetFilters"
       >
         <template #filters>
-          <!-- 날짜 검색 유형 선택 -->
-          <!-- 날짜 범위 필터 -->
           <div class="flex items-center gap-2">
-            <DateRangeFilter v-model="dateRange" placeholder="계약일 날짜 범위 선택" />
+            <DateRangeFilter v-model="dateRange" placeholder="프로젝트 기간 선택" />
           </div>
 
           <DataTableFacetedFilter
@@ -408,8 +406,8 @@ const summaryParams = computed(() => {
     name: params.name,
     statuses: params.statuses,
     partyIds: params.partyIds,
-    startDate: params.startDate,
-    endDate: params.endDate,
+    periodStart: params.periodStart,
+    periodEnd: params.periodEnd,
   };
 });
 const projectsQuery = useProjectListQuery(searchParams);
@@ -486,14 +484,14 @@ function getSearchParams(): ProjectSearchParams {
   }
 
   if (dateRange.value?.start) {
-    params.startDate =
+    params.periodStart =
       dateRange.value.start instanceof Date
         ? dateRange.value.start.toISOString().split('T')[0]
         : (dateRange.value.start as string);
   }
 
   if (dateRange.value?.end) {
-    params.endDate =
+    params.periodEnd =
       dateRange.value.end instanceof Date
         ? dateRange.value.end.toISOString().split('T')[0]
         : (dateRange.value.end as string);
@@ -502,7 +500,8 @@ function getSearchParams(): ProjectSearchParams {
   if (sorting.value.length > 0) {
     const s = sorting.value[0];
     if (s) {
-      params.sort = `${s.id},${s.desc ? 'desc' : 'asc'}`;
+      const sortId = s.id === 'period' ? 'periodStart' : s.id;
+      params.sort = `${sortId},${s.desc ? 'desc' : 'asc'}`;
     }
   }
 

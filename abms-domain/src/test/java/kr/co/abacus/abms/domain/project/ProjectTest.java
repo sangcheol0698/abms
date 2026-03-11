@@ -17,7 +17,7 @@ class ProjectTest {
     @Test
     @DisplayName("프로젝트 생성 - 필수 정보와 초기 상태")
     void create() {
-        Project project = Project.create(new ProjectCreateRequest(
+        Project project = Project.create(
                 1L,
                 4L,
                 "PROJECT_123",
@@ -26,7 +26,7 @@ class ProjectTest {
                 ProjectStatus.CANCELLED,
                 32_000_000L,
                 LocalDate.of(2024, 1, 1),
-                LocalDate.of(2024, 12, 31)));
+                LocalDate.of(2024, 12, 31));
 
         assertThat(project.getCode()).isEqualTo("PROJECT_123");
         assertThat(project.getName()).isEqualTo("This is a test project");
@@ -39,7 +39,7 @@ class ProjectTest {
     @Test
     @DisplayName("프로젝트 정보 수정")
     void update() {
-        Project project = Project.create(new ProjectCreateRequest(
+        Project project = Project.create(
                 1L,
                 4L,
                 "PROJECT_123",
@@ -48,9 +48,9 @@ class ProjectTest {
                 ProjectStatus.CANCELLED,
                 32_000_000L,
                 LocalDate.of(2024, 1, 1),
-                LocalDate.of(2024, 12, 31)));
+                LocalDate.of(2024, 12, 31));
 
-        project.update(new ProjectUpdateRequest(
+        project.update(
                 99L,
                 4L,
                 "Updated Project Name",
@@ -58,7 +58,7 @@ class ProjectTest {
                 ProjectStatus.IN_PROGRESS,
                 45_000_000L,
                 LocalDate.of(2024, 2, 1),
-                LocalDate.of(2024, 12, 31)));
+                LocalDate.of(2024, 12, 31));
 
         assertThat(project.getName()).isEqualTo("Updated Project Name");
         assertThat(project.getDescription()).isEqualTo("Updated description");
@@ -70,7 +70,7 @@ class ProjectTest {
     @Test
     @DisplayName("프로젝트 완료 처리")
     void complete() {
-        Project project = Project.create(new ProjectCreateRequest(
+        Project project = Project.create(
                 1L,
                 4L,
                 "PROJECT_123",
@@ -79,7 +79,7 @@ class ProjectTest {
                 ProjectStatus.IN_PROGRESS,
                 32_000_000L,
                 LocalDate.of(2024, 1, 1),
-                LocalDate.of(2024, 12, 31)));
+                LocalDate.of(2024, 12, 31));
 
         project.complete();
 
@@ -89,7 +89,7 @@ class ProjectTest {
     @Test
     @DisplayName("프로젝트 취소 처리")
     void cancel() {
-        Project project = Project.create(new ProjectCreateRequest(
+        Project project = Project.create(
                 1L,
                 4L,
                 "PROJECT_123",
@@ -98,7 +98,7 @@ class ProjectTest {
                 ProjectStatus.IN_PROGRESS,
                 32_000_000L,
                 LocalDate.of(2024, 1, 1),
-                LocalDate.of(2024, 12, 31)));
+                LocalDate.of(2024, 12, 31));
 
         project.cancel();
 

@@ -1,10 +1,12 @@
-package kr.co.abacus.abms.domain.project;
+package kr.co.abacus.abms.application.project.dto;
 
 import java.time.LocalDate;
 
 import org.jspecify.annotations.Nullable;
 
-public record ProjectCreateRequest(
+import kr.co.abacus.abms.domain.project.ProjectStatus;
+
+public record ProjectCreateCommand(
         Long partyId,
         Long leadDepartmentId,
         String code,
@@ -13,6 +15,6 @@ public record ProjectCreateRequest(
         ProjectStatus status,
         Long contractAmount,
         LocalDate startDate,
-        LocalDate endDate) {
+        @Nullable LocalDate endDate) {
 
 }

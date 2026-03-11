@@ -13,11 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
+import kr.co.abacus.abms.domain.party.Party;
+import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
@@ -25,6 +27,9 @@ class ProjectRepositoryTest extends IntegrationTestBase {
 
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private PartyRepository partyRepository;
 
     @Test
     @DisplayName("프로젝트 저장")
@@ -131,9 +136,9 @@ class ProjectRepositoryTest extends IntegrationTestBase {
         Long otherPartyId = 2L;
         Long leadDepartmentId = 1L;
 
-        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-001", "프로젝트1", partyId, leadDepartmentId)));
-        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-002", "프로젝트2", partyId, leadDepartmentId)));
-        projectRepository.save(Project.create(createProjectCreateRequest("PRJ-003", "프로젝트3", otherPartyId, leadDepartmentId)));
+        projectRepository.save(createProject("PRJ-001", "프로젝트1", partyId, leadDepartmentId));
+        projectRepository.save(createProject("PRJ-002", "프로젝트2", partyId, leadDepartmentId));
+        projectRepository.save(createProject("PRJ-003", "프로젝트3", otherPartyId, leadDepartmentId));
         flushAndClear();
 
         List<Project> projects = projectRepository.findAllByPartyIdAndDeletedFalse(partyId);
@@ -164,49 +169,53 @@ class ProjectRepositoryTest extends IntegrationTestBase {
     @Test
     @DisplayName("프로젝트 조건에 따른 검색")
     void search() {
-        projectRepository.save(createProjectForSearch("PRJ-ALPHA-001", "알파 프로젝트", 1L, 1L, ProjectStatus.IN_PROGRESS,
-                LocalDate.of(2024, 1, 10)));
-        projectRepository.save(createProjectForSearch("PRJ-ALPHA-002", "알파 보조", 1L, 1L, ProjectStatus.COMPLETED,
-                LocalDate.of(2024, 2, 5)));
-        projectRepository.save(createProjectForSearch("PRJ-ALPHA-003", "알파 프로젝트", 2L, 1L, ProjectStatus.IN_PROGRESS,
-                LocalDate.of(2024, 3, 1)));
-        projectRepository.save(createProjectForSearch("PRJ-ALPHA-004", "알파 프로젝트", 1L, 1L, ProjectStatus.IN_PROGRESS,
-                LocalDate.of(2023, 5, 1)));
+        Long alphaPartyId = createParty("알파 협력사");
+        Long betaPartyId = createParty("베타 협력사");
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-001", "알파 프로젝트", alphaPartyId, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2023, 12, 20), LocalDate.of(2024, 1, 15)));
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-002", "알파 보조", alphaPartyId, 1L, ProjectStatus.COMPLETED,
+                LocalDate.of(2024, 2, 5), LocalDate.of(2024, 2, 28)));
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-003", "알파 프로젝트", betaPartyId, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 3, 1), LocalDate.of(2024, 8, 31)));
+        projectRepository.save(createProjectForSearch("PRJ-ALPHA-004", "알파 프로젝트", alphaPartyId, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2023, 5, 1), LocalDate.of(2023, 12, 15)));
         flushAndClear();
 
         ProjectSearchCondition condition = new ProjectSearchCondition(
                 "알파",
                 List.of(ProjectStatus.IN_PROGRESS),
-                List.of(1L),
+                List.of(alphaPartyId),
                 LocalDate.of(2024, 1, 1),
                 LocalDate.of(2024, 12, 31));
 
         Page<ProjectSummary> projects = projectRepository.search(condition, PageRequest.of(0, 10));
 
         assertThat(projects).hasSize(1)
-                .extracting(ProjectSummary::code)
-                .containsExactly("PRJ-ALPHA-001");
+                .extracting(ProjectSummary::code, ProjectSummary::partyName)
+                .containsExactly(tuple("PRJ-ALPHA-001", "알파 협력사"));
     }
 
     @Test
     @DisplayName("프로젝트 요약 정보를 집계한다")
     void summarize() {
-        projectRepository.save(createProjectForSearch("PRJ-SUM-001", "요약 프로젝트 1", 1L, 1L, ProjectStatus.SCHEDULED,
-                LocalDate.of(2024, 1, 10)));
-        projectRepository.save(createProjectForSearch("PRJ-SUM-002", "요약 프로젝트 2", 1L, 1L, ProjectStatus.IN_PROGRESS,
-                LocalDate.of(2024, 2, 10)));
-        projectRepository.save(createProjectForSearch("PRJ-SUM-003", "요약 프로젝트 3", 1L, 1L, ProjectStatus.COMPLETED,
-                LocalDate.of(2024, 3, 10)));
-        projectRepository.save(createProjectForSearch("PRJ-SUM-004", "요약 프로젝트 4", 1L, 1L, ProjectStatus.ON_HOLD,
-                LocalDate.of(2024, 4, 10)));
-        projectRepository.save(createProjectForSearch("PRJ-SUM-005", "요약 프로젝트 5", 2L, 1L, ProjectStatus.CANCELLED,
-                LocalDate.of(2024, 5, 10)));
+        Long summaryPartyId = createParty("요약 협력사");
+        Long otherPartyId = createParty("다른 협력사");
+        projectRepository.save(createProjectForSearch("PRJ-SUM-001", "요약 프로젝트 1", summaryPartyId, 1L, ProjectStatus.SCHEDULED,
+                LocalDate.of(2024, 1, 10), LocalDate.of(2024, 6, 30)));
+        projectRepository.save(createProjectForSearch("PRJ-SUM-002", "요약 프로젝트 2", summaryPartyId, 1L, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 2, 10), LocalDate.of(2024, 7, 31)));
+        projectRepository.save(createProjectForSearch("PRJ-SUM-003", "요약 프로젝트 3", summaryPartyId, 1L, ProjectStatus.COMPLETED,
+                LocalDate.of(2024, 3, 10), LocalDate.of(2024, 8, 31)));
+        projectRepository.save(createProjectForSearch("PRJ-SUM-004", "요약 프로젝트 4", summaryPartyId, 1L, ProjectStatus.ON_HOLD,
+                LocalDate.of(2024, 4, 10), LocalDate.of(2024, 9, 30)));
+        projectRepository.save(createProjectForSearch("PRJ-SUM-005", "요약 프로젝트 5", otherPartyId, 1L, ProjectStatus.CANCELLED,
+                LocalDate.of(2024, 5, 10), LocalDate.of(2024, 10, 31)));
         flushAndClear();
 
         ProjectOverviewSummary summary = projectRepository.summarize(new ProjectSearchCondition(
                 "요약",
                 null,
-                List.of(1L),
+                List.of(summaryPartyId),
                 LocalDate.of(2024, 1, 1),
                 LocalDate.of(2024, 12, 31)
         ));
@@ -221,8 +230,8 @@ class ProjectRepositoryTest extends IntegrationTestBase {
     }
 
     private Project createProjectForSearch(String code, String name, Long partyId, Long leadDepartmentId, ProjectStatus status,
-                                           LocalDate startDate) {
-        return Project.create(new ProjectCreateRequest(
+                                           LocalDate startDate, LocalDate endDate) {
+        return Project.create(
                 partyId,
                 leadDepartmentId,
                 code,
@@ -231,7 +240,12 @@ class ProjectRepositoryTest extends IntegrationTestBase {
                 status,
                 100_000_000L,
                 startDate,
-                startDate.plusMonths(6)));
+                endDate);
+    }
+
+    private Long createParty(String name) {
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest(name, null, null, null, null)));
+        return party.getIdOrThrow();
     }
 
 }

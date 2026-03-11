@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 import org.jspecify.annotations.Nullable;
 
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
+import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 
 public record ProjectCreateApiRequest(
@@ -16,10 +16,10 @@ public record ProjectCreateApiRequest(
         ProjectStatus status,
         Long contractAmount,
         LocalDate startDate,
-        LocalDate endDate) {
+        @Nullable LocalDate endDate) {
 
-    public ProjectCreateRequest toDomainRequest() {
-        return new ProjectCreateRequest(
+    public ProjectCreateCommand toCommand() {
+        return new ProjectCreateCommand(
                 partyId,
                 leadDepartmentId,
                 code,

@@ -2,8 +2,10 @@ package kr.co.abacus.abms.adapter.api.project.dto;
 
 import java.time.LocalDate;
 
+import org.jspecify.annotations.Nullable;
+
+import kr.co.abacus.abms.application.project.dto.ProjectUpdateCommand;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
-import kr.co.abacus.abms.domain.project.ProjectUpdateRequest;
 
 public record ProjectUpdateApiRequest(
         Long partyId,
@@ -13,15 +15,15 @@ public record ProjectUpdateApiRequest(
         String status,
         Long contractAmount,
         LocalDate startDate,
-        LocalDate endDate) {
+        @Nullable LocalDate endDate) {
 
-    public ProjectUpdateRequest toDomainRequest() {
-        return new ProjectUpdateRequest(
-                partyId, // Added partyId
+    public ProjectUpdateCommand toCommand() {
+        return new ProjectUpdateCommand(
+                partyId,
                 leadDepartmentId,
                 name,
                 description,
-                ProjectStatus.valueOf(status), // Conversion added
+                ProjectStatus.valueOf(status),
                 contractAmount,
                 startDate,
                 endDate);
