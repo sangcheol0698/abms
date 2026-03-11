@@ -23,7 +23,6 @@ import kr.co.abacus.abms.domain.payroll.Payroll;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlanCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
@@ -624,7 +623,7 @@ public class InitData {
         // 프로젝트 (프로젝트, 매출 일정, 인력 투입) 구성
         // ---------------------------------------------------------
         Project aiProject = projectRepository.save(
-            Project.create(new ProjectCreateRequest(
+            Project.create(
                 partyNaverCloud.getIdOrThrow(),
                 22L, // PM ID (임의)
                 "PROJ-2026-AI",
@@ -634,7 +633,7 @@ public class InitData {
                 1000000000L, // 총 계약금 10억
                 LocalDate.of(2026, 1, 1),
                 LocalDate.of(2026, 6, 30)
-            ))
+            )
         );
 
         ProjectRevenuePlan aiPlanJan = projectRevenuePlanRepository.save(

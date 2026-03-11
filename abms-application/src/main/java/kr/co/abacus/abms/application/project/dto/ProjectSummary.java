@@ -10,6 +10,7 @@ import kr.co.abacus.abms.domain.shared.Money;
 public record ProjectSummary(
         Long projectId,
         Long partyId,
+        String partyName,
         String code,
         String name,
         @Nullable String description,

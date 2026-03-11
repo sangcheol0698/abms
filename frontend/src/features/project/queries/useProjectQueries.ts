@@ -116,8 +116,8 @@ export function useUpdateProjectMutation() {
   return useMutation({
     mutationFn: (variables: { projectId: number; data: ProjectUpdateData }) =>
       repository.update(variables.projectId, variables.data),
-    onSuccess: async (updated) => {
-      await invalidateProjectSideEffects(updated.projectId);
+    onSuccess: async (_updated, variables) => {
+      await invalidateProjectSideEffects(variables.projectId);
     },
   });
 }
@@ -138,8 +138,8 @@ export function useCompleteProjectMutation() {
 
   return useMutation({
     mutationFn: (projectId: number) => repository.complete(projectId),
-    onSuccess: async (updated) => {
-      await invalidateProjectSideEffects(updated.projectId);
+    onSuccess: async (_data, projectId) => {
+      await invalidateProjectSideEffects(projectId);
     },
   });
 }
@@ -149,8 +149,8 @@ export function useCancelProjectMutation() {
 
   return useMutation({
     mutationFn: (projectId: number) => repository.cancel(projectId),
-    onSuccess: async (updated) => {
-      await invalidateProjectSideEffects(updated.projectId);
+    onSuccess: async (_data, projectId) => {
+      await invalidateProjectSideEffects(projectId);
     },
   });
 }

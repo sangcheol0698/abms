@@ -2,16 +2,17 @@ package kr.co.abacus.abms.adapter.api.project;
 
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectCreateApiRequest;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectCreateResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectDetailResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
+import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateResponse;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectFixture;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
@@ -60,25 +61,24 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
-        ProjectResponse response = restTestClient.post()
+        ProjectCreateResponse response = restTestClient.post()
                 .uri("/api/projects")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestJson)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(ProjectResponse.class)
+                .expectBody(ProjectCreateResponse.class)
                 .returnResult()
                 .getResponseBody();
 
         assertThat(response).isNotNull();
         assertThat(response.projectId()).isNotNull();
-        assertThat(response.code()).isEqualTo("PRJ-TEST-001");
-        assertThat(response.name()).isEqualTo("테스트 프로젝트");
-        assertThat(response.statusDescription()).isEqualTo("예약");
 
         flushAndClear();
         Project savedProject = projectRepository.findById(response.projectId()).orElseThrow();
         assertThat(savedProject.getCode()).isEqualTo("PRJ-TEST-001");
+        assertThat(savedProject.getName()).isEqualTo("테스트 프로젝트");
+        assertThat(savedProject.getStatus()).isEqualTo(ProjectStatus.SCHEDULED);
     }
 
     @Test
@@ -127,8 +127,8 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                         .path("/api/projects")
                         .queryParam("name", "알파")
                         .queryParam("statuses", ProjectStatus.IN_PROGRESS.name())
-                        .queryParam("startDate", "2024-01-01")
-                        .queryParam("endDate", "2024-12-31")
+                        .queryParam("periodStart", "2024-01-01")
+                        .queryParam("periodEnd", "2024-12-31")
                         .queryParam("page", 0)
                         .queryParam("size", 10)
                         .build())
@@ -236,19 +236,18 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
-        ProjectResponse response = restTestClient.put()
+        ProjectUpdateResponse response = restTestClient.put()
                 .uri("/api/projects/{id}", project.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestJson)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(ProjectResponse.class)
+                .expectBody(ProjectUpdateResponse.class)
                 .returnResult()
                 .getResponseBody();
 
         assertThat(response).isNotNull();
-        assertThat(response.name()).isEqualTo("수정된 프로젝트명");
-        assertThat(response.statusDescription()).isEqualTo("진행 중");
+        assertThat(response.projectId()).isEqualTo(project.getId());
 
         flushAndClear();
         Project updatedProject = projectRepository.findById(project.getId()).orElseThrow();
@@ -266,16 +265,10 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // When & Then
-        ProjectResponse response = restTestClient.patch()
+        restTestClient.patch()
                 .uri("/api/projects/{id}/complete", project.getId())
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProjectResponse.class)
-                .returnResult()
-                .getResponseBody();
-
-        assertThat(response).isNotNull();
-        assertThat(response.statusDescription()).isEqualTo("완료");
+                .expectStatus().isNoContent();
 
         flushAndClear();
         Project completedProject = projectRepository.findById(project.getId()).orElseThrow();
@@ -293,16 +286,10 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // When & Then
-        ProjectResponse response = restTestClient.patch()
+        restTestClient.patch()
                 .uri("/api/projects/{id}/cancel", project.getId())
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProjectResponse.class)
-                .returnResult()
-                .getResponseBody();
-
-        assertThat(response).isNotNull();
-        assertThat(response.statusDescription()).isEqualTo("취소");
+                .expectStatus().isNoContent();
 
         flushAndClear();
         Project cancelledProject = projectRepository.findById(project.getId()).orElseThrow();
@@ -409,7 +396,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     // }
 
     private Project createProject(String code, String name, Long partyId, Long leadDepartmentId, ProjectStatus status, LocalDate startDate) {
-        return Project.create(new ProjectCreateRequest(
+        return Project.create(
                 partyId,
                 leadDepartmentId,
                 code,
@@ -418,7 +405,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                 status,
                 100_000_000L,
                 startDate,
-                startDate.plusMonths(6)));
+                startDate.plusMonths(6));
     }
 
     private Long createParty(String name) {

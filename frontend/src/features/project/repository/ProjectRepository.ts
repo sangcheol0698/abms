@@ -32,8 +32,12 @@ export interface ProjectOverviewSummaryParams {
   name?: string;
   statuses?: string[];
   partyIds?: number[];
-  startDate?: string;
-  endDate?: string;
+  periodStart?: string;
+  periodEnd?: string;
+}
+
+export interface ProjectWriteResult {
+  projectId: number;
 }
 
 @singleton()
@@ -91,11 +95,12 @@ export default class ProjectRepository {
   /**
    * 프로젝트 생성
    */
-  async create(data: ProjectCreateData): Promise<ProjectDetail> {
-    const response = await this.httpRepository.post({
+  async create(data: ProjectCreateData): Promise<ProjectWriteResult> {
+    const response = await this.httpRepository.post<ProjectWriteResult>({
       path: '/api/projects',
       data: {
         partyId: data.partyId,
+        leadDepartmentId: data.leadDepartmentId,
         code: data.code,
         name: data.name,
         description: data.description || null,
@@ -106,17 +111,20 @@ export default class ProjectRepository {
       },
     });
 
-    return mapProjectDetail(response);
+    return {
+      projectId: Number(response?.projectId ?? 0),
+    };
   }
 
   /**
    * 프로젝트 수정
    */
-  async update(projectId: number, data: ProjectUpdateData): Promise<ProjectDetail> {
-    const response = await this.httpRepository.put({
+  async update(projectId: number, data: ProjectUpdateData): Promise<ProjectWriteResult> {
+    const response = await this.httpRepository.put<ProjectWriteResult>({
       path: `/api/projects/${projectId}`,
       data: {
         partyId: data.partyId,
+        leadDepartmentId: data.leadDepartmentId,
         name: data.name,
         description: data.description || null,
         status: data.status,
@@ -126,7 +134,9 @@ export default class ProjectRepository {
       },
     });
 
-    return mapProjectDetail(response);
+    return {
+      projectId: Number(response?.projectId ?? 0),
+    };
   }
 
   /**
@@ -141,23 +151,19 @@ export default class ProjectRepository {
   /**
    * 프로젝트 완료 처리
    */
-  async complete(projectId: number): Promise<ProjectDetail> {
-    const response = await this.httpRepository.patch({
+  async complete(projectId: number): Promise<void> {
+    await this.httpRepository.patch({
       path: `/api/projects/${projectId}/complete`,
     });
-
-    return mapProjectDetail(response);
   }
 
   /**
    * 프로젝트 취소 처리
    */
-  async cancel(projectId: number): Promise<ProjectDetail> {
-    const response = await this.httpRepository.patch({
+  async cancel(projectId: number): Promise<void> {
+    await this.httpRepository.patch({
       path: `/api/projects/${projectId}/cancel`,
     });
-
-    return mapProjectDetail(response);
   }
 
   /**
@@ -238,12 +244,12 @@ function buildRequestParams(params: ProjectSearchParams): Record<string, string>
     query.name = params.name;
   }
 
-  if (params.startDate) {
-    query.startDate = params.startDate;
+  if (params.periodStart) {
+    query.periodStart = params.periodStart;
   }
 
-  if (params.endDate) {
-    query.endDate = params.endDate;
+  if (params.periodEnd) {
+    query.periodEnd = params.periodEnd;
   }
 
   if (params.sort) {
@@ -268,12 +274,12 @@ function buildOverviewRequestParams(params: ProjectOverviewSummaryParams): Recor
     query.name = params.name;
   }
 
-  if (params.startDate) {
-    query.startDate = params.startDate;
+  if (params.periodStart) {
+    query.periodStart = params.periodStart;
   }
 
-  if (params.endDate) {
-    query.endDate = params.endDate;
+  if (params.periodEnd) {
+    query.periodEnd = params.periodEnd;
   }
 
   const arrayFields: (keyof ProjectOverviewSummaryParams)[] = ['statuses', 'partyIds'];

@@ -108,12 +108,12 @@ class PartyApiTest extends ApiIntegrationTestBase {
                 "010-0000-0000",
                 "contact2@test.com")));
 
-        projectRepository.save(Project.create(ProjectFixture.createProjectCreateRequest(
-                "PRJ-PARTY-001", "협력사 프로젝트 1", party.getId(), 1L)));
-        projectRepository.save(Project.create(ProjectFixture.createProjectCreateRequest(
-                "PRJ-PARTY-002", "협력사 프로젝트 2", party.getId(), 1L)));
-        projectRepository.save(Project.create(ProjectFixture.createProjectCreateRequest(
-                "PRJ-OTHER-001", "다른 협력사 프로젝트", otherParty.getId(), 1L)));
+        projectRepository.save(ProjectFixture.createProject(
+                "PRJ-PARTY-001", "협력사 프로젝트 1", party.getId(), 1L));
+        projectRepository.save(ProjectFixture.createProject(
+                "PRJ-PARTY-002", "협력사 프로젝트 2", party.getId(), 1L));
+        projectRepository.save(ProjectFixture.createProject(
+                "PRJ-OTHER-001", "다른 협력사 프로젝트", otherParty.getId(), 1L));
         flushAndClear();
 
         var response = restTestClient.get()
@@ -180,7 +180,7 @@ class PartyApiTest extends ApiIntegrationTestBase {
     }
 
     private Project createProject(String code, Long partyId, ProjectStatus status, long contractAmount) {
-        return Project.create(new kr.co.abacus.abms.domain.project.ProjectCreateRequest(
+        return Project.create(
                 partyId,
                 1L,
                 code,
@@ -190,7 +190,7 @@ class PartyApiTest extends ApiIntegrationTestBase {
                 contractAmount,
                 java.time.LocalDate.of(2024, 1, 1),
                 java.time.LocalDate.of(2024, 12, 31)
-        ));
+        );
     }
 
 }

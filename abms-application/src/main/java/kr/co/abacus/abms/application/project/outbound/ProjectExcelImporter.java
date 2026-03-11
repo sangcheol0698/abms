@@ -4,10 +4,10 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.function.Function;
 
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
+import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 
 public interface ProjectExcelImporter {
 
-    List<ProjectCreateRequest> importProjects(InputStream inputStream, Function<String, Long> partyLookup);
+    List<ProjectCreateCommand> importProjects(InputStream inputStream, Function<String, Long> partyLookup);
 
 }

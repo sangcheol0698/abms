@@ -75,7 +75,7 @@ class PartyRepositoryTest extends IntegrationTestBase {
     }
 
     private Project createProject(String code, Long partyId, ProjectStatus status, long contractAmount) {
-        return Project.create(new kr.co.abacus.abms.domain.project.ProjectCreateRequest(
+        return Project.create(
                 partyId,
                 1L,
                 code,
@@ -85,7 +85,7 @@ class PartyRepositoryTest extends IntegrationTestBase {
                 contractAmount,
                 java.time.LocalDate.of(2024, 1, 1),
                 java.time.LocalDate.of(2024, 12, 31)
-        ));
+        );
     }
 
 }

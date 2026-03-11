@@ -35,11 +35,11 @@ public record ProjectResponse(
                 project.getPeriod().endDate());
     }
 
-    public static ProjectResponse from(ProjectSummary summary, String partyName) {
+    public static ProjectResponse from(ProjectSummary summary) {
         return new ProjectResponse(
                 summary.projectId(),
                 summary.partyId(),
-                partyName,
+                summary.partyName(),
                 summary.code(),
                 summary.name(),
                 summary.description(),

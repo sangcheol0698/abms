@@ -1,10 +1,12 @@
-package kr.co.abacus.abms.domain.project;
+package kr.co.abacus.abms.application.project.dto;
 
 import java.time.LocalDate;
 
 import org.jspecify.annotations.Nullable;
 
-public record ProjectUpdateRequest(
+import kr.co.abacus.abms.domain.project.ProjectStatus;
+
+public record ProjectUpdateCommand(
         Long partyId,
         Long leadDepartmentId,
         String name,

@@ -15,8 +15,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
+import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 import kr.co.abacus.abms.application.project.outbound.ProjectExcelImporter;
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
 import kr.co.abacus.abms.domain.project.ProjectExcelException;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 
@@ -35,14 +35,14 @@ public class PoiProjectExcelImporter implements ProjectExcelImporter {
     );
 
     @Override
-    public List<ProjectCreateRequest> importProjects(InputStream inputStream, Function<String, Long> partyLookup) {
+    public List<ProjectCreateCommand> importProjects(InputStream inputStream, Function<String, Long> partyLookup) {
         try (Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
             if (sheet == null || sheet.getPhysicalNumberOfRows() < 2) {
                 throw new ProjectExcelException("유효한 데이터가 포함된 시트를 찾을 수 없습니다.");
             }
 
-            List<ProjectCreateRequest> requests = new ArrayList<>();
+            List<ProjectCreateCommand> requests = new ArrayList<>();
             for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
                 if (row == null || isRowEmpty(row)) {
@@ -58,7 +58,7 @@ public class PoiProjectExcelImporter implements ProjectExcelImporter {
         }
     }
 
-    private ProjectCreateRequest toCreateRequest(Row row, Function<String, Long> partyLookup) {
+    private ProjectCreateCommand toCreateRequest(Row row, Function<String, Long> partyLookup) {
         String partyName = getCellValue(row, 0);
         String leadDepartmentName = getCellValue(row, 1);
         String code = getCellValue(row, 2);
@@ -74,7 +74,7 @@ public class PoiProjectExcelImporter implements ProjectExcelImporter {
             throw new IllegalArgumentException("존재하지 않는 협력사입니다: " + partyName);
         }
 
-        return new ProjectCreateRequest(
+        return new ProjectCreateCommand(
                 partyId,
                 Long.parseLong(leadDepartmentName), // 임시
                 code,

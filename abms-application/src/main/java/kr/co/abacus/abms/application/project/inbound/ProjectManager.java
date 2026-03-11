@@ -1,18 +1,17 @@
 package kr.co.abacus.abms.application.project.inbound;
 
-import kr.co.abacus.abms.domain.project.Project;
-import kr.co.abacus.abms.domain.project.ProjectCreateRequest;
-import kr.co.abacus.abms.domain.project.ProjectUpdateRequest;
+import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
+import kr.co.abacus.abms.application.project.dto.ProjectUpdateCommand;
 
 public interface ProjectManager {
 
-    Project create(ProjectCreateRequest request);
+    Long create(ProjectCreateCommand command);
 
-    Project update(Long id, ProjectUpdateRequest request);
+    Long update(Long id, ProjectUpdateCommand command);
 
-    Project complete(Long id);
+    void complete(Long id);
 
-    Project cancel(Long id);
+    void cancel(Long id);
 
     void delete(Long id);
 

@@ -1,9 +1,9 @@
 package kr.co.abacus.abms.adapter.infrastructure.project;
 
+import static kr.co.abacus.abms.domain.party.QParty.*;
 import static kr.co.abacus.abms.domain.project.QProject.*;
 import static org.springframework.util.StringUtils.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +20,6 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -49,6 +47,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                 .select(Projections.constructor(ProjectSummary.class,
                         project.id,
                         project.partyId,
+                        party.name,
                         project.code,
                         project.name,
                         project.description,
@@ -57,12 +56,12 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         project.period.startDate,
                         project.period.endDate))
                 .from(project)
+                .join(party).on(project.partyId.eq(party.id))
                 .where(
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        startDateFrom(condition.startDate()),
-                        startDateTo(condition.endDate()),
+                        overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
@@ -72,12 +71,12 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
         JPAQuery<Long> countQuery = queryFactory
                 .select(project.count())
                 .from(project)
+                .join(party).on(project.partyId.eq(party.id))
                 .where(
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        startDateFrom(condition.startDate()),
-                        startDateTo(condition.endDate()),
+                        overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
@@ -102,8 +101,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        startDateFrom(condition.startDate()),
-                        startDateTo(condition.endDate()),
+                        overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .orderBy(defaultSort())
                 .fetch();
@@ -131,12 +129,18 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
         return project.partyId.in(partyIds);
     }
 
-    private @Nullable BooleanExpression startDateFrom(@Nullable LocalDate startDate) {
-        return startDate != null ? project.period.startDate.goe(startDate) : null;
-    }
-
-    private @Nullable BooleanExpression startDateTo(@Nullable LocalDate endDate) {
-        return endDate != null ? project.period.startDate.loe(endDate) : null;
+    private @Nullable BooleanExpression overlapsPeriod(@Nullable LocalDate periodStart, @Nullable LocalDate periodEnd) {
+        if (periodStart == null && periodEnd == null) {
+            return null;
+        }
+        if (periodStart != null && periodEnd != null) {
+            return project.period.startDate.loe(periodEnd)
+                    .and(project.period.endDate.isNull().or(project.period.endDate.goe(periodStart)));
+        }
+        if (periodStart != null) {
+            return project.period.endDate.isNull().or(project.period.endDate.goe(periodStart));
+        }
+        return project.period.startDate.loe(periodEnd);
     }
 
     private OrderSpecifier<?>[] resolveSort(Pageable pageable) {
@@ -158,8 +162,8 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
             case "name" -> new OrderSpecifier<>(direction, project.name);
             case "status" -> new OrderSpecifier<>(direction, project.status);
             case "contractAmount" -> new OrderSpecifier<>(direction, project.contractAmount.amount);
-            case "startDate" -> new OrderSpecifier<>(direction, project.period.startDate);
-            case "endDate" -> new OrderSpecifier<>(direction, project.period.endDate);
+            case "periodStart" -> new OrderSpecifier<>(direction, project.period.startDate);
+            case "periodEnd" -> new OrderSpecifier<>(direction, project.period.endDate);
             case "createdAt" -> new OrderSpecifier<>(direction, project.createdAt);
             default -> defaultSort();
         };
@@ -177,8 +181,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        startDateFrom(condition.startDate()),
-                        startDateTo(condition.endDate()),
+                        overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         extraCondition,
                         project.deleted.isFalse())
                 .fetchOne();
@@ -193,8 +196,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        startDateFrom(condition.startDate()),
-                        startDateTo(condition.endDate()),
+                        overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .fetchOne();
         return value != null ? value : 0L;
