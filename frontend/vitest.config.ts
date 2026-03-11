@@ -16,7 +16,23 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     exclude: ['tests/**', 'node_modules/**'],
     coverage: {
-      provider: 'v8'
+      provider: 'v8',
+      include: ['src/features/**/*.{ts,vue}', 'src/core/**/*.{ts,vue}'],
+      exclude: [
+        'src/features/chat/**',
+        'src/test-utils/**',
+        'src/**/*.spec.*',
+        'src/**/*.test.*',
+        'src/**/index.ts',
+        'src/**/__tests__/**',
+      ],
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        statements: 55,
+        branches: 74,
+        functions: 52,
+        lines: 55,
+      },
     },
   },
 });
