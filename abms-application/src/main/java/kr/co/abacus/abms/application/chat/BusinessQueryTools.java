@@ -27,6 +27,8 @@ import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.application.party.PartyQueryService;
+import kr.co.abacus.abms.application.party.dto.PartyListItem;
+import kr.co.abacus.abms.application.party.dto.PartySearchCondition;
 import kr.co.abacus.abms.application.project.ProjectQueryService;
 import kr.co.abacus.abms.application.project.dto.ProjectDetail;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
@@ -37,7 +39,6 @@ import kr.co.abacus.abms.application.summary.inbound.MonthlyRevenueSummaryFinder
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
-import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
@@ -180,16 +181,16 @@ public class BusinessQueryTools {
         notifyToolCall("searchParties");
 
         int pageSize = normalizeLimit(limit);
-        Page<Party> page = partyFinder.getParties(PageRequest.of(0, pageSize), name);
+        Page<PartyListItem> page = partyFinder.getParties(PageRequest.of(0, pageSize), new PartySearchCondition(name));
         List<PartySearchItem> parties = page.getContent().stream()
                 .map(party -> new PartySearchItem(
-                        party.getIdOrThrow(),
-                        party.getName(),
-                        party.getCeoName(),
-                        party.getSalesRepName(),
-                        party.getSalesRepPhone(),
-                        party.getSalesRepEmail(),
-                        "/parties/" + party.getIdOrThrow()))
+                        party.partyId(),
+                        party.name(),
+                        party.ceo(),
+                        party.manager(),
+                        party.contact(),
+                        party.email(),
+                        "/parties/" + party.partyId()))
                 .toList();
 
         return new PartySearchResult(name, (int) page.getTotalElements(), parties.size(), parties);
@@ -199,12 +200,12 @@ public class BusinessQueryTools {
     public @Nullable PartyProjectsResult getPartyProjects(String partyName) {
         notifyToolCall("getPartyProjects");
 
-        @Nullable Party resolvedParty = resolvePartyByName(partyName);
+        @Nullable PartyListItem resolvedParty = resolvePartyByName(partyName);
         if (resolvedParty == null) {
             return null;
         }
 
-        List<Project> projects = projectQueryService.findAllByPartyId(resolvedParty.getIdOrThrow());
+        List<Project> projects = projectQueryService.findAllByPartyId(resolvedParty.partyId());
         List<PartyProjectItem> items = projects.stream()
                 .map(project -> new PartyProjectItem(
                         project.getIdOrThrow(),
@@ -219,9 +220,9 @@ public class BusinessQueryTools {
                 .toList();
 
         return new PartyProjectsResult(
-                resolvedParty.getIdOrThrow(),
-                resolvedParty.getName(),
-                "/parties/" + resolvedParty.getIdOrThrow(),
+                resolvedParty.partyId(),
+                resolvedParty.name(),
+                "/parties/" + resolvedParty.partyId(),
                 items.size(),
                 items);
     }
@@ -417,14 +418,16 @@ public class BusinessQueryTools {
         return resolveEmployeeById(selected.employeeId());
     }
 
-    private @Nullable Party resolvePartyByName(String partyName) {
-        Page<Party> page = partyFinder.getParties(PageRequest.of(0, RESOLVE_CANDIDATE_LIMIT), partyName);
+    private @Nullable PartyListItem resolvePartyByName(String partyName) {
+        Page<PartyListItem> page = partyFinder.getParties(
+                PageRequest.of(0, RESOLVE_CANDIDATE_LIMIT),
+                new PartySearchCondition(partyName));
         if (page.isEmpty()) {
             return null;
         }
 
         return page.getContent().stream()
-                .filter(party -> party.getName().equalsIgnoreCase(partyName))
+                .filter(party -> party.name().equalsIgnoreCase(partyName))
                 .findFirst()
                 .orElse(page.getContent().getFirst());
     }

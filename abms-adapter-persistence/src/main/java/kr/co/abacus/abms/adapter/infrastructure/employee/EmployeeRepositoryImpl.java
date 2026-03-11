@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
+import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.outbound.CustomEmployeeRepository;
@@ -89,6 +90,18 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                         employee.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public EmployeeOverviewSummary summarize(EmployeeSearchCondition condition) {
+        return new EmployeeOverviewSummary(
+                countEmployees(condition, null),
+                countEmployees(condition, employee.status.eq(EmployeeStatus.ACTIVE)),
+                countEmployees(condition, employee.status.eq(EmployeeStatus.ON_LEAVE)),
+                countEmployees(condition, employee.type.eq(EmployeeType.FULL_TIME)),
+                countEmployees(condition, employee.type.eq(EmployeeType.FREELANCER)),
+                countEmployees(condition, employee.type.eq(EmployeeType.OUTSOURCING)),
+                countEmployees(condition, employee.type.eq(EmployeeType.PART_TIME)));
     }
 
     @Override
@@ -247,6 +260,23 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
     private OrderSpecifier<?> defaultSort() {
         return employee.createdAt.desc();
+    }
+
+    private long countEmployees(EmployeeSearchCondition condition, @Nullable BooleanExpression extraCondition) {
+        Long value = queryFactory
+                .select(employee.count())
+                .from(employee)
+                .where(
+                        containsName(condition.name()),
+                        inPositions(condition.positions()),
+                        inTypes(condition.types()),
+                        inGrades(condition.grades()),
+                        inDepartments(condition.departmentIds()),
+                        inStatuses(condition.statuses()),
+                        extraCondition,
+                        employee.deleted.isFalse())
+                .fetchOne();
+        return value != null ? value : 0L;
     }
 
 }

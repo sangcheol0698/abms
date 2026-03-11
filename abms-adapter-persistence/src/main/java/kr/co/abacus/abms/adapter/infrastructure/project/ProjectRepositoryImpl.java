@@ -3,6 +3,7 @@ package kr.co.abacus.abms.adapter.infrastructure.project;
 import static kr.co.abacus.abms.domain.project.QProject.*;
 import static org.springframework.util.StringUtils.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +20,15 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.outbound.CustomProjectRepository;
@@ -76,6 +81,18 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         project.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public ProjectOverviewSummary summarize(ProjectSearchCondition condition) {
+        return new ProjectOverviewSummary(
+                countProjects(condition, null),
+                countProjects(condition, project.status.eq(ProjectStatus.SCHEDULED)),
+                countProjects(condition, project.status.eq(ProjectStatus.IN_PROGRESS)),
+                countProjects(condition, project.status.eq(ProjectStatus.COMPLETED)),
+                countProjects(condition, project.status.eq(ProjectStatus.ON_HOLD)),
+                countProjects(condition, project.status.eq(ProjectStatus.CANCELLED)),
+                sumContractAmount(condition));
     }
 
     @Override
@@ -150,6 +167,37 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
 
     private OrderSpecifier<?> defaultSort() {
         return project.createdAt.desc();
+    }
+
+    private long countProjects(ProjectSearchCondition condition, @Nullable BooleanExpression extraCondition) {
+        Long value = queryFactory
+                .select(project.count())
+                .from(project)
+                .where(
+                        containsNameOrCode(condition.name()),
+                        inStatuses(condition.statuses()),
+                        inPartyIds(condition.partyIds()),
+                        startDateFrom(condition.startDate()),
+                        startDateTo(condition.endDate()),
+                        extraCondition,
+                        project.deleted.isFalse())
+                .fetchOne();
+        return value != null ? value : 0L;
+    }
+
+    private long sumContractAmount(ProjectSearchCondition condition) {
+        Long value = queryFactory
+                .select(Expressions.numberTemplate(Long.class, "coalesce(sum({0}), 0)", project.contractAmount.amount))
+                .from(project)
+                .where(
+                        containsNameOrCode(condition.name()),
+                        inStatuses(condition.statuses()),
+                        inPartyIds(condition.partyIds()),
+                        startDateFrom(condition.startDate()),
+                        startDateTo(condition.endDate()),
+                        project.deleted.isFalse())
+                .fetchOne();
+        return value != null ? value : 0L;
     }
 
 }

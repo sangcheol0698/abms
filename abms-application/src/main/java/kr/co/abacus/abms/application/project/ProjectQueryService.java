@@ -13,6 +13,7 @@ import kr.co.abacus.abms.application.party.PartyQueryService;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.project.dto.ProjectDetail;
+import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
@@ -69,6 +70,11 @@ public class ProjectQueryService implements ProjectFinder {
     @Override
     public Page<ProjectSummary> search(ProjectSearchCondition condition, Pageable pageable) {
         return projectRepository.search(condition, pageable);
+    }
+
+    @Override
+    public ProjectOverviewSummary getOverviewSummary(ProjectSearchCondition condition) {
+        return projectRepository.summarize(condition);
     }
 
 }

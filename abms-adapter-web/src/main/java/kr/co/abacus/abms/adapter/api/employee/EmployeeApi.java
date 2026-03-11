@@ -50,6 +50,7 @@ import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
 import kr.co.abacus.abms.application.employee.authorization.EmployeeWriteAuthorizationService;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
+import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
@@ -103,6 +104,11 @@ public class EmployeeApi {
         Page<EmployeeSearchResponse> responses = employeeSummaries.map(EmployeeSearchResponse::of);
 
         return PageResponse.of(responses);
+    }
+
+    @GetMapping("/api/employees/summary")
+    public EmployeeOverviewSummary getOverviewSummary(@Valid EmployeeSearchCondition condition) {
+        return employeeFinder.getOverviewSummary(condition);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")

@@ -9,12 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
+import kr.co.abacus.abms.application.party.dto.PartyOverviewSummary;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectFixture;
+import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 import org.springframework.core.ParameterizedTypeReference;
@@ -130,6 +132,65 @@ class PartyApiTest extends ApiIntegrationTestBase {
         assertThat(response)
                 .extracting(ProjectResponse::code)
                 .containsExactlyInAnyOrder("PRJ-PARTY-001", "PRJ-PARTY-002");
+    }
+
+    @Test
+    @DisplayName("협력사 요약 정보를 조회한다")
+    void summary() {
+        Party alpha = partyRepository.save(Party.create(new PartyCreateRequest(
+                "요약 협력사 Alpha",
+                "홍길동",
+                "김담당",
+                "010-1234-5678",
+                "contact@test.com")));
+        Party beta = partyRepository.save(Party.create(new PartyCreateRequest(
+                "요약 협력사 Beta",
+                "홍길동",
+                "김담당",
+                "010-1234-5678",
+                "contact@test.com")));
+        partyRepository.save(Party.create(new PartyCreateRequest(
+                "요약 협력사 Gamma",
+                "홍길동",
+                "김담당",
+                "010-1234-5678",
+                "contact@test.com")));
+
+        projectRepository.save(createProject("PRJ-PARTY-SUM-API-001", alpha.getId(), ProjectStatus.IN_PROGRESS, 100_000_000L));
+        projectRepository.save(createProject("PRJ-PARTY-SUM-API-002", beta.getId(), ProjectStatus.COMPLETED, 200_000_000L));
+        flushAndClear();
+
+        PartyOverviewSummary response = restTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/parties/summary")
+                        .queryParam("name", "요약 협력사")
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(PartyOverviewSummary.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.totalCount()).isEqualTo(3);
+        assertThat(response.withProjectsCount()).isEqualTo(2);
+        assertThat(response.withInProgressProjectsCount()).isEqualTo(1);
+        assertThat(response.withoutProjectsCount()).isEqualTo(1);
+        assertThat(response.totalContractAmount()).isEqualTo(300_000_000L);
+    }
+
+    private Project createProject(String code, Long partyId, ProjectStatus status, long contractAmount) {
+        return Project.create(new kr.co.abacus.abms.domain.project.ProjectCreateRequest(
+                partyId,
+                1L,
+                code,
+                code,
+                "테스트 프로젝트 설명",
+                status,
+                contractAmount,
+                java.time.LocalDate.of(2024, 1, 1),
+                java.time.LocalDate.of(2024, 12, 31)
+        ));
     }
 
 }
