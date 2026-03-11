@@ -33,8 +33,14 @@ public interface EmployeeRepository extends CustomEmployeeRepository {
 
     int count();
 
+    int countByDeletedFalse();
+
     int countByJoinDateBetween(LocalDate startDate, LocalDate endDate);
 
+    int countByJoinDateBetweenAndDeletedFalse(LocalDate startDate, LocalDate endDate);
+
     int countByStatus(EmployeeStatus status);
+
+    int countByStatusAndDeletedFalse(EmployeeStatus status);
 
 }

@@ -29,6 +29,7 @@ public class AuthQueryService implements AuthFinder {
         Email userEmail = new Email(username);
 
         return accountRepository.findByUsername(userEmail)
+                .filter(account -> !account.isDeleted())
                 .map(this::toUserInfo)
                 .orElseGet(() -> fallbackUserInfo(userEmail.address()));
     }
@@ -37,12 +38,13 @@ public class AuthQueryService implements AuthFinder {
     public Long getCurrentAccountId(String username) {
         Email userEmail = new Email(username);
         return accountRepository.findByUsername(userEmail)
+                .filter(account -> !account.isDeleted())
                 .map(Account::getIdOrThrow)
                 .orElseThrow(() -> new AccountNotFoundException("계정을 찾을 수 없습니다: " + userEmail.address()));
     }
 
     private AuthenticatedUserInfo toUserInfo(Account account) {
-        return employeeRepository.findById(account.getEmployeeId())
+        return employeeRepository.findByIdAndDeletedFalse(account.getEmployeeId())
                 .map(employee -> new AuthenticatedUserInfo(
                         employee.getName(),
                         employee.getEmail().address(),

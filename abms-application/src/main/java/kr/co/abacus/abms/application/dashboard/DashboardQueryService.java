@@ -23,15 +23,15 @@ public class DashboardQueryService implements DashboardFinder {
     private final ProjectRepository projectRepository;
 
     public DashboardSummaryResponse getDashboardSummary() {
-        int totalEmployeesCount = employeeRepository.count();
-        int activeProjectsCount = projectRepository.countByStatus(ProjectStatus.IN_PROGRESS);
+        int totalEmployeesCount = employeeRepository.countByDeletedFalse();
+        int activeProjectsCount = projectRepository.countByStatusAndDeletedFalse(ProjectStatus.IN_PROGRESS);
 
         LocalDate today = LocalDate.now();
         LocalDate startDate = today.withDayOfMonth(1);
         LocalDate endDate = today.withDayOfMonth(today.lengthOfMonth());
-        int newEmployeesCount = employeeRepository.countByJoinDateBetween(startDate, endDate);
+        int newEmployeesCount = employeeRepository.countByJoinDateBetweenAndDeletedFalse(startDate, endDate);
 
-        int onLeaveEmployeesCount = employeeRepository.countByStatus(EmployeeStatus.ON_LEAVE);
+        int onLeaveEmployeesCount = employeeRepository.countByStatusAndDeletedFalse(EmployeeStatus.ON_LEAVE);
 
         return new DashboardSummaryResponse(totalEmployeesCount, activeProjectsCount, newEmployeesCount, onLeaveEmployeesCount);
     }

@@ -30,6 +30,8 @@ public interface ProjectRepository extends CustomProjectRepository {
 
     int countByStatus(ProjectStatus status);
 
+    int countByStatusAndDeletedFalse(ProjectStatus status);
+
     List<Project> findActiveProjects(LocalDate startOfMonth, LocalDate endOfMonth);
 
 }
