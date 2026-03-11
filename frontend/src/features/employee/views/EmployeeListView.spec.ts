@@ -104,6 +104,18 @@ vi.mock('@/features/employee/queries/useEmployeeQueries', () => ({
     ...createMockQueryState({ data: employeesData.value }),
     data: employeesData,
   }),
+  useEmployeeOverviewSummaryQuery: () =>
+    createMockQueryState({
+      data: {
+        totalCount: 1,
+        activeCount: 1,
+        onLeaveCount: 0,
+        fullTimeCount: 1,
+        freelancerCount: 0,
+        outsourcingCount: 0,
+        partTimeCount: 0,
+      },
+    }),
   useEmployeeStatusesQuery: () => createMockQueryState({ data: [{ value: 'ACTIVE', label: '재직' }] }),
   useEmployeeTypesQuery: () => createMockQueryState({ data: [{ value: 'FULL_TIME', label: '정직원' }] }),
   useEmployeeGradesQuery: () => createMockQueryState({ data: [{ value: 'JUNIOR', label: '초급' }] }),

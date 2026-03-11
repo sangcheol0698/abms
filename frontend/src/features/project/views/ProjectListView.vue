@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full flex-col gap-6">
-    <ProjectSummaryCards :cards="projectSummaryCards" />
+    <ProjectSummaryCards :cards="projectSummary.cards" />
 
     <div class="flex flex-1 flex-col gap-4">
       <DataTableToolbar
@@ -210,13 +210,14 @@ import { formatCurrency, formatProjectPeriod } from '@/features/project/models/p
 import type { ProjectDetail } from '@/features/project/models/projectDetail';
 import { valueUpdater } from '@/components/ui/table/utils';
 import { toast } from 'vue-sonner';
+import { useProjectSummary } from '@/features/project/composables/useProjectSummary';
 import { useProjectQuerySync } from '@/features/project/composables/useProjectQuerySync';
-import { projectSummaryCards } from '@/features/project/data';
 import { useProjectDeletion } from '@/features/project/composables/useProjectDeletion';
 import { usePartyOptionsQuery } from '@/features/party/queries/usePartyQueries';
 import {
   useProjectDetailQuery,
   useProjectListQuery,
+  useProjectOverviewSummaryQuery,
   useProjectStatusesQuery,
 } from '@/features/project/queries/useProjectQueries';
 import { projectKeys, queryClient } from '@/core/query';
@@ -401,10 +402,24 @@ useProjectQuerySync({
 });
 
 const searchParams = computed(() => getSearchParams());
+const summaryParams = computed(() => {
+  const params = getSearchParams();
+  return {
+    name: params.name,
+    statuses: params.statuses,
+    partyIds: params.partyIds,
+    startDate: params.startDate,
+    endDate: params.endDate,
+  };
+});
 const projectsQuery = useProjectListQuery(searchParams);
+const projectOverviewSummaryQuery = useProjectOverviewSummaryQuery(summaryParams);
 const projectStatusesQuery = useProjectStatusesQuery();
 const partyOptionsQuery = usePartyOptionsQuery();
 const projectDetailQuery = useProjectDetailQuery(editingProjectId);
+const projectSummary = useProjectSummary({
+  summary: computed(() => projectOverviewSummaryQuery.data.value),
+});
 
 const projects = computed(() => projectsQuery.data.value?.content ?? []);
 const totalPages = computed(() => Math.max(projectsQuery.data.value?.totalPages ?? 1, 1));

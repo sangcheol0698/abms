@@ -5,6 +5,7 @@ import { authKeys, employeeKeys, departmentKeys, dashboardKeys, queryClient } fr
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import type { EmployeeCreatePayload } from '@/features/employee/models/employee';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
+import type { EmployeeOverviewSummaryParams } from '@/features/employee/repository/EmployeeRepository';
 import AuthRepository from '@/features/auth/repository/AuthRepository';
 
 async function invalidateEmployeeSideEffects(employeeId?: number) {
@@ -30,6 +31,19 @@ export function useEmployeesQuery(paramsRef: MaybeRefOrGetter<EmployeeSearchPara
       employeeKeys.list((params.value ?? {}) as unknown as Record<string, unknown>),
     ),
     queryFn: () => repository.search(params.value),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useEmployeeOverviewSummaryQuery(
+  paramsRef: MaybeRefOrGetter<EmployeeOverviewSummaryParams>,
+) {
+  const repository = appContainer.resolve(EmployeeRepository);
+  const params = computed(() => toValue(paramsRef));
+
+  return useQuery({
+    queryKey: computed(() => employeeKeys.summary(params.value ?? {})),
+    queryFn: () => repository.fetchOverviewSummary(params.value),
     placeholderData: keepPreviousData,
   });
 }

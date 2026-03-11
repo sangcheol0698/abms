@@ -12,6 +12,18 @@ import type {
 } from '@/features/party/models/partyDetail';
 import { mapPartyDetail } from '@/features/party/models/partyDetail';
 
+export interface PartyOverviewSummary {
+  totalCount: number;
+  withProjectsCount: number;
+  withInProgressProjectsCount: number;
+  withoutProjectsCount: number;
+  totalContractAmount: number;
+}
+
+export interface PartyOverviewSummaryParams {
+  name?: string;
+}
+
 @singleton()
 export default class PartyRepository {
   constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
@@ -50,6 +62,26 @@ export default class PartyRepository {
     });
 
     return mapPartyDetail(response);
+  }
+
+  async fetchOverviewSummary(params: PartyOverviewSummaryParams): Promise<PartyOverviewSummary> {
+    const queryParams: Record<string, string> = {};
+    if (params.name) {
+      queryParams.name = params.name;
+    }
+
+    const response = await this.httpRepository.get<PartyOverviewSummary>({
+      path: '/api/parties/summary',
+      params: queryParams,
+    });
+
+    return {
+      totalCount: Number(response?.totalCount ?? 0),
+      withProjectsCount: Number(response?.withProjectsCount ?? 0),
+      withInProgressProjectsCount: Number(response?.withInProgressProjectsCount ?? 0),
+      withoutProjectsCount: Number(response?.withoutProjectsCount ?? 0),
+      totalContractAmount: Number(response?.totalContractAmount ?? 0),
+    };
   }
 
   /**

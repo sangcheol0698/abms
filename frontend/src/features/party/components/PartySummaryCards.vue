@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { PartySummaryCard } from '@/features/party/data';
+import type { PartySummaryCard } from '@/features/party/composables/usePartySummary';
 
 withDefaults(
   defineProps<{

@@ -26,6 +26,8 @@ export const employeeKeys = {
   listRoot: () => [...EMPLOYEE_KEY, 'list'] as const,
   list: (params: Record<string, unknown> = {}) =>
     [...EMPLOYEE_KEY, 'list', normalizeEmployeeSearchParams(params)] as const,
+  summary: (params: Record<string, unknown> = {}) =>
+    [...EMPLOYEE_KEY, 'summary', normalizeEmployeeSearchParams(params)] as const,
   detail: (employeeId: number | null | undefined) =>
     [...EMPLOYEE_KEY, 'detail', employeeId ?? 0] as const,
   currentProfile: (email: string | null | undefined = '') =>
@@ -55,6 +57,8 @@ export const partyKeys = {
   listRoot: () => [...PARTY_KEY, 'list'] as const,
   list: (params: Record<string, unknown> = {}) =>
     [...PARTY_KEY, 'list', normalizePartySearchParams(params)] as const,
+  summary: (params: Record<string, unknown> = {}) =>
+    [...PARTY_KEY, 'summary', normalizePartySearchParams(params)] as const,
   detail: (partyId: number | null | undefined) => [...PARTY_KEY, 'detail', partyId ?? 0] as const,
   projects: (partyId: number | null | undefined) => [...PARTY_KEY, 'projects', partyId ?? 0] as const,
   options: () => [...PARTY_KEY, 'options'] as const,
@@ -65,6 +69,8 @@ export const projectKeys = {
   listRoot: () => [...PROJECT_KEY, 'list'] as const,
   list: (params: Record<string, unknown> = {}) =>
     [...PROJECT_KEY, 'list', normalizeProjectSearchParams(params)] as const,
+  summary: (params: Record<string, unknown> = {}) =>
+    [...PROJECT_KEY, 'summary', normalizeProjectSearchParams(params)] as const,
   detail: (projectId: number | null | undefined) => [...PROJECT_KEY, 'detail', projectId ?? 0] as const,
   statuses: () => [...PROJECT_KEY, 'statuses'] as const,
   revenuePlans: (projectId: number | null | undefined) =>
