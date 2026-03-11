@@ -153,7 +153,7 @@ describe('PartySelectDialog', () => {
 
     expect(latestParams).toHaveBeenLastCalledWith({
       page: 1,
-      size: 10,
+      size: 5,
       name: '검색어',
     });
     expect(wrapper.text()).toContain('검색 협력사');

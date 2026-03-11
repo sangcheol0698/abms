@@ -69,15 +69,6 @@ export function usePartyProjectsQuery(partyIdRef: MaybeRefOrGetter<number | null
   });
 }
 
-export function usePartyOptionsQuery() {
-  const repository = appContainer.resolve(PartyRepository);
-
-  return useQuery({
-    queryKey: partyKeys.options(),
-    queryFn: () => repository.fetchAll(),
-  });
-}
-
 export function useCreatePartyMutation() {
   const repository = appContainer.resolve(PartyRepository);
 

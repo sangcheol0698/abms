@@ -75,35 +75,36 @@
                       </FormLabel>
                       <FormControl>
                         <div class="flex items-center gap-2">
-                          <Select
-                            :model-value="field.value"
-                            class="flex-1"
-                            :disabled="partyOptions.length === 0 || isSubmitting"
-                            @update:model-value="(value) => handleChange(value ?? 0)"
-                            @blur="handleBlur"
-                          >
-                            <SelectTrigger class="w-full">
-                              <SelectValue placeholder="협력사를 선택하세요" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem
-                                v-for="option in partyOptions"
-                                :key="option.value"
-                                :value="option.value"
-                              >
-                                {{ option.label }}
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
                           <Button
                             type="button"
                             variant="outline"
-                            class="h-9 gap-2 whitespace-nowrap px-3"
+                            class="h-9 flex-1 justify-between gap-2 px-3"
                             :disabled="isSubmitting"
                             @click="handlePartySelectButton(field.value, handleChange, handleBlur)"
                           >
-                            <Building class="h-4 w-4" />
-                            <span>협력사</span>
+                            <span class="flex min-w-0 items-center gap-2">
+                              <Building class="h-4 w-4 shrink-0" />
+                              <span class="truncate">
+                                {{ selectedPartyLabel || '협력사를 선택하세요' }}
+                              </span>
+                            </span>
+                          </Button>
+                          <Button
+                            v-if="field.value"
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            class="h-9 w-9 shrink-0"
+                            :disabled="isSubmitting"
+                            @click="
+                              () => {
+                                handleChange(0);
+                                selectedPartyLabel = '';
+                                handleBlur();
+                              }
+                            "
+                          >
+                            <X class="h-4 w-4" />
                           </Button>
                         </div>
                       </FormControl>
@@ -201,7 +202,7 @@
               <section class="space-y-4">
                 <div class="space-y-1">
                   <h3 class="text-lg font-semibold text-foreground">프로젝트 기간</h3>
-                  <p class="text-sm text-muted-foreground">시작일과 종료일을 정확히 입력하세요.</p>
+                  <p class="text-sm text-muted-foreground">종료일은 미정으로 둘 수 있습니다.</p>
                 </div>
                 <div class="grid gap-4 md:grid-cols-2">
                   <FormField name="startDate" v-slot="{ field, handleChange, handleBlur }">
@@ -223,20 +224,18 @@
                           "
                         />
                       </FormControl>
+                      <FormDescription>프로젝트 착수 예정일 또는 실제 시작일을 입력하세요.</FormDescription>
                       <FormMessage class="sr-only" />
                     </FormItem>
                   </FormField>
 
                   <FormField name="endDate" v-slot="{ field, handleChange, handleBlur }">
                     <FormItem>
-                      <FormLabel>
-                        종료일
-                        <span class="ml-0.5 text-destructive">*</span>
-                      </FormLabel>
+                      <FormLabel>종료일</FormLabel>
                       <FormControl>
                         <DatePicker
                           :model-value="toDateValue(field.value)"
-                          placeholder="종료일을 선택하세요"
+                          placeholder="종료일 미정 가능"
                           :disabled="isSubmitting"
                           @update:modelValue="
                             (value) => {
@@ -246,6 +245,7 @@
                           "
                         />
                       </FormControl>
+                      <FormDescription>미정인 경우 비워둘 수 있습니다.</FormDescription>
                       <FormMessage class="sr-only" />
                     </FormItem>
                   </FormField>
@@ -338,7 +338,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Separator } from '@/components/ui/separator';
 import { MoneyInput } from '@/components/business';
 import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
-import { Building } from 'lucide-vue-next';
+import { Building, X } from 'lucide-vue-next';
 import HttpError from '@/core/http/HttpError';
 import type { ProjectDetail } from '@/features/project/models/projectDetail';
 import {
@@ -346,7 +346,6 @@ import {
   useProjectStatusesQuery,
   useUpdateProjectMutation,
 } from '@/features/project/queries/useProjectQueries';
-import { usePartyOptionsQuery } from '@/features/party/queries/usePartyQueries';
 import { toast } from 'vue-sonner';
 
 const props = withDefaults(
@@ -386,11 +385,14 @@ const schema = z.object({
     .date({ required_error: '시작일을 선택하세요.' })
     .nullable()
     .refine((value): value is Date => value instanceof Date, '시작일을 선택하세요.'),
-  endDate: z
-    .date({ required_error: '종료일을 선택하세요.' })
-    .nullable()
-    .refine((value): value is Date => value instanceof Date, '종료일을 선택하세요.'),
-});
+  endDate: z.date().nullable(),
+}).refine(
+  (values) => !(values.startDate instanceof Date && values.endDate instanceof Date) || values.startDate <= values.endDate,
+  {
+    message: '종료일은 시작일보다 빠를 수 없습니다.',
+    path: ['endDate'],
+  },
+);
 
 const formSchema = toTypedSchema(schema);
 const initialValues = {
@@ -409,13 +411,12 @@ const formInitialValues = ref({ ...initialValues });
 const errorMessage = ref<string | null>(null);
 const isPartySelectOpen = ref(false);
 const selectedPartyIdForDialog = ref<number | undefined>();
+const selectedPartyLabel = ref('');
 const applyPartySelection = ref<((value: number) => void) | null>(null);
 const projectStatusesQuery = useProjectStatusesQuery();
-const partyOptionsQuery = usePartyOptionsQuery();
 const createProjectMutation = useCreateProjectMutation();
 const updateProjectMutation = useUpdateProjectMutation();
 const statusOptions = computed(() => projectStatusesQuery.data.value ?? []);
-const partyOptions = computed(() => partyOptionsQuery.data.value ?? []);
 
 const isEditMode = computed(() => props.mode === 'edit');
 const dialogTitle = computed(() => (isEditMode.value ? '프로젝트 편집' : '프로젝트 추가'));
@@ -462,6 +463,7 @@ function resetForm() {
   setFormInitialValues(initialValues);
   isPartySelectOpen.value = false;
   selectedPartyIdForDialog.value = undefined;
+  selectedPartyLabel.value = '';
   applyPartySelection.value = null;
 }
 
@@ -486,7 +488,7 @@ async function onSubmit(rawValues: Record<string, unknown>) {
     status: values.status,
     contractAmount: values.contractAmount,
     startDate: formatDate(values.startDate),
-    endDate: formatDate(values.endDate),
+    endDate: values.endDate ? formatDate(values.endDate) : null,
     leadDepartmentId: props.project?.leadDepartmentId ?? null,
   } as const;
 
@@ -550,8 +552,10 @@ function toNumber(value: unknown): number {
 function initializeFormValues() {
   errorMessage.value = null;
   if (isEditMode.value && props.project) {
+    selectedPartyLabel.value = props.project.partyName;
     setFormInitialValues(mapProjectToFormValues(props.project));
   } else {
+    selectedPartyLabel.value = '';
     setFormInitialValues(initialValues);
   }
 }
@@ -592,8 +596,9 @@ function openPartySelect(currentPartyId: number, setter: (value: number) => void
   isPartySelectOpen.value = true;
 }
 
-function handlePartySelected({ partyId }: { partyId: number }) {
+function handlePartySelected({ partyId, partyName }: { partyId: number; partyName: string }) {
   applyPartySelection.value?.(partyId);
+  selectedPartyLabel.value = partyName;
   applyPartySelection.value = null;
   isPartySelectOpen.value = false;
 }

@@ -56,7 +56,14 @@ test.describe('직원 삭제', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터' }),
+          body: JSON.stringify({
+            email: 'tester@abms.co.kr',
+            name: '테스터',
+            permissions: [
+              { code: 'employee.read', scopes: ['ALL'] },
+              { code: 'employee.write', scopes: ['ALL'] },
+            ],
+          }),
         });
         return;
       }

@@ -61,7 +61,6 @@ export const partyKeys = {
     [...PARTY_KEY, 'summary', normalizePartySearchParams(params)] as const,
   detail: (partyId: number | null | undefined) => [...PARTY_KEY, 'detail', partyId ?? 0] as const,
   projects: (partyId: number | null | undefined) => [...PARTY_KEY, 'projects', partyId ?? 0] as const,
-  options: () => [...PARTY_KEY, 'options'] as const,
 };
 
 export const projectKeys = {

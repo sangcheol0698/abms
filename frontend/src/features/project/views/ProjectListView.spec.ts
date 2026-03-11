@@ -79,9 +79,9 @@ vi.mock('@/features/project/queries/useProjectQueries', () => ({
 }));
 
 vi.mock('@/features/party/queries/usePartyQueries', () => ({
-  usePartyOptionsQuery: () =>
+  usePartyDetailQuery: () =>
     createMockQueryState({
-      data: [{ value: 100, label: '협력사A' }],
+      data: { partyId: 100, name: '협력사A' },
     }),
 }));
 

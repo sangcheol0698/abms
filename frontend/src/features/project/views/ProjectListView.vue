@@ -211,7 +211,7 @@ import { toast } from 'vue-sonner';
 import { useProjectSummary } from '@/features/project/composables/useProjectSummary';
 import { useProjectQuerySync } from '@/features/project/composables/useProjectQuerySync';
 import { useProjectDeletion } from '@/features/project/composables/useProjectDeletion';
-import { usePartyOptionsQuery } from '@/features/party/queries/usePartyQueries';
+import { usePartyDetailQuery } from '@/features/party/queries/usePartyQueries';
 import {
   useProjectDetailQuery,
   useProjectListQuery,
@@ -250,8 +250,7 @@ const selectedPartyName = computed(() => {
   if (!selectedPartyId.value) {
     return null;
   }
-  const match = partyOptions.value.find((option) => option.value === selectedPartyId.value);
-  return match?.label ?? `협력사 #${selectedPartyId.value}`;
+  return selectedPartyDetailQuery.data.value?.name ?? `협력사 #${selectedPartyId.value}`;
 });
 
 // 날짜 필터 상태
@@ -413,7 +412,7 @@ const summaryParams = computed(() => {
 const projectsQuery = useProjectListQuery(searchParams);
 const projectOverviewSummaryQuery = useProjectOverviewSummaryQuery(summaryParams);
 const projectStatusesQuery = useProjectStatusesQuery();
-const partyOptionsQuery = usePartyOptionsQuery();
+const selectedPartyDetailQuery = usePartyDetailQuery(selectedPartyId);
 const projectDetailQuery = useProjectDetailQuery(editingProjectId);
 const projectSummary = useProjectSummary({
   summary: computed(() => projectOverviewSummaryQuery.data.value),
@@ -426,7 +425,6 @@ const isLoading = computed(() => projectsQuery.isLoading.value || projectsQuery.
 const statusFilterOptions = computed(
   () => projectStatusesQuery.data.value ?? ([] as { value: string; label: string; icon?: any }[]),
 );
-const partyOptions = computed(() => partyOptionsQuery.data.value ?? []);
 
 const table = useVueTable({
   data: projects,

@@ -28,7 +28,7 @@ test.describe('내 계정 비밀번호 변경', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터' }),
+          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터', permissions: [] }),
         });
         return;
       }
@@ -92,7 +92,7 @@ test.describe('내 계정 비밀번호 변경', () => {
     await page.getByText('테스터').first().click();
     await page.getByRole('menuitem', { name: '내 계정' }).click();
 
-    await expect(page.getByText('읽기 전용 정보')).toBeVisible();
+    await expect(page.locator('[data-test="profile-section"]')).toBeVisible();
     await page.getByRole('button', { name: '보안' }).click();
 
     await page.locator('#currentPassword').fill('CurrentPassword123!');
@@ -132,7 +132,7 @@ test.describe('내 계정 비밀번호 변경', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터' }),
+          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터', permissions: [] }),
         });
         return;
       }
@@ -197,7 +197,7 @@ test.describe('내 계정 비밀번호 변경', () => {
     await page.getByText('테스터').first().click();
     await page.getByRole('menuitem', { name: '내 계정' }).click();
 
-    await expect(page.getByText('읽기 전용 정보')).toBeVisible();
+    await expect(page.locator('[data-test="profile-section"]')).toBeVisible();
     await expect(page.getByText('Abacus Inc')).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Close' })).toBeVisible();
 

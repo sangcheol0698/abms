@@ -132,14 +132,6 @@ export default class PartyRepository {
   /**
    * 전체 협력사 옵션 목록 조회
    */
-  async fetchAll(): Promise<{ label: string; value: number }[]> {
-    const response = await this.list({ page: 1, size: 1000 });
-    return response.content.map((party) => ({
-      label: party.name,
-      value: party.partyId,
-    }));
-  }
-
   /**
    * 협력사 관련 프로젝트 조회
    */

@@ -49,7 +49,7 @@ export interface ProjectCreateData {
   status: string;
   contractAmount: number;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   leadDepartmentId: number | null;
 }
 
@@ -63,6 +63,6 @@ export interface ProjectUpdateData {
   status: string;
   contractAmount: number;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   leadDepartmentId: number | null;
 }

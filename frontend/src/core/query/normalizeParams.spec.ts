@@ -40,9 +40,9 @@ describe('normalizeParams', () => {
       name: '',
       statuses: ['IN_PROGRESS', 'SCHEDULED', 'IN_PROGRESS'],
       partyIds: [10, '2', 2],
-      startDate: new Date('2025-01-01T12:00:00.000Z'),
-      endDate: { year: 2025, month: 12, day: 31 },
-      sort: 'startDate,desc',
+      periodStart: new Date('2025-01-01T12:00:00.000Z'),
+      periodEnd: { year: 2025, month: 12, day: 31 },
+      sort: 'periodStart,desc',
     });
 
     expect(normalized).toEqual({
@@ -51,9 +51,9 @@ describe('normalizeParams', () => {
       name: null,
       statuses: ['IN_PROGRESS', 'SCHEDULED'],
       partyIds: [2, 10],
-      startDate: '2025-01-01',
-      endDate: '2025-12-31',
-      sort: 'startDate,desc',
+      periodStart: '2025-01-01',
+      periodEnd: '2025-12-31',
+      sort: 'periodStart,desc',
     });
   });
 

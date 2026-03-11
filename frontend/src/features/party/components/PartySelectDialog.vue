@@ -129,7 +129,7 @@ const selectedPartyIdValue = ref<number | undefined>();
 const searchQuery = ref('');
 const appliedSearchQuery = ref('');
 const page = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(5);
 const searchParams = computed(() => ({
   page: page.value,
   size: pageSize.value,
