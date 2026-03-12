@@ -18,13 +18,22 @@ import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 public class EmployeeReadAuthorizationService {
 
     public static final String EMPLOYEE_READ_PERMISSION_CODE = "employee.read";
+    public static final String EMPLOYEE_EXCEL_DOWNLOAD_PERMISSION_CODE = "employee.excel.download";
 
     private final PermissionFinder permissionFinder;
     private final EmployeeAuthorizationSupport employeeAuthorizationSupport;
 
     public EmployeeReadScope resolveScope(Long accountId) {
+        return resolveScope(accountId, EMPLOYEE_READ_PERMISSION_CODE);
+    }
+
+    public EmployeeReadScope resolveExcelDownloadScope(Long accountId) {
+        return resolveScope(accountId, EMPLOYEE_EXCEL_DOWNLOAD_PERMISSION_CODE);
+    }
+
+    private EmployeeReadScope resolveScope(Long accountId, String permissionCode) {
         GrantedPermissionDetail permission = permissionFinder.findPermissions(accountId).permissions().stream()
-                .filter(grantedPermission -> EMPLOYEE_READ_PERMISSION_CODE.equals(grantedPermission.code()))
+                .filter(grantedPermission -> permissionCode.equals(grantedPermission.code()))
                 .findFirst()
                 .orElse(null);
         if (permission == null) {

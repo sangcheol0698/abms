@@ -24,14 +24,23 @@ import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 public class EmployeeWriteAuthorizationService {
 
     public static final String EMPLOYEE_WRITE_PERMISSION_CODE = "employee.write";
+    public static final String EMPLOYEE_EXCEL_UPLOAD_PERMISSION_CODE = "employee.excel.upload";
 
     private final PermissionFinder permissionFinder;
     private final EmployeeAuthorizationSupport employeeAuthorizationSupport;
     private final EmployeeRepository employeeRepository;
 
     public EmployeeWriteScope resolveScope(Long accountId) {
+        return resolveScope(accountId, EMPLOYEE_WRITE_PERMISSION_CODE);
+    }
+
+    public EmployeeWriteScope resolveExcelUploadScope(Long accountId) {
+        return resolveScope(accountId, EMPLOYEE_EXCEL_UPLOAD_PERMISSION_CODE);
+    }
+
+    private EmployeeWriteScope resolveScope(Long accountId, String permissionCode) {
         GrantedPermissionDetail permission = permissionFinder.findPermissions(accountId).permissions().stream()
-                .filter(grantedPermission -> EMPLOYEE_WRITE_PERMISSION_CODE.equals(grantedPermission.code()))
+                .filter(grantedPermission -> permissionCode.equals(grantedPermission.code()))
                 .findFirst()
                 .orElse(null);
         if (permission == null) {
@@ -110,7 +119,7 @@ public class EmployeeWriteAuthorizationService {
     }
 
     public void assertCanUpload(Long accountId, java.util.List<EmployeeCreateCommand> commands) {
-        EmployeeWriteScope scope = resolveScope(accountId);
+        EmployeeWriteScope scope = resolveExcelUploadScope(accountId);
         boolean unauthorizedExists = commands.stream()
                 .map(EmployeeCreateCommand::departmentId)
                 .anyMatch(departmentId -> !scope.canCreateIn(departmentId));

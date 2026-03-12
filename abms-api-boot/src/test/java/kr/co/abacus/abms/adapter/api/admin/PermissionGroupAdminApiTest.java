@@ -79,6 +79,8 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
     private Permission permissionManage;
     private Permission employeeRead;
     private Permission employeeWrite;
+    private Permission employeeExcelDownload;
+    private Permission employeeExcelUpload;
 
     @BeforeEach
     void setUp() {
@@ -126,6 +128,16 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                 "employee.write",
                 "직원 변경",
                 "직원 변경 권한"
+        ));
+        employeeExcelDownload = permissionRepository.save(Permission.create(
+                "employee.excel.download",
+                "직원 엑셀 다운로드",
+                "직원 엑셀 다운로드 권한"
+        ));
+        employeeExcelUpload = permissionRepository.save(Permission.create(
+                "employee.excel.upload",
+                "직원 엑셀 업로드",
+                "직원 엑셀 업로드 권한"
         ));
 
         PermissionGroup adminGroup = permissionGroupRepository.save(PermissionGroup.create(
@@ -194,7 +206,9 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.permissions[*].code", hasItems(
                         "permission.group.manage",
                         "employee.read",
-                        "employee.write")))
+                        "employee.write",
+                        "employee.excel.download",
+                        "employee.excel.upload")))
                 .andExpect(jsonPath("$.scopes[*].code", hasItems(
                         "ALL",
                         "OWN_DEPARTMENT",

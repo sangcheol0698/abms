@@ -261,9 +261,10 @@ import {
 } from '@/features/employee/queries/useEmployeeQueries';
 import { employeeKeys, queryClient } from '@/core/query';
 import {
+  canDownloadEmployeeExcel,
   canEditOwnProfile,
   canManageEmployees,
-  canReadEmployeeDetail,
+  canUploadEmployeeExcel,
   canViewEmployeeDetail,
 } from '@/features/employee/permissions';
 import { dispatchOpenProfileDialogEvent } from '@/features/auth/profileDialogEvents';
@@ -301,8 +302,8 @@ const deletion = useEmployeeDeletion(async () => {
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 const canCreateEmployees = computed(() => canManageEmployees());
-const canUploadEmployees = computed(() => canManageEmployees());
-const canDownloadEmployees = computed(() => canReadEmployeeDetail());
+const canUploadEmployees = computed(() => canUploadEmployeeExcel());
+const canDownloadEmployees = computed(() => canDownloadEmployeeExcel());
 
 // 테이블 컬럼 정의 (EmployeeTableColumns.ts로 분리됨)
 const columns = createEmployeeTableColumns({

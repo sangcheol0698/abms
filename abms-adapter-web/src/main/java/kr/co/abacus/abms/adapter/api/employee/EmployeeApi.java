@@ -212,13 +212,13 @@ public class EmployeeApi {
                 .toList();
     }
 
-    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.excel.download')")
     @GetMapping("/api/employees/excel/download")
     public ResponseEntity<Resource> downloadExcel(
             @Valid EmployeeSearchCondition request,
             Authentication authentication
     ) {
-        EmployeeReadScope scope = resolveEmployeeReadScope(authentication)
+        EmployeeReadScope scope = resolveEmployeeExcelDownloadScope(authentication)
                 .limitToRequestedDepartments(request.departmentIds());
         byte[] content = employeeExcelService.download(request, scope);
         String filename = FilenameBuilder.build("employees");
@@ -238,7 +238,7 @@ public class EmployeeApi {
                 .body(new ByteArrayResource(content));
     }
 
-    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.excel.upload')")
     @PostMapping(value = "/api/employees/excel/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public EmployeeExcelUploadResponse uploadExcel(@RequestParam("file") MultipartFile file, Authentication authentication) {
         if (file.isEmpty()) {
@@ -259,6 +259,11 @@ public class EmployeeApi {
     private EmployeeReadScope resolveEmployeeReadScope(Authentication authentication) {
         Long accountId = authFinder.getCurrentAccountId(authentication.getName());
         return employeeReadAuthorizationService.resolveScope(accountId);
+    }
+
+    private EmployeeReadScope resolveEmployeeExcelDownloadScope(Authentication authentication) {
+        Long accountId = authFinder.getCurrentAccountId(authentication.getName());
+        return employeeReadAuthorizationService.resolveExcelDownloadScope(accountId);
     }
 
 }

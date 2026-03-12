@@ -385,8 +385,8 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("employee.write 권한이 없으면 엑셀 업로드는 403을 반환한다")
-    void should_returnForbidden_whenUploadingExcelWithoutEmployeeWritePermission() throws Exception {
+    @DisplayName("employee.excel.upload 권한이 없으면 엑셀 업로드는 403을 반환한다")
+    void should_returnForbidden_whenUploadingExcelWithoutEmployeeExcelUploadPermission() throws Exception {
         MockHttpSession session = login();
 
         mockMvc.perform(multipart("/api/employees/excel/upload")
@@ -396,9 +396,34 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @DisplayName("employee.write 권한만 있으면 엑셀 업로드는 403을 반환한다")
+    void should_returnForbidden_whenUploadingExcelWithOnlyEmployeeWritePermission() throws Exception {
+        grantEmployeeWritePermission(PermissionScope.OWN_DEPARTMENT);
+        MockHttpSession session = login();
+
+        mockMvc.perform(multipart("/api/employees/excel/upload")
+                        .file(createUploadFile(ownDivisionId, "upload-write-only@abacus.co.kr"))
+                        .session(session))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("employee.excel.upload 권한만 있으면 직원 생성 API는 403을 반환한다")
+    void should_returnForbidden_whenCreatingEmployeeWithOnlyEmployeeExcelUploadPermission() throws Exception {
+        grantEmployeeExcelUploadPermission(PermissionScope.OWN_DEPARTMENT);
+        MockHttpSession session = login();
+
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(createRequest(ownDivisionId, "create-upload-only@abacus.co.kr", "업로드전용")))
+                        .session(session))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("OWN_DEPARTMENT 범위는 허용된 부서 엑셀 업로드만 허용한다")
     void should_allowExcelUploadOnlyInOwnDepartment_whenGrantedOwnDepartmentScope() throws Exception {
-        grantEmployeeWritePermission(PermissionScope.OWN_DEPARTMENT);
+        grantEmployeeExcelUploadPermission(PermissionScope.OWN_DEPARTMENT);
         MockHttpSession session = login();
 
         mockMvc.perform(multipart("/api/employees/excel/upload")
@@ -414,7 +439,7 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("범위 밖 부서가 포함된 엑셀 업로드는 전체를 403으로 거부한다")
     void should_forbidExcelUpload_whenAnyRowIsOutsideAllowedScope() throws Exception {
-        grantEmployeeWritePermission(PermissionScope.OWN_DEPARTMENT);
+        grantEmployeeExcelUploadPermission(PermissionScope.OWN_DEPARTMENT);
         MockHttpSession session = login();
 
         mockMvc.perform(multipart("/api/employees/excel/upload")
@@ -433,7 +458,7 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("SELF 범위는 엑셀 업로드를 허용하지 않는다")
     void should_forbidExcelUpload_whenGrantedSelfScope() throws Exception {
-        grantEmployeeWritePermission(PermissionScope.SELF);
+        grantEmployeeExcelUploadPermission(PermissionScope.SELF);
         MockHttpSession session = login();
 
         mockMvc.perform(multipart("/api/employees/excel/upload")
@@ -443,15 +468,44 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     private void grantEmployeeWritePermission(PermissionScope... scopes) {
-        Account account = accountRepository.findByUsername(new kr.co.abacus.abms.domain.shared.Email(USERNAME)).orElseThrow();
-        Permission permission = permissionRepository.save(Permission.create(
+        grantEmployeePermission(
                 "employee.write",
                 "직원 쓰기",
-                "직원 쓰기 권한"
-        ));
-        PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                "직원 쓰기 권한",
                 "직원 쓰기 그룹",
                 "직원 쓰기 권한 그룹",
+                scopes
+        );
+    }
+
+    private void grantEmployeeExcelUploadPermission(PermissionScope... scopes) {
+        grantEmployeePermission(
+                "employee.excel.upload",
+                "직원 엑셀 업로드",
+                "직원 엑셀 업로드 권한",
+                "직원 엑셀 업로드 그룹",
+                "직원 엑셀 업로드 권한 그룹",
+                scopes
+        );
+    }
+
+    private void grantEmployeePermission(
+            String permissionCode,
+            String permissionName,
+            String permissionDescription,
+            String groupName,
+            String groupDescription,
+            PermissionScope... scopes
+    ) {
+        Account account = accountRepository.findByUsername(new kr.co.abacus.abms.domain.shared.Email(USERNAME)).orElseThrow();
+        Permission permission = permissionRepository.save(Permission.create(
+                permissionCode,
+                permissionName,
+                permissionDescription
+        ));
+        PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                groupName,
+                groupDescription,
                 PermissionGroupType.CUSTOM
         ));
 
