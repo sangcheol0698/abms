@@ -153,6 +153,8 @@ async function submitLogin() {
     setStoredUser({
       email: resolvedEmail,
       name: resolvedName,
+      employeeId: null,
+      departmentId: null,
       permissions: [],
     }, { validated: false });
 

@@ -23,6 +23,8 @@ interface ChangePasswordPayload {
 export interface AuthMeResponse {
   name: string;
   email: string;
+  employeeId: number | null;
+  departmentId: number | null;
   permissions: AuthPermissionResponse[];
 }
 

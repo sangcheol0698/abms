@@ -35,6 +35,28 @@ const employeesData = ref({
   totalElements: 1,
 });
 
+const departmentChartData = ref([
+  {
+    departmentId: 10,
+    departmentName: '개발팀',
+    departmentCode: 'DEV',
+    departmentType: 'TEAM',
+    departmentLeader: null,
+    employeeCount: 1,
+    children: [
+      {
+        departmentId: 11,
+        departmentName: '하위개발팀',
+        departmentCode: 'DEV-SUB',
+        departmentType: 'TEAM',
+        departmentLeader: null,
+        employeeCount: 1,
+        children: [],
+      },
+    ],
+  },
+]);
+
 const employeeDetailRefetchMock = vi.fn();
 
 const deletionState = {
@@ -85,17 +107,7 @@ vi.mock('@/features/employee/composables', () => ({
 vi.mock('@/features/department/queries/useDepartmentQueries', () => ({
   useDepartmentOrganizationChartQuery: () =>
     createMockQueryState({
-      data: [
-        {
-          departmentId: 10,
-          departmentName: '개발팀',
-          departmentCode: 'DEV',
-          departmentType: 'TEAM',
-          departmentLeader: null,
-          employeeCount: 1,
-          children: [],
-        },
-      ],
+      data: departmentChartData.value,
     }),
 }));
 
@@ -322,6 +334,8 @@ describe('EmployeeListView', () => {
     storage.user = JSON.stringify({
       name: '홍길동',
       email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         { code: 'employee.read', scopes: ['ALL'] },
         { code: 'employee.write', scopes: ['ALL'] },
@@ -419,6 +433,8 @@ describe('EmployeeListView', () => {
     storage.user = JSON.stringify({
       name: '홍길동',
       email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [{ code: 'employee.read', scopes: ['ALL'] }],
     });
     localStorage.setItem('user', storage.user);
@@ -433,6 +449,8 @@ describe('EmployeeListView', () => {
     storage.user = JSON.stringify({
       name: '홍길동',
       email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         { code: 'employee.read', scopes: ['ALL'] },
         { code: 'employee.write', scopes: ['ALL'] },
@@ -453,6 +471,8 @@ describe('EmployeeListView', () => {
     storage.user = JSON.stringify({
       name: '홍길동',
       email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         { code: 'employee.read', scopes: ['ALL'] },
         { code: 'employee.write', scopes: ['ALL'] },
@@ -465,5 +485,45 @@ describe('EmployeeListView', () => {
     const uploadButton = wrapper.findAll('button').find((item) => item.text().includes('엑셀 업로드'));
 
     expect(uploadButton).toBeUndefined();
+  });
+
+  it('OWN_DEPARTMENT 권한이면 같은 부서 직원만 액션을 연다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
+      permissions: [
+        { code: 'employee.read', scopes: ['OWN_DEPARTMENT'] },
+        { code: 'employee.write', scopes: ['OWN_DEPARTMENT'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    await mountEmployeeListView();
+
+    expect(tableActionHandlers.canViewEmployee({ employeeId: 2, email: 'same@abms.co.kr', departmentId: 10 })).toBe(true);
+    expect(tableActionHandlers.canEditEmployee({ employeeId: 2, email: 'same@abms.co.kr', departmentId: 10 })).toBe(true);
+    expect(tableActionHandlers.canViewEmployee({ employeeId: 3, email: 'child@abms.co.kr', departmentId: 11 })).toBe(false);
+    expect(tableActionHandlers.canEditEmployee({ employeeId: 3, email: 'child@abms.co.kr', departmentId: 11 })).toBe(false);
+  });
+
+  it('OWN_DEPARTMENT_TREE 권한이면 하위 부서 직원 액션도 연다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
+      permissions: [
+        { code: 'employee.read', scopes: ['OWN_DEPARTMENT_TREE'] },
+        { code: 'employee.write', scopes: ['OWN_DEPARTMENT_TREE'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    await mountEmployeeListView();
+
+    expect(tableActionHandlers.canViewEmployee({ employeeId: 3, email: 'child@abms.co.kr', departmentId: 11 })).toBe(true);
+    expect(tableActionHandlers.canEditEmployee({ employeeId: 3, email: 'child@abms.co.kr', departmentId: 11 })).toBe(true);
   });
 });

@@ -51,6 +51,8 @@ describe('auth session', () => {
     setStoredUser({
       email: 'user@abms.co.kr',
       name: '사용자',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         {
           code: 'employee.read',
@@ -66,6 +68,8 @@ describe('auth session', () => {
     expect(getStoredUser()).toEqual({
       email: 'user@abms.co.kr',
       name: '사용자',
+      employeeId: 1,
+      departmentId: 10,
       avatar: '',
       permissions: [
         {
@@ -96,6 +100,8 @@ describe('auth session', () => {
     expect(getStoredUser()).toEqual({
       email: 'legacy@abms.co.kr',
       name: 'Legacy',
+      employeeId: null,
+      departmentId: null,
       avatar: '',
       permissions: [],
     });
@@ -106,6 +112,8 @@ describe('auth session', () => {
     fetchMeMock.mockResolvedValue({
       email: 'user@abms.co.kr',
       name: '사용자',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         {
           code: 'employee.read',
@@ -118,6 +126,8 @@ describe('auth session', () => {
       {
         email: 'user@abms.co.kr',
         name: '사용자',
+        employeeId: null,
+        departmentId: null,
         permissions: [],
       },
       { validated: false },
@@ -131,6 +141,8 @@ describe('auth session', () => {
         scopes: ['SELF'],
       },
     ]);
+    expect(getStoredUser()?.employeeId).toBe(1);
+    expect(getStoredUser()?.departmentId).toBe(10);
 
     await expect(ensureServerSessionValid()).resolves.toBe(true);
     expect(fetchMeMock).toHaveBeenCalledTimes(1);

@@ -263,6 +263,7 @@ import { employeeKeys, queryClient } from '@/core/query';
 import {
   canDownloadEmployeeExcel,
   canEditOwnProfile,
+  canManageEmployee,
   canManageEmployees,
   canUploadEmployeeExcel,
   canViewEmployeeDetail,
@@ -304,6 +305,9 @@ const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 const canCreateEmployees = computed(() => canManageEmployees());
 const canUploadEmployees = computed(() => canUploadEmployeeExcel());
 const canDownloadEmployees = computed(() => canDownloadEmployeeExcel());
+const employeePermissionContext = computed(() => ({
+  departmentChart: departmentChartQuery.data.value ?? [],
+}));
 
 // 테이블 컬럼 정의 (EmployeeTableColumns.ts로 분리됨)
 const columns = createEmployeeTableColumns({
@@ -312,11 +316,14 @@ const columns = createEmployeeTableColumns({
   onCopyEmail: handleCopyEmail,
   onDeleteEmployee: handleDeleteEmployee,
   onNavigateToDepartment: navigateToDepartment,
-  canViewEmployee: (employee) => canViewEmployeeDetail(employee.email),
-  canEditEmployee: (employee) => canManageEmployees() || canEditOwnProfile(employee.email),
-  canDeleteEmployee: () => canManageEmployees(),
+  canViewEmployee: (employee) => canViewEmployeeDetail(employee, employeePermissionContext.value),
+  canEditEmployee: (employee) =>
+    canManageEmployee(employee, employeePermissionContext.value) || canEditOwnProfile(employee),
+  canDeleteEmployee: (employee) => canManageEmployee(employee, employeePermissionContext.value),
   getEditActionLabel: (employee) =>
-    !canManageEmployees() && canEditOwnProfile(employee.email) ? '내 정보 수정' : '직원 편집',
+    !canManageEmployee(employee, employeePermissionContext.value) && canEditOwnProfile(employee)
+      ? '내 정보 수정'
+      : '직원 편집',
 });
 
 // URL 쿼리 동기화 Composable 초기화
@@ -575,10 +582,10 @@ async function handleEmployeeUpdated() {
 }
 
 async function handleEditEmployee(row: EmployeeListItem) {
-  if (!(canManageEmployees() || canEditOwnProfile(row.email))) {
+  if (!(canManageEmployee(row, employeePermissionContext.value) || canEditOwnProfile(row))) {
     return;
   }
-  if (!canManageEmployees() && canEditOwnProfile(row.email)) {
+  if (!canManageEmployee(row, employeePermissionContext.value) && canEditOwnProfile(row)) {
     dispatchOpenProfileDialogEvent({ openSelfProfileEditor: true });
     return;
   }
@@ -621,14 +628,14 @@ async function handleCopyEmail(row: EmployeeListItem) {
 }
 
 function handleDeleteEmployee(row: EmployeeListItem) {
-  if (!canManageEmployees()) {
+  if (!canManageEmployee(row, employeePermissionContext.value)) {
     return;
   }
   deletion.open(row.employeeId, row.name);
 }
 
 function handleViewEmployee(row: EmployeeListItem) {
-  if (!canViewEmployeeDetail(row.email)) {
+  if (!canViewEmployeeDetail(row, employeePermissionContext.value)) {
     return;
   }
   router.push({ name: 'employee-detail', params: { employeeId: row.employeeId } }).catch(() => {

@@ -192,6 +192,8 @@ class AuthApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(USERNAME))
                 .andExpect(jsonPath("$.name").value("인증사용자"))
+                .andExpect(jsonPath("$.employeeId").isNumber())
+                .andExpect(jsonPath("$.departmentId").isNumber())
                 .andExpect(jsonPath("$.permissions[0].code").value("employee.manage"))
                 .andExpect(jsonPath("$.permissions[0].scopes[0]").value("ALL"))
                 .andExpect(jsonPath("$.permissions[1].code").value("employee.read"))

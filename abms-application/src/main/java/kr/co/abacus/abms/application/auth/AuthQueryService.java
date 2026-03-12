@@ -48,6 +48,8 @@ public class AuthQueryService implements AuthFinder {
                 .map(employee -> new AuthenticatedUserInfo(
                         employee.getName(),
                         employee.getEmail().address(),
+                        employee.getIdOrThrow(),
+                        employee.getDepartmentId(),
                         permissionFinder.findPermissions(account.getIdOrThrow()).permissions()
                 ))
                 .orElseGet(() -> fallbackUserInfo(account.getUsername().address()));
@@ -56,7 +58,7 @@ public class AuthQueryService implements AuthFinder {
     private AuthenticatedUserInfo fallbackUserInfo(String email) {
         String localPart = email.split("@")[0];
         String normalizedName = localPart.isBlank() ? email : localPart;
-        return new AuthenticatedUserInfo(normalizedName, email, java.util.List.of());
+        return new AuthenticatedUserInfo(normalizedName, email, null, null, java.util.List.of());
     }
 
 }

@@ -187,7 +187,7 @@ import {
   useTakeLeaveEmployeeMutation,
 } from '@/features/employee/queries/useEmployeeQueries';
 import { employeeKeys, queryClient } from '@/core/query';
-import { canEditOwnProfile, canManageEmployees } from '@/features/employee/permissions';
+import { canEditOwnProfile, canManageEmployee } from '@/features/employee/permissions';
 import { dispatchOpenProfileDialogEvent } from '@/features/auth/profileDialogEvents';
 
 const route = useRoute();
@@ -233,12 +233,21 @@ const employeeInitials = computed(() => {
   const name = employee.value?.name ?? '';
   return name.trim().slice(0, 2).toUpperCase() || '??';
 });
-const canManageCurrentEmployee = computed(() => canManageEmployees());
-const canOpenOwnProfileEdit = computed(() => {
-  if (!employee.value?.email) {
+const employeePermissionContext = computed(() => ({
+  departmentChart: departmentChartQuery.data.value ?? [],
+}));
+const canManageCurrentEmployee = computed(() => {
+  if (!employee.value) {
     return false;
   }
-  return !canManageCurrentEmployee.value && canEditOwnProfile(employee.value.email);
+
+  return canManageEmployee(employee.value, employeePermissionContext.value);
+});
+const canOpenOwnProfileEdit = computed(() => {
+  if (!employee.value) {
+    return false;
+  }
+  return !canManageCurrentEmployee.value && canEditOwnProfile(employee.value);
 });
 
 const isEmployeeUpdateDialogOpen = ref(false);

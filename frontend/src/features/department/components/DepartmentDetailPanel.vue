@@ -78,7 +78,7 @@
           class="flex flex-col"
         >
           <TabsList class="rounded-lg bg-muted/30 p-1">
-            <TabsTrigger value="info" class="text-sm">팀 기본정보</TabsTrigger>
+            <TabsTrigger value="info" class="text-sm">부서 기본정보</TabsTrigger>
             <TabsTrigger value="employees" class="text-sm">직원</TabsTrigger>
             <TabsTrigger value="revenue" class="text-sm">매출</TabsTrigger>
           </TabsList>
@@ -141,7 +141,7 @@
                     메모
                   </dt>
                   <dd class="text-sm text-muted-foreground">
-                    팀별 KPI, 진행 중인 프로젝트 등 메모가 필요하다면 이 영역을 확장하세요.
+                    부서별 KPI, 진행 중인 프로젝트 등 메모가 필요하다면 이 영역을 확장하세요.
                   </dd>
                 </div>
               </div>
@@ -182,7 +182,7 @@
     >
       <h3 class="text-base font-semibold text-foreground">부서를 선택해 주세요</h3>
       <p class="mt-2 text-sm text-muted-foreground">
-        왼쪽 부서 목록에서 팀을 선택하면 이 영역에 상세 정보가 표시됩니다.
+        왼쪽 부서 목록에서 부서를 선택하면 이 영역에 상세 정보가 표시됩니다.
       </p>
     </div>
 

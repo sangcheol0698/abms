@@ -118,7 +118,7 @@ import {
 import { departmentKeys, employeeKeys, queryClient } from '@/core/query';
 import {
   canEditOwnProfile,
-  canManageEmployees,
+  canManageEmployee,
   canViewEmployeeDetail,
 } from '@/features/employee/permissions';
 import { dispatchOpenProfileDialogEvent } from '@/features/auth/profileDialogEvents';
@@ -305,10 +305,13 @@ const totalPages = computed(() => {
   return typeof value === 'number' && value > 0 ? value : 1;
 });
 const totalElements = computed(() => departmentEmployeesQuery.data.value?.totalElements ?? 0);
+const employeePermissionContext = computed(() => ({
+  departmentChart: departmentChartQuery.data.value ?? [],
+}));
 
 // 이벤트 핸들러
 function handleViewEmployee(employee: EmployeeListItem) {
-  if (!canViewEmployeeDetail(employee.email)) {
+  if (!canViewEmployeeDetail(employee, employeePermissionContext.value)) {
     return;
   }
   router.push({
@@ -318,10 +321,10 @@ function handleViewEmployee(employee: EmployeeListItem) {
 }
 
 async function handleEditEmployee(employee: EmployeeListItem) {
-  if (!(canManageEmployees() || canEditOwnProfile(employee.email))) {
+  if (!(canManageEmployee(employee, employeePermissionContext.value) || canEditOwnProfile(employee))) {
     return;
   }
-  if (!canManageEmployees() && canEditOwnProfile(employee.email)) {
+  if (!canManageEmployee(employee, employeePermissionContext.value) && canEditOwnProfile(employee)) {
     dispatchOpenProfileDialogEvent({ openSelfProfileEditor: true });
     return;
   }
@@ -366,7 +369,7 @@ function handleCopyEmail(employee: EmployeeListItem) {
 }
 
 function handleDeleteEmployee(employee: EmployeeListItem) {
-  if (!canManageEmployees()) {
+  if (!canManageEmployee(employee, employeePermissionContext.value)) {
     return;
   }
   deletion.open(employee.employeeId, employee.name);
@@ -393,11 +396,14 @@ const columns = createEmployeeTableColumns(
     onCopyEmail: handleCopyEmail,
     onDeleteEmployee: handleDeleteEmployee,
     onNavigateToDepartment: handleNavigateToDepartment,
-    canViewEmployee: (employee) => canViewEmployeeDetail(employee.email),
-    canEditEmployee: (employee) => canManageEmployees() || canEditOwnProfile(employee.email),
-    canDeleteEmployee: () => canManageEmployees(),
+    canViewEmployee: (employee) => canViewEmployeeDetail(employee, employeePermissionContext.value),
+    canEditEmployee: (employee) =>
+      canManageEmployee(employee, employeePermissionContext.value) || canEditOwnProfile(employee),
+    canDeleteEmployee: (employee) => canManageEmployee(employee, employeePermissionContext.value),
     getEditActionLabel: (employee) =>
-      !canManageEmployees() && canEditOwnProfile(employee.email) ? '내 정보 수정' : '직원 편집',
+      !canManageEmployee(employee, employeePermissionContext.value) && canEditOwnProfile(employee)
+        ? '내 정보 수정'
+        : '직원 편집',
   },
   {
     excludeDepartmentColumn: true,

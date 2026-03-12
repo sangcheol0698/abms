@@ -9,11 +9,13 @@ import '@/assets/fonts.css';
 import { configureContainer } from '@/core/di/container';
 import { initializeTheme } from '@/core/composables';
 import { registerAuthHttpErrorHandler } from '@/features/auth/registerAuthHttpErrorHandler';
+import { initializeSessionSync } from '@/features/auth/session';
 import { queryClient } from '@/core/query';
 
 configureContainer();
 initializeTheme();
 registerAuthHttpErrorHandler(router);
+initializeSessionSync();
 
 const app = createApp(App);
 app.use(createPinia());

@@ -10,6 +10,8 @@ const EMPLOYEE_STORAGE_KEY = 'employee';
 interface StoredUser {
   name: string;
   email: string;
+  employeeId: number | null;
+  departmentId: number | null;
   avatar?: string;
   permissions: StoredPermission[];
 }
@@ -25,6 +27,10 @@ export interface StoredPermission {
 
 let isSessionValidated = false;
 let validatingPromise: Promise<boolean> | null = null;
+let isSessionSyncInitialized = false;
+let lastForcedValidationAt = 0;
+
+const SESSION_REFRESH_INTERVAL_MS = 10_000;
 
 function normalizePermissions(rawPermissions: unknown): StoredPermission[] {
   if (!Array.isArray(rawPermissions)) {
@@ -71,6 +77,8 @@ function parseStoredUser(raw: string | null): StoredUser | null {
     return {
       email: parsed.email.trim(),
       name: typeof parsed.name === 'string' && parsed.name.trim().length > 0 ? parsed.name : 'User',
+      employeeId: typeof parsed.employeeId === 'number' ? parsed.employeeId : null,
+      departmentId: typeof parsed.departmentId === 'number' ? parsed.departmentId : null,
       avatar: typeof parsed.avatar === 'string' ? parsed.avatar : '',
       permissions: normalizePermissions(parsed.permissions),
     };
@@ -94,6 +102,8 @@ export function setStoredUser(
   const normalized: StoredUser = {
     name: user.name?.trim() || 'User',
     email: user.email.trim(),
+    employeeId: 'employeeId' in user && typeof user.employeeId === 'number' ? user.employeeId : null,
+    departmentId: 'departmentId' in user && typeof user.departmentId === 'number' ? user.departmentId : null,
     avatar: 'avatar' in user && typeof user.avatar === 'string' ? user.avatar : '',
     permissions: 'permissions' in user ? normalizePermissions(user.permissions) : [],
   };
@@ -120,11 +130,13 @@ export function clearStoredUser(): void {
   localStorage.removeItem(EMPLOYEE_STORAGE_KEY);
   isSessionValidated = false;
   validatingPromise = null;
+  lastForcedValidationAt = 0;
   resetCsrfInitialization();
 }
 
 export function markSessionNeedsValidation(): void {
   isSessionValidated = false;
+  lastForcedValidationAt = 0;
 }
 
 export async function ensureServerSessionValid(forceRefresh = false): Promise<boolean> {
@@ -157,4 +169,42 @@ export async function ensureServerSessionValid(forceRefresh = false): Promise<bo
   }
 
   return validatingPromise;
+}
+
+export async function refreshStoredUserSession(force = false): Promise<void> {
+  if (!hasStoredUser()) {
+    return;
+  }
+
+  const now = Date.now();
+  if (!force && now - lastForcedValidationAt < SESSION_REFRESH_INTERVAL_MS) {
+    return;
+  }
+
+  await ensureServerSessionValid(true);
+  lastForcedValidationAt = Date.now();
+}
+
+export function initializeSessionSync(): void {
+  if (isSessionSyncInitialized || typeof window === 'undefined') {
+    return;
+  }
+
+  const syncSession = () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      return;
+    }
+    if (!hasStoredUser()) {
+      return;
+    }
+
+    void refreshStoredUserSession();
+  };
+
+  window.addEventListener('focus', syncSession);
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', syncSession);
+  }
+
+  isSessionSyncInitialized = true;
 }
