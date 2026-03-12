@@ -28,7 +28,13 @@ test.describe('로그인 플로우', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터' }),
+          body: JSON.stringify({
+            email: 'tester@abms.co.kr',
+            name: '테스터',
+            employeeId: 1,
+            departmentId: 10,
+            permissions: [{ code: 'dashboard.read', scopes: ['ALL'] }],
+          }),
         });
         return;
       }

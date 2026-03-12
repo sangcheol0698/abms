@@ -3,6 +3,7 @@ package kr.co.abacus.abms.adapter.api.party;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +40,7 @@ public class PartyApi {
     private final PartyManager partyManager;
     private final ProjectFinder projectFinder;
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')")
     @GetMapping("/api/parties")
     public PageResponse<PartyResponse> getParties(Pageable pageable, @RequestParam(required = false) String name) {
         Page<PartyListItem> parties = partyFinder.getParties(pageable, new PartySearchCondition(name));
@@ -46,17 +48,20 @@ public class PartyApi {
         return PageResponse.of(parties.map(PartyResponse::from));
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')")
     @GetMapping("/api/parties/summary")
     public PartyOverviewSummary getOverviewSummary(@RequestParam(required = false) String name) {
         return partyFinder.getOverviewSummary(new PartySearchCondition(name));
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')")
     @GetMapping("/api/parties/{id}")
     public PartyResponse getParty(@PathVariable Long id) {
         Party party = partyManager.findById(id);
         return PartyResponse.from(party);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.write')")
     @PostMapping("/api/parties")
     @ResponseStatus(HttpStatus.CREATED)
     public PartyResponse create(@RequestBody PartyCreateApiRequest request) {
@@ -64,18 +69,22 @@ public class PartyApi {
         return PartyResponse.from(party);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.write')")
     @PutMapping("/api/parties/{id}")
     public PartyResponse update(@PathVariable Long id, @RequestBody PartyUpdateApiRequest request) {
         Party party = partyManager.update(id, request.toDomainRequest());
         return PartyResponse.from(party);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.write')")
     @DeleteMapping("/api/parties/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         partyManager.delete(id);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')"
+            + " and @permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/parties/{id}/projects")
     public List<ProjectResponse> getPartyProjects(@PathVariable Long id) {
         Party party = partyManager.findById(id);

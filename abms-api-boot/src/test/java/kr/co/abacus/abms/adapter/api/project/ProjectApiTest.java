@@ -10,8 +10,29 @@ import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateResponse;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
+import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentRepository;
+import kr.co.abacus.abms.application.permission.outbound.GroupPermissionGrantRepository;
+import kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository;
+import kr.co.abacus.abms.application.permission.outbound.PermissionRepository;
+import kr.co.abacus.abms.domain.account.Account;
+import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
+import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.department.DepartmentType;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.grouppermissiongrant.GroupPermissionGrant;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
+import kr.co.abacus.abms.domain.permission.Permission;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroup;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectFixture;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
@@ -21,21 +42,53 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("프로젝트 API (ProjectApi)")
 class ProjectApiTest extends ApiIntegrationTestBase {
+
+    private static final String USERNAME = "project-api-user@abacus.co.kr";
+    private static final String PASSWORD = "Password123!";
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
+
+    @Autowired
+    private PermissionGroupRepository permissionGroupRepository;
+
+    @Autowired
+    private AccountGroupAssignmentRepository accountGroupAssignmentRepository;
+
+    @Autowired
+    private GroupPermissionGrantRepository groupPermissionGrantRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private ProjectRepository projectRepository;
@@ -43,9 +96,54 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     @Autowired
     private PartyRepository partyRepository;
 
+    @BeforeEach
+    void setUpAccount() {
+        Department department = departmentRepository.save(Department.create(
+                "PROJECT-API",
+                "프로젝트API부서",
+                DepartmentType.TEAM,
+                null,
+                null
+        ));
+        Employee employee = employeeRepository.save(Employee.create(
+                department.getIdOrThrow(),
+                "프로젝트API사용자",
+                USERNAME,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(1990, 5, 20),
+                EmployeePosition.ASSOCIATE,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.JUNIOR,
+                EmployeeAvatar.SKY_GLOW,
+                null
+        ));
+        Account account = accountRepository.save(Account.create(
+                employee.getIdOrThrow(),
+                USERNAME,
+                passwordEncoder.encode(PASSWORD)
+        ));
+
+        PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                "프로젝트 API 권한 그룹",
+                "프로젝트 API 테스트용 권한 그룹",
+                PermissionGroupType.CUSTOM
+        ));
+        accountGroupAssignmentRepository.save(AccountGroupAssignment.create(
+                account.getIdOrThrow(),
+                permissionGroup.getIdOrThrow()
+        ));
+
+        grant(permissionGroup, "project.read", "프로젝트 조회");
+        grant(permissionGroup, "project.write", "프로젝트 변경");
+        grant(permissionGroup, "project.excel.download", "프로젝트 엑셀 다운로드");
+        grant(permissionGroup, "project.excel.upload", "프로젝트 엑셀 업로드");
+        grant(permissionGroup, "party.read", "협력사 조회");
+        flushAndClear();
+    }
+
     @Test
     @DisplayName("프로젝트 생성")
-    void create() {
+    void create() throws Exception {
         // Given
         Long partyId = createParty("테스트 협력사 A");
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
@@ -61,15 +159,14 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
-        ProjectCreateResponse response = restTestClient.post()
-                .uri("/api/projects")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestJson)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProjectCreateResponse.class)
-                .returnResult()
-                .getResponseBody();
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/projects")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        ProjectCreateResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), ProjectCreateResponse.class);
 
         assertThat(response).isNotNull();
         assertThat(response.projectId()).isNotNull();
@@ -83,7 +180,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 생성 - 중복 코드")
-    void create_duplicateCode() {
+    void create_duplicateCode() throws Exception {
         // Given: 동일한 코드의 프로젝트가 이미 존재
         projectRepository.save(ProjectFixture.createProject("PRJ-DUP-001"));
         flushAndClear();
@@ -101,17 +198,17 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
-        restTestClient.post()
-                .uri("/api/projects")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestJson)
-                .exchange()
-                .expectStatus().isBadRequest();
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/projects")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     @DisplayName("프로젝트 검색 - 코드/이름, 상태, 기간 조건")
-    void search() {
+    void search() throws Exception {
         Long partyAlphaId = createParty("테스트 협력사 Alpha");
         Long partyBetaId = createParty("테스트 협력사 Beta");
         projectRepository.save(createProject("PRJ-ALPHA-001", "알파 프로젝트", partyAlphaId, 1L, ProjectStatus.IN_PROGRESS,
@@ -122,32 +219,22 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                 LocalDate.of(2023, 5, 1)));
         flushAndClear();
 
-        PageResponse<ProjectResponse> response = restTestClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/projects")
-                        .queryParam("name", "알파")
-                        .queryParam("statuses", ProjectStatus.IN_PROGRESS.name())
-                        .queryParam("periodStart", "2024-01-01")
-                        .queryParam("periodEnd", "2024-12-31")
-                        .queryParam("page", 0)
-                        .queryParam("size", 10)
-                        .build())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<PageResponse<ProjectResponse>>() {
-                })
-                .returnResult()
-                .getResponseBody();
-
-        assertThat(response).isNotNull();
-        assertThat(response.content())
-                .extracting(ProjectResponse::code)
-                .containsExactly("PRJ-ALPHA-001");
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/projects")
+                        .session(session)
+                        .param("name", "알파")
+                        .param("statuses", ProjectStatus.IN_PROGRESS.name())
+                        .param("periodStart", "2024-01-01")
+                        .param("periodEnd", "2024-12-31")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].code").value("PRJ-ALPHA-001"));
     }
 
     @Test
     @DisplayName("프로젝트 요약 정보를 조회한다")
-    void overviewSummary() {
+    void overviewSummary() throws Exception {
         Long partyId = createParty("요약 협력사");
         projectRepository.save(createProject("PRJ-SUM-API-001", "요약 프로젝트 1", partyId, 1L, ProjectStatus.SCHEDULED,
                 LocalDate.of(2024, 1, 10)));
@@ -157,17 +244,14 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                 LocalDate.of(2024, 3, 10)));
         flushAndClear();
 
-        ProjectOverviewSummary response = restTestClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/projects/summary")
-                        .queryParam("name", "요약 프로젝트")
-                        .queryParam("partyIds", partyId)
-                        .build())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProjectOverviewSummary.class)
-                .returnResult()
-                .getResponseBody();
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/summary")
+                        .session(session)
+                        .param("name", "요약 프로젝트")
+                        .param("partyIds", String.valueOf(partyId)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        ProjectOverviewSummary response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), ProjectOverviewSummary.class);
 
         assertThat(response).isNotNull();
         assertThat(response.totalCount()).isEqualTo(3);
@@ -202,20 +286,19 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 상세 조회 - 존재하지 않는 프로젝트")
-    void find_notFound() {
+    void find_notFound() throws Exception {
         // Given
         Long nonExistentId = 9999L;
 
         // When & Then
-        restTestClient.get()
-                .uri("/api/projects/{id}", nonExistentId)
-                .exchange()
-                .expectStatus().isNotFound();
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/{id}", nonExistentId).session(session))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
     @DisplayName("프로젝트 수정")
-    void update() {
+    void update() throws Exception {
         // Given
         Long oldPartyId = createParty("테스트 협력사 Old");
         Long newPartyId = createParty("테스트 협력사 New");
@@ -236,15 +319,14 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         String requestJson = objectMapper.writeValueAsString(request);
 
         // When & Then
-        ProjectUpdateResponse response = restTestClient.put()
-                .uri("/api/projects/{id}", project.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestJson)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProjectUpdateResponse.class)
-                .returnResult()
-                .getResponseBody();
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.put("/api/projects/{id}", project.getId())
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        ProjectUpdateResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), ProjectUpdateResponse.class);
 
         assertThat(response).isNotNull();
         assertThat(response.projectId()).isEqualTo(project.getId());
@@ -256,7 +338,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 완료 처리")
-    void complete() {
+    void complete() throws Exception {
         // Given
         Long partyId = createParty("테스트 협력사 Complete");
         Project project = createProject("PRJ-COMPLETE-001", "완료 테스트", partyId, 1L, ProjectStatus.IN_PROGRESS,
@@ -265,10 +347,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // When & Then
-        restTestClient.patch()
-                .uri("/api/projects/{id}/complete", project.getId())
-                .exchange()
-                .expectStatus().isNoContent();
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/projects/{id}/complete", project.getId()).session(session))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         flushAndClear();
         Project completedProject = projectRepository.findById(project.getId()).orElseThrow();
@@ -277,7 +358,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 취소 처리")
-    void cancel() {
+    void cancel() throws Exception {
         // Given
         Long partyId = createParty("테스트 협력사 Cancel");
         Project project = createProject("PRJ-CANCEL-001", "취소 테스트", partyId, 1L, ProjectStatus.IN_PROGRESS,
@@ -286,10 +367,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         // When & Then
-        restTestClient.patch()
-                .uri("/api/projects/{id}/cancel", project.getId())
-                .exchange()
-                .expectStatus().isNoContent();
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/projects/{id}/cancel", project.getId()).session(session))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         flushAndClear();
         Project cancelledProject = projectRepository.findById(project.getId()).orElseThrow();
@@ -298,17 +378,16 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 삭제 (soft delete)")
-    void delete() {
+    void delete() throws Exception {
         // Given
         Project project = ProjectFixture.createProject("PRJ-DELETE-001");
         projectRepository.save(project);
         flushAndClear();
 
         // When & Then
-        restTestClient.delete()
-                .uri("/api/projects/{id}", project.getId())
-                .exchange()
-                .expectStatus().isNoContent();
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/{id}", project.getId()).session(session))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         flushAndClear();
         assertThat(projectRepository.findByIdAndDeletedFalse(project.getId())).isEmpty();
@@ -316,26 +395,24 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 삭제 - 존재하지 않는 프로젝트")
-    void delete_notFound() {
+    void delete_notFound() throws Exception {
         // Given
         Long nonExistentId = 9999L;
 
         // When & Then
-        restTestClient.delete()
-                .uri("/api/projects/{id}", nonExistentId)
-                .exchange()
-                .expectStatus().isNotFound();
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/{id}", nonExistentId).session(session))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
     @DisplayName("프로젝트 엑셀 다운로드")
-    void downloadExcel() {
-        restTestClient.get()
-                .uri("/api/projects/excel/download")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                .expectHeader().valueMatches("Content-Disposition", "attachment; filename=\"projects_\\d{8}_\\d{6}\\.xlsx\"");
+    void downloadExcel() throws Exception {
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/excel/download").session(session))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.header().string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(MockMvcResultMatchers.header().exists("Content-Disposition"));
     }
 
     @Test
@@ -412,6 +489,34 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         Party party = partyRepository.save(Party.create(
                 new PartyCreateRequest(name, null, null, null, null)));
         return party.getIdOrThrow();
+    }
+
+    private void grant(PermissionGroup permissionGroup, String code, String name) {
+        Permission permission = permissionRepository.save(Permission.create(
+                code,
+                name,
+                name + " 권한"
+        ));
+        groupPermissionGrantRepository.save(GroupPermissionGrant.create(
+                permissionGroup.getIdOrThrow(),
+                permission.getIdOrThrow(),
+                PermissionScope.ALL
+        ));
+    }
+
+    private MockHttpSession login() throws Exception {
+        MvcResult loginResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "username", USERNAME,
+                                "password", PASSWORD
+                        ))))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+        return session;
     }
 
 }

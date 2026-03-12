@@ -27,7 +27,7 @@
           <h3 class="text-lg font-medium leading-none">매출 일정</h3>
           <p class="text-sm text-muted-foreground">프로젝트의 매출 일정을 관리합니다.</p>
         </div>
-        <Button size="sm" @click="handleCreate">
+        <Button v-if="canManageProject" size="sm" @click="handleCreate">
           <Plus class="mr-2 h-4 w-4" />
           일정 추가
         </Button>
@@ -108,6 +108,7 @@ import {
 import { formatCurrency } from '@/features/project/models/projectListItem';
 import ProjectRevenuePlanDialog from './ProjectRevenuePlanDialog.vue';
 import { useProjectDetailQuery, useProjectRevenuePlansQuery } from '@/features/project/queries/useProjectQueries';
+import { canManageProjects } from '@/features/project/permissions';
 
 interface Props {
   projectId: number;
@@ -118,6 +119,7 @@ const projectId = toRef(props, 'projectId');
 const revenuePlansQuery = useProjectRevenuePlansQuery(projectId);
 const projectDetailQuery = useProjectDetailQuery(projectId);
 const isDialogOpen = ref(false);
+const canManageProject = computed(() => canManageProjects());
 
 const isLoading = computed(
   () => revenuePlansQuery.isLoading.value || projectDetailQuery.isLoading.value,
@@ -159,6 +161,9 @@ function formatDate(value: string) {
 }
 
 function handleCreate() {
+  if (!canManageProject.value) {
+    return;
+  }
   isDialogOpen.value = true;
 }
 

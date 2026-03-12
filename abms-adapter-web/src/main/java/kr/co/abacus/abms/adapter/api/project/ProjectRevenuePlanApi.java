@@ -3,6 +3,7 @@ package kr.co.abacus.abms.adapter.api.project;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,7 @@ public class ProjectRevenuePlanApi {
     private final ProjectRevenuePlanManager projectRevenuePlanManager;
     private final ProjectRevenuePlanFinder projectRevenuePlanFinder;
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/projectRevenuePlans/{projectId}")
     public List<ProjectRevenuePlanResponse> findByProjectId(@PathVariable Long projectId) {
         return projectRevenuePlanFinder.findByProjectId(projectId).stream()
@@ -31,6 +33,7 @@ public class ProjectRevenuePlanApi {
                 .toList();
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PostMapping("/api/projectRevenuePlans")
     public ProjectRevenuePlanResponse create(@RequestBody ProjectRevenuePlanCreateRequest request) {
         ProjectRevenuePlan projectRevenuePlan = projectRevenuePlanManager.create(request);

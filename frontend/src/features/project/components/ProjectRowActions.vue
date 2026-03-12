@@ -7,7 +7,7 @@
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-[180px]">
-      <DropdownMenuItem @click="$emit('edit')">
+      <DropdownMenuItem v-if="canEdit" @click="$emit('edit')">
         <Pencil class="mr-2 h-4 w-4" />
         프로젝트 편집
       </DropdownMenuItem>
@@ -15,8 +15,8 @@
         <Copy class="mr-2 h-4 w-4" />
         코드 복사
       </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem class="text-destructive" @click="$emit('delete')">
+      <DropdownMenuSeparator v-if="canDelete" />
+      <DropdownMenuItem v-if="canDelete" class="text-destructive" @click="$emit('delete')">
         <Trash class="mr-2 h-4 w-4" />
         프로젝트 삭제
       </DropdownMenuItem>
@@ -36,7 +36,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { ProjectListItem } from '@/features/project/models/projectListItem';
 
-defineProps<{ row: ProjectListItem }>();
+withDefaults(defineProps<{ row: ProjectListItem; canEdit?: boolean; canDelete?: boolean }>(), {
+  canEdit: true,
+  canDelete: true,
+});
 
 defineEmits<{
   edit: [];

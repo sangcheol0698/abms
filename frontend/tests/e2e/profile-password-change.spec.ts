@@ -28,7 +28,13 @@ test.describe('내 계정 비밀번호 변경', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터', permissions: [] }),
+          body: JSON.stringify({
+            email: 'tester@abms.co.kr',
+            name: '테스터',
+            employeeId: 1,
+            departmentId: 10,
+            permissions: [{ code: 'employee.write', scopes: ['SELF'] }],
+          }),
         });
         return;
       }
@@ -132,7 +138,13 @@ test.describe('내 계정 비밀번호 변경', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ email: 'tester@abms.co.kr', name: '테스터', permissions: [] }),
+          body: JSON.stringify({
+            email: 'tester@abms.co.kr',
+            name: '테스터',
+            employeeId: 1,
+            departmentId: 10,
+            permissions: [{ code: 'employee.write', scopes: ['SELF'] }],
+          }),
         });
         return;
       }

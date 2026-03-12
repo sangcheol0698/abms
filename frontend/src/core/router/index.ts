@@ -167,6 +167,7 @@ const routes = [
         meta: {
           title: '프로젝트',
           layout: SidebarLayout,
+          requiredPermission: 'project.read',
           breadcrumbs: [
             {
               title: '대시보드',
@@ -186,6 +187,7 @@ const routes = [
         meta: {
           title: '프로젝트 상세',
           layout: SidebarLayout,
+          requiredPermission: 'project.read',
           breadcrumbs: [
             {
               title: '대시보드',
@@ -209,6 +211,7 @@ const routes = [
         meta: {
           title: '협력사',
           layout: SidebarLayout,
+          requiredPermission: 'party.read',
           breadcrumbs: [
             {
               title: '대시보드',
@@ -228,6 +231,7 @@ const routes = [
         meta: {
           title: '협력사 상세',
           layout: SidebarLayout,
+          requiredPermission: 'party.read',
           breadcrumbs: [
             {
               title: '대시보드',

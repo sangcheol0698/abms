@@ -15,7 +15,7 @@
     <template v-else>
       <ProjectDetailHeader :project="project" @party-click="goToParty">
         <template #actions>
-          <AlertDialog>
+          <AlertDialog v-if="canDeleteProject">
             <AlertDialogTrigger as-child>
               <Button variant="outline" size="sm" class="text-destructive hover:text-destructive">
                 <Trash2 class="mr-2 h-4 w-4" />
@@ -41,7 +41,7 @@
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <Button variant="outline" size="sm" @click="openEditDialog">
+          <Button v-if="canEditProject" variant="outline" size="sm" @click="openEditDialog">
             <Pencil class="mr-2 h-4 w-4" />
             프로젝트 편집
           </Button>
@@ -108,6 +108,8 @@ import ProjectRevenuePlanPanel from '@/features/project/components/ProjectRevenu
 import ProjectUpdateDialog from '@/features/project/components/ProjectUpdateDialog.vue';
 import { useDeleteProjectMutation, useProjectDetailQuery } from '@/features/project/queries/useProjectQueries';
 import { projectKeys, queryClient } from '@/core/query';
+import { canManageProjects } from '@/features/project/permissions';
+import { canReadParties } from '@/features/party/permissions';
 
 defineOptions({ name: 'ProjectDetailView' });
 
@@ -133,8 +135,13 @@ const errorMessage = computed(() => {
   return error instanceof Error ? error.message : '프로젝트 정보를 불러오는 중 오류가 발생했습니다.';
 });
 const isDeleting = computed(() => deleteProjectMutation.isPending.value);
+const canDeleteProject = computed(() => canManageProjects());
+const canEditProject = computed(() => canManageProjects() && canReadParties());
 
 function goToParty() {
+  if (!canReadParties()) {
+    return;
+  }
   const id = project.value?.partyId;
   if (!id) return;
   router.push({ name: 'party-detail', params: { partyId: id } });
