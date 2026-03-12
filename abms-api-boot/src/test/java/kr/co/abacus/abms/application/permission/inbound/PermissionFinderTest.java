@@ -105,7 +105,7 @@ class PermissionFinderTest extends IntegrationTestBase {
                 "프로젝트를 조회할 수 있다."
         ));
         PermissionGroup teamGroup = permissionGroupRepository.save(PermissionGroup.create(
-                "팀 조회 그룹",
+                "부서 조회 그룹",
                 "부서 기준 프로젝트 조회 권한",
                 PermissionGroupType.CUSTOM
         ));

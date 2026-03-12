@@ -33,7 +33,7 @@ class DepartmentManagerTest extends IntegrationTestBase {
     private EmployeeRepository employeeRepository;
 
     @Test
-    @DisplayName("팀의 팀장을 지정한다.")
+    @DisplayName("부서의 부서장을 지정한다.")
     void assignLeader() {
         // given
         Department department1 = createDepartment("TEST-CODE", "테스트팀", DepartmentType.TEAM, null, null);

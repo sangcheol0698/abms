@@ -145,7 +145,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("팀의 리더를 임명한다")
+    @DisplayName("부서의 리더를 임명한다")
     void assignTeamLeader() {
         Department company = createDepartment("COMP001", "ABC Corp", DepartmentType.COMPANY, null, null);
         Department division = createDepartment("DIV001", "ABC Corp", DepartmentType.DIVISION, null, company);

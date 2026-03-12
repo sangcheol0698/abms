@@ -44,8 +44,8 @@
               >
                 <div class="space-y-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{{ permission.code }}</Badge>
                     <span class="text-sm font-medium text-foreground">{{ permission.name }}</span>
+                    <Badge variant="secondary">{{ permission.code }}</Badge>
                   </div>
                   <p class="text-xs text-muted-foreground">{{ permission.description }}</p>
                 </div>
