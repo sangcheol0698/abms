@@ -119,8 +119,8 @@ public class RevenueMonthlySummaryBatchConfig {
         @Value("#{jobParameters['targetDate'] ?: null}") LocalDate targetDate
     ) {
         return project -> {
-            Department team = departmentRepository.findByIdAndDeletedFalse(project.getLeadDepartmentId())
-                .orElseThrow(() -> new IllegalArgumentException("팀 누락: " + project.getLeadDepartmentId()));
+            Department leadDepartment = departmentRepository.findByIdAndDeletedFalse(project.getLeadDepartmentId())
+                .orElseThrow(() -> new IllegalArgumentException("주관 부서 누락: " + project.getLeadDepartmentId()));
 
             // 기준월 세팅
             LocalDate executeDate = (targetDate != null) ? targetDate : LocalDate.now().minusDays(1);
@@ -158,9 +158,9 @@ public class RevenueMonthlySummaryBatchConfig {
                    project.getId(),
                    project.getCode(),
                    project.getName(),
-                   team.getId(),
-                   team.getCode(),
-                   team.getName(),
+                   leadDepartment.getId(),
+                   leadDepartment.getCode(),
+                   leadDepartment.getName(),
                    executeDate,
                    totalRevenue,
                    totalCost,

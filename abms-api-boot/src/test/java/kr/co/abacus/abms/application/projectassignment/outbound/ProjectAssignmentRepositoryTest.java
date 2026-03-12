@@ -70,7 +70,7 @@ class ProjectAssignmentRepositoryTest extends IntegrationTestBase {
         Project project = createProject();
         ReflectionTestUtils.setField(project, "period", new Period(start, end));
 
-        // 프로젝트 할당 (인력 투입) 구성
+        // 프로젝트 투입 구성
         ProjectAssignmentCreateRequest projectAssignmentCreateRequest = new ProjectAssignmentCreateRequest(
             1L, 1L, AssignmentRole.DEV, start, end);
         ProjectAssignment assignment = ProjectAssignment.assign(project, projectAssignmentCreateRequest);

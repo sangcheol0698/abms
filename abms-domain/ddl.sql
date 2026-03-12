@@ -508,9 +508,9 @@ CREATE TABLE IF NOT EXISTS `tb_monthly_revenue_summary` (
     `project_id`     BIGINT         NOT NULL,
     `project_code`   VARCHAR(255)   NOT NULL,
     `project_name`   VARCHAR(255)   NOT NULL,
-    `team_id`        BIGINT         NOT NULL,
-    `team_code`      VARCHAR(255)   NOT NULL,
-    `team_name`      VARCHAR(255)   NOT NULL,
+    `lead_department_id` BIGINT     NOT NULL,
+    `lead_department_code` VARCHAR(255) NOT NULL,
+    `lead_department_name` VARCHAR(255) NOT NULL,
     `summary_date`   DATE           NOT NULL,
     `revenue_amount` DECIMAL(19, 0) NOT NULL,
     `cost_amount`    DECIMAL(19, 0) NOT NULL,
@@ -526,9 +526,9 @@ CREATE TABLE IF NOT EXISTS `tb_monthly_revenue_summary` (
 
     PRIMARY KEY (`id`),
     INDEX `IDX_MONTHLY_REVENUE_SUMMARY_PROJECT_ID` (`project_id`),
-    INDEX `IDX_MONTHLY_REVENUE_SUMMARY_TEAM_ID` (`team_id`),
+    INDEX `IDX_MONTHLY_REVENUE_SUMMARY_LEAD_DEPARTMENT_ID` (`lead_department_id`),
     CONSTRAINT `FK_MONTHLY_REVENUE_SUMMARY_PROJECT_ID` FOREIGN KEY (`project_id`) REFERENCES `tb_project` (`id`),
-    CONSTRAINT `FK_MONTHLY_REVENUE_SUMMARY_TEAM_ID` FOREIGN KEY (`team_id`) REFERENCES `tb_department` (`id`)
+    CONSTRAINT `FK_MONTHLY_REVENUE_SUMMARY_LEAD_DEPARTMENT_ID` FOREIGN KEY (`lead_department_id`) REFERENCES `tb_department` (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;

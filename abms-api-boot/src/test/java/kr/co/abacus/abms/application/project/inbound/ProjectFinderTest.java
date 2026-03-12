@@ -85,7 +85,7 @@ class ProjectFinderTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("거래처 ID로 프로젝트 조회")
+    @DisplayName("협력사 ID로 프로젝트 조회")
     void findAllByPartyId() {
         Long partyId = 1L;
         Long otherPartyId = 2L;

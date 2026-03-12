@@ -20,7 +20,7 @@ import java.util.List;
 import static kr.co.abacus.abms.domain.project.ProjectFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("프로젝트 할당 조회 (ProjectAssignmentFinder)")
+@DisplayName("프로젝트 투입 조회 (ProjectAssignmentFinder)")
 class ProjectAssignmentFinderTest extends IntegrationTestBase {
 
     @Autowired

@@ -48,7 +48,7 @@
         <h2 class="mb-4 text-sm font-semibold text-muted-foreground">계약 정보</h2>
         <dl class="grid gap-3 text-sm">
           <div class="grid grid-cols-[100px_1fr] gap-2">
-            <dt class="text-muted-foreground">거래처</dt>
+            <dt class="text-muted-foreground">협력사</dt>
             <dd>
               <button
                 type="button"

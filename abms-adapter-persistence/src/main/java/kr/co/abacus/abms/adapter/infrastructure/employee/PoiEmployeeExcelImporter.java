@@ -64,7 +64,7 @@ public class PoiEmployeeExcelImporter implements EmployeeExcelImporter {
     }
 
     private EmployeeCreateCommand toCreateCommand(Row row, Map<String, Long> departmentCodeMap) {
-        String teamCode = getCellValue(row, 0);
+        String departmentCode = getCellValue(row, 0);
         String email = getCellValue(row, 1);
         String name = getCellValue(row, 2);
         String joinedDate = getCellValue(row, 3);
@@ -74,9 +74,9 @@ public class PoiEmployeeExcelImporter implements EmployeeExcelImporter {
         String gradeDesc = getCellValue(row, 7);
         String memo = getCellValue(row, 8);
 
-        Long departmentId = departmentCodeMap.get(teamCode);
+        Long departmentId = departmentCodeMap.get(departmentCode);
         if (departmentId == null) {
-            throw new IllegalArgumentException("존재하지 않는 부서 코드입니다: " + teamCode);
+            throw new IllegalArgumentException("존재하지 않는 부서 코드입니다: " + departmentCode);
         }
 
         return EmployeeCreateCommand.builder()

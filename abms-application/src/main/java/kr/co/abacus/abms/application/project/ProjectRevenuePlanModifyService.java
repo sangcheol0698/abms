@@ -21,7 +21,7 @@ public class ProjectRevenuePlanModifyService implements ProjectRevenuePlanManage
     @Override
     public ProjectRevenuePlan create(ProjectRevenuePlanCreateRequest createRequest) {
         if (projectRevenuePlanRepository.existsByProjectIdAndSequence(createRequest.projectId(), createRequest.sequence())) {
-            throw new ProjectRevenuePlanDuplicateException("이미 존재하는 프로젝트 수금 계획입니다");
+            throw new ProjectRevenuePlanDuplicateException("이미 존재하는 프로젝트 매출 계획입니다.");
         }
 
         ProjectRevenuePlan projectRevenuePlan = ProjectRevenuePlan.create(createRequest);

@@ -19,7 +19,7 @@ import static kr.co.abacus.abms.domain.project.ProjectFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DisplayName("프로젝트 할당 수정 (ProjectAssignmentManager)")
+@DisplayName("프로젝트 투입 관리 (ProjectAssignmentManager)")
 class ProjectAssignmentManagerTest extends IntegrationTestBase  {
 
     @Autowired
@@ -56,7 +56,7 @@ class ProjectAssignmentManagerTest extends IntegrationTestBase  {
     }
 
     @Test
-    @DisplayName("존재하지 않는 프로젝트에 할당을 시도하면 예외가 발생한다")
+    @DisplayName("존재하지 않는 프로젝트에 투입을 시도하면 예외가 발생한다")
     void create_projectNotFound() {
         // given
         Long nonExistentProjectId = 9999L;

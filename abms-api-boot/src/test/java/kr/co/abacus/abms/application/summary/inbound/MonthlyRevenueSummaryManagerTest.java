@@ -156,7 +156,7 @@ class MonthlyRevenueSummaryManagerTest extends IntegrationTestBase {
         Employee empA = saveEmployeeWithCost("이직원", "this@naver.com", EmployeeType.FULL_TIME, 5_000_000L, 0.1, 0.05);
         Employee empB = saveEmployeeWithCost("저직원", "that@naver.com", EmployeeType.FREELANCER, 3_000_000L, 0.04, 0.02);
 
-        // 3. 프로젝트 할당 생성
+        // 3. 프로젝트 투입 생성
         // 직원A: 2월 꽉 채움 (1.0 MM)
         ProjectAssignment assignmentA = ProjectAssignment.assign(
             project,

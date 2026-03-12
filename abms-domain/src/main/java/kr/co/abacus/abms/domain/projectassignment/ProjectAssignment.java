@@ -49,7 +49,7 @@ public class ProjectAssignment extends AbstractEntity {
     public static ProjectAssignment assign(Project project, ProjectAssignmentCreateRequest request) {
         ProjectAssignment assignment = new ProjectAssignment();
 
-        // 프로젝트 할당 기간 유효성 검사
+        // 프로젝트 투입 기간 유효성 검사
         if (request.startDate().isBefore(project.getPeriod().startDate())) {
             throw new IllegalArgumentException("투입 시작일은 프로젝트 시작일보다 빠를 수 없습니다.");
         }

@@ -22,6 +22,6 @@ public enum EmployeeType {
         return Arrays.stream(values())
                 .filter(v -> v.description.equals(description))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("알 수 없는 직책: " + description));
+                .orElseThrow(() -> new IllegalArgumentException("알 수 없는 고용형태: " + description));
     }
 }

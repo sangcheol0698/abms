@@ -17,7 +17,7 @@ public enum AssignmentRole {
 
     public static AssignmentRole fromDescription(String description) {
         if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("프로젝트 투입입력 역할을 입력하세요.");
+            throw new IllegalArgumentException("프로젝트 투입 역할을 입력하세요.");
         }
 
         String normalized = description.trim();
