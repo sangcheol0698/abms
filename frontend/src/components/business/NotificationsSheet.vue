@@ -65,7 +65,10 @@
               class="flex w-full justify-start gap-3 rounded-md px-3 py-2 text-left hover:bg-accent/70"
               @click="openNotification(notification)"
             >
-              <span :class="indicatorClass(notification.type)" />
+              <span
+                class="mt-1 h-2.5 w-2.5 flex-none rounded-full"
+                :style="indicatorStyle(notification.type)"
+              />
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
                   <p class="truncate text-sm font-medium text-foreground">
@@ -104,6 +107,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useNotificationsStore, type NotificationItem } from '@/core/stores/notifications.store';
+import { statusColorVars } from '@/core/theme/theme';
 
 const props = withDefaults(
   defineProps<{
@@ -140,16 +144,16 @@ onMounted(() => {
   void store.fetchAll();
 });
 
-function indicatorClass(type: NotificationItem['type']) {
+function indicatorStyle(type: NotificationItem['type']) {
   switch (type) {
     case 'success':
-      return 'mt-1 h-2.5 w-2.5 flex-none rounded-full bg-emerald-500';
+      return { backgroundColor: statusColorVars.success };
     case 'warning':
-      return 'mt-1 h-2.5 w-2.5 flex-none rounded-full bg-amber-400';
+      return { backgroundColor: statusColorVars.warning };
     case 'error':
-      return 'mt-1 h-2.5 w-2.5 flex-none rounded-full bg-rose-500';
+      return { backgroundColor: statusColorVars.error };
     default:
-      return 'mt-1 h-2.5 w-2.5 flex-none rounded-full bg-sky-500';
+      return { backgroundColor: statusColorVars.info };
   }
 }
 

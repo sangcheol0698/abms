@@ -1,5 +1,5 @@
 <template>
-  <Card class="shadow-none">
+  <Card>
     <CardHeader>
       <CardTitle>부서별 재무 현황</CardTitle>
       <CardDescription>이번 달 기준 부서별 실적입니다.</CardDescription>

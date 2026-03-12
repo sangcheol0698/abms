@@ -1,6 +1,5 @@
 import { computed, ref, watch, type WatchStopHandle } from 'vue';
-
-type ThemePreference = 'light' | 'dark' | 'system';
+import type { ThemePreference } from '@/core/theme/theme';
 
 const STORAGE_KEY = 'abms-theme-preference';
 const theme = ref<ThemePreference>('system');
@@ -90,15 +89,19 @@ function watchSystemPreference() {
     return;
   }
 
-  mediaQueryHandler = (event: MediaQueryListEvent) => {
+  mediaQueryHandler = () => {
     if (theme.value === 'system') {
-      applyTheme(event.matches ? 'dark' : 'light');
+      applyTheme('system');
     }
   };
 
   if (typeof mediaQuery.addEventListener === 'function') {
     mediaQuery.addEventListener('change', mediaQueryHandler);
     return;
+  }
+
+  if (typeof mediaQuery.addListener === 'function') {
+    mediaQuery.addListener(mediaQueryHandler);
   }
 }
 

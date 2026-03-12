@@ -7,7 +7,7 @@
   </div>
   <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
     <div class="space-y-6">
-      <section class="rounded-lg border border-border/60 bg-background p-5">
+      <section class="rounded-xl border bg-card p-5 shadow-sm">
         <h2 class="mb-4 text-sm font-semibold text-muted-foreground">기본 정보</h2>
         <dl class="grid gap-3 text-sm">
           <div class="grid grid-cols-[100px_1fr] gap-2">
@@ -44,7 +44,7 @@
         </dl>
       </section>
 
-      <section class="rounded-lg border border-border/60 bg-background p-5">
+      <section class="rounded-xl border bg-card p-5 shadow-sm">
         <h2 class="mb-4 text-sm font-semibold text-muted-foreground">계약 정보</h2>
         <dl class="grid gap-3 text-sm">
           <div class="grid grid-cols-[100px_1fr] gap-2">
@@ -70,7 +70,7 @@
       </section>
     </div>
 
-    <section class="rounded-lg border border-border/60 bg-background p-5">
+    <section class="rounded-xl border bg-card p-5 shadow-sm">
       <h2 class="mb-4 text-sm font-semibold text-muted-foreground">프로젝트 설명</h2>
       <p class="text-sm leading-relaxed text-muted-foreground">
         {{ project.description || '등록된 설명이 없습니다.' }}

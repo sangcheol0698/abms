@@ -2,17 +2,17 @@
   <div class="flex flex-col gap-6">
     <!-- 요약 정보 -->
     <div class="grid gap-4 md:grid-cols-3">
-      <div class="rounded-lg border border-border/60 bg-background p-4">
+      <div class="rounded-xl border bg-card p-4 shadow-sm">
         <div class="text-sm font-medium text-muted-foreground">총 매출 금액</div>
         <div class="mt-2 text-2xl font-bold">{{ formatCurrency(totalAmount) }}</div>
       </div>
-      <div class="rounded-lg border border-border/60 bg-background p-4">
+      <div class="rounded-xl border bg-card p-4 shadow-sm">
         <div class="text-sm font-medium text-muted-foreground">예정 금액</div>
         <div class="mt-2 text-2xl font-bold text-muted-foreground">
           {{ formatCurrency(plannedAmount) }}
         </div>
       </div>
-      <div class="rounded-lg border border-border/60 bg-background p-4">
+      <div class="rounded-xl border bg-card p-4 shadow-sm">
         <div class="text-sm font-medium text-muted-foreground">발행된 금액</div>
         <div class="mt-2 text-2xl font-bold text-primary">
           {{ formatCurrency(invoicedAmount) }}
@@ -33,7 +33,7 @@
         </Button>
       </div>
 
-      <div class="rounded-md border border-border/60 bg-background">
+      <div class="rounded-xl border bg-card shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -107,7 +107,10 @@ import {
 } from '@/components/ui/table';
 import { formatCurrency } from '@/features/project/models/projectListItem';
 import ProjectRevenuePlanDialog from './ProjectRevenuePlanDialog.vue';
-import { useProjectDetailQuery, useProjectRevenuePlansQuery } from '@/features/project/queries/useProjectQueries';
+import {
+  useProjectDetailQuery,
+  useProjectRevenuePlansQuery,
+} from '@/features/project/queries/useProjectQueries';
 import { canManageProjects } from '@/features/project/permissions';
 
 interface Props {

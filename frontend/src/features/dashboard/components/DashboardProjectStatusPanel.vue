@@ -1,5 +1,5 @@
 <template>
-  <Card class="shadow-none">
+  <Card>
     <CardHeader>
       <CardTitle>프로젝트 상태 현황</CardTitle>
       <CardDescription>전체 프로젝트의 진행 상태 분포입니다.</CardDescription>
@@ -16,7 +16,7 @@
           <div class="h-2 w-full rounded-full bg-muted/50 overflow-hidden">
             <div
               class="h-full transition-all"
-              :style="{ width: `${status.percentage}%`, backgroundColor: status.colorCode }"
+              :style="{ width: `${status.percentage}%`, backgroundColor: status.color }"
             />
           </div>
         </div>
@@ -27,11 +27,12 @@
 
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getChartColor } from '@/core/theme/theme';
 
 const statuses = [
-  { label: '진행 중 (In Progress)', count: 12, percentage: 45, colorCode: '#f97316' },
-  { label: '준비 중 (Preparing)', count: 4, percentage: 15, colorCode: '#eab308' },
-  { label: '완료 (Completed)', count: 8, percentage: 30, colorCode: '#84cc16' },
-  { label: '보류 (On Hold)', count: 3, percentage: 10, colorCode: '#cbd5e1' },
+  { label: '진행 중 (In Progress)', count: 12, percentage: 45, color: getChartColor(0) },
+  { label: '준비 중 (Preparing)', count: 4, percentage: 15, color: getChartColor(1) },
+  { label: '완료 (Completed)', count: 8, percentage: 30, color: getChartColor(2) },
+  { label: '보류 (On Hold)', count: 3, percentage: 10, color: getChartColor(3) },
 ];
 </script>

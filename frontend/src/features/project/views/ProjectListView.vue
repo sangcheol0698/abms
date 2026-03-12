@@ -27,7 +27,7 @@
           <div class="flex items-center gap-1">
             <Button
               v-if="canFilterByParty"
-              variant="outline"
+              variant="field"
               size="sm"
               class="h-8 gap-2 border-dashed"
               @click="openPartyDialog"
@@ -210,7 +210,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { ProjectListItem, ProjectSearchParams } from '@/features/project/models/projectListItem';
+import type {
+  ProjectListItem,
+  ProjectSearchParams,
+} from '@/features/project/models/projectListItem';
 import { formatCurrency, formatProjectPeriod } from '@/features/project/models/projectListItem';
 import type { ProjectDetail } from '@/features/project/models/projectDetail';
 import { valueUpdater } from '@/components/ui/table/utils';
@@ -665,5 +668,4 @@ function handleDeleteProject(project: ProjectListItem) {
   }
   deletion.open(project.projectId, project.name);
 }
-
 </script>

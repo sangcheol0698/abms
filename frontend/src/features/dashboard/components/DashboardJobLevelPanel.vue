@@ -1,5 +1,5 @@
 <template>
-  <Card class="shadow-none">
+  <Card>
     <CardHeader>
       <CardTitle>직급별 인원 분포</CardTitle>
       <CardDescription>직급에 따른 직원 수 현황입니다.</CardDescription>
@@ -17,7 +17,7 @@
               :r="radius"
               fill="transparent"
               stroke-width="5"
-              :stroke="item.colorCode"
+              :stroke="item.color"
               :stroke-dasharray="`${item.percentage} ${100 - item.percentage}`"
               :stroke-dashoffset="item.offset"
               class="cursor-pointer transition-all duration-200 hover:opacity-80"
@@ -46,10 +46,7 @@
             @mouseenter="hoveredItem = item"
             @mouseleave="hoveredItem = null"
           >
-            <div
-              class="h-2.5 w-2.5 rounded-full"
-              :style="{ backgroundColor: item.colorCode }"
-            ></div>
+            <div class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: item.color }"></div>
             <span class="text-xs text-muted-foreground">{{ item.label }}</span>
           </div>
         </div>
@@ -61,6 +58,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getChartColor } from '@/core/theme/theme';
 
 const levels = [
   { label: '사원', count: 15 },
@@ -70,16 +68,16 @@ const levels = [
   { label: '임원', count: 3 },
 ];
 
-const COLORS = [
-  '#f97316', // Orange
-  '#eab308', // Yellow
-  '#84cc16', // Lime
-  '#cbd5e1', // Slate 300
-  '#0ea5e9', // Sky 500
-];
-
 const radius = 15.9155;
-const hoveredItem = ref<any>(null);
+interface JobLevelItem {
+  label: string;
+  count: number;
+  percentage: number;
+  offset: number;
+  color: string;
+}
+
+const hoveredItem = ref<JobLevelItem | null>(null);
 
 const totalCount = computed(() => levels.reduce((acc, curr) => acc + curr.count, 0));
 
@@ -96,7 +94,7 @@ const chartData = computed(() => {
       ...item,
       percentage,
       offset,
-      colorCode: COLORS[index % COLORS.length],
+      color: getChartColor(index),
     };
   });
 });

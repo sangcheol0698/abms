@@ -44,6 +44,20 @@ describe('Button', () => {
     expect(wrapper.classes()).toContain('h-8');
   });
 
+  it('field variant는 입력 계열 배경 스타일을 사용한다', () => {
+    const wrapper = mount(Button, {
+      props: {
+        variant: 'field',
+      },
+      slots: {
+        default: '필터',
+      },
+    });
+
+    expect(wrapper.classes()).toContain('bg-input-surface');
+    expect(wrapper.classes()).toContain('border-input');
+  });
+
   it('disabled 속성을 전달하면 비활성화 상태가 된다', () => {
     const wrapper = mount(Button, {
       props: {

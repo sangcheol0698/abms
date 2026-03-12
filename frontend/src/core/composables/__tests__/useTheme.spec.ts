@@ -7,6 +7,7 @@ describe('useTheme', () => {
   let systemPrefersDark = false;
   let storage: Map<string, string>;
   let localStorageMock: Storage;
+  let mediaQueryChangeHandler: ((event: MediaQueryListEvent) => void) | null = null;
 
   beforeEach(() => {
     vi.resetModules();
@@ -14,6 +15,7 @@ describe('useTheme', () => {
 
     systemPrefersDark = false;
     storage = new Map<string, string>();
+    mediaQueryChangeHandler = null;
 
     localStorageMock = {
       get length() {
@@ -37,16 +39,30 @@ describe('useTheme', () => {
 
     vi.stubGlobal(
       'matchMedia',
-      vi.fn((query: string) => ({
-        matches: systemPrefersDark,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })),
+      vi.fn((query: string) => {
+        const mediaQueryList = {
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(
+            (event: string, handler: (event: MediaQueryListEvent) => void) => {
+              if (event === 'change') {
+                mediaQueryChangeHandler = handler;
+              }
+            },
+          ),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        } as MediaQueryList;
+
+        Object.defineProperty(mediaQueryList, 'matches', {
+          configurable: true,
+          get: () => systemPrefersDark,
+        });
+
+        return mediaQueryList;
+      }),
     );
 
     document.documentElement.className = '';
@@ -101,5 +117,26 @@ describe('useTheme', () => {
     expect(isDark.value).toBe(false);
     expect(localStorageMock.setItem).toHaveBeenCalledWith(STORAGE_KEY, 'light');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
+  });
+
+  it('system 테마에서는 OS 변경 시 다크 클래스를 갱신하고 data-theme는 유지한다', async () => {
+    const { useTheme } = await import('../useTheme');
+
+    const { setTheme } = useTheme();
+    await nextTick();
+
+    setTheme('dark');
+    await nextTick();
+
+    setTheme('system');
+    await nextTick();
+
+    systemPrefersDark = true;
+    mediaQueryChangeHandler?.({ matches: true } as MediaQueryListEvent);
+    await nextTick();
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.dataset.theme).toBe('system');
+    expect(localStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY);
   });
 });

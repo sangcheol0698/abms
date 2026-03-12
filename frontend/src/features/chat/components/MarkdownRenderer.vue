@@ -1,5 +1,5 @@
 <template>
-    <div class="markdown-content" v-html="formattedContent" @click="handleContentClick" />
+  <div class="markdown-content" v-html="formattedContent" @click="handleContentClick" />
 </template>
 
 <script setup lang="ts">
@@ -11,14 +11,14 @@ import he from 'he';
 import { useMutationObserver } from '@vueuse/core';
 
 const props = defineProps<{
-    content: string;
+  content: string;
 }>();
 const router = useRouter();
 
 // Configure marked
 marked.setOptions({
-    breaks: true,
-    gfm: true,
+  breaks: true,
+  gfm: true,
 });
 
 // Shiki 캐시
@@ -29,99 +29,99 @@ const isDarkMode = ref(false);
 
 // 초기 상태 설정 및 변경 감지
 if (typeof document !== 'undefined') {
-    isDarkMode.value = document.documentElement.classList.contains('dark');
+  isDarkMode.value = document.documentElement.classList.contains('dark');
 
-    useMutationObserver(
-        document.documentElement,
-        () => {
-            const newIsDarkMode = document.documentElement.classList.contains('dark');
-            if (isDarkMode.value !== newIsDarkMode) {
-                isDarkMode.value = newIsDarkMode;
-            }
-        },
-        {
-            attributes: true,
-            attributeFilter: ['class'],
-        }
-    );
+  useMutationObserver(
+    document.documentElement,
+    () => {
+      const newIsDarkMode = document.documentElement.classList.contains('dark');
+      if (isDarkMode.value !== newIsDarkMode) {
+        isDarkMode.value = newIsDarkMode;
+      }
+    },
+    {
+      attributes: true,
+      attributeFilter: ['class'],
+    },
+  );
 }
 
 const formattedContent = ref('');
 
 // Shiki로 코드 하이라이트
 const highlightWithShiki = async (code: string, lang: string): Promise<string> => {
-    const cacheKey = `${lang}:${code}:${isDarkMode.value ? 'dark' : 'light'}`;
-    if (highlightCache.has(cacheKey)) {
-        return highlightCache.get(cacheKey)!;
-    }
+  const cacheKey = `${lang}:${code}:${isDarkMode.value ? 'dark' : 'light'}`;
+  if (highlightCache.has(cacheKey)) {
+    return highlightCache.get(cacheKey)!;
+  }
 
+  try {
+    const langMap: Record<string, string> = {
+      js: 'javascript',
+      ts: 'typescript',
+      py: 'python',
+      sh: 'bash',
+      shell: 'bash',
+      kt: 'kotlin',
+    };
+
+    const shikiLang = langMap[lang.toLowerCase()] || lang.toLowerCase();
+    // 테마 변경: 라이트 모드는 'github-light', 다크 모드는 'one-dark-pro' (nsales-pro와 동일)
+    const theme = isDarkMode.value ? 'one-dark-pro' : 'github-light';
+
+    const html = await codeToHtml(code, {
+      lang: shikiLang,
+      theme: theme,
+    });
+
+    highlightCache.set(cacheKey, html);
+    return html;
+  } catch {
+    // Fallback
     try {
-        const langMap: Record<string, string> = {
-            'js': 'javascript',
-            'ts': 'typescript',
-            'py': 'python',
-            'sh': 'bash',
-            'shell': 'bash',
-            'kt': 'kotlin',
-        };
-
-        const shikiLang = langMap[lang.toLowerCase()] || lang.toLowerCase();
-        // 테마 변경: 라이트 모드는 'github-light', 다크 모드는 'one-dark-pro' (nsales-pro와 동일)
-        const theme = isDarkMode.value ? 'one-dark-pro' : 'github-light';
-
-        const html = await codeToHtml(code, {
-            lang: shikiLang,
-            theme: theme,
-        });
-
-        highlightCache.set(cacheKey, html);
-        return html;
+      const theme = isDarkMode.value ? 'one-dark-pro' : 'github-light';
+      const html = await codeToHtml(code, {
+        lang: 'text',
+        theme: theme,
+      });
+      highlightCache.set(cacheKey, html);
+      return html;
     } catch {
-        // Fallback
-        try {
-            const theme = isDarkMode.value ? 'one-dark-pro' : 'github-light';
-            const html = await codeToHtml(code, {
-                lang: 'text',
-                theme: theme,
-            });
-            highlightCache.set(cacheKey, html);
-            return html;
-        } catch {
-            const fallback = `<pre><code>${he.encode(code)}</code></pre>`;
-            highlightCache.set(cacheKey, fallback);
-            return fallback;
-        }
+      const fallback = `<pre><code>${he.encode(code)}</code></pre>`;
+      highlightCache.set(cacheKey, fallback);
+      return fallback;
     }
+  }
 };
 
 // 컨텐츠 처리
 const processContent = async () => {
-    try {
-        let html = marked(props.content) as string;
+  try {
+    let html = marked(props.content) as string;
 
-        // 코드 블록 찾기
-        const codeBlockRegex = /<pre><code(?:\s+class="([^"]*)")?[^>]*>([\s\S]*?)<\/code><\/pre>/g;
-        const codeBlocks: Array<{ match: string; code: string; lang: string }> = [];
-        let match;
+    // 코드 블록 찾기
+    const codeBlockRegex = /<pre><code(?:\s+class="([^"]*)")?[^>]*>([\s\S]*?)<\/code><\/pre>/g;
+    const codeBlocks: Array<{ match: string; code: string; lang: string }> = [];
+    let match;
 
-        while ((match = codeBlockRegex.exec(html)) !== null) {
-            const [fullMatch, classAttr, code] = match;
-            const langMatch = classAttr?.match(/(?:^|\s)language-(\w+)(?:\s|$)/);
-            const lang = langMatch?.[1] || 'text';
+    while ((match = codeBlockRegex.exec(html)) !== null) {
+      const [fullMatch, classAttr, code] = match;
+      const langMatch = classAttr?.match(/(?:^|\s)language-(\w+)(?:\s|$)/);
+      const lang = langMatch?.[1] || 'text';
 
-            // HTML 디코딩
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = code ?? '';
-            const plainCode = (tempDiv.textContent ?? tempDiv.innerText ?? '') as string;
+      // HTML 디코딩
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = code ?? '';
+      const plainCode = (tempDiv.textContent ?? tempDiv.innerText ?? '') as string;
 
-            codeBlocks.push({ match: fullMatch, code: plainCode, lang });
-        }
+      codeBlocks.push({ match: fullMatch, code: plainCode, lang });
+    }
 
-        // 각 코드 블록을 Shiki로 처리
-        for (const block of codeBlocks) {
-            const highlightedHtml = await highlightWithShiki(block.code, block.lang);
+    // 각 코드 블록을 Shiki로 처리
+    for (const block of codeBlocks) {
+      const highlightedHtml = await highlightWithShiki(block.code, block.lang);
 
-            const wrappedCode = `
+      const wrappedCode = `
         <div class="code-block-container" data-language="${block.lang}">
           <div class="code-block-header">
             <span class="code-language">${block.lang.toUpperCase()}</span>
@@ -133,14 +133,14 @@ const processContent = async () => {
         </div>
       `;
 
-            html = html.replace(block.match, wrappedCode);
-        }
-
-        formattedContent.value = html;
-    } catch (error) {
-        console.error('Content processing error:', error);
-        formattedContent.value = marked(props.content) as string;
+      html = html.replace(block.match, wrappedCode);
     }
+
+    formattedContent.value = html;
+  } catch (error) {
+    console.error('Content processing error:', error);
+    formattedContent.value = marked(props.content) as string;
+  }
 };
 
 // 메시지 내용이 변경될 때마다 처리
@@ -148,83 +148,84 @@ watch(() => props.content, processContent, { immediate: true });
 
 // 다크 모드 변경 시 재처리
 watch(isDarkMode, () => {
-    highlightCache.clear(); // 캐시 초기화하여 새로운 테마 적용
-    processContent();
+  highlightCache.clear(); // 캐시 초기화하여 새로운 테마 적용
+  processContent();
 });
 
 const resolveInternalPath = (href: string): string | null => {
-    if (href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
-        return null;
-    }
+  if (href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+    return null;
+  }
 
-    if (href.startsWith('/')) {
-        return href;
-    }
+  if (href.startsWith('/')) {
+    return href;
+  }
 
-    if (typeof window === 'undefined') {
-        return null;
-    }
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
-    try {
-        const url = new URL(href, window.location.origin);
-        if (url.origin !== window.location.origin) {
-            return null;
-        }
-        return `${url.pathname}${url.search}${url.hash}`;
-    } catch {
-        return null;
+  try {
+    const url = new URL(href, window.location.origin);
+    if (url.origin !== window.location.origin) {
+      return null;
     }
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
 };
 
 const handleContentClick = async (event: MouseEvent) => {
-    const copyButton = (event.target as HTMLElement).closest('.copy-code-btn') as HTMLElement | null;
-    if (copyButton) {
-        const container = copyButton.closest('.code-block-container');
-        if (!container) return;
+  const copyButton = (event.target as HTMLElement).closest('.copy-code-btn') as HTMLElement | null;
+  if (copyButton) {
+    const container = copyButton.closest('.code-block-container');
+    if (!container) return;
 
-        const code = container.querySelector('code')?.innerText || '';
-        if (!code) return;
+    const code = container.querySelector('code')?.innerText || '';
+    if (!code) return;
 
-        try {
-            await navigator.clipboard.writeText(code);
+    try {
+      await navigator.clipboard.writeText(code);
 
-            copyButton.classList.add('복사성공');
-            const originalHtml = copyButton.innerHTML;
-            copyButton.innerHTML = `
+      copyButton.classList.add('복사성공');
+      const originalHtml = copyButton.innerHTML;
+      copyButton.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             `;
 
-            setTimeout(() => {
-                copyButton.classList.remove('복사성공');
-                copyButton.innerHTML = originalHtml;
-            }, 2000);
-        } catch (err) {
-            console.error('Failed to copy code:', err);
-        }
-        return;
+      setTimeout(() => {
+        copyButton.classList.remove('복사성공');
+        copyButton.innerHTML = originalHtml;
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy code:', err);
     }
+    return;
+  }
 
-    const anchor = (event.target as HTMLElement).closest('a') as HTMLAnchorElement | null;
-    if (!anchor) return;
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+  const anchor = (event.target as HTMLElement).closest('a') as HTMLAnchorElement | null;
+  if (!anchor) return;
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    return;
+  if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
 
-    const href = anchor.getAttribute('href');
-    if (!href) return;
+  const href = anchor.getAttribute('href');
+  if (!href) return;
 
-    const internalPath = resolveInternalPath(href);
-    if (!internalPath) return;
+  const internalPath = resolveInternalPath(href);
+  if (!internalPath) return;
 
-    event.preventDefault();
-    router.push(internalPath);
+  event.preventDefault();
+  router.push(internalPath);
 };
 </script>
 
 <style>
 .markdown-content {
-    color: var(--foreground);
-    line-height: 1.7;
-    font-size: 0.9rem;
+  color: var(--foreground);
+  line-height: 1.7;
+  font-size: 0.9rem;
 }
 
 /* 제목 스타일 - 그라데이션과 마진 최적화 */
@@ -234,35 +235,35 @@ const handleContentClick = async (event: MouseEvent) => {
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-    color: var(--foreground);
-    font-weight: 700;
-    margin: 1.5em 0 0.75em 0;
-    line-height: 1.3;
-    letter-spacing: -0.025em;
+  color: var(--foreground);
+  font-weight: 700;
+  margin: 1.5em 0 0.75em 0;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
 }
 
 .markdown-content h1 {
-    font-size: 1.5rem;
+  font-size: 1.5rem;
 }
 
 .markdown-content h2 {
-    font-size: 1.25rem;
+  font-size: 1.25rem;
 }
 
 .markdown-content h3 {
-    font-size: 1.125rem;
+  font-size: 1.125rem;
 }
 
 .markdown-content h4 {
-    font-size: 1rem;
+  font-size: 1rem;
 }
 
 .markdown-content h5 {
-    font-size: 0.875rem;
+  font-size: 0.875rem;
 }
 
 .markdown-content h6 {
-    font-size: 0.8125rem;
+  font-size: 0.8125rem;
 }
 
 /* 첫 번째 제목의 상단 마진 제거 */
@@ -272,77 +273,81 @@ const handleContentClick = async (event: MouseEvent) => {
 .markdown-content h4:first-child,
 .markdown-content h5:first-child,
 .markdown-content h6:first-child {
-    margin-top: 0;
+  margin-top: 0;
 }
 
 /* 강조 텍스트 */
 .markdown-content strong {
-    color: var(--foreground);
-    font-weight: 650;
+  color: var(--foreground);
+  font-weight: 650;
 }
 
 .markdown-content em {
-    color: var(--muted-foreground);
-    font-style: italic;
+  color: var(--muted-foreground);
+  font-style: italic;
 }
 
 /* 문단 스타일 */
 .markdown-content p {
-    margin: 1em 0;
-    color: var(--foreground);
-    line-height: 1.7;
+  margin: 1em 0;
+  color: var(--foreground);
+  line-height: 1.7;
 }
 
 .markdown-content p:first-child {
-    margin-top: 0;
+  margin-top: 0;
 }
 
 .markdown-content p:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 /* 리스트 스타일 - 더 모던한 불릿과 간격 */
 .markdown-content ul,
 .markdown-content ol {
-    margin: 1.25em 0;
-    padding-left: 1.75rem;
+  margin: 1.25em 0;
+  padding-left: 1.75rem;
 }
 
 .markdown-content ul {
-    list-style: none;
+  list-style: none;
 }
 
 .markdown-content ul li {
-    position: relative;
-    margin: 0.75em 0;
-    line-height: 1.6;
+  position: relative;
+  margin: 0.75em 0;
+  line-height: 1.6;
 }
 
 .markdown-content ul li::before {
-    content: '';
-    position: absolute;
-    left: -1.25rem;
-    top: 0.7em;
-    width: 6px;
-    height: 6px;
-    background: linear-gradient(135deg, var(--primary) 0%, color-mix(in oklch, var(--primary), transparent 30%) 100%);
-    border-radius: 50%;
-    transform: translateY(-50%);
+  content: '';
+  position: absolute;
+  left: -1.25rem;
+  top: 0.7em;
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    color-mix(in oklch, var(--primary), transparent 30%) 100%
+  );
+  border-radius: 50%;
+  transform: translateY(-50%);
 }
 
 .markdown-content ol li {
-    margin: 0.75em 0;
-    line-height: 1.6;
+  margin: 0.75em 0;
+  line-height: 1.6;
 }
 
 .markdown-content ol {
-    list-style-type: decimal;
-    list-style-position: outside;
+  list-style-type: decimal;
+  list-style-position: outside;
 }
 
 .markdown-content ol li::marker {
-    color: var(--primary);
-    font-weight: 600;
+  color: var(--primary);
+  font-weight: 600;
 }
 
 /* 중첩 리스트 */
@@ -350,64 +355,68 @@ const handleContentClick = async (event: MouseEvent) => {
 .markdown-content ol ol,
 .markdown-content ul ol,
 .markdown-content ol ul {
-    margin: 0.5em 0;
+  margin: 0.5em 0;
 }
 
 .markdown-content ol ol {
-    counter-reset: list-counter;
+  counter-reset: list-counter;
 }
 
 .markdown-content ol ol li::before {
-    left: -1.5rem;
+  left: -1.5rem;
 }
 
 /* 인용문 - 글래스모피즘 효과 */
 .markdown-content blockquote {
-    position: relative;
-    margin: 1.5em 0;
-    padding: 1.25rem 1.5rem;
-    background: color-mix(in oklch, var(--muted), transparent 50%);
-    backdrop-filter: blur(8px);
-    border-left: 4px solid var(--primary);
-    border-radius: 0 0.75rem 0.75rem 0;
-    font-style: italic;
-    color: var(--muted-foreground);
-    box-shadow: var(--shadow-md);
+  position: relative;
+  margin: 1.5em 0;
+  padding: 1.25rem 1.5rem;
+  background: color-mix(in oklch, var(--muted), transparent 50%);
+  backdrop-filter: blur(8px);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 0.75rem 0.75rem 0;
+  font-style: italic;
+  color: var(--muted-foreground);
+  box-shadow: var(--shadow-md);
 }
 
 .markdown-content blockquote::before {
-    content: '"';
-    position: absolute;
-    top: -0.5rem;
-    left: 1rem;
-    font-size: 2rem;
-    color: color-mix(in oklch, var(--primary), transparent 40%);
-    font-weight: bold;
+  content: '"';
+  position: absolute;
+  top: -0.5rem;
+  left: 1rem;
+  font-size: 2rem;
+  color: color-mix(in oklch, var(--primary), transparent 40%);
+  font-weight: bold;
 }
 
 .markdown-content blockquote p {
-    margin: 0.5em 0;
+  margin: 0.5em 0;
 }
 
 .markdown-content blockquote p:first-child {
-    margin-top: 0;
+  margin-top: 0;
 }
 
 .markdown-content blockquote p:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 /* 인라인 코드 - 더 예쁜 배경과 타이포그래피 */
 .markdown-content code:not(pre code) {
-    background: linear-gradient(135deg, var(--muted) 0%, color-mix(in oklch, var(--muted), transparent 20%) 100%);
-    color: var(--primary);
-    padding: 0.15rem 0.25rem;
-    border-radius: 0.375rem;
-    font-size: 0.75rem;
-    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
-    font-weight: 500;
-    border: 1px solid color-mix(in oklch, var(--border), transparent 50%);
-    box-shadow: var(--shadow-xs);
+  background: linear-gradient(
+    135deg,
+    var(--muted) 0%,
+    color-mix(in oklch, var(--muted), transparent 20%) 100%
+  );
+  color: var(--primary);
+  padding: 0.15rem 0.25rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-weight: 500;
+  border: 1px solid color-mix(in oklch, var(--border), transparent 50%);
+  box-shadow: var(--shadow-xs);
 }
 
 /* 헤더 내 인라인 코드 - 가독성 개선 */
@@ -417,211 +426,215 @@ const handleContentClick = async (event: MouseEvent) => {
 .markdown-content h4 code:not(pre code),
 .markdown-content h5 code:not(pre code),
 .markdown-content h6 code:not(pre code) {
-    -webkit-text-fill-color: var(--background) !important;
-    background: var(--primary) !important;
-    color: var(--primary-foreground) !important;
-    border: 1px solid color-mix(in oklch, var(--primary), transparent 30%) !important;
-    font-weight: 600;
-    display: inline-block;
-    vertical-align: baseline;
-    margin: 0 0.125rem;
+  -webkit-text-fill-color: var(--background) !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: 1px solid color-mix(in oklch, var(--primary), transparent 30%) !important;
+  font-weight: 600;
+  display: inline-block;
+  vertical-align: baseline;
+  margin: 0 0.125rem;
 }
 
 /* 코드 블록 컨테이너 - 모던한 디자인과 복사 기능 */
 .markdown-content .code-block-container {
-    position: relative;
-    margin: 1.2em 0;
-    background: color-mix(in oklch, var(--background), var(--foreground) 3%);
-    border: 1px solid color-mix(in oklch, var(--border), var(--foreground) 20%);
-    border-radius: 0.75rem;
-    overflow: hidden;
-    /* box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%); */
-    backdrop-filter: blur(8px);
-    max-width: 100%;
-    display: grid;
-    /* Grid layout helps contain overflow in nested flex containers */
-    min-width: 0;
+  position: relative;
+  margin: 1.2em 0;
+  background: color-mix(in oklch, var(--background), var(--foreground) 3%);
+  border: 1px solid color-mix(in oklch, var(--border), var(--foreground) 20%);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  /* box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%); */
+  backdrop-filter: blur(8px);
+  max-width: 100%;
+  display: grid;
+  /* Grid layout helps contain overflow in nested flex containers */
+  min-width: 0;
 }
 
 .markdown-content .code-block-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    background: color-mix(in oklch, var(--background), var(--foreground) 5%);
-    border-bottom: 1px solid color-mix(in oklch, var(--border), var(--foreground) 30%);
-    backdrop-filter: blur(4px);
-    width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: color-mix(in oklch, var(--background), var(--foreground) 5%);
+  border-bottom: 1px solid color-mix(in oklch, var(--border), var(--foreground) 30%);
+  backdrop-filter: blur(4px);
+  width: 100%;
 }
 
 .markdown-content .code-language {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--muted-foreground);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .markdown-content .copy-code-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    color: var(--muted-foreground);
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
 .markdown-content .copy-code-btn:hover {
-    background: var(--muted);
-    color: var(--foreground);
-    border-color: var(--border);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
+  background: var(--muted);
+  color: var(--foreground);
+  border-color: var(--border);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .markdown-content .copy-code-btn.copied {
-    background: var(--primary);
-    color: var(--primary-foreground);
-    border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
 }
 
 .markdown-content .copy-code-btn svg {
-    width: 14px;
-    height: 14px;
-    transition: transform 0.2s ease;
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
 }
 
 .markdown-content .copy-code-btn:hover svg {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .markdown-content .code-block-container pre {
-    margin: 0;
-    padding: 1rem;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    tab-size: 4;
-    -moz-tab-size: 4;
-    -o-tab-size: 4;
-    white-space: pre;
-    overflow-x: auto;
+  margin: 0;
+  padding: 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  tab-size: 4;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  white-space: pre;
+  overflow-x: auto;
 }
 
 .markdown-content .code-block-container pre code {
-    background: transparent;
-    padding: 0;
-    border: none;
-    font-size: 0.825rem;
-    color: var(--foreground);
-    box-shadow: none;
-    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
-    tab-size: 4;
-    -moz-tab-size: 4;
-    -o-tab-size: 4;
-    white-space: pre;
+  background: transparent;
+  padding: 0;
+  border: none;
+  font-size: 0.825rem;
+  color: var(--foreground);
+  box-shadow: none;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  tab-size: 4;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  white-space: pre;
 }
 
 /* Shiki 래퍼 스타일 */
 .markdown-content .shiki-wrapper {
-    overflow-x: auto;
-    border-radius: 0.5rem;
-    max-width: 100%;
-    width: 100%;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  max-width: 100%;
+  width: 100%;
 }
 
 .markdown-content .shiki-wrapper pre {
-    margin: 0 !important;
-    padding: 1rem !important;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    overflow-x: auto !important;
-    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace) !important;
-    line-height: 1.5 !important;
-    tab-size: 4 !important;
-    -moz-tab-size: 4 !important;
-    -o-tab-size: 4 !important;
-    white-space: pre !important;
-    width: 100%;
+  margin: 0 !important;
+  padding: 1rem !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  overflow-x: auto !important;
+  font-family: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace
+  ) !important;
+  line-height: 1.5 !important;
+  tab-size: 4 !important;
+  -moz-tab-size: 4 !important;
+  -o-tab-size: 4 !important;
+  white-space: pre !important;
+  width: 100%;
 }
 
 .markdown-content .shiki-wrapper code {
-    background: transparent !important;
-    padding: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-    font-family: inherit !important;
-    white-space: pre !important;
-    display: inline-block;
-    min-width: 100%;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  white-space: pre !important;
+  display: inline-block;
+  min-width: 100%;
 }
 
 /* 다크 테마에서 더 잘 보이도록 배경색 및 텍스트 조정 */
 .dark .markdown-content {
-    color: hsl(var(--foreground));
+  color: var(--foreground);
 }
 
 .dark .markdown-content p {
-    color: hsl(var(--foreground) / 0.9);
+  color: color-mix(in oklch, var(--foreground), transparent 10%);
 }
 
-
-
 .dark .markdown-content .code-block-container {
-    background: hsl(var(--muted) / 0.3);
-    border-color: hsl(var(--border) / 0.4);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  background: color-mix(in oklch, var(--muted), transparent 35%);
+  border-color: color-mix(in oklch, var(--border), transparent 20%);
+  box-shadow: 0 18px 36px -24px color-mix(in oklch, var(--foreground), transparent 75%);
 }
 
 .dark .markdown-content .code-block-header {
-    background: hsl(var(--muted) / 0.5);
-    border-bottom-color: hsl(var(--border) / 0.4);
+  background: color-mix(in oklch, var(--muted), transparent 20%);
+  border-bottom-color: color-mix(in oklch, var(--border), transparent 18%);
 }
 
 .dark .markdown-content code:not(pre code) {
-    background: hsl(var(--muted) / 0.4);
-    color: hsl(var(--primary) / 0.9);
-    border-color: hsl(var(--border) / 0.3);
+  background: color-mix(in oklch, var(--muted), transparent 25%);
+  color: color-mix(in oklch, var(--primary), white 10%);
+  border-color: color-mix(in oklch, var(--border), transparent 28%);
 }
 
 /* 다크 모드 테이블 스타일 강화 */
 .dark .markdown-content table {
-    border-color: hsl(var(--border) / 0.3);
+  border-color: color-mix(in oklch, var(--border), transparent 25%);
 }
 
 .dark .markdown-content th {
-    background: hsl(var(--muted) / 0.4);
-    color: hsl(var(--foreground));
-    border-bottom-color: hsl(var(--border) / 0.4);
+  background: color-mix(in oklch, var(--muted), transparent 24%);
+  color: var(--foreground);
+  border-bottom-color: color-mix(in oklch, var(--border), transparent 18%);
 }
 
 .dark .markdown-content td {
-    background: transparent;
-    border-bottom-color: hsl(var(--border) / 0.2);
-    color: hsl(var(--foreground) / 0.9);
+  background: transparent;
+  border-bottom-color: color-mix(in oklch, var(--border), transparent 35%);
+  color: color-mix(in oklch, var(--foreground), transparent 10%);
 }
 
 .dark .markdown-content tr:hover td {
-    background: hsl(var(--muted) / 0.2);
+  background: color-mix(in oklch, var(--muted), transparent 40%);
 }
 
 /* 다크 모드 인용문 */
 .dark .markdown-content blockquote {
-    background: hsl(var(--muted) / 0.2);
-    color: hsl(var(--muted-foreground));
-    border-left-color: hsl(var(--primary) / 0.7);
+  background: color-mix(in oklch, var(--muted), transparent 40%);
+  color: var(--muted-foreground);
+  border-left-color: color-mix(in oklch, var(--primary), transparent 20%);
 }
-
-
 
 /* 다크 모드 헤더 */
 .dark .markdown-content h1,
@@ -630,233 +643,254 @@ const handleContentClick = async (event: MouseEvent) => {
 .dark .markdown-content h4,
 .dark .markdown-content h5,
 .dark .markdown-content h6 {
-    color: hsl(var(--foreground));
-    background: none;
-    -webkit-text-fill-color: initial;
+  color: var(--foreground);
+  background: none;
+  -webkit-text-fill-color: initial;
 }
 
 /* 기존 pre 스타일은 코드 블록 컨테이너가 없는 경우를 위해 유지 */
 .markdown-content pre:not(.code-block-container pre) {
-    position: relative;
-    margin: 1.2em 0;
-    padding: 1rem;
-    background: linear-gradient(135deg, var(--muted) 0%, color-mix(in oklch, var(--muted), transparent 10%) 100%);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    overflow-x: auto;
-    /* box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%); */
-    backdrop-filter: blur(8px);
-    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
-    tab-size: 4;
-    -moz-tab-size: 4;
-    -o-tab-size: 4;
+  position: relative;
+  margin: 1.2em 0;
+  padding: 1rem;
+  background: linear-gradient(
+    135deg,
+    var(--muted) 0%,
+    color-mix(in oklch, var(--muted), transparent 10%) 100%
+  );
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  /* box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%); */
+  backdrop-filter: blur(8px);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  tab-size: 4;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
 }
 
 /* 링크 - 호버 효과와 애니메이션 */
 .markdown-content a {
-    color: var(--primary);
-    text-decoration: none;
-    position: relative;
-    font-weight: 500;
-    transition: all 0.2s ease;
+  color: var(--primary);
+  text-decoration: none;
+  position: relative;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .markdown-content a::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--primary) 0%, color-mix(in oklch, var(--primary), transparent 40%) 100%);
-    transition: width 0.3s ease;
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    color-mix(in oklch, var(--primary), transparent 40%) 100%
+  );
+  transition: width 0.3s ease;
 }
 
 .markdown-content a:hover {
-    color: color-mix(in oklch, var(--primary), transparent 20%);
+  color: color-mix(in oklch, var(--primary), transparent 20%);
 }
 
 .markdown-content a:hover::after {
-    width: 100%;
+  width: 100%;
 }
 
 /* 테이블 - 모던한 그리드 스타일 */
 .markdown-content table {
-    width: 100%;
-    margin: 1.5em 0;
-    border-collapse: separate;
-    border-spacing: 0;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%), 0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%);
-    border: 1px solid color-mix(in oklch, var(--border), var(--foreground) 20%);
+  width: 100%;
+  margin: 1.5em 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow:
+    0 4px 6px -1px color-mix(in oklch, var(--foreground), transparent 90%),
+    0 2px 4px -1px color-mix(in oklch, var(--foreground), transparent 94%);
+  border: 1px solid color-mix(in oklch, var(--border), var(--foreground) 20%);
 }
 
 .markdown-content th,
 .markdown-content td {
-    padding: 0.875rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid color-mix(in oklch, var(--border), var(--foreground) 30%);
+  padding: 0.875rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in oklch, var(--border), var(--foreground) 30%);
 }
 
 .markdown-content th {
-    background: color-mix(in oklch, var(--background), var(--foreground) 8%);
-    font-weight: 650;
-    color: var(--foreground);
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
+  background: color-mix(in oklch, var(--background), var(--foreground) 8%);
+  font-weight: 650;
+  color: var(--foreground);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
 }
 
 .markdown-content td {
-    background: color-mix(in oklch, var(--background), var(--foreground) 2%);
+  background: color-mix(in oklch, var(--background), var(--foreground) 2%);
 }
 
 .markdown-content tr:hover td {
-    background: color-mix(in oklch, var(--background), var(--foreground) 5%);
+  background: color-mix(in oklch, var(--background), var(--foreground) 5%);
 }
 
 .markdown-content tr:last-child td {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 /* 구분선 */
 .markdown-content hr {
-    margin: 2rem 0;
-    border: none;
-    height: 2px;
-    background: linear-gradient(90deg, transparent 0%, hsl(var(--border)) 20%, hsl(var(--border)) 80%, transparent 100%);
+  margin: 2rem 0;
+  border: none;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent 100%
+  );
 }
 
 /* 이미지 */
 .markdown-content img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px hsl(var(--foreground)/0.1);
-    margin: 1rem 0;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 14px 28px -20px color-mix(in oklch, var(--foreground), transparent 84%);
+  margin: 1rem 0;
 }
 
 /* 애니메이션 */
 @keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .markdown-content {
-    animation: fadeInUp 0.3s ease-out;
+  animation: fadeInUp 0.3s ease-out;
 }
 
 /* 다크 모드 최적화 */
 
-
 /* 다크 모드 구분선 */
 .dark .markdown-content hr {
-    background: linear-gradient(90deg, transparent 0%, hsl(var(--border) / 0.5) 20%, hsl(var(--border) / 0.5) 80%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--border), transparent 30%) 20%,
+    color-mix(in oklch, var(--border), transparent 30%) 80%,
+    transparent 100%
+  );
 }
 
 /* 다크 모드 이미지 그림자 */
 .dark .markdown-content img {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    opacity: 0.9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  opacity: 0.9;
 }
 
 /* 다크 모드 복사 버튼 */
 .dark .markdown-content .copy-code-btn {
-    background: hsl(var(--muted) / 0.3);
-    border-color: hsl(var(--border) / 0.3);
-    color: hsl(var(--muted-foreground));
+  background: color-mix(in oklch, var(--muted), transparent 30%);
+  border-color: color-mix(in oklch, var(--border), transparent 28%);
+  color: var(--muted-foreground);
 }
 
 .dark .markdown-content .copy-code-btn:hover {
-    background: hsl(var(--muted) / 0.5);
-    color: hsl(var(--foreground));
+  background: color-mix(in oklch, var(--muted), transparent 15%);
+  color: var(--foreground);
 }
 
 /* 다크 모드 스크롤바 */
 .dark .markdown-content pre::-webkit-scrollbar-track {
-    background: hsl(var(--muted) / 0.1);
+  background: color-mix(in oklch, var(--muted), transparent 45%);
 }
 
 .dark .markdown-content pre::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.2);
+  background: color-mix(in oklch, var(--muted-foreground), transparent 55%);
 }
 
 .dark .markdown-content pre::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.4);
+  background: color-mix(in oklch, var(--muted-foreground), transparent 40%);
 }
 
 /* 모바일 최적화 */
 @media (max-width: 768px) {
-    .markdown-content {
-        font-size: 0.9rem;
-        line-height: 1.6;
-    }
+  .markdown-content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
 
-    .markdown-content h1 {
-        font-size: 1.5rem;
-    }
+  .markdown-content h1 {
+    font-size: 1.5rem;
+  }
 
-    .markdown-content h2 {
-        font-size: 1.35rem;
-    }
+  .markdown-content h2 {
+    font-size: 1.35rem;
+  }
 
-    .markdown-content h3 {
-        font-size: 1.2rem;
-    }
+  .markdown-content h3 {
+    font-size: 1.2rem;
+  }
 
-    .markdown-content h4 {
-        font-size: 1.1rem;
-    }
+  .markdown-content h4 {
+    font-size: 1.1rem;
+  }
 
-    .markdown-content pre {
-        padding: 0.75rem;
-        margin: 0.75rem 0;
-        font-size: 0.8rem;
-    }
+  .markdown-content pre {
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    font-size: 0.8rem;
+  }
 
-    .markdown-content code {
-        font-size: 0.8rem;
-    }
+  .markdown-content code {
+    font-size: 0.8rem;
+  }
 
-    .markdown-content blockquote {
-        padding: 1rem;
-        margin: 1rem 0;
-    }
+  .markdown-content blockquote {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
 
-    .markdown-content table {
-        font-size: 0.85rem;
-    }
+  .markdown-content table {
+    font-size: 0.85rem;
+  }
 
-    .markdown-content th,
-    .markdown-content td {
-        padding: 0.625rem 0.75rem;
-    }
+  .markdown-content th,
+  .markdown-content td {
+    padding: 0.625rem 0.75rem;
+  }
 }
 
 /* 스크롤바 스타일링 (기본) */
 .markdown-content pre::-webkit-scrollbar {
-    height: 8px;
+  height: 8px;
 }
 
 .markdown-content pre::-webkit-scrollbar-track {
-    background: hsl(var(--muted)/0.3);
-    border-radius: 4px;
+  background: color-mix(in oklch, var(--muted), transparent 30%);
+  border-radius: 4px;
 }
 
 .markdown-content pre::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground)/0.3);
-    border-radius: 4px;
+  background: color-mix(in oklch, var(--muted-foreground), transparent 35%);
+  border-radius: 4px;
 }
 
 .markdown-content pre::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground)/0.5);
+  background: color-mix(in oklch, var(--muted-foreground), transparent 20%);
 }
 </style>

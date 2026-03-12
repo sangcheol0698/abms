@@ -1,5 +1,5 @@
 <template>
-  <Card class="shadow-none">
+  <Card>
     <CardHeader>
       <CardTitle>월별 매출 추이</CardTitle>
       <CardDescription>최근 6개월간의 매출 현황입니다.</CardDescription>

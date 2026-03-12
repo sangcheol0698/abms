@@ -1,30 +1,43 @@
 <template>
-  <Sidebar v-bind="props" variant="floating">
+  <Sidebar v-bind="props">
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="lg" asChild>
-            <router-link to="/" class="flex items-center gap-3">
+          <SidebarMenuButton
+            size="lg"
+            variant="default"
+            class="bg-transparent shadow-none ring-0 hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:!size-11 group-data-[collapsible=icon]:!p-1"
+            asChild
+          >
+            <RouterLink
+              to="/"
+              class="flex items-center gap-3 group-data-[collapsible=icon]:h-full group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
+            >
               <div
-                  class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-sidebar-primary-foreground transition-all duration-300"
+                class="flex aspect-square size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-sidebar-primary-foreground shadow-xs ring-1 ring-primary/10 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:shadow-xs group-data-[collapsible=icon]:ring-1 group-data-[collapsible=icon]:ring-primary/10"
               >
-                <img src="@/assets/main_logo.png" alt="ABACUS Logo" class="size-8" />
+                <img
+                  src="@/assets/main_logo.png"
+                  alt="ABACUS Logo"
+                  class="size-8 object-contain group-data-[collapsible=icon]:size-8"
+                />
               </div>
               <div
-                  class="flex flex-col gap-0.5 leading-none transition-all duration-300 ease-in-out group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden"
+                class="grid flex-1 text-left text-sm leading-tight transition-all duration-300 ease-in-out group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:opacity-0"
               >
-                <span class="font-semibold">ABACUS</span>
-                <span class="text-xs text-muted-foreground"> Abacus Inc </span>
+                <span class="truncate font-semibold tracking-tight">ABACUS</span>
+                <span class="truncate text-xs text-muted-foreground">통합 운영 대시보드</span>
               </div>
-            </router-link>
+            </RouterLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarHeader>
 
-    <SidebarContent>
+    <SidebarContent class="gap-4">
       <NavMain :items="mainNavItems" label="업무" />
-      <NavMain v-if="secondaryNavItems.length" :items="secondaryNavItems" label="시스템" />
+      <NavSecondary v-if="toolNavItems.length" :items="toolNavItems" label="도구" />
+      <NavSecondary v-if="permissionNavItems.length" :items="permissionNavItems" label="권한" />
     </SidebarContent>
 
     <SidebarFooter>
@@ -36,6 +49,13 @@
 </template>
 
 <script setup lang="ts">
+import type { SidebarProps } from '@/components/ui/sidebar';
+import { Bot, Briefcase, LayoutDashboard, Handshake, Network, ShieldCheck, UserCircle } from 'lucide-vue-next';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { RouterLink } from 'vue-router';
+import NavMain from './NavMain.vue';
+import NavSecondary from './NavSecondary.vue';
+import NavUser from './NavUser.vue';
 import {
   Sidebar,
   SidebarContent,
@@ -44,38 +64,25 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  type SidebarProps,
-  SidebarRail
+  SidebarRail,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
-import {
-  Bot,
-  Briefcase,
-  GalleryVerticalEnd,
-  Handshake,
-  Network,
-  PieChart,
-  ShieldCheck,
-  UserCircle,
-} from 'lucide-vue-next';
-import NavMain from './NavMain.vue';
-import NavUser from './NavUser.vue';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { hasStoredPermission } from '@/features/auth/session';
 import { canReadEmployeeDetail } from '@/features/employee/permissions';
 
 const props = withDefaults(
-    defineProps<
-        SidebarProps & {
+  defineProps<
+    SidebarProps & {
       onOpenProfileDialog?: () => void;
     }
-    >(),
-    {
-      collapsible: 'icon',
-      onOpenProfileDialog: () => {},
-    }
+  >(),
+  {
+    collapsible: 'icon',
+    variant: 'inset',
+    onOpenProfileDialog: () => {},
+  },
 );
 
-// 사용자 정보: localStorage에서 로드
 const user = ref<{ name: string; email: string; avatar: string }>({
   name: 'User',
   email: 'user@example.com',
@@ -92,29 +99,28 @@ function loadUserFromStorage() {
       canReadEmployees.value = false;
       return;
     }
-    const parsed = JSON.parse(raw);
 
-    // 다양한 필드 네이밍을 고려한 안전 추출
+    const parsed = JSON.parse(raw);
     const name =
-        parsed.name ||
-        parsed.username ||
-        [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') ||
-        'User';
+      parsed.name ||
+      parsed.username ||
+      [parsed.firstName, parsed.lastName].filter(Boolean).join(' ') ||
+      'User';
     const email = parsed.email || parsed.username || parsed.userId || 'user@example.com';
     const avatar = parsed.avatarUrl || parsed.avatar || '';
 
     user.value = { name, email, avatar };
     canManagePermissionGroups.value = hasStoredPermission('permission.group.manage');
     canReadEmployees.value = canReadEmployeeDetail();
-  } catch (e) {
-    console.warn('Failed to parse user from localStorage', e);
+  } catch (error) {
+    console.warn('Failed to parse user from localStorage', error);
     canManagePermissionGroups.value = false;
     canReadEmployees.value = false;
   }
 }
 
-function onStorage(e: StorageEvent) {
-  if (e.key === 'user') {
+function onStorage(event: StorageEvent) {
+  if (event.key === 'user') {
     loadUserFromStorage();
   }
 }
@@ -128,20 +134,12 @@ onBeforeUnmount(() => {
   window.removeEventListener('storage', onStorage);
 });
 
-// 네비게이션 항목
-const data = {
-  teams: [
-    {
-      name: 'Abacus Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-    },
-  ],
-  navMain: [
+const mainNavItems = computed(() =>
+  [
     {
       title: '대시보드',
       url: '/',
-      icon: PieChart,
+      icon: LayoutDashboard,
     },
     {
       title: '부서',
@@ -163,29 +161,27 @@ const data = {
       url: '/parties',
       icon: Handshake,
     },
-    {
-      title: 'AI Assistant',
-      url: '/assistant',
-      icon: Bot
-    }
-  ],
-  navSecondary: [
+  ].filter((item) => item.url !== '/employees' || canReadEmployees.value),
+);
+
+const toolNavItems = computed(() => [
+  {
+    title: 'AI Assistant',
+    url: '/assistant',
+    icon: Bot,
+  },
+]);
+
+const permissionNavItems = computed(() =>
+  [
     {
       title: '권한 그룹 관리',
       url: '/system/permission-groups',
       icon: ShieldCheck,
     },
-  ],
-};
-
-const secondaryNavItems = computed(() =>
-  canManagePermissionGroups.value ? data.navSecondary : [],
-);
-const mainNavItems = computed(() =>
-  data.navMain.filter((item) => item.url !== '/employees' || canReadEmployees.value),
+  ].filter(() => canManagePermissionGroups.value),
 );
 
-// 프로필 다이얼로그 열기
 function openProfileDialog() {
   props.onOpenProfileDialog();
 }
