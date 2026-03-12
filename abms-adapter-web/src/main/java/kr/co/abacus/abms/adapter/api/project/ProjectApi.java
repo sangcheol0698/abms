@@ -32,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,12 +50,14 @@ public class ProjectApi {
     private final ProjectQueryService projectQueryService;
     private final ProjectExcelService projectExcelService;
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PostMapping("/api/projects")
     public ProjectCreateResponse create(@RequestBody ProjectCreateApiRequest request) {
         Long projectId = projectManager.create(request.toCommand());
         return ProjectCreateResponse.of(projectId);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/projects")
     public PageResponse<ProjectResponse> search(@Valid ProjectSearchCondition condition, Pageable pageable) {
         Page<ProjectSummary> projects = projectFinder.search(condition, pageable);
@@ -62,41 +65,48 @@ public class ProjectApi {
         return PageResponse.of(projects.map(ProjectResponse::from));
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/projects/summary")
     public ProjectOverviewSummary getOverviewSummary(@Valid ProjectSearchCondition condition) {
         return projectFinder.getOverviewSummary(condition);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/projects/{id}")
     public ProjectDetailResponse find(@PathVariable Long id) {
         ProjectDetail detail = projectQueryService.findDetail(id);
         return ProjectDetailResponse.of(detail);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PutMapping("/api/projects/{id}")
     public ProjectUpdateResponse update(@PathVariable Long id, @RequestBody ProjectUpdateApiRequest request) {
         Long projectId = projectManager.update(id, request.toCommand());
         return ProjectUpdateResponse.of(projectId);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PatchMapping("/api/projects/{id}/complete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void complete(@PathVariable Long id) {
         projectManager.complete(id);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PatchMapping("/api/projects/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancel(@PathVariable Long id) {
         projectManager.cancel(id);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @DeleteMapping("/api/projects/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         projectManager.delete(id);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/projects/statuses")
     public List<ProjectStatusResponse> getProjectStatuses() {
         return Arrays.stream(ProjectStatus.values())
@@ -104,6 +114,7 @@ public class ProjectApi {
                 .toList();
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.excel.download')")
     @GetMapping("/api/projects/excel/download")
     public ResponseEntity<Resource> downloadExcel(@Valid ProjectSearchCondition condition) {
         byte[] content = projectExcelService.download(condition);
@@ -124,6 +135,7 @@ public class ProjectApi {
                 .body(new ByteArrayResource(content));
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.excel.upload')")
     @PostMapping(value = "/api/projects/excel/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ProjectExcelUploadResponse uploadExcel(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
