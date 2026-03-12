@@ -11,7 +11,12 @@
         :applySearchOnEnter="true"
       >
         <template #actions>
-          <Button v-if="canCreateParties" size="sm" class="h-8 gap-1 px-2 sm:px-3" @click="handleCreateParty">
+          <Button
+            v-if="canCreateParties"
+            size="sm"
+            class="h-8 gap-1 px-2 sm:px-3"
+            @click="handleCreateParty"
+          >
             <Plus class="h-4 w-4" />
             협력사 추가
           </Button>
@@ -169,7 +174,7 @@ const columns: ColumnDef<PartyListItem>[] = [
       }),
     enableSorting: false,
     enableHiding: false,
-    size: 48,
+    size: 28,
   },
   {
     accessorKey: 'name',
@@ -436,5 +441,4 @@ async function confirmDelete() {
     toast.error('협력사 삭제에 실패했습니다.');
   }
 }
-
 </script>

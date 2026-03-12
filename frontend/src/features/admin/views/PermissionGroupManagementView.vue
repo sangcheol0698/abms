@@ -507,7 +507,7 @@ const grantColumns: ColumnDef<(typeof grantRows.value)[number]>[] = [
       }),
     enableSorting: false,
     enableHiding: false,
-    size: 48,
+    size: 28,
   },
   {
     accessorKey: 'permissionName',
@@ -571,7 +571,7 @@ const accountColumns: ColumnDef<(typeof accountRows.value)[number]>[] = [
       }),
     enableSorting: false,
     enableHiding: false,
-    size: 48,
+    size: 28,
   },
   {
     accessorKey: 'employeeName',

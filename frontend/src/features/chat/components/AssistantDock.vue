@@ -2,7 +2,7 @@
   <template v-if="!isAssistantRoute">
     <aside
       class="relative hidden h-full min-h-0 shrink-0 overflow-hidden overscroll-contain bg-transparent xl:flex"
-      :class="isResizing ? 'transition-none' : 'transition-[width] duration-200'"
+      :class="isResizing ? 'transition-none' : 'transition-[width] duration-300 ease-out'"
       :style="{ width: isDockOpen ? `${desktopWidth}px` : `${DOCK_COLLAPSED_WIDTH}px` }"
     >
       <button
@@ -19,61 +19,55 @@
         v-if="isDockOpen"
         class="m-2 ml-0 flex h-[calc(100%-1rem)] min-h-0 w-[calc(100%-0.5rem)] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/88 shadow-[0_24px_50px_-28px_color-mix(in_oklch,var(--foreground),transparent_38%)] backdrop-blur-xl"
       >
-        <header class="border-b border-border/50 bg-card/70 p-3">
-          <div class="rounded-xl border border-border/60 bg-background/70 p-3 shadow-xs">
-            <div class="flex items-start gap-3">
-              <div
-                class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/15"
-              >
-                <Bot class="h-5 w-5" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold tracking-tight text-foreground">AI Assistant</p>
-                <p class="truncate text-xs text-muted-foreground">{{ dockSessionTitle }}</p>
-              </div>
-              <div class="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      class="h-7 w-7 rounded-md"
-                      :disabled="isResponding"
-                      @click="handleNewChat"
-                    >
-                      <SquarePen class="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">새 채팅</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      class="h-7 w-7 rounded-md"
-                      :disabled="isResponding"
-                      @click="openFullView"
-                    >
-                      <Expand class="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">전체 보기</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      class="h-7 w-7 rounded-md"
-                      @click="isDockOpen = false"
-                    >
-                      <PanelRightClose class="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">채팅 닫기</TooltipContent>
-                </Tooltip>
-              </div>
+        <header class="border-b border-border/50 bg-card/70 px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold tracking-tight text-foreground">
+                {{ dockSessionTitle }}
+              </p>
+            </div>
+            <div class="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-7 w-7 rounded-md"
+                    :disabled="isResponding"
+                    @click="handleNewChat"
+                  >
+                    <SquarePen class="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">새 채팅</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-7 w-7 rounded-md"
+                    :disabled="isResponding"
+                    @click="openFullView"
+                  >
+                    <Expand class="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">전체 보기</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-7 w-7 rounded-md"
+                    @click="isDockOpen = false"
+                  >
+                    <PanelRightClose class="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">채팅 닫기</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </header>
@@ -118,48 +112,42 @@
         <SheetTitle class="sr-only">Assistant Panel</SheetTitle>
         <SheetDescription class="sr-only">Assistant chat panel</SheetDescription>
         <div class="flex h-full min-h-0 flex-col bg-background">
-          <header class="border-b border-border/40 p-3">
-            <div class="rounded-xl border border-border/60 bg-card/70 p-3 shadow-xs">
-              <div class="flex items-start gap-3">
-                <div
-                  class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/15"
-                >
-                  <Bot class="h-5 w-5" />
-                </div>
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-semibold tracking-tight text-foreground">AI Assistant</p>
-                  <p class="truncate text-xs text-muted-foreground">{{ dockSessionTitle }}</p>
-                </div>
-                <div class="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        class="h-7 w-7 rounded-md"
-                        :disabled="isResponding"
-                        @click="handleNewChat"
-                      >
-                        <SquarePen class="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">새 채팅</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        class="h-7 w-7 rounded-md"
-                        :disabled="isResponding"
-                        @click="openFullView"
-                      >
-                        <Expand class="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">전체 보기</TooltipContent>
-                  </Tooltip>
-                </div>
+          <header class="border-b border-border/40 px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold tracking-tight text-foreground">
+                  {{ dockSessionTitle }}
+                </p>
+              </div>
+              <div class="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="h-7 w-7 rounded-md"
+                      :disabled="isResponding"
+                      @click="handleNewChat"
+                    >
+                      <SquarePen class="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">새 채팅</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="h-7 w-7 rounded-md"
+                      :disabled="isResponding"
+                      @click="openFullView"
+                    >
+                      <Expand class="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">전체 보기</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </header>

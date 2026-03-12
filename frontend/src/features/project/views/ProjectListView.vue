@@ -315,7 +315,7 @@ const columns: ColumnDef<ProjectListItem>[] = [
       }),
     enableSorting: false,
     enableHiding: false,
-    size: 48,
+    size: 28,
   },
   {
     accessorKey: 'name',

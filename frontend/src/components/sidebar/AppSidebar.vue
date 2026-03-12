@@ -1,6 +1,6 @@
 <template>
   <Sidebar v-bind="props">
-    <SidebarHeader>
+    <SidebarHeader class="px-3 pt-3">
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
@@ -34,13 +34,13 @@
       </SidebarMenu>
     </SidebarHeader>
 
-    <SidebarContent class="gap-4">
+    <SidebarContent class="gap-4 px-1.5 pb-2">
       <NavMain :items="mainNavItems" label="업무" />
       <NavSecondary v-if="toolNavItems.length" :items="toolNavItems" label="도구" />
       <NavSecondary v-if="permissionNavItems.length" :items="permissionNavItems" label="권한" />
     </SidebarContent>
 
-    <SidebarFooter>
+    <SidebarFooter class="px-1.5 pb-3 pt-2">
       <NavUser :user="user" :onOpenProfileDialog="openProfileDialog" />
     </SidebarFooter>
 

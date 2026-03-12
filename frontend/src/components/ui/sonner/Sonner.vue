@@ -45,3 +45,23 @@ const delegatedProps = reactiveOmit(props, "toastOptions")
     </template>
   </Sonner>
 </template>
+
+<style>
+.toaster {
+  --success-bg: color-mix(in oklch, var(--status-success), white 88%);
+  --success-border: color-mix(in oklch, var(--status-success), white 72%);
+  --success-text: color-mix(in oklch, var(--status-success), black 38%);
+  --error-bg: color-mix(in oklch, var(--status-danger), white 90%);
+  --error-border: color-mix(in oklch, var(--status-danger), white 76%);
+  --error-text: color-mix(in oklch, var(--status-danger), black 28%);
+}
+
+.dark .toaster {
+  --success-bg: color-mix(in oklch, var(--status-success), black 78%);
+  --success-border: color-mix(in oklch, var(--status-success), black 64%);
+  --success-text: color-mix(in oklch, var(--status-success), white 14%);
+  --error-bg: color-mix(in oklch, var(--status-danger), black 82%);
+  --error-border: color-mix(in oklch, var(--status-danger), black 68%);
+  --error-text: color-mix(in oklch, var(--status-danger), white 16%);
+}
+</style>

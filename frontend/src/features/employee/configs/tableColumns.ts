@@ -115,7 +115,7 @@ export function createEmployeeTableColumns(
         }),
       enableSorting: false,
       enableHiding: false,
-      size: 48,
+      size: 28,
     });
   }
 
@@ -139,18 +139,18 @@ export function createEmployeeTableColumns(
         h('div', { class: 'flex flex-col gap-0.5' }, [
           canView
             ? h(
-              'button',
-              {
-                type: 'button',
-                class:
-                  'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-                onClick: (event: MouseEvent) => {
-                  event.stopPropagation();
-                  handlers.onViewEmployee(row.original);
+                'button',
+                {
+                  type: 'button',
+                  class:
+                    'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+                  onClick: (event: MouseEvent) => {
+                    event.stopPropagation();
+                    handlers.onViewEmployee(row.original);
+                  },
                 },
-              },
-              name,
-            )
+                name,
+              )
             : h('span', { class: 'font-medium text-foreground' }, name),
           h('span', { class: 'text-xs text-muted-foreground' }, email),
         ]),
@@ -290,7 +290,9 @@ export function createEmployeeTableColumns(
         showEdit: handlers.canEditEmployee ? handlers.canEditEmployee(row.original) : true,
         showDelete: handlers.canDeleteEmployee ? handlers.canDeleteEmployee(row.original) : true,
         showCopyEmail: true,
-        editLabel: handlers.getEditActionLabel ? handlers.getEditActionLabel(row.original) : '직원 편집',
+        editLabel: handlers.getEditActionLabel
+          ? handlers.getEditActionLabel(row.original)
+          : '직원 편집',
         onEdit: () => handlers.onEditEmployee(row.original),
         onCopyEmail: () => handlers.onCopyEmail(row.original),
         onDelete: () => handlers.onDeleteEmployee(row.original),

@@ -1,9 +1,24 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteLocationRaw } from 'vue-router';
+import NProgress from 'nprogress';
 import AuthLayout from '@/core/layouts/AuthLayout.vue';
 import SidebarLayout from '@/core/layouts/SidebarLayout.vue';
-import { ensureServerSessionValid, hasStoredPermission, hasStoredUser } from '@/features/auth/session';
+import {
+  ensureServerSessionValid,
+  hasStoredPermission,
+  hasStoredUser,
+} from '@/features/auth/session';
 import { ensureCsrfInitialized } from '@/core/http/csrf';
+
+NProgress.configure({
+  showSpinner: false,
+  minimum: 0.12,
+  easing: 'ease',
+  speed: 360,
+});
+
+const NPROGRESS_DELAY_MS = 120;
+let progressStartTimer: ReturnType<typeof setTimeout> | null = null;
 
 const routes = [
   {
@@ -337,13 +352,40 @@ function resolveLoginRedirect(fullPath: string): RouteLocationRaw {
   };
 }
 
-const AUTH_ROUTE_WHITELIST = new Set(['auth-registration-confirm', 'auth-session-expired', 'auth-forbidden']);
+const AUTH_ROUTE_WHITELIST = new Set([
+  'auth-registration-confirm',
+  'auth-session-expired',
+  'auth-forbidden',
+]);
+
+function scheduleProgressStart() {
+  if (progressStartTimer != null || NProgress.isStarted()) {
+    return;
+  }
+
+  progressStartTimer = window.setTimeout(() => {
+    progressStartTimer = null;
+    if (!NProgress.isStarted()) {
+      NProgress.start();
+    }
+  }, NPROGRESS_DELAY_MS);
+}
+
+function stopProgress() {
+  if (progressStartTimer != null) {
+    clearTimeout(progressStartTimer);
+    progressStartTimer = null;
+  }
+
+  NProgress.done();
+}
 
 router.beforeEach(async (to, from) => {
+  scheduleProgressStart();
+
   const isLoggedIn = hasStoredUser();
   const authPage = isAuthRoute(to.path);
-  const isWhitelistedAuthPage =
-    typeof to.name === 'string' && AUTH_ROUTE_WHITELIST.has(to.name);
+  const isWhitelistedAuthPage = typeof to.name === 'string' && AUTH_ROUTE_WHITELIST.has(to.name);
 
   if (authPage || isLoggedIn) {
     try {
@@ -391,9 +433,14 @@ router.beforeEach(async (to, from) => {
 });
 
 router.afterEach((to) => {
+  stopProgress();
   if (to.meta?.title) {
     document.title = `${to.meta.title as string} | ABMS`;
   }
+});
+
+router.onError(() => {
+  stopProgress();
 });
 
 export default router;

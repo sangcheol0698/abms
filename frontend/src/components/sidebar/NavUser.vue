@@ -20,8 +20,8 @@
         </DropdownMenuTrigger>
         <DropdownMenuContent
           class="w-[--reka-popper-anchor-width] min-w-56 rounded-lg"
-          side="bottom"
-          align="end"
+          :side="sidebar.isMobile.value ? 'bottom' : 'right'"
+          :align="sidebar.isMobile.value ? 'end' : 'end'"
           :side-offset="4"
         >
           <DropdownMenuLabel class="p-0 font-normal">

@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-4">
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <Card v-for="card in cards" :key="card.id" class="shadow-sm">
-        <CardHeader class="space-y-1">
+      <Card v-for="card in cards" :key="card.id" class="gap-3 py-4 shadow-sm">
+        <CardHeader class="space-y-1 px-5">
           <CardTitle class="text-sm font-semibold text-muted-foreground">{{
             card.title
           }}</CardTitle>
           <div class="flex items-baseline gap-2">
-            <span class="text-2xl font-semibold text-foreground">{{ card.value }}</span>
+            <span class="text-xl font-semibold text-foreground">{{ card.value }}</span>
             <Badge
               v-if="card.trend?.direction"
               :variant="
@@ -22,7 +22,7 @@
             </Badge>
           </div>
         </CardHeader>
-        <CardContent v-if="card.description" class="text-xs text-muted-foreground">
+        <CardContent v-if="card.description" class="px-5 text-xs text-muted-foreground">
           {{ card.description }}
         </CardContent>
       </Card>

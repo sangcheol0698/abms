@@ -239,3 +239,19 @@
     cursor: pointer;
   }
 }
+
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: var(--primary);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--primary), transparent 85%);
+  height: 2px;
+}
+
+#nprogress .peg {
+  box-shadow:
+    0 0 10px color-mix(in oklch, var(--primary), transparent 40%),
+    0 0 5px color-mix(in oklch, var(--primary), transparent 55%);
+}

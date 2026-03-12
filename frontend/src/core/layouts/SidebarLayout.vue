@@ -1,6 +1,6 @@
 <template>
   <SidebarProvider>
-    <div class="flex h-svh w-full overflow-hidden bg-muted/20 text-foreground">
+    <div class="flex h-svh w-full overflow-hidden bg-sidebar text-foreground">
       <AppSidebar :onOpenProfileDialog="openProfileDialog" />
       <SidebarInset class="min-h-0 min-w-0 overflow-hidden">
         <header
@@ -11,7 +11,7 @@
             <Separator orientation="vertical" class="hidden h-6 md:block" />
             <div class="flex min-w-0 flex-col gap-1">
               <Breadcrumb v-if="breadcrumbs.length" class="hidden md:block">
-                <BreadcrumbList class="text-base">
+                <BreadcrumbList class="text-sm">
                   <template v-for="(crumb, index) in breadcrumbs" :key="`${crumb.title}-${index}`">
                     <BreadcrumbItem>
                       <template v-if="crumb.to && !crumb.disabled">
@@ -23,7 +23,7 @@
                         </BreadcrumbLink>
                       </template>
                       <template v-else>
-                        <BreadcrumbPage class="text-base font-semibold">{{
+                        <BreadcrumbPage class="text-sm font-semibold">{{
                           crumb.title
                         }}</BreadcrumbPage>
                       </template>
