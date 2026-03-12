@@ -15,7 +15,7 @@
       :content-min-size="52"
     >
       <template #sidebar="{ pane }">
-        <div class="flex h-full min-h-0 flex-col shadow-sm">
+        <div class="flex h-full min-h-0 flex-col">
           <DepartmentTree
             class="flex-1"
             :nodes="chart"
