@@ -59,6 +59,8 @@ test.describe('직원 삭제', () => {
           body: JSON.stringify({
             email: 'tester@abms.co.kr',
             name: '테스터',
+            employeeId: 1,
+            departmentId: 10,
             permissions: [
               { code: 'employee.read', scopes: ['ALL'] },
               { code: 'employee.write', scopes: ['ALL'] },

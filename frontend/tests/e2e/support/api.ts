@@ -5,7 +5,21 @@ export const API_ROUTE = /^https?:\/\/[^/]+\/api(?:\/.*)?(?:\?.*)?$/;
 const DEFAULT_AUTH_ME = {
   email: 'tester@abms.co.kr',
   name: '테스터',
-  permissions: [],
+  employeeId: 1,
+  departmentId: 10,
+  permissions: [
+    { code: 'employee.read', scopes: ['ALL'] },
+    { code: 'employee.write', scopes: ['ALL'] },
+    { code: 'employee.excel.download', scopes: ['ALL'] },
+    { code: 'employee.excel.upload', scopes: ['ALL'] },
+    { code: 'project.read', scopes: ['ALL'] },
+    { code: 'project.write', scopes: ['ALL'] },
+    { code: 'project.excel.download', scopes: ['ALL'] },
+    { code: 'project.excel.upload', scopes: ['ALL'] },
+    { code: 'party.read', scopes: ['ALL'] },
+    { code: 'party.write', scopes: ['ALL'] },
+    { code: 'dashboard.read', scopes: ['ALL'] },
+  ],
 };
 
 export interface ApiRequestContext {
