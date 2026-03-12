@@ -90,6 +90,8 @@ describe('AuthRepository', () => {
     httpGet.mockResolvedValueOnce({
       name: '인증사용자',
       email: 'auth-user@abacus.co.kr',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         {
           code: 'employee.read',
@@ -106,6 +108,8 @@ describe('AuthRepository', () => {
     expect(result).toEqual({
       name: '인증사용자',
       email: 'auth-user@abacus.co.kr',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         {
           code: 'employee.read',

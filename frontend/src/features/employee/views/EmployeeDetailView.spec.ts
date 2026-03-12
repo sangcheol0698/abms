@@ -25,6 +25,28 @@ const employeeData = ref({
   birthDate: '1990-01-01',
 });
 
+const departmentChartData = ref([
+  {
+    departmentId: 10,
+    departmentName: '개발본부',
+    departmentCode: 'DEV',
+    departmentType: 'DIVISION',
+    departmentLeader: null,
+    employeeCount: 1,
+    children: [
+      {
+        departmentId: 11,
+        departmentName: '개발팀',
+        departmentCode: 'DEV-TEAM',
+        departmentType: 'TEAM',
+        departmentLeader: null,
+        employeeCount: 1,
+        children: [],
+      },
+    ],
+  },
+]);
+
 const dispatchOpenProfileDialogEventMock = vi.fn();
 let storage: Record<string, string> = {};
 let EmployeeDetailViewComponent: Component;
@@ -47,7 +69,7 @@ vi.mock('@/features/employee/queries/useEmployeeQueries', () => ({
 
 vi.mock('@/features/department/queries/useDepartmentQueries', () => ({
   useDepartmentOrganizationChartQuery: () => ({
-    data: { value: [] },
+    data: departmentChartData,
   }),
 }));
 
@@ -161,12 +183,35 @@ describe('EmployeeDetailView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     storage = {};
+    employeeData.value = {
+      departmentId: 10,
+      departmentName: '개발팀',
+      employeeId: 1,
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      position: '사원',
+      positionCode: 'ASSOCIATE',
+      status: '재직',
+      statusCode: 'ACTIVE',
+      grade: '초급',
+      gradeCode: 'JUNIOR',
+      type: '정규직',
+      typeCode: 'FULL_TIME',
+      avatarCode: 'SKY_GLOW',
+      avatarLabel: 'Sky Glow',
+      avatarImageUrl: '',
+      memo: '',
+      joinDate: '2024-01-01',
+      birthDate: '1990-01-01',
+    };
   });
 
   it('employee.write ALL 권한이면 관리자 액션이 보인다', async () => {
     storage.user = JSON.stringify({
       name: '관리자',
       email: 'admin@abms.co.kr',
+      employeeId: 99,
+      departmentId: 10,
       permissions: [
         { code: 'employee.read', scopes: ['ALL'] },
         { code: 'employee.write', scopes: ['ALL'] },
@@ -186,6 +231,8 @@ describe('EmployeeDetailView', () => {
     storage.user = JSON.stringify({
       name: '홍길동',
       email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         { code: 'employee.read', scopes: ['SELF'] },
         { code: 'employee.write', scopes: ['SELF'] },
@@ -204,5 +251,57 @@ describe('EmployeeDetailView', () => {
 
     await selfEditButton?.trigger('click');
     expect(dispatchOpenProfileDialogEventMock).toHaveBeenCalled();
+  });
+
+  it('employee.write OWN_DEPARTMENT 권한이면 같은 부서 직원 관리 액션이 보인다', async () => {
+    employeeData.value = {
+      ...employeeData.value,
+      employeeId: 2,
+      departmentId: 10,
+      email: 'same@abms.co.kr',
+    };
+    storage.user = JSON.stringify({
+      name: '매니저',
+      email: 'manager@abms.co.kr',
+      employeeId: 99,
+      departmentId: 10,
+      permissions: [
+        { code: 'employee.read', scopes: ['OWN_DEPARTMENT'] },
+        { code: 'employee.write', scopes: ['OWN_DEPARTMENT'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountDetailView();
+
+    expect(wrapper.text()).toContain('승진');
+    expect(wrapper.text()).toContain('직원 편집');
+    expect(wrapper.text()).toContain('직원 삭제');
+  });
+
+  it('employee.write OWN_DEPARTMENT_TREE 권한이면 하위 부서 직원 관리 액션이 보인다', async () => {
+    employeeData.value = {
+      ...employeeData.value,
+      employeeId: 3,
+      departmentId: 11,
+      email: 'child@abms.co.kr',
+    };
+    storage.user = JSON.stringify({
+      name: '매니저',
+      email: 'manager@abms.co.kr',
+      employeeId: 99,
+      departmentId: 10,
+      permissions: [
+        { code: 'employee.read', scopes: ['OWN_DEPARTMENT_TREE'] },
+        { code: 'employee.write', scopes: ['OWN_DEPARTMENT_TREE'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountDetailView();
+
+    expect(wrapper.text()).toContain('승진');
+    expect(wrapper.text()).toContain('직원 편집');
+    expect(wrapper.text()).toContain('직원 삭제');
   });
 });

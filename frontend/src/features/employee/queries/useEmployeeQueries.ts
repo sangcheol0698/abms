@@ -7,6 +7,7 @@ import type { EmployeeCreatePayload } from '@/features/employee/models/employee'
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
 import type { EmployeeOverviewSummaryParams } from '@/features/employee/repository/EmployeeRepository';
 import AuthRepository from '@/features/auth/repository/AuthRepository';
+import { getStoredUser, markSessionNeedsValidation, refreshStoredUserSession } from '@/features/auth/session';
 
 async function invalidateEmployeeSideEffects(employeeId?: number) {
   const tasks: Promise<unknown>[] = [
@@ -15,11 +16,26 @@ async function invalidateEmployeeSideEffects(employeeId?: number) {
     queryClient.invalidateQueries({ queryKey: dashboardKeys.summary() }),
   ];
 
+  const currentUser = getStoredUser();
+  const isCurrentUserMutation = Boolean(
+    employeeId && currentUser?.employeeId && currentUser.employeeId === employeeId,
+  );
+
+  if (isCurrentUserMutation) {
+    tasks.push(queryClient.invalidateQueries({ queryKey: authKeys.me() }));
+    tasks.push(queryClient.invalidateQueries({ queryKey: employeeKeys.currentProfile() }));
+  }
+
   if (employeeId && employeeId > 0) {
     tasks.push(queryClient.invalidateQueries({ queryKey: employeeKeys.detail(employeeId) }));
   }
 
   await Promise.all(tasks);
+
+  if (isCurrentUserMutation) {
+    markSessionNeedsValidation();
+    await refreshStoredUserSession(true);
+  }
 }
 
 export function useEmployeesQuery(paramsRef: MaybeRefOrGetter<EmployeeSearchParams>) {
@@ -74,7 +90,11 @@ export function useCurrentEmployeeProfileQuery(enabledRef: MaybeRefOrGetter<bool
         queryFn: () => authRepository.fetchMe(),
       });
 
-      return employeeRepository.findCurrentByIdentity(me.name, me.email);
+      if (!me.employeeId || me.employeeId <= 0) {
+        throw new Error('현재 로그인한 직원 정보를 찾을 수 없습니다.');
+      }
+
+      return employeeRepository.findById(me.employeeId);
     },
     enabled,
   });

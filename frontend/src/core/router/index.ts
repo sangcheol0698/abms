@@ -82,6 +82,7 @@ const routes = [
           title: '부서',
           layout: SidebarLayout,
           padding: 'flush',
+          forceSessionRefresh: true,
           breadcrumbs: [
             {
               title: '대시보드',
@@ -102,6 +103,7 @@ const routes = [
           title: '부서',
           layout: SidebarLayout,
           padding: 'flush',
+          forceSessionRefresh: true,
           breadcrumbs: [
             {
               title: '대시보드',
@@ -364,8 +366,9 @@ router.beforeEach(async (to, from) => {
 
   const requiredPermission =
     typeof to.meta?.requiredPermission === 'string' ? to.meta.requiredPermission : null;
+  const forceSessionRefresh = Boolean(requiredPermission || to.meta?.forceSessionRefresh);
 
-  const sessionValid = await ensureServerSessionValid(Boolean(requiredPermission));
+  const sessionValid = await ensureServerSessionValid(forceSessionRefresh);
   if (!sessionValid) {
     return resolveLoginRedirect(to.fullPath);
   }

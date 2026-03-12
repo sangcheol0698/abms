@@ -65,6 +65,8 @@ describe('AuthLoginView', () => {
       data: {
         email: 'user@abms.co.kr',
         name: '사용자',
+        employeeId: 1,
+        departmentId: 10,
         permissions: [
           {
             code: 'employee.read',
@@ -137,6 +139,8 @@ describe('AuthLoginView', () => {
     expect(setStoredUser).toHaveBeenCalledWith({
       email: 'user@abms.co.kr',
       name: '사용자',
+      employeeId: 1,
+      departmentId: 10,
       permissions: [
         {
           code: 'employee.read',
@@ -159,6 +163,8 @@ describe('AuthLoginView', () => {
     expect(setStoredUser).toHaveBeenCalledWith({
       email: 'john.doe@abms.co.kr',
       name: 'John Doe',
+      employeeId: null,
+      departmentId: null,
       permissions: [],
     }, { validated: false });
   });

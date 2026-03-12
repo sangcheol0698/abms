@@ -98,6 +98,8 @@ class AuthFinderTest extends IntegrationTestBase {
 
         assertThat(currentUser.name()).isEqualTo("조회사용자");
         assertThat(currentUser.email()).isEqualTo(email);
+        assertThat(currentUser.employeeId()).isEqualTo(employee.getIdOrThrow());
+        assertThat(currentUser.departmentId()).isEqualTo(employee.getDepartmentId());
         assertThat(currentUser.permissions()).containsExactly(
                 new GrantedPermissionDetail("employee.read", java.util.Set.of(PermissionScope.ALL))
         );
@@ -110,6 +112,8 @@ class AuthFinderTest extends IntegrationTestBase {
 
         assertThat(currentUser.name()).isEqualTo("fallback-user");
         assertThat(currentUser.email()).isEqualTo("fallback-user@abms.co");
+        assertThat(currentUser.employeeId()).isNull();
+        assertThat(currentUser.departmentId()).isNull();
         assertThat(currentUser.permissions()).isEmpty();
     }
 
@@ -130,6 +134,8 @@ class AuthFinderTest extends IntegrationTestBase {
 
         assertThat(currentUser.name()).isEqualTo("deleted-account");
         assertThat(currentUser.email()).isEqualTo(email);
+        assertThat(currentUser.employeeId()).isNull();
+        assertThat(currentUser.departmentId()).isNull();
         assertThat(currentUser.permissions()).isEmpty();
     }
 
@@ -150,6 +156,8 @@ class AuthFinderTest extends IntegrationTestBase {
 
         assertThat(currentUser.name()).isEqualTo("deleted-employee");
         assertThat(currentUser.email()).isEqualTo(email);
+        assertThat(currentUser.employeeId()).isNull();
+        assertThat(currentUser.departmentId()).isNull();
         assertThat(currentUser.permissions()).isEmpty();
     }
 
