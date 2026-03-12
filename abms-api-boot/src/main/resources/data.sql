@@ -599,8 +599,10 @@ VALUES (0, 1, 0, NOW(), NULL, 2, NOW(), NOW(), 'test2@iabacus.co.kr', 1, NULL,
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_permission (id, code, name, description, created_at, updated_at, created_by, updated_by,
                                 deleted, deleted_at, deleted_by)
-VALUES (1, 'employee.read', '직원 상세 조회 및 엑셀 다운로드', '직원 상세 정보 조회와 범위 기반 엑셀 다운로드를 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
-       (4, 'employee.write', '직원 생성 및 변경 관리', '직원 생성, 프로필 수정, 상태 변경, 삭제, 엑셀 업로드를 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+VALUES (1, 'employee.read', '직원 상세 조회', '직원 상세 정보 조회를 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (4, 'employee.write', '직원 생성 및 변경 관리', '직원 생성, 프로필 수정, 상태 변경, 삭제를 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (6, 'employee.excel.download', '직원 엑셀 다운로드', '직원 목록을 범위 기반으로 엑셀 다운로드할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (7, 'employee.excel.upload', '직원 엑셀 업로드', '직원 정보를 범위 기반으로 엑셀 업로드할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (2, 'project.read', '프로젝트 목록 및 상세 조회', '프로젝트 목록, 상세 정보, 관련 조회 화면 접근을 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (3, 'dashboard.read', '대시보드 지표 조회', '대시보드의 핵심 지표와 요약 정보를 조회할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (5, 'permission.group.manage', '권한 그룹 관리', '권한 그룹과 그룹별 계정 할당을 조회하고 관리할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL);
@@ -637,4 +639,6 @@ VALUES (1, 1, 1, 'SELF', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (6, 2, 2, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (7, 2, 3, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (8, 2, 4, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
-       (9, 2, 5, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL);
+       (9, 2, 5, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (10, 2, 6, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (11, 2, 7, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL);

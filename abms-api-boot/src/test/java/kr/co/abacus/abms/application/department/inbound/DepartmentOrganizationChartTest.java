@@ -108,20 +108,22 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("조직도 조회 성능 테스트 - 캐싱 확인")
-    void getOrganizationChart_testPerformance() {
+    @DisplayName("조직도 조회 시 캐시된 값을 재사용한다")
+    void getOrganizationChart_reusesCachedValue() {
         departmentFinder.clearOrganizationChartCache();
 
-        long start1 = System.currentTimeMillis();
-        departmentFinder.getOrganizationChart();
-        long duration1 = System.currentTimeMillis() - start1;
+        Cache cache = Objects.requireNonNull(cacheManager.getCache("organizationChart"));
+        assertThat(cache.get(SimpleKey.EMPTY)).isNull();
 
-        long start2 = System.currentTimeMillis();
-        departmentFinder.getOrganizationChart();
-        long duration2 = System.currentTimeMillis() - start2;
+        List<OrganizationChartDetail> first = departmentFinder.getOrganizationChart();
 
-        // 두 번째 호출이 첫 번째보다 현저히 빨라야 함
-        assertThat(duration2).isLessThan(duration1);
+        Cache.ValueWrapper cached = cache.get(SimpleKey.EMPTY);
+        assertThat(cached).isNotNull();
+        assertThat(cached.get()).isSameAs(first);
+
+        List<OrganizationChartDetail> second = departmentFinder.getOrganizationChart();
+
+        assertThat(second).isSameAs(first);
     }
 
     @Test

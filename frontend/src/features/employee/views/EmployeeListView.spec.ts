@@ -325,6 +325,8 @@ describe('EmployeeListView', () => {
       permissions: [
         { code: 'employee.read', scopes: ['ALL'] },
         { code: 'employee.write', scopes: ['ALL'] },
+        { code: 'employee.excel.download', scopes: ['ALL'] },
+        { code: 'employee.excel.upload', scopes: ['ALL'] },
       ],
     });
     localStorage.setItem(
@@ -425,5 +427,43 @@ describe('EmployeeListView', () => {
     const createButton = wrapper.findAll('button').find((item) => item.text().includes('직원 추가'));
 
     expect(createButton).toBeUndefined();
+  });
+
+  it('employee.excel.download 권한이 없으면 현재 조건 다운로드 메뉴가 보이지 않는다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      permissions: [
+        { code: 'employee.read', scopes: ['ALL'] },
+        { code: 'employee.write', scopes: ['ALL'] },
+        { code: 'employee.excel.upload', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountEmployeeListView();
+    const downloadButton = wrapper
+      .findAll('button')
+      .find((item) => item.text().includes('현재 조건 다운로드'));
+
+    expect(downloadButton).toBeUndefined();
+  });
+
+  it('employee.excel.upload 권한이 없으면 엑셀 업로드 메뉴가 보이지 않는다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      permissions: [
+        { code: 'employee.read', scopes: ['ALL'] },
+        { code: 'employee.write', scopes: ['ALL'] },
+        { code: 'employee.excel.download', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountEmployeeListView();
+    const uploadButton = wrapper.findAll('button').find((item) => item.text().includes('엑셀 업로드'));
+
+    expect(uploadButton).toBeUndefined();
   });
 });

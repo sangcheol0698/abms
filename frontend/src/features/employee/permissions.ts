@@ -2,6 +2,8 @@ import { getStoredPermissions, getStoredUser, hasStoredPermission } from '@/feat
 
 const EMPLOYEE_READ = 'employee.read';
 const EMPLOYEE_WRITE = 'employee.write';
+const EMPLOYEE_EXCEL_DOWNLOAD = 'employee.excel.download';
+const EMPLOYEE_EXCEL_UPLOAD = 'employee.excel.upload';
 const PERMISSION_GROUP_MANAGE = 'permission.group.manage';
 const SELF_SCOPE = 'SELF';
 
@@ -31,6 +33,10 @@ function isCurrentUserEmail(email: string | null | undefined): boolean {
 
 export function canReadEmployeeDetail(): boolean {
   return hasStoredPermission(EMPLOYEE_READ);
+}
+
+export function canDownloadEmployeeExcel(): boolean {
+  return hasStoredPermission(EMPLOYEE_EXCEL_DOWNLOAD);
 }
 
 export function canViewEmployeeDetail(employeeEmail: string | null | undefined): boolean {
@@ -79,6 +85,10 @@ export function canEditOwnProfile(employeeEmail?: string | null): boolean {
 
 export function canAccessOwnProfileEditor(): boolean {
   return hasStoredPermission(EMPLOYEE_WRITE);
+}
+
+export function canUploadEmployeeExcel(): boolean {
+  return hasStoredPermission(EMPLOYEE_EXCEL_UPLOAD) && hasNonSelfScope(EMPLOYEE_EXCEL_UPLOAD);
 }
 
 export function canManagePermissionGroups(): boolean {

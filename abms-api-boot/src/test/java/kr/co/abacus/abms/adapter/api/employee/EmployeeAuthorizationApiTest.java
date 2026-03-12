@@ -278,8 +278,8 @@ class EmployeeAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("employee.read 권한이 없으면 직원 엑셀 다운로드는 403을 반환한다")
-    void should_returnForbidden_whenDownloadingExcelWithoutEmployeeReadPermission() throws Exception {
+    @DisplayName("employee.excel.download 권한이 없으면 직원 엑셀 다운로드는 403을 반환한다")
+    void should_returnForbidden_whenDownloadingExcelWithoutEmployeeExcelDownloadPermission() throws Exception {
         MockHttpSession session = login();
 
         mockMvc.perform(get("/api/employees/excel/download").session(session))
@@ -287,9 +287,29 @@ class EmployeeAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @DisplayName("employee.read 권한만 있으면 직원 엑셀 다운로드는 403을 반환한다")
+    void should_returnForbidden_whenDownloadingExcelWithOnlyEmployeeReadPermission() throws Exception {
+        grantEmployeeReadPermission(PermissionScope.SELF);
+        MockHttpSession session = login();
+
+        mockMvc.perform(get("/api/employees/excel/download").session(session))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("employee.excel.download 권한만 있으면 직원 상세 조회는 403을 반환한다")
+    void should_returnForbidden_whenReadingEmployeeDetailWithOnlyEmployeeExcelDownloadPermission() throws Exception {
+        grantEmployeeExcelDownloadPermission(PermissionScope.SELF);
+        MockHttpSession session = login();
+
+        mockMvc.perform(get("/api/employees/{id}", selfEmployeeId).session(session))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("SELF 범위 엑셀 다운로드는 본인만 포함한다")
     void should_downloadOnlySelf_whenGrantedSelfScope() throws Exception {
-        grantEmployeeReadPermission(PermissionScope.SELF);
+        grantEmployeeExcelDownloadPermission(PermissionScope.SELF);
         MockHttpSession session = login();
 
         byte[] content = mockMvc.perform(get("/api/employees/excel/download").session(session))
@@ -304,7 +324,7 @@ class EmployeeAuthorizationApiTest extends ApiIntegrationTestBase {
     @Test
     @DisplayName("OWN_DEPARTMENT_TREE 범위 엑셀 다운로드는 허용 범위 직원만 포함한다")
     void should_downloadOnlyAllowedEmployees_whenGrantedOwnDepartmentTreeScope() throws Exception {
-        grantEmployeeReadPermission(PermissionScope.OWN_DEPARTMENT_TREE);
+        grantEmployeeExcelDownloadPermission(PermissionScope.OWN_DEPARTMENT_TREE);
         MockHttpSession session = login();
 
         byte[] content = mockMvc.perform(get("/api/employees/excel/download").session(session))
@@ -322,15 +342,44 @@ class EmployeeAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     private void grantEmployeeReadPermission(PermissionScope... scopes) {
-        Account account = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
-        Permission permission = permissionRepository.save(Permission.create(
+        grantEmployeePermission(
                 "employee.read",
                 "직원 조회",
-                "직원 조회 권한"
-        ));
-        PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                "직원 조회 권한",
                 "직원 조회 그룹",
                 "직원 조회 권한 그룹",
+                scopes
+        );
+    }
+
+    private void grantEmployeeExcelDownloadPermission(PermissionScope... scopes) {
+        grantEmployeePermission(
+                "employee.excel.download",
+                "직원 엑셀 다운로드",
+                "직원 엑셀 다운로드 권한",
+                "직원 엑셀 다운로드 그룹",
+                "직원 엑셀 다운로드 권한 그룹",
+                scopes
+        );
+    }
+
+    private void grantEmployeePermission(
+            String permissionCode,
+            String permissionName,
+            String permissionDescription,
+            String groupName,
+            String groupDescription,
+            PermissionScope... scopes
+    ) {
+        Account account = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
+        Permission permission = permissionRepository.save(Permission.create(
+                permissionCode,
+                permissionName,
+                permissionDescription
+        ));
+        PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                groupName,
+                groupDescription,
                 PermissionGroupType.CUSTOM
         ));
 

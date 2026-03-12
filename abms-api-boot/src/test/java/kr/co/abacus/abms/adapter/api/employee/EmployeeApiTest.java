@@ -127,6 +127,16 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 "직원 쓰기",
                 "직원 쓰기 권한"
         ));
+        Permission excelDownloadPermission = permissionRepository.save(Permission.create(
+                "employee.excel.download",
+                "직원 엑셀 다운로드",
+                "직원 엑셀 다운로드 권한"
+        ));
+        Permission excelUploadPermission = permissionRepository.save(Permission.create(
+                "employee.excel.upload",
+                "직원 엑셀 업로드",
+                "직원 엑셀 업로드 권한"
+        ));
         PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
                 "직원 조회 그룹",
                 "직원 조회 권한 그룹",
@@ -145,6 +155,16 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 GroupPermissionGrant.create(
                         permissionGroup.getIdOrThrow(),
                         writePermission.getIdOrThrow(),
+                        PermissionScope.ALL
+                ),
+                GroupPermissionGrant.create(
+                        permissionGroup.getIdOrThrow(),
+                        excelDownloadPermission.getIdOrThrow(),
+                        PermissionScope.ALL
+                ),
+                GroupPermissionGrant.create(
+                        permissionGroup.getIdOrThrow(),
+                        excelUploadPermission.getIdOrThrow(),
                         PermissionScope.ALL
                 )
         ));

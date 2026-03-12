@@ -1,4 +1,5 @@
 import { appContainer } from '@/core/di/container';
+import { resetCsrfInitialization } from '@/core/http/csrf';
 import type { AuthMeResponse } from '@/features/auth/repository/AuthRepository';
 import AuthRepository from '@/features/auth/repository/AuthRepository';
 import { authKeys, queryClient } from '@/core/query';
@@ -119,6 +120,7 @@ export function clearStoredUser(): void {
   localStorage.removeItem(EMPLOYEE_STORAGE_KEY);
   isSessionValidated = false;
   validatingPromise = null;
+  resetCsrfInitialization();
 }
 
 export function markSessionNeedsValidation(): void {

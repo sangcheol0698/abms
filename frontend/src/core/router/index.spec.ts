@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Router } from 'vue-router';
 
-const { authState, csrfRequestMock } = vi.hoisted(() => ({
+const { authState, ensureCsrfInitializedMock } = vi.hoisted(() => ({
   authState: {
     hasStoredUser: false,
     hasStoredPermission: false,
     ensureServerSessionValid: false,
   },
-  csrfRequestMock: vi.fn(),
+  ensureCsrfInitializedMock: vi.fn(),
 }));
 
 vi.mock('@/features/auth/session', () => ({
@@ -16,10 +16,8 @@ vi.mock('@/features/auth/session', () => ({
   ensureServerSessionValid: vi.fn(() => Promise.resolve(authState.ensureServerSessionValid)),
 }));
 
-vi.mock('@/core/http/AxiosHttpClient', () => ({
-  default: class AxiosHttpClient {
-    request = csrfRequestMock;
-  },
+vi.mock('@/core/http/csrf', () => ({
+  ensureCsrfInitialized: ensureCsrfInitializedMock,
 }));
 
 vi.mock('@/core/layouts/AuthLayout.vue', () => ({
@@ -57,7 +55,7 @@ describe('router permission guard', () => {
     authState.hasStoredUser = false;
     authState.hasStoredPermission = false;
     authState.ensureServerSessionValid = false;
-    csrfRequestMock.mockResolvedValue(undefined);
+    ensureCsrfInitializedMock.mockResolvedValue(undefined);
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => {
