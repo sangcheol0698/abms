@@ -15,6 +15,7 @@
     <template v-else>
       <PartyDetailHeader
         :party="party"
+        :can-manage="canManageParty"
         @edit="openEditDialog"
         @delete="openDeleteDialog"
       />
@@ -22,14 +23,14 @@
       <Tabs default-value="overview" class="flex min-h-[320px] flex-1 flex-col gap-4">
         <TabsList class="flex-wrap">
           <TabsTrigger value="overview">개요</TabsTrigger>
-          <TabsTrigger value="projects">프로젝트</TabsTrigger>
+          <TabsTrigger v-if="canViewProjectsTab" value="projects">프로젝트</TabsTrigger>
         </TabsList>
 
         <div class="flex flex-1 flex-col gap-4">
           <TabsContent value="overview" class="flex-1">
             <PartyOverviewPanel :party="party" />
           </TabsContent>
-          <TabsContent value="projects" class="flex-1">
+          <TabsContent v-if="canViewProjectsTab" value="projects" class="flex-1">
             <PartyProjectsPanel :party-id="party?.partyId ?? 0" />
           </TabsContent>
         </div>
@@ -88,6 +89,8 @@ import PartyProjectsPanel from '@/features/party/components/PartyProjectsPanel.v
 import PartyFormDialog from '@/features/party/components/PartyFormDialog.vue';
 import { useDeletePartyMutation, usePartyDetailQuery } from '@/features/party/queries/usePartyQueries';
 import { partyKeys, queryClient } from '@/core/query';
+import { canManageParties, canReadParties } from '@/features/party/permissions';
+import { canReadProjects } from '@/features/project/permissions';
 
 defineOptions({ name: 'PartyDetailView' });
 
@@ -114,6 +117,8 @@ const errorMessage = computed(() => {
   return error instanceof Error ? error.message : '협력사 정보를 불러오는 중 오류가 발생했습니다.';
 });
 const isDeleting = computed(() => deletePartyMutation.isPending.value);
+const canManageParty = computed(() => canManageParties());
+const canViewProjectsTab = computed(() => canReadParties() && canReadProjects());
 
 function openEditDialog() {
   isFormDialogOpen.value = true;

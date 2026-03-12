@@ -5,6 +5,8 @@ import { queryClient } from '@/core/query';
 import PartyListView from '@/features/party/views/PartyListView.vue';
 import { toast } from 'vue-sonner';
 
+let storage: Record<string, string> = {};
+
 const listQueryState = createMockQueryState({
   data: {
     content: [
@@ -171,6 +173,30 @@ async function mountPartyListView() {
 describe('PartyListView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    storage = {};
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key: string) => storage[key] ?? null),
+      setItem: vi.fn((key: string, value: string) => {
+        storage[key] = String(value);
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete storage[key];
+      }),
+      clear: vi.fn(() => {
+        storage = {};
+      }),
+    });
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
+      permissions: [
+        { code: 'party.read', scopes: ['ALL'] },
+        { code: 'party.write', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
     vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined as never);
     detailRefetchMock.mockResolvedValue({ data: { partyId: 1, name: '협력사A' } });
     deleteMutateAsyncMock.mockResolvedValue(undefined);
@@ -212,5 +238,21 @@ describe('PartyListView', () => {
 
     expect(wrapper.get('[data-test="summary-count"]').text()).toBe('4');
     expect(wrapper.get('[data-test="party-row-count"]').text()).toBe('1');
+  });
+
+  it('party.write 권한이 없으면 협력사 추가 버튼이 보이지 않는다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
+      permissions: [{ code: 'party.read', scopes: ['ALL'] }],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountPartyListView();
+    const createButton = wrapper.findAll('button').find((item) => item.text().includes('협력사 추가'));
+
+    expect(createButton).toBeUndefined();
   });
 });

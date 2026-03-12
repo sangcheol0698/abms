@@ -11,7 +11,7 @@
         :applySearchOnEnter="true"
       >
         <template #actions>
-          <Button size="sm" class="h-8 gap-1 px-2 sm:px-3" @click="handleCreateParty">
+          <Button v-if="canCreateParties" size="sm" class="h-8 gap-1 px-2 sm:px-3" @click="handleCreateParty">
             <Plus class="h-4 w-4" />
             협력사 추가
           </Button>
@@ -130,6 +130,7 @@ import {
   usePartyOverviewSummaryQuery,
 } from '@/features/party/queries/usePartyQueries';
 import { partyKeys, queryClient } from '@/core/query';
+import { canManageParties, canReadParties } from '@/features/party/permissions';
 
 defineOptions({ name: 'PartyListView' });
 
@@ -145,6 +146,7 @@ const rowSelection = ref<RowSelectionState>({});
 const editingPartyId = ref<number | null>(null);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
+const canCreateParties = computed(() => canManageParties());
 
 const columns: ColumnDef<PartyListItem>[] = [
   {
@@ -246,20 +248,24 @@ const columns: ColumnDef<PartyListItem>[] = [
                     { onClick: () => handleViewParty(row.original) },
                     { default: () => '상세 보기' },
                   ),
-                  h(
-                    DropdownMenuItem,
-                    { onClick: () => handleEditParty(row.original) },
-                    { default: () => '수정' },
-                  ),
-                  h(DropdownMenuSeparator),
-                  h(
-                    DropdownMenuItem,
-                    {
-                      class: 'text-destructive',
-                      onClick: () => handleDeleteParty(row.original),
-                    },
-                    { default: () => '삭제' },
-                  ),
+                  canManageParties()
+                    ? h(
+                        DropdownMenuItem,
+                        { onClick: () => handleEditParty(row.original) },
+                        { default: () => '수정' },
+                      )
+                    : null,
+                  canManageParties() ? h(DropdownMenuSeparator) : null,
+                  canManageParties()
+                    ? h(
+                        DropdownMenuItem,
+                        {
+                          class: 'text-destructive',
+                          onClick: () => handleDeleteParty(row.original),
+                        },
+                        { default: () => '삭제' },
+                      )
+                    : null,
                 ],
               },
             ),
@@ -361,16 +367,25 @@ const deletingParty = ref<PartyListItem | null>(null);
 const isDeleting = computed(() => deletePartyMutation.isPending.value);
 
 function handleViewParty(party: PartyListItem) {
+  if (!canReadParties()) {
+    return;
+  }
   router.push({ name: 'party-detail', params: { partyId: party.partyId } });
 }
 
 function handleCreateParty() {
+  if (!canManageParties()) {
+    return;
+  }
   formDialogMode.value = 'create';
   editingParty.value = null;
   isFormDialogOpen.value = true;
 }
 
 async function handleEditParty(party: PartyListItem) {
+  if (!canManageParties()) {
+    return;
+  }
   try {
     editingPartyId.value = party.partyId;
     const result = await partyDetailQuery.refetch();
@@ -402,6 +417,9 @@ async function handlePartyUpdated() {
 }
 
 function handleDeleteParty(party: PartyListItem) {
+  if (!canManageParties()) {
+    return;
+  }
   deletingParty.value = party;
   isDeleteDialogOpen.value = true;
 }

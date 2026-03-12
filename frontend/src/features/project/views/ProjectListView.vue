@@ -26,6 +26,7 @@
 
           <div class="flex items-center gap-1">
             <Button
+              v-if="canFilterByParty"
               variant="outline"
               size="sm"
               class="h-8 gap-2 border-dashed"
@@ -35,7 +36,7 @@
               <span>{{ selectedPartyName ?? '협력사 선택' }}</span>
             </Button>
             <Button
-              v-if="selectedPartyId"
+              v-if="canFilterByParty && selectedPartyId"
               variant="ghost"
               size="sm"
               class="h-8 px-2"
@@ -56,7 +57,11 @@
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="w-48">
-              <DropdownMenuItem :disabled="isDownloadingExcel" @click="handleExcelDownload">
+              <DropdownMenuItem
+                v-if="canDownloadProjects"
+                :disabled="isDownloadingExcel"
+                @click="handleExcelDownload"
+              >
                 <Download class="mr-2 h-4 w-4" />
                 <span>{{ isDownloadingExcel ? '다운로드 중...' : '현재 조건 다운로드' }}</span>
               </DropdownMenuItem>
@@ -64,14 +69,15 @@
                 <Download class="mr-2 h-4 w-4" />
                 <span>샘플 다운로드</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem @click="openExcelUploadDialog">
+              <DropdownMenuSeparator v-if="canUploadProjects" />
+              <DropdownMenuItem v-if="canUploadProjects" @click="openExcelUploadDialog">
                 <Upload class="mr-2 h-4 w-4" />
                 <span>엑셀 업로드</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
+            v-if="canCreateProjects"
             variant="default"
             size="sm"
             class="h-8 px-2 sm:px-3 gap-1"
@@ -193,6 +199,7 @@ import ProjectUpdateDialog from '@/features/project/components/ProjectUpdateDial
 import ProjectRowActions from '@/features/project/components/ProjectRowActions.vue';
 import ProjectSummaryCards from '@/features/project/components/ProjectSummaryCards.vue';
 import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
+import { canReadParties } from '@/features/party/permissions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -219,6 +226,12 @@ import {
   useProjectStatusesQuery,
 } from '@/features/project/queries/useProjectQueries';
 import { projectKeys, queryClient } from '@/core/query';
+import {
+  canDownloadProjectExcel,
+  canManageProjects,
+  canReadProjects,
+  canUploadProjectExcel,
+} from '@/features/project/permissions';
 
 defineOptions({ name: 'ProjectListView' });
 
@@ -241,6 +254,11 @@ const isDownloadingExcel = ref(false);
 const isExcelUploadDialogOpen = ref(false);
 
 const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
+const canCreateProjects = computed(() => canManageProjects() && canReadParties());
+const canUploadProjects = computed(() => canUploadProjectExcel());
+const canDownloadProjects = computed(() => canDownloadProjectExcel());
+const canFilterByParty = computed(() => canReadParties());
+const canEditProjects = computed(() => canManageProjects() && canReadParties());
 const selectedPartyId = computed(() => {
   const filter = columnFilters.value.find((item) => item.id === 'partyId');
   const value = Array.isArray(filter?.value) ? filter?.value[0] : filter?.value;
@@ -380,6 +398,8 @@ const columns: ColumnDef<ProjectListItem>[] = [
     cell: ({ row }) =>
       h(ProjectRowActions, {
         row: row.original,
+        canEdit: canEditProjects.value,
+        canDelete: canManageProjects(),
         onEdit: () => handleEditProject(row.original),
         onCopyCode: () => handleCopyCode(row.original),
         onDelete: () => handleDeleteProject(row.original),
@@ -507,6 +527,9 @@ function getSearchParams(): ProjectSearchParams {
 }
 
 function handleViewProject(project: ProjectListItem) {
+  if (!canReadProjects()) {
+    return;
+  }
   router.push({
     name: 'project-detail',
     params: { projectId: project.projectId },
@@ -523,6 +546,9 @@ function handlePageSizeChange(newSize: number) {
 }
 
 function handleCreateProject() {
+  if (!canEditProjects.value) {
+    return;
+  }
   isProjectCreateDialogOpen.value = true;
 }
 
@@ -535,6 +561,9 @@ async function handleProjectCreated() {
 }
 
 async function handleEditProject(project: ProjectListItem) {
+  if (!canEditProjects.value) {
+    return;
+  }
   try {
     editingProjectId.value = project.projectId;
     const result = await projectDetailQuery.refetch();
@@ -556,7 +585,7 @@ async function handleProjectUpdated() {
 }
 
 async function handleExcelDownload() {
-  if (isDownloadingExcel.value) return;
+  if (!canDownloadProjects.value || isDownloadingExcel.value) return;
 
   try {
     isDownloadingExcel.value = true;
@@ -584,6 +613,9 @@ async function handleExcelSampleDownloadFromMenu() {
 }
 
 function openExcelUploadDialog() {
+  if (!canUploadProjects.value) {
+    return;
+  }
   isExcelUploadDialogOpen.value = true;
 }
 
@@ -604,6 +636,9 @@ function handleCopyCode(project: ProjectListItem) {
 }
 
 function openPartyDialog() {
+  if (!canFilterByParty.value) {
+    return;
+  }
   isPartySelectOpen.value = true;
 }
 
@@ -625,6 +660,9 @@ function clearPartyFilter() {
 }
 
 function handleDeleteProject(project: ProjectListItem) {
+  if (!canManageProjects()) {
+    return;
+  }
   deletion.open(project.projectId, project.name);
 }
 

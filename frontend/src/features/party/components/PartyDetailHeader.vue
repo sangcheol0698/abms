@@ -25,7 +25,7 @@
         </span>
       </div>
     </div>
-    <div class="flex items-center gap-2">
+    <div v-if="canManage" class="flex items-center gap-2">
       <Button
         variant="outline"
         size="sm"
@@ -50,9 +50,12 @@ import type { PartyDetail } from '@/features/party/models/partyDetail';
 
 interface Props {
   party: PartyDetail | null;
+  canManage?: boolean;
 }
 
-defineProps<Props>();
+withDefaults(defineProps<Props>(), {
+  canManage: true,
+});
 const emit = defineEmits<{
   edit: [];
   delete: [];

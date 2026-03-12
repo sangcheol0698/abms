@@ -4,6 +4,8 @@ import { renderWithProviders, createMockQueryState } from '@/test-utils';
 import ProjectListView from '@/features/project/views/ProjectListView.vue';
 import { toast } from 'vue-sonner';
 
+let storage: Record<string, string> = {};
+
 const repositoryMock = {
   downloadExcel: vi.fn(),
   downloadExcelSample: vi.fn(),
@@ -242,6 +244,33 @@ async function mountProjectListView() {
 describe('ProjectListView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    storage = {};
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key: string) => storage[key] ?? null),
+      setItem: vi.fn((key: string, value: string) => {
+        storage[key] = String(value);
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete storage[key];
+      }),
+      clear: vi.fn(() => {
+        storage = {};
+      }),
+    });
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
+      permissions: [
+        { code: 'project.read', scopes: ['ALL'] },
+        { code: 'project.write', scopes: ['ALL'] },
+        { code: 'project.excel.download', scopes: ['ALL'] },
+        { code: 'project.excel.upload', scopes: ['ALL'] },
+        { code: 'party.read', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
     deletionState.isDialogOpen.value = false;
     repositoryMock.downloadExcel.mockResolvedValue(undefined);
     repositoryMock.downloadExcelSample.mockResolvedValue(undefined);
@@ -317,5 +346,68 @@ describe('ProjectListView', () => {
     await Promise.resolve();
 
     expect(wrapper.get('[data-test="project-alert-open"]').text()).toContain('true');
+  });
+
+  it('project.write 권한이 없으면 프로젝트 추가 버튼이 보이지 않는다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
+      permissions: [
+        { code: 'project.read', scopes: ['ALL'] },
+        { code: 'project.excel.download', scopes: ['ALL'] },
+        { code: 'project.excel.upload', scopes: ['ALL'] },
+        { code: 'party.read', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountProjectListView();
+    const createButton = wrapper.findAll('button').find((item) => item.text().includes('프로젝트 추가'));
+
+    expect(createButton).toBeUndefined();
+  });
+
+  it('project.excel.download 권한이 없으면 현재 조건 다운로드 메뉴가 보이지 않는다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
+      permissions: [
+        { code: 'project.read', scopes: ['ALL'] },
+        { code: 'project.write', scopes: ['ALL'] },
+        { code: 'project.excel.upload', scopes: ['ALL'] },
+        { code: 'party.read', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountProjectListView();
+    const downloadButton = wrapper.findAll('button').find((item) => item.text().includes('현재 조건 다운로드'));
+
+    expect(downloadButton).toBeUndefined();
+  });
+
+  it('project.excel.upload 권한이 없으면 엑셀 업로드 메뉴가 보이지 않는다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      employeeId: 1,
+      departmentId: 10,
+      permissions: [
+        { code: 'project.read', scopes: ['ALL'] },
+        { code: 'project.write', scopes: ['ALL'] },
+        { code: 'project.excel.download', scopes: ['ALL'] },
+        { code: 'party.read', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountProjectListView();
+    const uploadButton = wrapper.findAll('button').find((item) => item.text().includes('엑셀 업로드'));
+
+    expect(uploadButton).toBeUndefined();
   });
 });
