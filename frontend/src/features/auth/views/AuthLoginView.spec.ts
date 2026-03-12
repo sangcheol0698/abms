@@ -7,6 +7,10 @@ import { renderWithProviders } from '@/test-utils';
 import { toast } from 'vue-sonner';
 import { clearStoredUser, setStoredUser } from '@/features/auth/session';
 
+const { ensureCsrfInitializedMock } = vi.hoisted(() => ({
+  ensureCsrfInitializedMock: vi.fn(),
+}));
+
 const mutateAsyncMock = vi.fn();
 const refetchMock = vi.fn();
 
@@ -17,6 +21,10 @@ vi.mock('@/features/auth/queries/useAuthQueries', () => ({
   useAuthMeQuery: () => ({
     refetch: refetchMock,
   }),
+}));
+
+vi.mock('@/core/http/csrf', () => ({
+  ensureCsrfInitialized: ensureCsrfInitializedMock,
 }));
 
 vi.mock('@/features/auth/session', () => ({
@@ -51,6 +59,7 @@ async function mountLoginView(path = '/auths/login') {
 describe('AuthLoginView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    ensureCsrfInitializedMock.mockResolvedValue(undefined);
     mutateAsyncMock.mockResolvedValue(undefined);
     refetchMock.mockResolvedValue({
       data: {
@@ -96,6 +105,24 @@ describe('AuthLoginView', () => {
     expect(mutateAsyncMock).toHaveBeenCalledWith({
       username: 'user.name@abms.co.kr',
       password: 'password123!',
+    });
+    expect(ensureCsrfInitializedMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('CSRF 초기화에 실패하면 로그인 요청을 보내지 않는다', async () => {
+    ensureCsrfInitializedMock.mockRejectedValueOnce(new Error('csrf failed'));
+
+    const { wrapper } = await mountLoginView();
+
+    await wrapper.find('#username').setValue('user@abms.co.kr');
+    await wrapper.find('#password').setValue('password123!');
+    await wrapper.find('form').trigger('submit.prevent');
+    await flushPromises();
+
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('보안 토큰 초기화에 실패했습니다. 다시 시도해 주세요.');
+    expect(toast.error).toHaveBeenCalledWith('로그인에 실패했습니다.', {
+      description: '보안 토큰 초기화에 실패했습니다. 다시 시도해 주세요.',
     });
   });
 

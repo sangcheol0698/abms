@@ -60,6 +60,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import HttpError from '@/core/http/HttpError';
+import { ensureCsrfInitialized } from '@/core/http/csrf';
 import { useAuthMeQuery, useLoginMutation } from '@/features/auth/queries/useAuthQueries';
 import { clearStoredUser, setStoredUser } from '@/features/auth/session';
 
@@ -124,6 +125,12 @@ async function submitLogin() {
   try {
     const normalizedEmail = username.value.trim().toLowerCase();
     const displayName = getDisplayNameFromEmail(normalizedEmail);
+    try {
+      await ensureCsrfInitialized();
+    } catch {
+      throw new Error('보안 토큰 초기화에 실패했습니다. 다시 시도해 주세요.');
+    }
+
     await loginMutation.mutateAsync({
       username: normalizedEmail,
       password: password.value,
@@ -153,7 +160,11 @@ async function submitLogin() {
   } catch (error) {
     clearStoredUser();
     const message =
-      error instanceof HttpError ? error.message : '로그인 처리 중 오류가 발생했습니다.';
+      error instanceof HttpError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : '로그인 처리 중 오류가 발생했습니다.';
     errorMessage.value = message;
     toast.error('로그인에 실패했습니다.', { description: message });
   } finally {
