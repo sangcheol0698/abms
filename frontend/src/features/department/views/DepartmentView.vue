@@ -13,6 +13,7 @@
       :sidebar-min-size="14"
       :sidebar-max-size="32"
       :content-min-size="52"
+      storage-key="department-sidebar-layout"
     >
       <template #sidebar="{ pane }">
         <div class="flex h-full min-h-0 flex-col">

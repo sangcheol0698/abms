@@ -13,11 +13,6 @@
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-40">
-      <DropdownMenuLabel class="space-y-1">
-        <p>현재 선택: {{ currentOption.label }}</p>
-        <p>적용 중: {{ resolvedOption.label }}</p>
-      </DropdownMenuLabel>
-      <DropdownMenuSeparator />
       <DropdownMenuRadioGroup :model-value="theme">
         <DropdownMenuRadioItem
           v-for="option in themeOptions"
@@ -26,6 +21,9 @@
           class="items-center"
           @click="setTheme(option.value)"
         >
+          <Sun v-if="option.value === 'light'" class="mr-2 h-4 w-4" />
+          <Moon v-else-if="option.value === 'dark'" class="mr-2 h-4 w-4" />
+          <Monitor v-else class="mr-2 h-4 w-4" />
           <span>{{ option.label }}</span>
         </DropdownMenuRadioItem>
       </DropdownMenuRadioGroup>
@@ -36,16 +34,14 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue';
 import { computed } from 'vue';
-import { Moon, Sun } from 'lucide-vue-next';
+import { Monitor, Moon, Sun } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import type { ButtonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/core/composables';
@@ -68,9 +64,5 @@ const { theme, resolvedTheme, setTheme } = useTheme();
 
 const currentOption = computed(
   () => themeOptions.find((option) => option.value === theme.value) ?? themeOptions[0],
-);
-
-const resolvedOption = computed(
-  () => themeOptions.find((option) => option.value === resolvedTheme.value) ?? themeOptions[0],
 );
 </script>

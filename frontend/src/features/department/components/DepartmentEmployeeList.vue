@@ -330,7 +330,6 @@ async function handleEditEmployee(employee: EmployeeListItem) {
   }
   editingEmployee.value = null;
   isLoadingEmployee.value = true;
-  const loadingToast = toast.loading('직원 정보를 불러오는 중입니다.');
 
   try {
     editingEmployeeId.value = employee.employeeId;
@@ -341,9 +340,7 @@ async function handleEditEmployee(employee: EmployeeListItem) {
     }
     editingEmployee.value = detail;
     isEmployeeUpdateDialogOpen.value = true;
-    toast.dismiss(loadingToast);
   } catch (error) {
-    toast.dismiss(loadingToast);
     const message = error instanceof HttpError ? error.message : '직원 정보를 불러오지 못했습니다.';
     toast.error('직원 정보를 불러오지 못했습니다.', {
       description: message,

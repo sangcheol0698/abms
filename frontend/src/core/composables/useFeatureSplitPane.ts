@@ -8,6 +8,7 @@ export interface FeatureSplitPaneOptions {
   breakpointPx?: number;
   headerOffset?: number;
   minHeight?: number;
+  useViewportHeight?: boolean;
 }
 
 export interface FeatureSplitPaneContext {
@@ -28,6 +29,7 @@ export function useProvideFeatureSplitPane(
   const breakpointPx = options.breakpointPx ?? 1024;
   const headerOffset = options.headerOffset ?? 64;
   const minHeight = options.minHeight ?? 320;
+  const useViewportHeight = options.useViewportHeight ?? true;
 
   const breakpoints = useBreakpoints({ lg: breakpointPx });
   const isLargeScreen = breakpoints.greater('lg');
@@ -90,6 +92,9 @@ export function useProvideFeatureSplitPane(
   }
 
   const sectionStyle = computed(() => {
+    if (!useViewportHeight) {
+      return undefined;
+    }
     const viewportHeight = windowHeight.value || 0;
     if (viewportHeight === 0) {
       return undefined;

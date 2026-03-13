@@ -4,6 +4,7 @@
     :sidebar-min-size="10"
     :sidebar-max-size="26"
     :content-min-size="60"
+    :use-viewport-height="false"
   >
     <template #sidebar="{ pane }">
       <div class="flex h-full min-h-0 flex-col border-r border-border/60 bg-background">

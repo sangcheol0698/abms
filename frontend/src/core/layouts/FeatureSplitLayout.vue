@@ -1,7 +1,11 @@
 <template>
   <section class="relative flex min-h-0 flex-1 flex-col overflow-hidden" :style="pane.sectionStyle.value">
     <template v-if="pane.isLargeScreen.value">
-      <ResizablePanelGroup direction="horizontal" class="flex min-h-0 flex-1 overflow-hidden">
+      <ResizablePanelGroup
+        direction="horizontal"
+        :auto-save-id="storageKey ?? null"
+        class="flex min-h-0 flex-1 overflow-hidden"
+      >
         <ResizablePanel :default-size="sidebarPanelSize"
           :min-size="pane.isSidebarCollapsed.value ? sidebarCollapsedSize : sidebarMinSize" :max-size="sidebarMaxSize"
           :collapsed="pane.isSidebarCollapsed.value" :collapsed-size="sidebarCollapsedSize">
@@ -54,6 +58,8 @@ const props = withDefaults(
     sidebarMaxSize?: number;
     sidebarCollapsedSize?: number;
     contentMinSize?: number;
+    storageKey?: string;
+    useViewportHeight?: boolean;
   }>(),
   {
     breakpointPx: 1024,
@@ -64,6 +70,8 @@ const props = withDefaults(
     sidebarMaxSize: 32,
     sidebarCollapsedSize: 0,
     contentMinSize: 60,
+    storageKey: undefined,
+    useViewportHeight: true,
   },
 );
 
@@ -71,6 +79,7 @@ const pane = useProvideFeatureSplitPane({
   breakpointPx: props.breakpointPx,
   headerOffset: props.headerOffset,
   minHeight: props.minHeight,
+  useViewportHeight: props.useViewportHeight,
 });
 
 const sidebarPanelSize = computed(() =>
