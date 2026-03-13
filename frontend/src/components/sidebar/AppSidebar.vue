@@ -68,6 +68,8 @@ import {
 } from '@/components/ui/sidebar';
 import { hasStoredPermission } from '@/features/auth/session';
 import { canReadEmployeeDetail } from '@/features/employee/permissions';
+import { canReadProjects } from '@/features/project/permissions';
+import { canReadParties } from '@/features/party/permissions';
 
 const props = withDefaults(
   defineProps<
@@ -89,6 +91,8 @@ const user = ref<{ name: string; email: string; avatar: string }>({
 });
 const canManagePermissionGroups = ref(false);
 const canReadEmployees = ref(false);
+const canReadProjectMenu = ref(false);
+const canReadPartyMenu = ref(false);
 
 function loadUserFromStorage() {
   try {
@@ -96,6 +100,8 @@ function loadUserFromStorage() {
     if (!raw) {
       canManagePermissionGroups.value = false;
       canReadEmployees.value = false;
+      canReadProjectMenu.value = false;
+      canReadPartyMenu.value = false;
       return;
     }
 
@@ -111,10 +117,14 @@ function loadUserFromStorage() {
     user.value = { name, email, avatar };
     canManagePermissionGroups.value = hasStoredPermission('permission.group.manage');
     canReadEmployees.value = canReadEmployeeDetail();
+    canReadProjectMenu.value = canReadProjects();
+    canReadPartyMenu.value = canReadParties();
   } catch (error) {
     console.warn('Failed to parse user from localStorage', error);
     canManagePermissionGroups.value = false;
     canReadEmployees.value = false;
+    canReadProjectMenu.value = false;
+    canReadPartyMenu.value = false;
   }
 }
 
@@ -160,7 +170,18 @@ const mainNavItems = computed(() =>
       url: '/parties',
       icon: Handshake,
     },
-  ].filter((item) => item.url !== '/employees' || canReadEmployees.value),
+  ].filter((item) => {
+    if (item.url === '/employees') {
+      return canReadEmployees.value;
+    }
+    if (item.url === '/projects') {
+      return canReadProjectMenu.value;
+    }
+    if (item.url === '/parties') {
+      return canReadPartyMenu.value;
+    }
+    return true;
+  }),
 );
 
 const toolNavItems = computed(() => [
