@@ -84,6 +84,13 @@ async function mountDialog() {
             code: 'employee.read',
             name: '직원 조회',
             description: '직원 상세 조회',
+            availableScopes: [
+              {
+                code: 'SELF',
+                description: '본인',
+                level: 5,
+              },
+            ],
           },
         ],
         scopes: [

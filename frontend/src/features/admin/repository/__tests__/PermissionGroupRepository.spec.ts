@@ -101,6 +101,13 @@ describe('PermissionGroupRepository', () => {
           code: 'permission.group.manage',
           name: '권한 그룹 관리',
           description: '관리 권한',
+          availableScopes: [
+            {
+              code: 'ALL',
+              description: '전체',
+              level: 1,
+            },
+          ],
         },
       ],
       scopes: [
@@ -119,6 +126,7 @@ describe('PermissionGroupRepository', () => {
     });
     expect(result.permissions[0].code).toBe('permission.group.manage');
     expect(result.scopes[0].description).toBe('전체');
+    expect(result.permissions[0].availableScopes[0].code).toBe('ALL');
   });
 
   it('추가 가능한 계정을 검색한다', async () => {

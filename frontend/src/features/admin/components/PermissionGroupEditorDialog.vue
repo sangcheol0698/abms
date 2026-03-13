@@ -52,7 +52,7 @@
 
                 <div class="flex flex-wrap gap-3">
                   <label
-                    v-for="scope in catalog.scopes"
+                    v-for="scope in permission.availableScopes"
                     :key="`${permission.code}-${scope.code}`"
                     class="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
                   >

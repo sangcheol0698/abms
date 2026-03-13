@@ -168,7 +168,8 @@ public class PermissionGroupAdminModifyService implements PermissionGroupAdminMa
         Set<GrantKey> desired = new HashSet<>();
 
         for (PermissionGroupGrantCommand command : commands) {
-            Permission permission = permissionRepository.findByCodeAndDeletedFalse(command.permissionCode().trim())
+            String permissionCode = command.permissionCode().trim();
+            Permission permission = permissionRepository.findByCodeAndDeletedFalse(permissionCode)
                     .orElseThrow(() -> new PermissionNotFoundException(
                             "존재하지 않는 권한 코드입니다: " + command.permissionCode()));
 
@@ -178,6 +179,10 @@ public class PermissionGroupAdminModifyService implements PermissionGroupAdminMa
             }
 
             for (PermissionScope scope : scopes) {
+                if (!PermissionScopePolicy.isScopeAllowed(permissionCode, scope)) {
+                    throw new IllegalArgumentException(
+                            "허용되지 않은 권한 scope 조합입니다: " + permissionCode + " -> " + scope.name());
+                }
                 GrantKey key = new GrantKey(permission.getIdOrThrow(), scope);
                 if (!desired.add(key)) {
                     throw new IllegalArgumentException("중복된 권한 grant가 포함되어 있습니다: " + command.permissionCode());

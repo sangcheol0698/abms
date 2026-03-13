@@ -10,6 +10,18 @@ const catalogData = ref({
       code: 'employee.read',
       name: '직원 조회',
       description: '직원 조회',
+      availableScopes: [
+        {
+          code: 'ALL',
+          description: '전체',
+          level: 1,
+        },
+        {
+          code: 'SELF',
+          description: '본인',
+          level: 5,
+        },
+      ],
     },
   ],
   scopes: [
