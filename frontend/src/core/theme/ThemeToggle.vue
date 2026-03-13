@@ -13,6 +13,11 @@
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-40">
+      <DropdownMenuLabel class="space-y-1">
+        <p>현재 선택: {{ currentOption.label }}</p>
+        <p>적용 중: {{ resolvedOption.label }}</p>
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
       <DropdownMenuRadioGroup :model-value="theme">
         <DropdownMenuRadioItem
           v-for="option in themeOptions"
@@ -37,8 +42,10 @@ import type { ButtonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/core/composables';
@@ -61,5 +68,9 @@ const { theme, resolvedTheme, setTheme } = useTheme();
 
 const currentOption = computed(
   () => themeOptions.find((option) => option.value === theme.value) ?? themeOptions[0],
+);
+
+const resolvedOption = computed(
+  () => themeOptions.find((option) => option.value === resolvedTheme.value) ?? themeOptions[0],
 );
 </script>
