@@ -42,7 +42,7 @@
     />
 
     <!-- 직원 삭제 확인 다이얼로그 -->
-    <AlertDialog :open="deletion.isDialogOpen.value" @update:open="deletion.close">
+    <AlertDialog :open="deletion.isDialogOpen.value">
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>직원을 삭제하시겠습니까?</AlertDialogTitle>
@@ -56,6 +56,7 @@
           </AlertDialogCancel>
           <AlertDialogAction
             :disabled="deletion.isProcessing.value"
+            @pointerdown.prevent
             @click="deletion.confirm"
             class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
@@ -152,6 +153,8 @@ const isLoadingEmployee = ref(false);
 // 직원 삭제 Composable
 const deletion = useEmployeeDeletion(async () => {
   await Promise.all([
+    queryClient.invalidateQueries({ queryKey: departmentKeys.detail(props.departmentId) }),
+    queryClient.invalidateQueries({ queryKey: departmentKeys.organizationChart() }),
     queryClient.invalidateQueries({ queryKey: departmentKeys.employeesRoot(props.departmentId) }),
     queryClient.invalidateQueries({ queryKey: employeeKeys.all }),
   ]);

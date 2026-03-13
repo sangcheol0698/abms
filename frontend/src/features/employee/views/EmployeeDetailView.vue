@@ -19,18 +19,33 @@
         @department-click="goToDepartment"
       >
         <template #actions>
-          <Button v-if="canManageCurrentEmployee" variant="outline" size="sm" @click="openPromotionDialog">
-            <TrendingUp class="mr-2 h-4 w-4" />
-            승진
-          </Button>
-          <Button v-if="canManageCurrentEmployee" variant="outline" size="sm" @click="openEditDialog">
-            <Pencil class="mr-2 h-4 w-4" />
-            직원 편집
-          </Button>
-          <Button v-else-if="canOpenOwnProfileEdit" variant="outline" size="sm" @click="openOwnProfileDialog">
-            <Pencil class="mr-2 h-4 w-4" />
-            내 정보 수정
-          </Button>
+          <DropdownMenu v-if="canManageCurrentEmployee || canOpenOwnProfileEdit">
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="sm">
+                <MoreHorizontal class="mr-2 h-4 w-4" />
+                더보기
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-44">
+              <DropdownMenuItem v-if="canManageCurrentEmployee" @click="openPromotionDialog">
+                <TrendingUp class="mr-2 h-4 w-4" />
+                승진
+              </DropdownMenuItem>
+              <DropdownMenuItem v-if="canManageCurrentEmployee" @click="openEditDialog">
+                <Pencil class="mr-2 h-4 w-4" />
+                직원 편집
+              </DropdownMenuItem>
+              <DropdownMenuItem v-else-if="canOpenOwnProfileEdit" @click="openOwnProfileDialog">
+                <Pencil class="mr-2 h-4 w-4" />
+                내 정보 수정
+              </DropdownMenuItem>
+              <DropdownMenuSeparator v-if="canManageCurrentEmployee" />
+              <DropdownMenuItem v-if="canManageCurrentEmployee" class="text-destructive" @click="isDeleteDialogOpen = true">
+                <Trash2 class="mr-2 h-4 w-4" />
+                직원 삭제
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </template>
       </EmployeeDetailHeader>
 
@@ -78,46 +93,26 @@
         </div>
       </Tabs>
 
-      <div v-if="canManageCurrentEmployee" class="mt-8 flex justify-end">
-        <div
-          class="flex w-full max-w-[400px] items-center justify-between rounded-lg border border-border p-4"
-        >
-          <div class="space-y-1">
-            <h3 class="text-sm font-medium">직원 삭제</h3>
-            <p class="text-xs text-muted-foreground">이 작업은 되돌릴 수 없습니다.</p>
-          </div>
-          <AlertDialog>
-            <AlertDialogTrigger as-child>
-              <Button
-                variant="outline"
-                size="sm"
-                class="text-muted-foreground hover:text-foreground"
-              >
-                <Trash2 class="mr-2 h-4 w-4" />
-                직원 삭제
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>직원을 삭제하시겠습니까?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {{ employee?.name }} 직원 정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction
-                  class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  :disabled="isDeleting"
-                  @click="handleDelete"
-                >
-                  {{ isDeleting ? '삭제 중...' : '삭제' }}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
+      <AlertDialog :open="isDeleteDialogOpen" @update:open="isDeleteDialogOpen = $event">
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>직원을 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {{ employee?.name }} 직원 정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              :disabled="isDeleting"
+              @click="handleDelete"
+            >
+              {{ isDeleting ? '삭제 중...' : '삭제' }}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </template>
 
     <EmployeeUpdateDialog
@@ -157,9 +152,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Pencil, Trash2, TrendingUp } from 'lucide-vue-next';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Pencil, Trash2, TrendingUp } from 'lucide-vue-next';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 import {
   getEmployeeGradeOptions,
@@ -252,6 +247,7 @@ const canOpenOwnProfileEdit = computed(() => {
 
 const isEmployeeUpdateDialogOpen = ref(false);
 const isPromotionDialogOpen = ref(false);
+const isDeleteDialogOpen = ref(false);
 
 const departmentOptions = computed<{ label: string; value: number }[]>(() => {
   const chart = departmentChartQuery.data.value ?? [];

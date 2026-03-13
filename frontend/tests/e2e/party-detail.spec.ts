@@ -107,7 +107,8 @@ test.describe('협력사 상세', () => {
     await expect(page.getByRole('heading', { name: '진행 프로젝트' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '완료 프로젝트' })).toBeVisible();
 
-    await page.getByRole('button', { name: '삭제' }).click();
+    await page.getByRole('button', { name: '더보기' }).click();
+    await page.getByRole('menuitem', { name: '삭제' }).click();
     const dialog = page.getByRole('alertdialog');
     await expect(dialog.getByText('협력사를 삭제하시겠습니까?')).toBeVisible();
     await dialog.getByRole('button', { name: '삭제' }).click();

@@ -44,6 +44,18 @@ const ProjectDetailHeaderStub = defineComponent({
   },
 });
 
+const AlertDialogStub = defineComponent({
+  props: {
+    open: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  setup(props, { slots }) {
+    return () => (props.open ? h('div', slots.default?.()) : null);
+  },
+});
+
 async function mountProjectDetailView() {
   return renderWithProviders(ProjectDetailViewComponent, {
     route: '/projects/1',
@@ -63,7 +75,7 @@ async function mountProjectDetailView() {
         TabsContent: PassThrough,
         TabsList: PassThrough,
         TabsTrigger: ButtonStub,
-        AlertDialog: PassThrough,
+        AlertDialog: AlertDialogStub,
         AlertDialogAction: ButtonStub,
         AlertDialogCancel: ButtonStub,
         AlertDialogContent: PassThrough,
@@ -71,12 +83,17 @@ async function mountProjectDetailView() {
         AlertDialogFooter: PassThrough,
         AlertDialogHeader: PassThrough,
         AlertDialogTitle: PassThrough,
-        AlertDialogTrigger: PassThrough,
+        DropdownMenu: PassThrough,
+        DropdownMenuContent: PassThrough,
+        DropdownMenuItem: ButtonStub,
+        DropdownMenuSeparator: true,
+        DropdownMenuTrigger: PassThrough,
         ProjectDetailHeader: ProjectDetailHeaderStub,
         ProjectOverviewPanel: true,
         ProjectAssignmentPanel: true,
         ProjectRevenuePlanPanel: true,
         ProjectUpdateDialog: true,
+        MoreHorizontal: true,
         Pencil: true,
         Trash2: true,
       },
@@ -136,7 +153,10 @@ describe('ProjectDetailView', () => {
 
     const { wrapper } = await mountProjectDetailView();
 
-    expect(wrapper.text()).not.toContain('삭제');
-    expect(wrapper.text()).not.toContain('프로젝트 편집');
+    const editButton = wrapper.findAll('button').find((button) => button.text().includes('프로젝트 편집'));
+    const deleteButton = wrapper.findAll('button').find((button) => button.text() === '삭제');
+
+    expect(editButton).toBeUndefined();
+    expect(deleteButton).toBeUndefined();
   });
 });

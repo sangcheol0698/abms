@@ -26,26 +26,39 @@
       </div>
     </div>
     <div v-if="canManage" class="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        class="text-destructive hover:text-destructive"
-        @click="emit('delete')"
-      >
-        <Trash2 class="mr-2 h-4 w-4" />
-        삭제
-      </Button>
-      <Button variant="outline" size="sm" @click="emit('edit')">
-        <Pencil class="mr-2 h-4 w-4" />
-        협력사 편집
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="outline" size="sm">
+            <MoreHorizontal class="mr-2 h-4 w-4" />
+            더보기
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" class="w-44">
+          <DropdownMenuItem @click="emit('edit')">
+            <Pencil class="mr-2 h-4 w-4" />
+            협력사 편집
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem class="text-destructive" @click="emit('delete')">
+            <Trash2 class="mr-2 h-4 w-4" />
+            삭제
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Building, Pencil, Phone, Trash2 } from 'lucide-vue-next';
+import { Building, MoreHorizontal, Pencil, Phone, Trash2 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { PartyDetail } from '@/features/party/models/partyDetail';
 
 interface Props {

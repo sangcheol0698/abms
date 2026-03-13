@@ -26,7 +26,7 @@ describe('ThemeToggle', () => {
     setTheme.mockClear();
   });
 
-  it('system 선택 시 현재 적용 테마를 함께 표시한다', () => {
+  it('theme option 목록을 표시한다', () => {
     const wrapper = mount(ThemeToggle, {
       global: {
         stubs: {
@@ -34,19 +34,21 @@ describe('ThemeToggle', () => {
           DropdownMenu: { template: '<div><slot /></div>' },
           DropdownMenuTrigger: { template: '<div><slot /></div>' },
           DropdownMenuContent: { template: '<div><slot /></div>' },
-          DropdownMenuLabel: { template: '<div><slot /></div>' },
-          DropdownMenuSeparator: true,
           DropdownMenuRadioGroup: { template: '<div><slot /></div>' },
           DropdownMenuRadioItem: {
             props: ['value'],
             template: '<button type="button" @click="$emit(\'click\')"><slot /></button>',
           },
+          Sun: true,
+          Moon: true,
+          Monitor: true,
         },
       },
     });
 
-    expect(wrapper.text()).toContain('현재 선택: 시스템');
-    expect(wrapper.text()).toContain('적용 중: 다크');
+    expect(wrapper.text()).toContain('라이트');
+    expect(wrapper.text()).toContain('다크');
+    expect(wrapper.text()).toContain('시스템');
   });
 
   it('메뉴 항목을 클릭하면 해당 테마를 설정한다', async () => {
@@ -57,14 +59,15 @@ describe('ThemeToggle', () => {
           DropdownMenu: { template: '<div><slot /></div>' },
           DropdownMenuTrigger: { template: '<div><slot /></div>' },
           DropdownMenuContent: { template: '<div><slot /></div>' },
-          DropdownMenuLabel: { template: '<div><slot /></div>' },
-          DropdownMenuSeparator: true,
           DropdownMenuRadioGroup: { template: '<div><slot /></div>' },
           DropdownMenuRadioItem: {
             props: ['value'],
             template:
               '<button type="button" :data-value="value" @click="$emit(\'click\')"><slot /></button>',
           },
+          Sun: true,
+          Moon: true,
+          Monitor: true,
         },
       },
     });

@@ -15,36 +15,25 @@
     <template v-else>
       <ProjectDetailHeader :project="project" @party-click="goToParty">
         <template #actions>
-          <AlertDialog v-if="canDeleteProject">
-            <AlertDialogTrigger as-child>
-              <Button variant="outline" size="sm" class="text-destructive hover:text-destructive">
+          <DropdownMenu v-if="canEditProject || canDeleteProject">
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" size="sm">
+                <MoreHorizontal class="mr-2 h-4 w-4" />
+                더보기
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-44">
+              <DropdownMenuItem v-if="canEditProject" @click="openEditDialog">
+                <Pencil class="mr-2 h-4 w-4" />
+                프로젝트 편집
+              </DropdownMenuItem>
+              <DropdownMenuSeparator v-if="canDeleteProject" />
+              <DropdownMenuItem v-if="canDeleteProject" class="text-destructive" @click="isDeleteDialogOpen = true">
                 <Trash2 class="mr-2 h-4 w-4" />
                 삭제
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>프로젝트를 삭제하시겠습니까?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {{ project?.name }} 프로젝트가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction
-                  class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  :disabled="isDeleting"
-                  @click="handleDelete"
-                >
-                  {{ isDeleting ? '삭제 중...' : '삭제' }}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <Button v-if="canEditProject" variant="outline" size="sm" @click="openEditDialog">
-            <Pencil class="mr-2 h-4 w-4" />
-            프로젝트 편집
-          </Button>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </template>
       </ProjectDetailHeader>
 
@@ -80,6 +69,27 @@
       @update:open="isProjectUpdateDialogOpen = $event"
       @updated="handleProjectUpdated"
     />
+
+    <AlertDialog :open="isDeleteDialogOpen" @update:open="isDeleteDialogOpen = $event">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>프로젝트를 삭제하시겠습니까?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {{ project?.name }} 프로젝트가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>취소</AlertDialogCancel>
+          <AlertDialogAction
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            :disabled="isDeleting"
+            @click="handleDelete"
+          >
+            {{ isDeleting ? '삭제 중...' : '삭제' }}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </section>
 </template>
 
@@ -98,9 +108,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Pencil, Trash2 } from 'lucide-vue-next';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next';
 import ProjectDetailHeader from '@/features/project/components/ProjectDetailHeader.vue';
 import ProjectOverviewPanel from '@/features/project/components/ProjectOverviewPanel.vue';
 import ProjectAssignmentPanel from '@/features/project/components/ProjectAssignmentPanel.vue';
@@ -122,6 +138,7 @@ const projectId = computed(() => {
 });
 
 const isProjectUpdateDialogOpen = ref(false);
+const isDeleteDialogOpen = ref(false);
 const projectQuery = useProjectDetailQuery(projectId);
 const deleteProjectMutation = useDeleteProjectMutation();
 
