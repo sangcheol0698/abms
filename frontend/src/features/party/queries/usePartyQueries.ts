@@ -21,15 +21,20 @@ async function invalidatePartySideEffects(partyId?: number) {
   await Promise.all(tasks);
 }
 
-export function usePartyListQuery(paramsRef: MaybeRefOrGetter<PartySearchParams>) {
+export function usePartyListQuery(
+  paramsRef: MaybeRefOrGetter<PartySearchParams>,
+  enabledRef: MaybeRefOrGetter<boolean> = true,
+) {
   const repository = appContainer.resolve(PartyRepository);
   const params = computed(() => toValue(paramsRef));
+  const enabled = computed(() => Boolean(toValue(enabledRef)));
 
   return useQuery({
     queryKey: computed(() =>
       partyKeys.list((params.value ?? {}) as unknown as Record<string, unknown>),
     ),
     queryFn: () => repository.list(params.value),
+    enabled,
     placeholderData: keepPreviousData,
   });
 }

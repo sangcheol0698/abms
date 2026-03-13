@@ -135,7 +135,7 @@ const searchParams = computed(() => ({
   size: pageSize.value,
   name: appliedSearchQuery.value || undefined,
 }));
-const partiesQuery = usePartyListQuery(searchParams);
+const partiesQuery = usePartyListQuery(searchParams, computed(() => props.open));
 const loading = computed(() => partiesQuery.isLoading.value || partiesQuery.isFetching.value);
 const parties = computed<PartyListItem[]>(() => partiesQuery.data.value?.content ?? []);
 const totalPages = computed(() => partiesQuery.data.value?.totalPages ?? 1);
