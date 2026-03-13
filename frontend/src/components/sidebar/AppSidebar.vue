@@ -65,7 +65,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { hasStoredPermission } from '@/features/auth/session';
 import { canReadEmployeeDetail } from '@/features/employee/permissions';

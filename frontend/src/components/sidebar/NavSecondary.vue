@@ -35,7 +35,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     items: Array<{
       title: string;
