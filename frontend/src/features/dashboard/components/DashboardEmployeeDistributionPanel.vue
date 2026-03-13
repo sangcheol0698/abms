@@ -1,5 +1,5 @@
 <template>
-  <Card class="shadow-none">
+  <Card>
     <CardHeader>
       <CardTitle>직원 구성 현황</CardTitle>
       <CardDescription>전체 직원의 고용 형태별 분포입니다.</CardDescription>
@@ -17,7 +17,7 @@
               :r="radius"
               fill="transparent"
               stroke-width="5"
-              :stroke="item.colorCode"
+              :stroke="item.color"
               :stroke-dasharray="`${item.percentage} ${100 - item.percentage}`"
               :stroke-dashoffset="item.offset"
               class="cursor-pointer transition-all duration-200 hover:opacity-80"
@@ -46,7 +46,7 @@
             @mouseenter="hoveredItem = item"
             @mouseleave="hoveredItem = null"
           >
-            <div class="h-2.5 w-2.5 rounded-full" :class="item.colorClass"></div>
+            <div class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: item.color }"></div>
             <span class="text-xs text-muted-foreground">{{ item.label }}</span>
           </div>
         </div>
@@ -58,6 +58,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getChartColor } from '@/core/theme/theme';
 
 const props = defineProps<{
   totalCount?: number;
@@ -70,8 +71,7 @@ interface DistributionItem {
   label: string;
   count: number;
   percentage: number;
-  colorClass: string;
-  colorCode: string;
+  color: string;
   offset: number;
 }
 
@@ -91,24 +91,21 @@ const distribution = computed(() => {
       label: '정직원',
       count: fullTime,
       percentage: 75,
-      colorClass: 'bg-orange-500',
-      colorCode: '#f97316',
+      color: getChartColor(0),
       offset: 0,
     },
     {
       label: '프리랜서',
       count: freelance,
       percentage: 15,
-      colorClass: 'bg-yellow-500',
-      colorCode: '#eab308',
+      color: getChartColor(1),
       offset: 0,
     },
     {
       label: '외주(협력사)',
       count: outsource,
       percentage: 10,
-      colorClass: 'bg-lime-500',
-      colorCode: '#84cc16',
+      color: getChartColor(2),
       offset: 0,
     },
   ];

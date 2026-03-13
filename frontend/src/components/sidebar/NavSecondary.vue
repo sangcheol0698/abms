@@ -3,21 +3,18 @@
     <SidebarGroupLabel>{{ label }}</SidebarGroupLabel>
     <SidebarMenu>
       <SidebarMenuItem v-for="item in items" :key="item.title">
-        <SidebarMenuButton 
-          asChild 
-          :tooltip="item.title" 
+        <SidebarMenuButton
+          asChild
+          size="sm"
+          :tooltip="item.title"
           :isActive="isActiveRoute(item.url)"
           :class="
             isActiveRoute(item.url)
-              ? 'bg-primary text-primary-foreground font-medium shadow-sm shadow-primary/20'
-              : 'text-sidebar-foreground/78 hover:text-sidebar-foreground'
+              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+              : 'text-sidebar-foreground/72 hover:text-sidebar-foreground'
           "
         >
-          <router-link 
-            :to="item.url" 
-            @click.prevent.stop="navigateTo(item.url)"
-            :class="isActiveRoute(item.url) ? 'text-primary-foreground' : 'text-inherit'"
-          >
+          <router-link :to="item.url" @click.prevent.stop="navigateTo(item.url)">
             <component :is="item.icon" v-if="item.icon" />
             <span>{{ item.title }}</span>
           </router-link>
@@ -28,6 +25,8 @@
 </template>
 
 <script setup lang="ts">
+import type { LucideIcon } from 'lucide-vue-next';
+import { useRoute, useRouter } from 'vue-router';
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -35,39 +34,31 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { type LucideIcon } from 'lucide-vue-next';
-import { toRefs } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
-    items: {
+    items: Array<{
       title: string;
       url: string;
       icon?: LucideIcon;
-      isActive?: boolean;
-    }[];
+    }>;
     label?: string;
   }>(),
   {
-    label: '메뉴',
+    label: '도구',
   },
 );
-
-const { items, label } = toRefs(props);
 
 const route = useRoute();
 const router = useRouter();
 
-// Check if the current route path matches the menu item's URL
-const isActiveRoute = (url: string) => {
+function isActiveRoute(url: string) {
   return route.path === url || route.path.startsWith(`${url}/`);
-};
+}
 
-// Function to navigate to a URL
-const navigateTo = async (url: string) => {
+async function navigateTo(url: string) {
   if (route.path !== url) {
     await router.push(url);
   }
-};
+}
 </script>

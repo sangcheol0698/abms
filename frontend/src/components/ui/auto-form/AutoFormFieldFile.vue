@@ -47,7 +47,7 @@ async function parseFileAsString(file: File | undefined): Promise<string> {
               slotProps.componentField.onInput(parsed)
             }"
           />
-          <div v-else class="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent pl-3 pr-1 py-1 text-sm shadow-sm transition-colors">
+          <div v-else class="flex h-9 w-full items-center justify-between rounded-md border border-input bg-input-surface pl-3 pr-1 py-1 text-sm shadow-sm transition-[color,box-shadow,background-color] hover:bg-input-surface-hover">
             <p>{{ inputFile?.name }}</p>
             <Button
               :size="'icon'"

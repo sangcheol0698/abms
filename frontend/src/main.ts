@@ -4,6 +4,7 @@ import { createPinia } from 'pinia';
 import { VueQueryPlugin } from '@tanstack/vue-query';
 import App from './App.vue';
 import router from '@/core/router';
+import 'nprogress/nprogress.css';
 import '@/index.css';
 import '@/assets/fonts.css';
 import { configureContainer } from '@/core/di/container';

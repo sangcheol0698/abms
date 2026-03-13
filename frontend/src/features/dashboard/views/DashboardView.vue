@@ -34,7 +34,7 @@
 
       <!-- 사이드바 영역 (오른쪽) -->
       <div class="lg:col-span-1 xl:col-span-1">
-        <Card class="h-full shadow-none">
+        <Card class="h-full">
           <CardHeader>
             <CardTitle class="text-base">최근 알림</CardTitle>
             <CardDescription>시스템 전반에서 발생한 주요 이벤트입니다.</CardDescription>

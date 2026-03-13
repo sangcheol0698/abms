@@ -1,5 +1,5 @@
 <template>
-  <Card class="shadow-none">
+  <Card>
     <CardHeader>
       <CardTitle>근무 상태 현황</CardTitle>
       <CardDescription>전체 직원의 근무 및 휴가 현황입니다.</CardDescription>
@@ -17,7 +17,7 @@
               :r="radius"
               fill="transparent"
               stroke-width="5"
-              :stroke="item.colorCode"
+              :stroke="item.color"
               :stroke-dasharray="`${item.percentage} ${100 - item.percentage}`"
               :stroke-dashoffset="item.offset"
               class="cursor-pointer transition-all duration-200 hover:opacity-80"
@@ -46,7 +46,7 @@
             @mouseenter="hoveredItem = item"
             @mouseleave="hoveredItem = null"
           >
-            <div class="h-2.5 w-2.5 rounded-full" :class="item.colorClass"></div>
+            <div class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: item.color }"></div>
             <span class="text-xs text-muted-foreground">{{ item.label }}</span>
           </div>
         </div>
@@ -58,6 +58,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getChartColor } from '@/core/theme/theme';
 
 const props = defineProps<{
   totalCount?: number;
@@ -65,7 +66,15 @@ const props = defineProps<{
 }>();
 
 const radius = 15.9155;
-const hoveredItem = ref<any>(null);
+interface DistributionItem {
+  label: string;
+  count: number;
+  percentage: number;
+  color: string;
+  offset: number;
+}
+
+const hoveredItem = ref<DistributionItem | null>(null);
 
 const distribution = computed(() => {
   const total = props.totalCount || 0;
@@ -80,16 +89,14 @@ const distribution = computed(() => {
       label: '근무 중',
       count: working,
       percentage: workingPercentage,
-      colorClass: 'bg-orange-500',
-      colorCode: '#f97316',
+      color: getChartColor(0),
       offset: 0,
     },
     {
       label: '휴가/휴직',
       count: onLeave,
       percentage: onLeavePercentage,
-      colorClass: 'bg-slate-300',
-      colorCode: '#cbd5e1',
+      color: getChartColor(3),
       offset: 0,
     },
   ];

@@ -1,5 +1,5 @@
 <template>
-  <Card class="shadow-none">
+  <Card>
     <CardHeader>
       <CardTitle>월별 재무 추이</CardTitle>
       <CardDescription>최근 6개월간의 매출, 비용, 이익 현황입니다.</CardDescription>
@@ -37,18 +37,24 @@
           <div class="flex h-full w-full items-end justify-center gap-0.5 sm:gap-1">
             <!-- Revenue Bar -->
             <div
-              class="w-full rounded-t-sm bg-orange-500 transition-all hover:opacity-90"
-              :style="{ height: `${(item.revenue / maxValue) * 100}%` }"
+              class="w-full rounded-t-sm transition-all hover:opacity-90"
+              :style="{
+                height: `${(item.revenue / maxValue) * 100}%`,
+                backgroundColor: revenueColor,
+              }"
             ></div>
             <!-- Cost Bar -->
             <div
-              class="w-full rounded-t-sm bg-slate-300 transition-all hover:opacity-90"
-              :style="{ height: `${(item.cost / maxValue) * 100}%` }"
+              class="w-full rounded-t-sm transition-all hover:opacity-90"
+              :style="{ height: `${(item.cost / maxValue) * 100}%`, backgroundColor: costColor }"
             ></div>
             <!-- Profit Bar -->
             <div
-              class="w-full rounded-t-sm bg-lime-500 transition-all hover:opacity-90"
-              :style="{ height: `${(Math.max(0, item.profit) / maxValue) * 100}%` }"
+              class="w-full rounded-t-sm transition-all hover:opacity-90"
+              :style="{
+                height: `${(Math.max(0, item.profit) / maxValue) * 100}%`,
+                backgroundColor: profitColor,
+              }"
             ></div>
           </div>
 
@@ -60,15 +66,15 @@
 
       <div class="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
         <div class="flex items-center gap-1.5">
-          <div class="h-2.5 w-2.5 rounded-sm bg-orange-500"></div>
+          <div class="h-2.5 w-2.5 rounded-sm" :style="{ backgroundColor: revenueColor }"></div>
           <span>매출</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <div class="h-2.5 w-2.5 rounded-sm bg-slate-300"></div>
+          <div class="h-2.5 w-2.5 rounded-sm" :style="{ backgroundColor: costColor }"></div>
           <span>비용</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <div class="h-2.5 w-2.5 rounded-sm bg-lime-500"></div>
+          <div class="h-2.5 w-2.5 rounded-sm" :style="{ backgroundColor: profitColor }"></div>
           <span>이익</span>
         </div>
       </div>
@@ -80,9 +86,13 @@
 import { computed } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDashboardMonthlyRevenueSummaryQuery } from '@/features/dashboard/queries/useDashboardQueries';
+import { getChartColor } from '@/core/theme/theme';
 
 const monthlyRevenueQuery = useDashboardMonthlyRevenueSummaryQuery();
 const isLoading = computed(() => monthlyRevenueQuery.isLoading.value);
+const revenueColor = getChartColor(0);
+const costColor = getChartColor(3);
+const profitColor = getChartColor(2);
 
 const data = computed(() => {
   return (monthlyRevenueQuery.data.value ?? []).map((item) => {

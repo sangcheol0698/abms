@@ -7,12 +7,9 @@
   </div>
   <div
     v-else
-    :class="[
-      'grid gap-6',
-      showManagementActions ? 'lg:grid-cols-[1fr_320px]' : undefined,
-    ]"
+    :class="['grid gap-6', showManagementActions ? 'lg:grid-cols-[1fr_320px]' : undefined]"
   >
-    <section class="rounded-lg border border-border/60 bg-background p-5">
+    <section class="rounded-xl border bg-card p-5 shadow-sm">
       <h2 class="mb-4 text-sm font-semibold text-muted-foreground">근무 타임라인 (최신순)</h2>
 
       <div v-if="isLoadingHistory" class="py-4 text-center text-xs text-muted-foreground">
@@ -42,7 +39,7 @@
     </section>
 
     <div v-if="showManagementActions" class="flex flex-col gap-6">
-      <section class="rounded-lg border border-border/60 bg-background p-5">
+      <section class="rounded-xl border bg-card p-5 shadow-sm">
         <h2 class="mb-4 text-sm font-semibold text-muted-foreground">관리 메모</h2>
         <p class="text-sm leading-relaxed text-muted-foreground">
           {{ employee.memo || '등록된 메모가 없습니다.' }}
@@ -55,7 +52,7 @@
         </Alert>
       </section>
 
-      <section class="rounded-lg border border-border/60 bg-background p-5">
+      <section class="rounded-xl border bg-card p-5 shadow-sm">
         <h2 class="text-sm font-semibold text-muted-foreground">상태 변경</h2>
         <p class="mt-1 text-sm text-muted-foreground">
           현재 상태는 <span class="font-medium text-foreground">{{ employee.status }}</span> 입니다.

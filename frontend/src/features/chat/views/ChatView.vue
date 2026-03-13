@@ -1,11 +1,20 @@
 <template>
-  <FeatureSplitLayout :sidebar-default-size="18" :sidebar-min-size="10" :sidebar-max-size="26" :content-min-size="60">
+  <FeatureSplitLayout
+    :sidebar-default-size="18"
+    :sidebar-min-size="10"
+    :sidebar-max-size="26"
+    :content-min-size="60"
+  >
     <template #sidebar="{ pane }">
       <div class="flex h-full min-h-0 flex-col border-r border-border/60 bg-background">
         <div class="flex items-center justify-between px-3 py-3"></div>
 
         <div class="px-4 pb-3">
-          <Button class="w-full gap-2 text-sm" :disabled="isResponding" @click="handleCreateNewChat(pane)">
+          <Button
+            class="w-full gap-2 text-sm"
+            :disabled="isResponding"
+            @click="handleCreateNewChat(pane)"
+          >
             <SquarePen class="h-4 w-4" /> 새 채팅
           </Button>
         </div>
@@ -13,7 +22,8 @@
         <div class="px-4">
           <div class="relative">
             <Search
-              class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            />
             <Input v-model="searchQuery" placeholder="채팅 검색" class="pl-9 text-xs" />
           </div>
         </div>
@@ -21,42 +31,60 @@
         <nav class="mt-5 flex-1 space-y-5 overflow-y-auto px-4 pb-5 text-sm">
           <div v-if="filteredFavorites.length > 0">
             <div
-              class="flex items-center justify-between px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              class="flex items-center justify-between px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+            >
               <span>즐겨찾기</span>
               <Sparkles class="h-3.5 w-3.5" />
             </div>
             <ul class="space-y-1">
               <li v-for="item in filteredFavorites" :key="item.sessionId">
                 <div class="group relative">
-                  <button type="button"
+                  <button
+                    type="button"
                     class="flex w-full min-w-0 items-center justify-between rounded-xl px-3 py-2 pr-10 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-                    :class="currentSessionId === item.sessionId
-                      ? 'bg-primary/10 text-primary'
-                      : 'hover:bg-muted/60 text-foreground'
-                      " :disabled="isResponding" @click="handleSessionSelect(item.sessionId, pane)">
+                    :class="
+                      currentSessionId === item.sessionId
+                        ? 'bg-primary/10 text-primary'
+                        : 'hover:bg-muted/60 text-foreground'
+                    "
+                    :disabled="isResponding"
+                    @click="handleSessionSelect(item.sessionId, pane)"
+                  >
                     <span class="truncate">{{ item.title }}</span>
                     <Star class="h-3.5 w-3.5 fill-current" />
                   </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger as-child>
-                      <Button variant="ghost" size="icon"
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         class="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground transition-opacity"
-                        :class="currentSessionId === item.sessionId
-                          ? 'opacity-100 pointer-events-auto'
-                          : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto'"
+                        :class="
+                          currentSessionId === item.sessionId
+                            ? 'opacity-100 pointer-events-auto'
+                            : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto'
+                        "
                         :disabled="isResponding"
-                        @click.stop>
+                        @click.stop
+                      >
                         <MoreHorizontal class="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-36">
-                      <DropdownMenuItem :disabled="isResponding" @click="handleToggleFavoriteForSession(item)">
+                      <DropdownMenuItem
+                        :disabled="isResponding"
+                        @click="handleToggleFavoriteForSession(item)"
+                      >
                         {{ item.favorite ? '즐겨찾기 해제' : '즐겨찾기' }}
                       </DropdownMenuItem>
                       <DropdownMenuItem :disabled="isResponding" @click="openRenameDialog(item)">
                         세션명 변경
                       </DropdownMenuItem>
-                      <DropdownMenuItem :disabled="isResponding" class="text-destructive" @click="openDeleteDialog(item)">
+                      <DropdownMenuItem
+                        :disabled="isResponding"
+                        class="text-destructive"
+                        @click="openDeleteDialog(item)"
+                      >
                         세션 삭제
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -67,18 +95,25 @@
           </div>
 
           <div v-if="filteredRecent.length > 0">
-            <div class="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div
+              class="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+            >
               최근 항목
             </div>
             <ul class="space-y-1 text-xs">
               <li v-for="item in filteredRecent" :key="item.sessionId">
                 <div class="group relative">
-                  <button type="button"
+                  <button
+                    type="button"
                     class="flex w-full min-w-0 items-center justify-between rounded-xl px-3 py-2 pr-10 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-                    :class="currentSessionId === item.sessionId
-                      ? 'bg-muted text-foreground'
-                      : 'hover:bg-muted/50 text-foreground'
-                      " :disabled="isResponding" @click="handleSessionSelect(item.sessionId, pane)">
+                    :class="
+                      currentSessionId === item.sessionId
+                        ? 'bg-muted text-foreground'
+                        : 'hover:bg-muted/50 text-foreground'
+                    "
+                    :disabled="isResponding"
+                    @click="handleSessionSelect(item.sessionId, pane)"
+                  >
                     <div class="min-w-0">
                       <p class="truncate font-medium">{{ item.title }}</p>
                       <p class="truncate text-[11px] text-muted-foreground">
@@ -88,24 +123,36 @@
                   </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger as-child>
-                      <Button variant="ghost" size="icon"
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         class="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground transition-opacity"
-                        :class="currentSessionId === item.sessionId
-                          ? 'opacity-100 pointer-events-auto'
-                          : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto'"
+                        :class="
+                          currentSessionId === item.sessionId
+                            ? 'opacity-100 pointer-events-auto'
+                            : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto'
+                        "
                         :disabled="isResponding"
-                        @click.stop>
+                        @click.stop
+                      >
                         <MoreHorizontal class="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-36">
-                      <DropdownMenuItem :disabled="isResponding" @click="handleToggleFavoriteForSession(item)">
+                      <DropdownMenuItem
+                        :disabled="isResponding"
+                        @click="handleToggleFavoriteForSession(item)"
+                      >
                         {{ item.favorite ? '즐겨찾기 해제' : '즐겨찾기' }}
                       </DropdownMenuItem>
                       <DropdownMenuItem :disabled="isResponding" @click="openRenameDialog(item)">
                         세션명 변경
                       </DropdownMenuItem>
-                      <DropdownMenuItem :disabled="isResponding" class="text-destructive" @click="openDeleteDialog(item)">
+                      <DropdownMenuItem
+                        :disabled="isResponding"
+                        class="text-destructive"
+                        @click="openDeleteDialog(item)"
+                      >
                         세션 삭제
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -119,8 +166,10 @@
             <Loader2 class="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
 
-          <div v-if="!isLoading && filteredFavorites.length === 0 && filteredRecent.length === 0"
-            class="text-center py-4 text-xs text-muted-foreground">
+          <div
+            v-if="!isLoading && filteredFavorites.length === 0 && filteredRecent.length === 0"
+            class="text-center py-4 text-xs text-muted-foreground"
+          >
             채팅 기록이 없습니다
           </div>
         </nav>
@@ -140,29 +189,46 @@
     </template>
 
     <template #default="{ pane }">
-      <div class="relative flex h-full min-h-0 flex-1 flex-col bg-background" @dragenter.prevent="handleDragEnter"
-        @dragleave.prevent="handleDragLeave" @dragover.prevent @drop.prevent="handleDrop">
+      <div
+        class="relative flex h-full min-h-0 flex-1 flex-col bg-background"
+        @dragenter.prevent="handleDragEnter"
+        @dragleave.prevent="handleDragLeave"
+        @dragover.prevent
+        @drop.prevent="handleDrop"
+      >
         <!-- Drag & Drop Overlay -->
-        <div v-if="isDragging"
-          class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm transition-all animate-in fade-in duration-200">
+        <div
+          v-if="isDragging"
+          class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm transition-all animate-in fade-in duration-200"
+        >
           <div class="flex flex-col items-center gap-4 p-8">
             <div
-              class="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 shadow-lg ring-1 ring-primary/20">
+              class="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 shadow-lg ring-1 ring-primary/20"
+            >
               <FileUp class="h-10 w-10 text-primary animate-bounce" />
             </div>
             <div class="text-center space-y-1">
               <h3 class="text-xl font-semibold tracking-tight">무엇이든 추가하세요</h3>
-              <p class="text-sm text-muted-foreground">대화에 추가하려면 여기에 파일을 드롭하세요</p>
+              <p class="text-sm text-muted-foreground">
+                대화에 추가하려면 여기에 파일을 드롭하세요
+              </p>
             </div>
           </div>
         </div>
 
         <header class="flex items-center justify-between border-b border-border/40 px-4 py-3">
           <div class="flex items-center gap-3">
-            <Button variant="ghost" size="icon"
-              class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground" aria-label="채팅 사이드바 토글"
-              @click="pane.toggleSidebar()">
-              <Menu class="h-4 w-4 transition" :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''" />
+            <Button
+              variant="ghost"
+              size="icon"
+              class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground"
+              aria-label="채팅 사이드바 토글"
+              @click="pane.toggleSidebar()"
+            >
+              <Menu
+                class="h-4 w-4 transition"
+                :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''"
+              />
             </Button>
             <div class="flex flex-col">
               <h2 class="text-base font-semibold text-foreground">{{ currentSessionTitle }}</h2>
@@ -172,8 +238,18 @@
             </div>
           </div>
           <div class="flex items-center gap-1 text-xs text-muted-foreground">
-            <Button v-if="currentSessionId" variant="ghost" size="sm" class="gap-1" :disabled="isResponding" @click="handleToggleFavorite">
-              <Star class="h-3.5 w-3.5" :class="currentSession?.favorite ? 'fill-current text-yellow-500' : ''" />
+            <Button
+              v-if="currentSessionId"
+              variant="ghost"
+              size="sm"
+              class="gap-1"
+              :disabled="isResponding"
+              @click="handleToggleFavorite"
+            >
+              <Star
+                class="h-3.5 w-3.5"
+                :style="currentSession?.favorite ? favoriteStarStyle : undefined"
+              />
               즐겨찾기
             </Button>
             <Button variant="ghost" size="sm" class="gap-1">
@@ -185,12 +261,22 @@
           </div>
         </header>
 
-
-        <div class="flex h-full min-h-0 flex-col items-center bg-background"
-          :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'">
-          <ChatWidget ref="chatWidgetRef" class="flex w-full flex-1 min-h-0" v-model="draft" :messages="messages"
-            :is-responding="isResponding" :suggestions="[]" :info-text="infoText" @submit="handleSubmit"
-            @suggestion="handleSuggestion" @stop="handleStopResponse" />
+        <div
+          class="flex h-full min-h-0 flex-col items-center bg-background"
+          :class="pane.isLargeScreen.value ? 'px-0 py-0' : 'px-0 py-0'"
+        >
+          <ChatWidget
+            ref="chatWidgetRef"
+            class="flex w-full flex-1 min-h-0"
+            v-model="draft"
+            :messages="messages"
+            :is-responding="isResponding"
+            :suggestions="[]"
+            :info-text="infoText"
+            @submit="handleSubmit"
+            @suggestion="handleSuggestion"
+            @stop="handleStopResponse"
+          />
         </div>
       </div>
     </template>
@@ -200,19 +286,24 @@
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>세션명 변경</DialogTitle>
-        <DialogDescription>
-          채팅 세션 제목을 수정합니다.
-        </DialogDescription>
+        <DialogDescription> 채팅 세션 제목을 수정합니다. </DialogDescription>
       </DialogHeader>
       <div class="space-y-2 py-2">
-        <label for="chat-session-title" class="text-sm font-medium text-foreground">
-          세션명
-        </label>
-        <Input id="chat-session-title" v-model="renameTitle" placeholder="세션명을 입력하세요" maxlength="200"
-          @keydown.enter.prevent="handleRenameSession" />
+        <label for="chat-session-title" class="text-sm font-medium text-foreground"> 세션명 </label>
+        <Input
+          id="chat-session-title"
+          v-model="renameTitle"
+          placeholder="세션명을 입력하세요"
+          maxlength="200"
+          @keydown.enter.prevent="handleRenameSession"
+        />
       </div>
       <DialogFooter>
-        <Button variant="outline" :disabled="isSessionActionProcessing" @click="handleRenameDialogOpenChange(false)">
+        <Button
+          variant="outline"
+          :disabled="isSessionActionProcessing"
+          @click="handleRenameDialogOpenChange(false)"
+        >
           취소
         </Button>
         <Button :disabled="isSessionActionProcessing" @click="handleRenameSession">
@@ -227,15 +318,26 @@
       <AlertDialogHeader>
         <AlertDialogTitle>세션을 삭제할까요?</AlertDialogTitle>
         <AlertDialogDescription>
-          {{ deleteTargetSession ? `"${deleteTargetSession.title}" 세션이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.` : '' }}
+          {{
+            deleteTargetSession
+              ? `"${deleteTargetSession.title}" 세션이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`
+              : ''
+          }}
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel :disabled="isSessionActionProcessing" @click="handleDeleteDialogOpenChange(false)">
+        <AlertDialogCancel
+          :disabled="isSessionActionProcessing"
+          @click="handleDeleteDialogOpenChange(false)"
+        >
           취소
         </AlertDialogCancel>
-        <AlertDialogAction class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          :disabled="isSessionActionProcessing" @pointerdown.prevent @click="handleDeleteSession">
+        <AlertDialogAction
+          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          :disabled="isSessionActionProcessing"
+          @pointerdown.prevent
+          @click="handleDeleteSession"
+        >
           {{ isSessionActionProcessing ? '삭제 중...' : '삭제' }}
         </AlertDialogAction>
       </AlertDialogFooter>
@@ -297,6 +399,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { sanitizeAssistantLinks } from '@/features/chat/utils/linkSanitizer';
 import { toast } from 'vue-sonner';
+import { statusColorVars } from '@/core/theme/theme';
 import {
   invalidateChatSessions,
   useChatFavoriteSessionsQuery,
@@ -338,6 +441,7 @@ const sessionDetailQuery = useChatSessionDetailQuery(currentSessionId);
 const renameSessionMutation = useRenameChatSessionMutation();
 const deleteSessionMutation = useDeleteChatSessionMutation();
 const toggleFavoriteMutation = useToggleChatFavoriteMutation();
+const favoriteStarStyle = { color: statusColorVars.warning, fill: 'currentColor' };
 
 const favorites = computed(() => favoritesQuery.data.value ?? []);
 const recentSessions = computed(() => recentSessionsQuery.data.value ?? []);
@@ -357,11 +461,15 @@ const isSessionActionProcessing = computed(
 
 // Computed
 const infoText = computed(() =>
-  isResponding.value ? '응답 생성 중... 중지 버튼으로 멈출 수 있습니다.' : 'Enter: 전송 · Shift + Enter: 줄바꿈',
+  isResponding.value
+    ? '응답 생성 중... 중지 버튼으로 멈출 수 있습니다.'
+    : 'Enter: 전송 · Shift + Enter: 줄바꿈',
 );
 
 const filteredFavorites = computed(() =>
-  favorites.value.filter((item) => item.title.toLowerCase().includes(searchQuery.value.toLowerCase())),
+  favorites.value.filter((item) =>
+    item.title.toLowerCase().includes(searchQuery.value.toLowerCase()),
+  ),
 );
 
 const filteredRecent = computed(() =>
@@ -473,7 +581,7 @@ async function loadSessionDetail(sessionId: string) {
             ...message,
             content: sanitizeAssistantLinks(message.content),
           }
-        : message
+        : message,
     );
     currentSession.value = detail;
     if (!areMessagesEquivalent(messages.value, sanitizedMessages)) {
@@ -755,10 +863,10 @@ async function handleSubmit(content: string) {
         content,
       },
       (chunk: string) => {
-        // If there was a tool indicator, we don't need to clear content manually 
+        // If there was a tool indicator, we don't need to clear content manually
         // because we are now using a separate field.
         // But we should probably clear the toolStatus when real content arrives if we want it to disappear,
-        // OR keep it if we want to show "it was used". 
+        // OR keep it if we want to show "it was used".
         // For now, let's keep it until the message is done or maybe just leave it provided the backend sends chunks.
         // Actually, the previous logic was: "If there was a tool indicator, clear it when real content arrives".
         // Let's replicate this: Clear toolStatus when we receive the first chunk of content.
@@ -795,12 +903,12 @@ async function handleSubmit(content: string) {
           message.toolStatus = {
             name: toolName,
             emoji: toolEmoji,
-            description: toolDescription
+            description: toolDescription,
           };
           // Do NOT touch message.content
         }
       },
-      { signal: abortController.signal }
+      { signal: abortController.signal },
     );
 
     if (isStopRequested.value) {
@@ -881,7 +989,7 @@ watch(
       skipNextRouteSyncSessionId.value = null;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(

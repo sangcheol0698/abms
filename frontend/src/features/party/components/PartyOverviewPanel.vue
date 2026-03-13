@@ -6,7 +6,7 @@
     협력사 정보를 불러오지 못했습니다.
   </div>
   <div v-else class="grid gap-6 lg:grid-cols-2">
-    <section class="rounded-lg border border-border/60 bg-background p-5">
+    <section class="rounded-xl border bg-card p-5 shadow-sm">
       <h2 class="mb-4 text-sm font-semibold text-muted-foreground">기본 정보</h2>
       <dl class="grid gap-3 text-sm">
         <div class="grid grid-cols-[100px_1fr] gap-2">
@@ -20,7 +20,7 @@
       </dl>
     </section>
 
-    <section class="rounded-lg border border-border/60 bg-background p-5">
+    <section class="rounded-xl border bg-card p-5 shadow-sm">
       <h2 class="mb-4 text-sm font-semibold text-muted-foreground">담당자 정보</h2>
       <dl class="grid gap-3 text-sm">
         <div class="grid grid-cols-[100px_1fr] gap-2">

@@ -37,7 +37,7 @@
           />
           <div class="flex items-center gap-1">
             <Button
-              variant="outline"
+              variant="field"
               size="sm"
               class="h-8 gap-2 border-dashed"
               @click="openDepartmentDialog"
@@ -443,7 +443,9 @@ const selectedDepartmentName = computed(() => {
   return match?.label ?? `부서 #${selectedDepartmentId.value}`;
 });
 
-const employeeSummary = useEmployeeSummary({ summary: computed(() => employeeOverviewSummaryQuery.data.value) });
+const employeeSummary = useEmployeeSummary({
+  summary: computed(() => employeeOverviewSummaryQuery.data.value),
+});
 
 watch(
   () => employeesQuery.data.value?.totalPages,
@@ -679,5 +681,4 @@ const columnLabelMap: Record<string, string> = {
 function getColumnLabel(columnId: string): string {
   return columnLabelMap[columnId] ?? columnId;
 }
-
 </script>

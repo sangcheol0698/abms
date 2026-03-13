@@ -1,29 +1,37 @@
 <template>
   <SidebarProvider>
-    <div class="flex h-svh w-full overflow-hidden bg-background text-foreground">
+    <div class="flex h-svh w-full overflow-hidden bg-sidebar text-foreground">
       <AppSidebar :onOpenProfileDialog="openProfileDialog" />
       <SidebarInset class="min-h-0 min-w-0 overflow-hidden">
         <header
-          class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-2 md:px-4 lg:px-6 backdrop-blur"
+          class="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border/70 bg-background/80 px-3 md:px-5 lg:px-7 backdrop-blur-xl shadow-[0_18px_40px_-32px_color-mix(in_oklch,var(--foreground),transparent_55%)]"
         >
           <div class="flex flex-1 items-center gap-3">
             <SidebarTrigger class="-ml-1" />
             <Separator orientation="vertical" class="hidden h-6 md:block" />
             <div class="flex min-w-0 flex-col gap-1">
               <Breadcrumb v-if="breadcrumbs.length" class="hidden md:block">
-                <BreadcrumbList>
+                <BreadcrumbList class="text-sm">
                   <template v-for="(crumb, index) in breadcrumbs" :key="`${crumb.title}-${index}`">
                     <BreadcrumbItem>
                       <template v-if="crumb.to && !crumb.disabled">
-                        <BreadcrumbLink as-child>
+                        <BreadcrumbLink
+                          as-child
+                          class="font-medium text-muted-foreground hover:text-foreground"
+                        >
                           <RouterLink :to="crumb.to">{{ crumb.title }}</RouterLink>
                         </BreadcrumbLink>
                       </template>
                       <template v-else>
-                        <BreadcrumbPage>{{ crumb.title }}</BreadcrumbPage>
+                        <BreadcrumbPage class="text-sm font-semibold">{{
+                          crumb.title
+                        }}</BreadcrumbPage>
                       </template>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator v-if="index < breadcrumbs.length - 1" />
+                    <BreadcrumbSeparator
+                      v-if="index < breadcrumbs.length - 1"
+                      class="text-muted-foreground/70"
+                    />
                   </template>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -33,38 +41,44 @@
 
           <div class="ml-auto flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="field"
               size="sm"
-              class="relative hidden h-9 w-48 justify-start text-xs font-normal text-muted-foreground shadow-none sm:flex"
+              class="relative hidden h-10 w-56 justify-start rounded-xl text-sm font-normal text-foreground shadow-none sm:flex"
               @click="openCommandPalette"
             >
               <Search class="mr-2 h-4 w-4" />
-              <span>검색...</span>
+              <span class="text-muted-foreground">검색...</span>
               <KbdGroup class="absolute right-2 items-center sm:flex">
                 <Kbd>⌘</Kbd>
                 <Kbd>K</Kbd>
               </KbdGroup>
             </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              class="relative h-9 w-9"
-              @click="toggleNotifications"
+            <div
+              class="flex items-center gap-1 rounded-xl border border-border/60 bg-card/80 p-1 shadow-xs backdrop-blur"
             >
-              <Bell class="h-4 w-4" />
-              <span class="sr-only">알림 보기</span>
-              <span
-                v-if="unreadCount > 0"
-                class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground"
+              <Button
+                variant="ghost"
+                size="icon"
+                class="relative h-9 w-9 rounded-lg text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+                @click="toggleNotifications"
               >
-                {{ unreadCount > 9 ? '9+' : unreadCount }}
-              </span>
-            </Button>
-            <ThemeToggle />
+                <Bell class="h-4 w-4" />
+                <span class="sr-only">알림 보기</span>
+                <span
+                  v-if="unreadCount > 0"
+                  class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground"
+                >
+                  {{ unreadCount > 9 ? '9+' : unreadCount }}
+                </span>
+              </Button>
+              <ThemeToggle class="h-9 w-9" />
+            </div>
           </div>
         </header>
 
-        <main :class="['flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden', paddingClass]">
+        <main
+          :class="['flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden', paddingClass]"
+        >
           <slot />
         </main>
       </SidebarInset>

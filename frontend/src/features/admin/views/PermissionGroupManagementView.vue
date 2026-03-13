@@ -22,12 +22,10 @@
             </div>
 
             <div class="relative">
-              <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                v-model="filters.name"
-                placeholder="그룹 이름 검색"
-                class="pl-9 text-xs"
+              <Search
+                class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
               />
+              <Input v-model="filters.name" placeholder="그룹 이름 검색" class="pl-9 text-xs" />
             </div>
           </div>
 
@@ -46,7 +44,9 @@
 
               <div v-else class="space-y-5 px-4 pb-5 pt-5 text-sm">
                 <div v-for="section in groupSections" :key="section.key">
-                  <div class="flex items-center justify-between px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <div
+                    class="flex items-center justify-between px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
                     <span>{{ section.title }}</span>
                   </div>
 
@@ -73,7 +73,6 @@
                             {{ group.groupType === 'SYSTEM' ? '시스템' : '커스텀' }}
                           </Badge>
                         </div>
-
                       </button>
                     </li>
                   </ul>
@@ -95,25 +94,37 @@
                 aria-label="권한 그룹 사이드바 토글"
                 @click="pane.toggleSidebar()"
               >
-                <Menu class="h-4 w-4 transition" :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''" />
+                <Menu
+                  class="h-4 w-4 transition"
+                  :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''"
+                />
               </Button>
 
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">Permission Groups</p>
+                <p class="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
+                  Permission Groups
+                </p>
                 <h2 class="truncate text-2xl font-semibold tracking-tight text-foreground">
                   {{ selectedGroupDetail?.name ?? '권한 그룹 선택' }}
                 </h2>
               </div>
             </div>
 
-            <div v-if="selectedGroupDetail" class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div
+              v-if="selectedGroupDetail"
+              class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+            >
               <div class="space-y-3">
                 <div class="flex flex-wrap items-center gap-2">
-                  <Badge :variant="selectedGroupDetail.groupType === 'SYSTEM' ? 'secondary' : 'outline'">
+                  <Badge
+                    :variant="selectedGroupDetail.groupType === 'SYSTEM' ? 'secondary' : 'outline'"
+                  >
                     {{ selectedGroupDetail.groupType === 'SYSTEM' ? '시스템 그룹' : '커스텀 그룹' }}
                   </Badge>
                   <Badge variant="secondary">권한 {{ selectedGroupDetail.grants.length }}</Badge>
-                  <Badge variant="secondary">사용자 {{ selectedGroupDetail.accounts.length }}</Badge>
+                  <Badge variant="secondary"
+                    >사용자 {{ selectedGroupDetail.accounts.length }}</Badge
+                  >
                 </div>
 
                 <p class="max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -122,9 +133,11 @@
 
                 <p
                   v-if="selectedGroupDetail.groupType === 'SYSTEM'"
-                  class="text-xs font-medium text-amber-700"
+                  class="text-xs font-medium"
+                  :style="{ color: statusColorVars.warning }"
                 >
-                  시스템 그룹은 권한 구성과 기본 정보를 수정할 수 없고, 사용자 할당만 관리할 수 있습니다.
+                  시스템 그룹은 권한 구성과 기본 정보를 수정할 수 없고, 사용자 할당만 관리할 수
+                  있습니다.
                 </p>
               </div>
 
@@ -148,7 +161,10 @@
           </header>
 
           <div class="flex-1 min-h-0 overflow-y-auto">
-            <div v-if="!selectedGroupId" class="flex h-full items-center justify-center px-4 py-8 text-sm text-muted-foreground">
+            <div
+              v-if="!selectedGroupId"
+              class="flex h-full items-center justify-center px-4 py-8 text-sm text-muted-foreground"
+            >
               권한 그룹을 선택하면 상세 정보를 볼 수 있습니다.
             </div>
 
@@ -156,7 +172,9 @@
               v-else-if="isDetailLoading"
               class="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 px-4 py-4"
             >
-              <span class="text-sm text-muted-foreground">권한 그룹 상세를 불러오는 중입니다...</span>
+              <span class="text-sm text-muted-foreground"
+                >권한 그룹 상세를 불러오는 중입니다...</span
+              >
             </div>
 
             <div v-else-if="selectedGroupDetail" class="flex min-h-full flex-col px-4 pb-4 pt-4">
@@ -205,7 +223,9 @@
 
                 <TabsContent value="accounts" class="m-0 space-y-0">
                   <div class="flex flex-col">
-                    <div class="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+                    <div
+                      class="flex items-center justify-between gap-3 border-b border-border px-4 py-3"
+                    >
                       <div>
                         <h3 class="text-sm font-semibold text-foreground">소속 계정</h3>
                         <p class="text-xs text-muted-foreground">
@@ -292,7 +312,11 @@
       <AlertDialogHeader>
         <AlertDialogTitle>그룹에서 해제할까요?</AlertDialogTitle>
         <AlertDialogDescription>
-          {{ pendingUnassignAccount ? `${pendingUnassignAccount.employeeName} 계정을 현재 권한 그룹에서 해제합니다.` : '' }}
+          {{
+            pendingUnassignAccount
+              ? `${pendingUnassignAccount.employeeName} 계정을 현재 권한 그룹에서 해제합니다.`
+              : ''
+          }}
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
@@ -347,6 +371,7 @@ import {
 import PermissionGroupAccountAssignDialog from '@/features/admin/components/PermissionGroupAccountAssignDialog.vue';
 import PermissionGroupAccountRowActions from '@/features/admin/components/PermissionGroupAccountRowActions.vue';
 import PermissionGroupEditorDialog from '@/features/admin/components/PermissionGroupEditorDialog.vue';
+import { statusColorVars } from '@/core/theme/theme';
 import type {
   PermissionGroupCatalog,
   PermissionGroupAccountItem,
@@ -482,16 +507,21 @@ const grantColumns: ColumnDef<(typeof grantRows.value)[number]>[] = [
       }),
     enableSorting: false,
     enableHiding: false,
-    size: 48,
+    size: 28,
   },
   {
     accessorKey: 'permissionName',
     size: 360,
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: '권한명 / 설명', align: 'left' }),
+    header: ({ column }) =>
+      h(DataTableColumnHeader, { column, title: '권한명 / 설명', align: 'left' }),
     cell: ({ row }) =>
       h('div', { class: 'space-y-1' }, [
         h('p', { class: 'text-sm font-medium text-foreground' }, row.original.permissionName),
-        h('p', { class: 'text-xs leading-5 text-muted-foreground whitespace-normal' }, row.original.permissionDescription),
+        h(
+          'p',
+          { class: 'text-xs leading-5 text-muted-foreground whitespace-normal' },
+          row.original.permissionDescription,
+        ),
       ]),
   },
   {
@@ -499,7 +529,11 @@ const grantColumns: ColumnDef<(typeof grantRows.value)[number]>[] = [
     size: 180,
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '권한 코드', align: 'left' }),
     cell: ({ row }) =>
-      h(Badge, { variant: 'outline', class: 'font-mono text-[11px]' }, () => row.original.permissionCode),
+      h(
+        Badge,
+        { variant: 'outline', class: 'font-mono text-[11px]' },
+        () => row.original.permissionCode,
+      ),
   },
   {
     id: 'scopes',
@@ -511,7 +545,8 @@ const grantColumns: ColumnDef<(typeof grantRows.value)[number]>[] = [
         'div',
         { class: 'flex flex-wrap gap-2' },
         row.original.scopes.map((scope) =>
-          h(Badge, { key: scope, variant: 'secondary' }, () => scopeLabelMap.value[scope] ?? scope)),
+          h(Badge, { key: scope, variant: 'secondary' }, () => scopeLabelMap.value[scope] ?? scope),
+        ),
       ),
   },
 ];
@@ -536,7 +571,7 @@ const accountColumns: ColumnDef<(typeof accountRows.value)[number]>[] = [
       }),
     enableSorting: false,
     enableHiding: false,
-    size: 48,
+    size: 28,
   },
   {
     accessorKey: 'employeeName',
@@ -601,8 +636,7 @@ const grantTable = useVueTable({
     },
   },
   onSortingChange: (updater) => {
-    grantSorting.value =
-      typeof updater === 'function' ? updater(grantSorting.value) : updater;
+    grantSorting.value = typeof updater === 'function' ? updater(grantSorting.value) : updater;
   },
   onColumnFiltersChange: (updater) => {
     grantColumnFilters.value =
@@ -635,8 +669,7 @@ const accountTable = useVueTable({
     },
   },
   onSortingChange: (updater) => {
-    accountSorting.value =
-      typeof updater === 'function' ? updater(accountSorting.value) : updater;
+    accountSorting.value = typeof updater === 'function' ? updater(accountSorting.value) : updater;
   },
   onColumnFiltersChange: (updater) => {
     accountColumnFilters.value =
@@ -705,7 +738,9 @@ useQuerySync({
   serialize: (value) => (value === 'grants' ? undefined : value),
   deserialize: (value) => {
     if (Array.isArray(value)) {
-      const first = value.find((item) => typeof item === 'string' && VALID_TABS.includes(item as TabValue));
+      const first = value.find(
+        (item) => typeof item === 'string' && VALID_TABS.includes(item as TabValue),
+      );
       return (first as TabValue) ?? 'grants';
     }
 

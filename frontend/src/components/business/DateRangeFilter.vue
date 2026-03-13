@@ -2,13 +2,13 @@
   <Popover>
     <PopoverTrigger as-child>
       <Button
-        variant="outline"
+        variant="field"
         size="sm"
         class="h-8 gap-2"
         :class="[
-          'justify-start text-left font-normal border-dashed',
+          'justify-start border-dashed text-left font-normal',
           !modelValue?.start && !modelValue?.end && 'text-muted-foreground',
-          dense && '!h-6'
+          dense && '!h-6',
         ]"
       >
         <CalendarIcon class="h-4 w-4" />
@@ -45,12 +45,7 @@
               <Button variant="outline" size="sm" @click="clearSelection" class="w-full">
                 초기화
               </Button>
-              <Button
-                size="sm"
-                @click="applySelection"
-                :disabled="!canApply"
-                class="w-full"
-              >
+              <Button size="sm" @click="applySelection" :disabled="!canApply" class="w-full">
                 적용
               </Button>
             </div>
@@ -78,7 +73,11 @@
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="month in monthOptions" :key="month.value" :value="String(month.value)">
+                  <SelectItem
+                    v-for="month in monthOptions"
+                    :key="month.value"
+                    :value="String(month.value)"
+                  >
                     {{ month.label }}
                   </SelectItem>
                 </SelectContent>
@@ -87,7 +86,7 @@
           </div>
           <Calendar
             v-model:placeholder="startPlaceholder"
-            :model-value="(startDateValue as any)"
+            :model-value="startDateValue as any"
             @update:model-value="(v: any) => (startDateValue = v)"
             :locale="locale"
             :key="startCalendarKey"
@@ -115,7 +114,11 @@
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="month in monthOptions" :key="month.value" :value="String(month.value)">
+                  <SelectItem
+                    v-for="month in monthOptions"
+                    :key="month.value"
+                    :value="String(month.value)"
+                  >
                     {{ month.label }}
                   </SelectItem>
                 </SelectContent>
@@ -124,7 +127,7 @@
           </div>
           <Calendar
             v-model:placeholder="endPlaceholder"
-            :model-value="(endDateValue as any)"
+            :model-value="endDateValue as any"
             @update:model-value="(v: any) => (endDateValue = v)"
             :locale="locale"
             :key="endCalendarKey"
@@ -141,7 +144,13 @@ import { CalendarIcon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { type DateValue, fromDate, getLocalTimeZone, today } from '@internationalized/date';
 
 interface DateRange {
@@ -262,24 +271,28 @@ const presets = computed<Preset[]>(() => {
 // 포맷된 날짜 범위 표시
 const formattedDateRange = computed(() => {
   if (!props.modelValue?.start || !props.modelValue?.end) return '';
-  const start = typeof props.modelValue.start === 'string'
-    ? new Date(props.modelValue.start)
-    : props.modelValue.start;
-  const end = typeof props.modelValue.end === 'string'
-    ? new Date(props.modelValue.end)
-    : props.modelValue.end;
+  const start =
+    typeof props.modelValue.start === 'string'
+      ? new Date(props.modelValue.start)
+      : props.modelValue.start;
+  const end =
+    typeof props.modelValue.end === 'string'
+      ? new Date(props.modelValue.end)
+      : props.modelValue.end;
   return `${formatDate(start)} ~ ${formatDate(end)}`;
 });
 
 // 모바일용 짧은 날짜 범위 표시
 const formattedDateRangeMobile = computed(() => {
   if (!props.modelValue?.start || !props.modelValue?.end) return '';
-  const start = typeof props.modelValue.start === 'string'
-    ? new Date(props.modelValue.start)
-    : props.modelValue.start;
-  const end = typeof props.modelValue.end === 'string'
-    ? new Date(props.modelValue.end)
-    : props.modelValue.end;
+  const start =
+    typeof props.modelValue.start === 'string'
+      ? new Date(props.modelValue.start)
+      : props.modelValue.start;
+  const end =
+    typeof props.modelValue.end === 'string'
+      ? new Date(props.modelValue.end)
+      : props.modelValue.end;
   return `${formatDateShort(start)}~${formatDateShort(end)}`;
 });
 
@@ -345,8 +358,10 @@ watch(endPlaceholder, (p) => {
 // 프리셋 선택
 function selectPreset(preset: Preset) {
   if (preset.range.start && preset.range.end) {
-    const startDateObj = typeof preset.range.start === 'string' ? new Date(preset.range.start) : preset.range.start;
-    const endDateObj = typeof preset.range.end === 'string' ? new Date(preset.range.end) : preset.range.end;
+    const startDateObj =
+      typeof preset.range.start === 'string' ? new Date(preset.range.start) : preset.range.start;
+    const endDateObj =
+      typeof preset.range.end === 'string' ? new Date(preset.range.end) : preset.range.end;
 
     // Calendar 상태 업데이트 (DateValue로 변환)
     startDateValue.value = fromDate(startDateObj, getLocalTimeZone());
@@ -402,49 +417,58 @@ function clearSelection() {
 }
 
 // Props 변경 감지하여 내부 상태 업데이트
-watch(() => props.modelValue, (newValue) => {
-  if (newValue && newValue.start && newValue.end) {
-    const startDateObj = typeof newValue.start === 'string' ? new Date(newValue.start) : newValue.start;
-    const endDateObj = typeof newValue.end === 'string' ? new Date(newValue.end) : newValue.end;
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (newValue && newValue.start && newValue.end) {
+      const startDateObj =
+        typeof newValue.start === 'string' ? new Date(newValue.start) : newValue.start;
+      const endDateObj = typeof newValue.end === 'string' ? new Date(newValue.end) : newValue.end;
 
-    dateRange.value = { ...newValue };
-    startDateValue.value = fromDate(startDateObj, getLocalTimeZone());
-    endDateValue.value = fromDate(endDateObj, getLocalTimeZone());
-    startPlaceholder.value = fromDate(startDateObj, getLocalTimeZone());
-    endPlaceholder.value = fromDate(endDateObj, getLocalTimeZone());
-    startYear.value = String(startDateObj.getFullYear());
-    startMonth.value = String(startDateObj.getMonth() + 1);
-    endYear.value = String(endDateObj.getFullYear());
-    endMonth.value = String(endDateObj.getMonth() + 1);
-  } else {
-    dateRange.value = {};
-    startDateValue.value = undefined;
-    endDateValue.value = undefined;
-    startPlaceholder.value = today(getLocalTimeZone());
-    endPlaceholder.value = today(getLocalTimeZone());
-  }
-}, { immediate: true });
+      dateRange.value = { ...newValue };
+      startDateValue.value = fromDate(startDateObj, getLocalTimeZone());
+      endDateValue.value = fromDate(endDateObj, getLocalTimeZone());
+      startPlaceholder.value = fromDate(startDateObj, getLocalTimeZone());
+      endPlaceholder.value = fromDate(endDateObj, getLocalTimeZone());
+      startYear.value = String(startDateObj.getFullYear());
+      startMonth.value = String(startDateObj.getMonth() + 1);
+      endYear.value = String(endDateObj.getFullYear());
+      endMonth.value = String(endDateObj.getMonth() + 1);
+    } else {
+      dateRange.value = {};
+      startDateValue.value = undefined;
+      endDateValue.value = undefined;
+      startPlaceholder.value = today(getLocalTimeZone());
+      endPlaceholder.value = today(getLocalTimeZone());
+    }
+  },
+  { immediate: true },
+);
 
 // Calendar 값 변경 시 placeholder도 선택된 달로 동기화
-watch([startDateValue, endDateValue], ([startVal, endVal]) => {
-  if (startVal && startVal.toDate) {
-    const s = startVal.toDate(getLocalTimeZone());
-    startPlaceholder.value = fromDate(s, getLocalTimeZone());
-    startYear.value = String(s.getFullYear());
-    startMonth.value = String(s.getMonth() + 1);
-  }
-  if (endVal && endVal.toDate) {
-    const e = endVal.toDate(getLocalTimeZone());
-    endPlaceholder.value = fromDate(e, getLocalTimeZone());
-    endYear.value = String(e.getFullYear());
-    endMonth.value = String(e.getMonth() + 1);
-  }
-  if (startVal && endVal && startVal.toDate && endVal.toDate) {
-    const startDateObj = startVal.toDate(getLocalTimeZone());
-    const endDateObj = endVal.toDate(getLocalTimeZone());
-    dateRange.value = { start: startDateObj, end: endDateObj };
-  } else if (!startVal || !endVal) {
-    dateRange.value = {};
-  }
-}, { deep: true });
+watch(
+  [startDateValue, endDateValue],
+  ([startVal, endVal]) => {
+    if (startVal && startVal.toDate) {
+      const s = startVal.toDate(getLocalTimeZone());
+      startPlaceholder.value = fromDate(s, getLocalTimeZone());
+      startYear.value = String(s.getFullYear());
+      startMonth.value = String(s.getMonth() + 1);
+    }
+    if (endVal && endVal.toDate) {
+      const e = endVal.toDate(getLocalTimeZone());
+      endPlaceholder.value = fromDate(e, getLocalTimeZone());
+      endYear.value = String(e.getFullYear());
+      endMonth.value = String(e.getMonth() + 1);
+    }
+    if (startVal && endVal && startVal.toDate && endVal.toDate) {
+      const startDateObj = startVal.toDate(getLocalTimeZone());
+      const endDateObj = endVal.toDate(getLocalTimeZone());
+      dateRange.value = { start: startDateObj, end: endDateObj };
+    } else if (!startVal || !endVal) {
+      dateRange.value = {};
+    }
+  },
+  { deep: true },
+);
 </script>

@@ -82,7 +82,7 @@ defineProps<DataTableProps>();
 function getHeaderSizePx(header: any): number {
   try {
     const col = header?.column;
-    if (col?.id === 'select') return 44;
+    if (col?.id === 'select') return 28;
     const size = typeof col?.getSize === 'function' ? col.getSize() : (col?.columnDef?.size ?? 120);
     return Math.max(48, Math.min(400, Number(size) || 120));
   } catch {
@@ -93,7 +93,7 @@ function getHeaderSizePx(header: any): number {
 function getCellSizePx(cell: any): number {
   try {
     const col = cell?.column;
-    if (col?.id === 'select') return 44;
+    if (col?.id === 'select') return 28;
     const size = typeof col?.getSize === 'function' ? col.getSize() : (col?.columnDef?.size ?? 120);
     return Math.max(48, Math.min(400, Number(size) || 120));
   } catch {

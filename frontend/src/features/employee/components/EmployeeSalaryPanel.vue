@@ -20,7 +20,7 @@
       </AlertDescription>
     </Alert>
 
-    <div class="rounded-lg border border-border/60 bg-background p-4 text-sm text-muted-foreground">
+    <div class="rounded-xl border bg-card p-4 text-sm text-muted-foreground shadow-sm">
       <p class="font-medium text-foreground">현재 연봉</p>
       <p class="mt-1 text-2xl font-semibold text-muted-foreground/70">추가 정보 대기</p>
     </div>

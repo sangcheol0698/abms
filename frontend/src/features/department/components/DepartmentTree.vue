@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-full min-h-0 flex-col">
     <div
-      class="sticky top-0 z-10 flex flex-col gap-1.5 border-b border-border/60 bg-card/95 px-3.5 pt-3 pb-2.5"
+      class="sticky top-0 z-10 flex flex-col gap-1.5 border-b border-border/60 bg-background/80 px-3.5 pt-3 pb-2.5 backdrop-blur-sm"
     >
       <div
         class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground"
@@ -60,7 +60,7 @@
       </div>
     </div>
 
-    <div ref="scrollRef" class="flex-1 min-h-0 overflow-y-auto bg-card p-3.5 pt-2">
+    <div ref="scrollRef" class="flex-1 min-h-0 overflow-y-auto bg-transparent p-3.5 pt-2">
       <p
         v-if="!filteredNodes.length"
         class="rounded-md border border-dashed border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground"

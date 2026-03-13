@@ -17,7 +17,7 @@
 
       <div class="grid gap-2 sm:grid-cols-3">
         <article
-          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3 relative group"
+          class="relative flex items-center gap-3 rounded-xl border bg-card p-3 shadow-sm group"
         >
           <div
             class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"
@@ -39,9 +39,7 @@
             <Pencil class="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         </article>
-        <article
-          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3"
-        >
+        <article class="flex items-center gap-3 rounded-xl border bg-card p-3 shadow-sm">
           <div
             class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"
           >
@@ -52,9 +50,7 @@
             <span class="font-semibold text-foreground">{{ department.employeeCount }}명</span>
           </div>
         </article>
-        <article
-          class="flex items-center gap-3 rounded-lg border border-border/60 bg-background/80 p-3"
-        >
+        <article class="flex items-center gap-3 rounded-xl border bg-card p-3 shadow-sm">
           <div
             class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"
           >
@@ -85,7 +81,7 @@
 
           <div class="pt-3">
             <TabsContent value="info" class="flex flex-col gap-4">
-              <div class="grid gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm">
+              <div class="grid gap-3 rounded-xl border bg-card p-4 text-sm shadow-sm">
                 <div class="grid grid-cols-[120px_1fr] gap-2">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     부서 코드
@@ -161,9 +157,7 @@
             </TabsContent>
 
             <TabsContent value="revenue" class="flex flex-col">
-              <div
-                class="flex flex-col gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm"
-              >
+              <div class="flex flex-col gap-3 rounded-xl border bg-card p-4 text-sm shadow-sm">
                 <p class="text-sm font-semibold text-foreground">매출 지표</p>
                 <p class="text-xs text-muted-foreground">
                   매출 데이터 연동을 준비 중입니다. 연결된 ERP 또는 회계 시스템 API가 마련되면 이

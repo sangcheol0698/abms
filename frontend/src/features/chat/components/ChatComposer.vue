@@ -47,7 +47,7 @@
       @change="handleFileSelect"
     />
 
-    <InputGroup class="rounded-2xl border border-border/60 bg-background shadow-sm">
+    <InputGroup class="overflow-hidden rounded-2xl border border-border/60 bg-background shadow-sm">
       <InputGroupTextarea
         ref="textareaRef"
         v-model="draft"

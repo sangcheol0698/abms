@@ -1,15 +1,12 @@
 <template>
   <Popover>
     <PopoverTrigger as-child>
-      <Button variant="outline" size="sm" class="h-8 border-dashed">
+      <Button variant="field" size="sm" class="h-8 border-dashed">
         <PlusCircle class="mr-2 h-4 w-4" />
         {{ title }}
         <template v-if="selectedValues.size > 0">
           <Separator orientation="vertical" class="mx-2 h-4" />
-          <Badge
-            variant="secondary"
-            class="rounded-sm px-1 font-normal lg:hidden"
-          >
+          <Badge variant="secondary" class="rounded-sm px-1 font-normal lg:hidden">
             {{ selectedValues.size }}
           </Badge>
           <div class="hidden space-x-1 lg:flex">
@@ -23,8 +20,7 @@
 
             <template v-else>
               <Badge
-                v-for="option in options
-                  .filter((option) => selectedValues.has(option.value))"
+                v-for="option in options.filter((option) => selectedValues.has(option.value))"
                 :key="option.value"
                 variant="secondary"
                 class="rounded-sm px-1 font-normal"
@@ -50,18 +46,27 @@
               @select="toggleOption(option.value)"
             >
               <div
-                :class="cn(
-                  'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-                  selectedValues.has(option.value)
-                    ? 'bg-primary text-primary-foreground'
-                    : 'opacity-50 [&_svg]:invisible',
-                )"
+                :class="
+                  cn(
+                    'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
+                    selectedValues.has(option.value)
+                      ? 'bg-primary text-primary-foreground'
+                      : 'opacity-50 [&_svg]:invisible',
+                  )
+                "
               >
                 <Check :class="cn('h-4 w-4')" />
               </div>
-              <component :is="option.icon" v-if="option.icon" class="mr-2 h-4 w-4 text-muted-foreground" />
+              <component
+                :is="option.icon"
+                v-if="option.icon"
+                class="mr-2 h-4 w-4 text-muted-foreground"
+              />
               <span>{{ option.label }}</span>
-              <span v-if="option.count !== undefined" class="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs">
+              <span
+                v-if="option.count !== undefined"
+                class="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs"
+              >
                 {{ option.count }}
               </span>
             </CommandItem>
