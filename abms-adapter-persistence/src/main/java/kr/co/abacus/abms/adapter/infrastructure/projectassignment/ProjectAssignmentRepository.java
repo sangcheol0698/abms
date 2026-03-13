@@ -15,6 +15,15 @@ public interface ProjectAssignmentRepository
 
     @Override
     @Query("SELECT pa FROM ProjectAssignment pa " +
+            "WHERE pa.employeeId = :employeeId " +
+            "AND pa.deleted = false " +
+            "AND pa.period.startDate <= :targetDate " +
+            "AND (pa.period.endDate IS NULL OR pa.period.endDate >= :targetDate)")
+    List<ProjectAssignment> findCurrentActiveAssignmentsByEmployeeId(@Param("employeeId") Long employeeId,
+                                                                     @Param("targetDate") LocalDate targetDate);
+
+    @Override
+    @Query("SELECT pa FROM ProjectAssignment pa " +
         "WHERE pa.period.startDate <= :monthEnd " +
         "AND (pa.period.endDate IS NULL OR pa.period.endDate >= :monthStart)")
     List<ProjectAssignment> findActiveAssignments(@Param("monthStart") LocalDate monthStart,

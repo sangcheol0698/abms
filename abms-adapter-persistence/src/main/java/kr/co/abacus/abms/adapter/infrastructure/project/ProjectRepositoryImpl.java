@@ -61,6 +61,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
+                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .orderBy(orderSpecifiers)
@@ -76,6 +77,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
+                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse());
 
@@ -101,6 +103,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
+                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .orderBy(defaultSort())
@@ -181,6 +184,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
+                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         extraCondition,
                         project.deleted.isFalse())
@@ -196,10 +200,35 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
+                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .fetchOne();
         return value != null ? value : 0L;
+    }
+
+    private @Nullable BooleanExpression inAccessibleScope(
+            @Nullable List<Long> accessibleProjectIds,
+            @Nullable List<Long> accessibleLeadDepartmentIds
+    ) {
+        if (accessibleProjectIds == null && accessibleLeadDepartmentIds == null) {
+            return null;
+        }
+
+        BooleanExpression projectScope = accessibleProjectIds != null
+                ? project.id.in(accessibleProjectIds.isEmpty() ? List.of(-1L) : accessibleProjectIds)
+                : null;
+        BooleanExpression departmentScope = accessibleLeadDepartmentIds != null
+                ? project.leadDepartmentId.in(accessibleLeadDepartmentIds.isEmpty() ? List.of(-1L) : accessibleLeadDepartmentIds)
+                : null;
+
+        if (projectScope == null) {
+            return departmentScope;
+        }
+        if (departmentScope == null) {
+            return projectScope;
+        }
+        return projectScope.or(departmentScope);
     }
 
 }

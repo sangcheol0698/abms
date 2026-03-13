@@ -12,6 +12,33 @@ public record ProjectSearchCondition(
         @Nullable List<ProjectStatus> statuses,
         @Nullable List<Long> partyIds,
         @Nullable LocalDate periodStart,
-        @Nullable LocalDate periodEnd) {
+        @Nullable LocalDate periodEnd,
+        @Nullable List<Long> accessibleProjectIds,
+        @Nullable List<Long> accessibleLeadDepartmentIds) {
+
+    public ProjectSearchCondition(
+            @Nullable String name,
+            @Nullable List<ProjectStatus> statuses,
+            @Nullable List<Long> partyIds,
+            @Nullable LocalDate periodStart,
+            @Nullable LocalDate periodEnd
+    ) {
+        this(name, statuses, partyIds, periodStart, periodEnd, null, null);
+    }
+
+    public ProjectSearchCondition withAccess(
+            @Nullable List<Long> accessibleProjectIds,
+            @Nullable List<Long> accessibleLeadDepartmentIds
+    ) {
+        return new ProjectSearchCondition(
+                name,
+                statuses,
+                partyIds,
+                periodStart,
+                periodEnd,
+                accessibleProjectIds,
+                accessibleLeadDepartmentIds
+        );
+    }
 
 }
