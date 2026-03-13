@@ -16,6 +16,8 @@ public interface ProjectAssignmentRepository {
 
     List<ProjectAssignment> findByProjectId(Long projectId);
 
+    List<ProjectAssignment> findCurrentActiveAssignmentsByEmployeeId(Long employeeId, LocalDate targetDate);
+
     List<ProjectAssignment> findActiveAssignments(LocalDate monthStart, LocalDate monthEnd);
 
     List<ProjectAssignment> findActiveAssignmentsByProjectId(Long projectId, LocalDate startOfMonth, LocalDate endOfMonth);

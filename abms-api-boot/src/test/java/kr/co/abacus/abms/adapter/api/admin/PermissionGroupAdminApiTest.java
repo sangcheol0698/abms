@@ -81,6 +81,12 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
     private Permission employeeWrite;
     private Permission employeeExcelDownload;
     private Permission employeeExcelUpload;
+    private Permission projectRead;
+    private Permission projectWrite;
+    private Permission projectExcelDownload;
+    private Permission projectExcelUpload;
+    private Permission partyRead;
+    private Permission partyWrite;
 
     @BeforeEach
     void setUp() {
@@ -138,6 +144,36 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                 "employee.excel.upload",
                 "직원 엑셀 업로드",
                 "직원 엑셀 업로드 권한"
+        ));
+        projectRead = permissionRepository.save(Permission.create(
+                "project.read",
+                "프로젝트 조회",
+                "프로젝트 조회 권한"
+        ));
+        projectWrite = permissionRepository.save(Permission.create(
+                "project.write",
+                "프로젝트 변경",
+                "프로젝트 변경 권한"
+        ));
+        projectExcelDownload = permissionRepository.save(Permission.create(
+                "project.excel.download",
+                "프로젝트 엑셀 다운로드",
+                "프로젝트 엑셀 다운로드 권한"
+        ));
+        projectExcelUpload = permissionRepository.save(Permission.create(
+                "project.excel.upload",
+                "프로젝트 엑셀 업로드",
+                "프로젝트 엑셀 업로드 권한"
+        ));
+        partyRead = permissionRepository.save(Permission.create(
+                "party.read",
+                "협력사 조회",
+                "협력사 조회 권한"
+        ));
+        partyWrite = permissionRepository.save(Permission.create(
+                "party.write",
+                "협력사 변경",
+                "협력사 변경 권한"
         ));
 
         PermissionGroup adminGroup = permissionGroupRepository.save(PermissionGroup.create(
@@ -208,11 +244,18 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                         "employee.read",
                         "employee.write",
                         "employee.excel.download",
-                        "employee.excel.upload")))
+                        "employee.excel.upload",
+                        "project.read",
+                        "project.write",
+                        "project.excel.download",
+                        "project.excel.upload",
+                        "party.read",
+                        "party.write")))
                 .andExpect(jsonPath("$.scopes[*].code", hasItems(
                         "ALL",
                         "OWN_DEPARTMENT",
                         "OWN_DEPARTMENT_TREE",
+                        "CURRENT_PARTICIPATION",
                         "SELF")));
 
         mockMvc.perform(get("/api/admin/accounts")
@@ -262,6 +305,24 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.grants", hasSize(1)))
                 .andExpect(jsonPath("$.grants[0].permissionCode").value("employee.read"))
                 .andExpect(jsonPath("$.grants[0].scopes[0]").value("ALL"));
+    }
+
+    @Test
+    @DisplayName("허용되지 않은 scope 조합으로 커스텀 그룹을 생성할 수 없다")
+    void should_rejectInvalidScopeCombination() throws Exception {
+        MockHttpSession session = login(ADMIN_USERNAME);
+
+        mockMvc.perform(post("/api/admin/permission-groups")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "name", "잘못된 권한 그룹",
+                                "description", "잘못된 scope 조합",
+                                "grants", List.of(
+                                        Map.of("permissionCode", "party.read", "scopes", List.of("SELF"))
+                                )
+                        ))))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

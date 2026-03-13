@@ -119,7 +119,10 @@ public class PermissionGroupAdminQueryService implements PermissionGroupAdminFin
                 .map(permission -> new PermissionCatalogItem(
                         permission.getCode(),
                         permission.getName(),
-                        permission.getDescription()))
+                        permission.getDescription(),
+                        PermissionScopePolicy.allowedScopesFor(permission.getCode()).stream()
+                                .sorted(SCOPE_ORDER)
+                                .toList()))
                 .toList();
 
         List<PermissionScope> scopes = java.util.Arrays.stream(PermissionScope.values())

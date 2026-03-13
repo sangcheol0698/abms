@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,11 +22,13 @@ import kr.co.abacus.abms.adapter.api.party.dto.PartyCreateApiRequest;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyResponse;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyUpdateApiRequest;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
+import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.party.dto.PartyListItem;
 import kr.co.abacus.abms.application.party.dto.PartyOverviewSummary;
 import kr.co.abacus.abms.application.party.dto.PartySearchCondition;
 import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.application.party.inbound.PartyManager;
+import kr.co.abacus.abms.application.project.authorization.ProjectReadAuthorizationService;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.project.Project;
@@ -39,6 +42,8 @@ public class PartyApi {
     private final PartyFinder partyFinder;
     private final PartyManager partyManager;
     private final ProjectFinder projectFinder;
+    private final AuthFinder authFinder;
+    private final ProjectReadAuthorizationService projectReadAuthorizationService;
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')")
     @GetMapping("/api/parties")
@@ -86,11 +91,14 @@ public class PartyApi {
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')"
             + " and @permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/parties/{id}/projects")
-    public List<ProjectResponse> getPartyProjects(@PathVariable Long id) {
+    public List<ProjectResponse> getPartyProjects(@PathVariable Long id, Authentication authentication) {
         Party party = partyManager.findById(id);
         List<Project> projects = projectFinder.findAllByPartyId(id);
+        Long accountId = authFinder.getCurrentAccountId(authentication.getName());
 
         return projects.stream()
+                .filter(project -> projectReadAuthorizationService.resolveScope(accountId)
+                        .canRead(project.getIdOrThrow(), project.getLeadDepartmentId()))
                 .map(project -> ProjectResponse.from(project, party.getName()))
                 .toList();
     }

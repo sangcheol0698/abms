@@ -40,6 +40,7 @@ export interface PermissionCatalogItem {
   code: string;
   name: string;
   description: string;
+  availableScopes: EnumResponse[];
 }
 
 export interface PermissionGroupCatalog {
@@ -133,6 +134,13 @@ export function mapPermissionGroupCatalog(response: any): PermissionGroupCatalog
           code: String(item.code ?? ''),
           name: String(item.name ?? ''),
           description: String(item.description ?? ''),
+          availableScopes: Array.isArray(item.availableScopes)
+            ? item.availableScopes.map((scope) => ({
+                code: String(scope.code ?? ''),
+                description: String(scope.description ?? ''),
+                level: Number(scope.level ?? 0),
+              }))
+            : [],
         }))
       : [],
     scopes: Array.isArray(response.scopes)

@@ -52,7 +52,7 @@
 
                 <div class="flex flex-wrap gap-3">
                   <label
-                    v-for="scope in catalog.scopes"
+                    v-for="scope in permission.availableScopes"
                     :key="`${permission.code}-${scope.code}`"
                     class="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
                   >
@@ -128,6 +128,15 @@ const name = ref('');
 const description = ref('');
 const selectedScopesByPermission = ref<Record<string, string[]>>({});
 
+const availableScopeCodesByPermission = computed<Record<string, Set<string>>>(() =>
+  Object.fromEntries(
+    props.catalog.permissions.map((permission) => [
+      permission.code,
+      new Set(permission.availableScopes.map((scope) => scope.code)),
+    ]),
+  ),
+);
+
 const canSubmit = computed(() => name.value.trim().length > 0 && description.value.trim().length > 0);
 
 watch(
@@ -145,7 +154,13 @@ function resetForm() {
     name.value = props.initialGroup.name;
     description.value = props.initialGroup.description;
     selectedScopesByPermission.value = Object.fromEntries(
-      props.initialGroup.grants.map((grant) => [grant.permissionCode, [...grant.scopes]]),
+      props.initialGroup.grants
+        .map((grant) => {
+          const allowedScopes = availableScopeCodesByPermission.value[grant.permissionCode] ?? new Set<string>();
+          const normalizedScopes = grant.scopes.filter((scope) => allowedScopes.has(scope));
+          return [grant.permissionCode, normalizedScopes] as const;
+        })
+        .filter(([, scopes]) => scopes.length > 0),
     );
     return;
   }
@@ -188,10 +203,13 @@ function toggleScope(permissionCode: string, scopeCode: string, checked: boolean
 
 function submit() {
   const grants = Object.entries(selectedScopesByPermission.value)
-    .map(([permissionCode, scopes]) => ({
-      permissionCode,
-      scopes: [...scopes],
-    }))
+    .map(([permissionCode, scopes]) => {
+      const allowedScopes = availableScopeCodesByPermission.value[permissionCode] ?? new Set<string>();
+      return {
+        permissionCode,
+        scopes: scopes.filter((scope) => allowedScopes.has(scope)),
+      };
+    })
     .filter((grant) => grant.scopes.length > 0)
     .sort((a, b) => a.permissionCode.localeCompare(b.permissionCode));
 

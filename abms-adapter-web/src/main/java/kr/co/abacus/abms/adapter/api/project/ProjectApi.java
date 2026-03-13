@@ -12,8 +12,11 @@ import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectStatusResponse;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateApiRequest;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectUpdateResponse;
+import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.project.ProjectExcelService;
 import kr.co.abacus.abms.application.project.ProjectQueryService;
+import kr.co.abacus.abms.application.project.authorization.ProjectReadAuthorizationService;
+import kr.co.abacus.abms.application.project.authorization.ProjectWriteAuthorizationService;
 import kr.co.abacus.abms.application.project.dto.ProjectDetail;
 import kr.co.abacus.abms.application.project.dto.ProjectExcelUploadResult;
 import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
@@ -33,6 +36,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,38 +53,58 @@ public class ProjectApi {
     private final ProjectFinder projectFinder;
     private final ProjectQueryService projectQueryService;
     private final ProjectExcelService projectExcelService;
+    private final AuthFinder authFinder;
+    private final ProjectReadAuthorizationService projectReadAuthorizationService;
+    private final ProjectWriteAuthorizationService projectWriteAuthorizationService;
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PostMapping("/api/projects")
-    public ProjectCreateResponse create(@RequestBody ProjectCreateApiRequest request) {
+    public ProjectCreateResponse create(@RequestBody ProjectCreateApiRequest request, Authentication authentication) {
+        projectWriteAuthorizationService.assertCanCreate(resolveAccountId(authentication), request.leadDepartmentId());
         Long projectId = projectManager.create(request.toCommand());
         return ProjectCreateResponse.of(projectId);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/projects")
-    public PageResponse<ProjectResponse> search(@Valid ProjectSearchCondition condition, Pageable pageable) {
-        Page<ProjectSummary> projects = projectFinder.search(condition, pageable);
+    public PageResponse<ProjectResponse> search(
+            @Valid ProjectSearchCondition condition,
+            Pageable pageable,
+            Authentication authentication
+    ) {
+        Page<ProjectSummary> projects = projectFinder.search(
+                projectReadAuthorizationService.authorizeSearchCondition(resolveAccountId(authentication), condition),
+                pageable);
 
         return PageResponse.of(projects.map(ProjectResponse::from));
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/projects/summary")
-    public ProjectOverviewSummary getOverviewSummary(@Valid ProjectSearchCondition condition) {
-        return projectFinder.getOverviewSummary(condition);
+    public ProjectOverviewSummary getOverviewSummary(@Valid ProjectSearchCondition condition, Authentication authentication) {
+        return projectFinder.getOverviewSummary(
+                projectReadAuthorizationService.authorizeSearchCondition(resolveAccountId(authentication), condition));
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/projects/{id}")
-    public ProjectDetailResponse find(@PathVariable Long id) {
+    public ProjectDetailResponse find(@PathVariable Long id, Authentication authentication) {
         ProjectDetail detail = projectQueryService.findDetail(id);
+        projectReadAuthorizationService.assertCanRead(
+                resolveAccountId(authentication),
+                detail.projectId(),
+                detail.leadDepartmentId());
         return ProjectDetailResponse.of(detail);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PutMapping("/api/projects/{id}")
-    public ProjectUpdateResponse update(@PathVariable Long id, @RequestBody ProjectUpdateApiRequest request) {
+    public ProjectUpdateResponse update(
+            @PathVariable Long id,
+            @RequestBody ProjectUpdateApiRequest request,
+            Authentication authentication
+    ) {
+        projectWriteAuthorizationService.assertCanUpdate(resolveAccountId(authentication), id, request.toCommand());
         Long projectId = projectManager.update(id, request.toCommand());
         return ProjectUpdateResponse.of(projectId);
     }
@@ -88,21 +112,24 @@ public class ProjectApi {
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PatchMapping("/api/projects/{id}/complete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void complete(@PathVariable Long id) {
+    public void complete(@PathVariable Long id, Authentication authentication) {
+        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
         projectManager.complete(id);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PatchMapping("/api/projects/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void cancel(@PathVariable Long id) {
+    public void cancel(@PathVariable Long id, Authentication authentication) {
+        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
         projectManager.cancel(id);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @DeleteMapping("/api/projects/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
         projectManager.delete(id);
     }
 
@@ -116,8 +143,9 @@ public class ProjectApi {
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.excel.download')")
     @GetMapping("/api/projects/excel/download")
-    public ResponseEntity<Resource> downloadExcel(@Valid ProjectSearchCondition condition) {
-        byte[] content = projectExcelService.download(condition);
+    public ResponseEntity<Resource> downloadExcel(@Valid ProjectSearchCondition condition, Authentication authentication) {
+        byte[] content = projectExcelService.download(
+                projectReadAuthorizationService.authorizeExcelDownloadCondition(resolveAccountId(authentication), condition));
         String filename = FilenameBuilder.build("projects");
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
@@ -137,16 +165,20 @@ public class ProjectApi {
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.excel.upload')")
     @PostMapping(value = "/api/projects/excel/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ProjectExcelUploadResponse uploadExcel(@RequestParam("file") MultipartFile file) {
+    public ProjectExcelUploadResponse uploadExcel(@RequestParam("file") MultipartFile file, Authentication authentication) {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("업로드할 파일을 선택하세요.");
         }
         try (InputStream inputStream = file.getInputStream()) {
-            ProjectExcelUploadResult result = projectExcelService.upload(inputStream);
+            ProjectExcelUploadResult result = projectExcelService.upload(inputStream, resolveAccountId(authentication));
             return ProjectExcelUploadResponse.of(result);
         } catch (IOException ex) {
             throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
         }
+    }
+
+    private Long resolveAccountId(Authentication authentication) {
+        return authFinder.getCurrentAccountId(authentication.getName());
     }
 
 }

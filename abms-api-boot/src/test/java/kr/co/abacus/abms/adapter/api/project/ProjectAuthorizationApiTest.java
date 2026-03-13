@@ -23,6 +23,8 @@ import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
+import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
+import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository;
 import kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentRepository;
 import kr.co.abacus.abms.application.permission.outbound.GroupPermissionGrantRepository;
 import kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository;
@@ -43,6 +45,10 @@ import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.domain.permission.Permission;
 import kr.co.abacus.abms.domain.permissiongroup.PermissionGroup;
 import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType;
+import kr.co.abacus.abms.domain.project.Project;
+import kr.co.abacus.abms.domain.project.ProjectStatus;
+import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
+import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentCreateRequest;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 @DisplayName("프로젝트 API 권한 인가")
@@ -78,6 +84,15 @@ class ProjectAuthorizationApiTest extends ApiIntegrationTestBase {
     @Autowired
     private PartyRepository partyRepository;
 
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private ProjectAssignmentRepository projectAssignmentRepository;
+
+    private Long departmentId;
+    private Long employeeId;
+
     private Long partyId;
 
     @BeforeEach
@@ -102,6 +117,8 @@ class ProjectAuthorizationApiTest extends ApiIntegrationTestBase {
                 EmployeeAvatar.SKY_GLOW,
                 null
         ));
+        employeeId = employee.getIdOrThrow();
+        departmentId = department.getIdOrThrow();
         accountRepository.save(Account.create(employee.getIdOrThrow(), USERNAME, passwordEncoder.encode(PASSWORD)));
 
         partyId = partyRepository.save(Party.create(new PartyCreateRequest("프로젝트권한협력사", null, null, null, null)))
@@ -126,6 +143,59 @@ class ProjectAuthorizationApiTest extends ApiIntegrationTestBase {
 
         mockMvc.perform(get("/api/projects").session(session))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("project.read CURRENT_PARTICIPATION 권한이면 현재 참여 중인 프로젝트만 조회한다")
+    void should_onlyReturnCurrentParticipatingProjects_whenGrantedCurrentParticipationScope() throws Exception {
+        grantPermission("project.read", "프로젝트 조회", "프로젝트 조회 권한", PermissionScope.CURRENT_PARTICIPATION);
+
+        Project visibleProject = projectRepository.save(Project.create(
+                partyId,
+                departmentId,
+                "PRJ-CP-001",
+                "참여중 프로젝트",
+                null,
+                ProjectStatus.IN_PROGRESS,
+                1000000L,
+                LocalDate.now().minusDays(1),
+                LocalDate.now().plusDays(30)
+        ));
+        Project hiddenProject = projectRepository.save(Project.create(
+                partyId,
+                departmentId,
+                "PRJ-CP-002",
+                "미참여 프로젝트",
+                null,
+                ProjectStatus.IN_PROGRESS,
+                1000000L,
+                LocalDate.now().minusDays(1),
+                LocalDate.now().plusDays(30)
+        ));
+        projectAssignmentRepository.save(ProjectAssignment.assign(
+                visibleProject,
+                new ProjectAssignmentCreateRequest(
+                        visibleProject.getIdOrThrow(),
+                        employeeId,
+                        null,
+                        LocalDate.now().minusDays(1),
+                        LocalDate.now().plusDays(5)
+                )
+        ));
+        flushAndClear();
+
+        MockHttpSession session = login();
+
+        mockMvc.perform(get("/api/projects").session(session))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.content[*].code")
+                        .value(org.hamcrest.Matchers.contains("PRJ-CP-001")));
+
+        mockMvc.perform(get("/api/projects/{id}", visibleProject.getIdOrThrow()).session(session))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/projects/{id}", hiddenProject.getIdOrThrow()).session(session))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -202,6 +272,10 @@ class ProjectAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     private void grantPermission(String code, String name, String description) {
+        grantPermission(code, name, description, PermissionScope.ALL);
+    }
+
+    private void grantPermission(String code, String name, String description, PermissionScope scope) {
         Account account = accountRepository.findByUsername(new kr.co.abacus.abms.domain.shared.Email(USERNAME)).orElseThrow();
         Permission permission = permissionRepository.save(Permission.create(code, name, description));
         PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
@@ -216,7 +290,7 @@ class ProjectAuthorizationApiTest extends ApiIntegrationTestBase {
         groupPermissionGrantRepository.save(GroupPermissionGrant.create(
                 permissionGroup.getIdOrThrow(),
                 permission.getIdOrThrow(),
-                PermissionScope.ALL
+                scope
         ));
         flushAndClear();
     }

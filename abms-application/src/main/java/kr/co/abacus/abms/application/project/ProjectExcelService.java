@@ -5,6 +5,7 @@ import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 import kr.co.abacus.abms.application.project.dto.ProjectExcelUploadResult;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.inbound.ProjectManager;
+import kr.co.abacus.abms.application.project.authorization.ProjectWriteAuthorizationService;
 import kr.co.abacus.abms.application.project.outbound.ProjectExcelExporter;
 import kr.co.abacus.abms.application.project.outbound.ProjectExcelImporter;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
@@ -33,6 +34,7 @@ public class ProjectExcelService {
     private final ProjectManager projectManager;
     private final ProjectExcelExporter projectExcelExporter;
     private final ProjectExcelImporter projectExcelImporter;
+    private final ProjectWriteAuthorizationService projectWriteAuthorizationService;
 
     public byte[] download(ProjectSearchCondition condition) {
         List<Project> projects = projectRepository.search(condition);
@@ -45,8 +47,9 @@ public class ProjectExcelService {
     }
 
     @Transactional
-    public ProjectExcelUploadResult upload(InputStream inputStream) {
+    public ProjectExcelUploadResult upload(InputStream inputStream, Long accountId) {
         List<ProjectCreateCommand> commands = projectExcelImporter.importProjects(inputStream, this::getPartyIdByName);
+        projectWriteAuthorizationService.assertCanUpload(accountId, commands);
 
         List<ProjectExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
         int successCount = 0;
