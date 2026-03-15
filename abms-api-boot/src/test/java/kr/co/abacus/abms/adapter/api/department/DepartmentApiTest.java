@@ -1,23 +1,36 @@
 package kr.co.abacus.abms.adapter.api.department;
 
 import static org.assertj.core.api.Assertions.*;
+import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MvcResult;
 
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.department.dto.DepartmentDetailResponse;
 import kr.co.abacus.abms.adapter.api.department.dto.EmployeeAssignLeaderRequest;
 import kr.co.abacus.abms.adapter.api.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentRepository;
+import kr.co.abacus.abms.application.permission.outbound.GroupPermissionGrantRepository;
+import kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository;
+import kr.co.abacus.abms.application.permission.outbound.PermissionRepository;
+import kr.co.abacus.abms.domain.account.Account;
+import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -25,10 +38,37 @@ import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.grouppermissiongrant.GroupPermissionGrant;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
+import kr.co.abacus.abms.domain.permission.Permission;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroup;
+import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType;
+import kr.co.abacus.abms.domain.shared.Email;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 @DisplayName("부서 API (DepartmentApi)")
 class DepartmentApiTest extends ApiIntegrationTestBase {
+
+    private static final String USERNAME = "department-api-test-user@abacus.co.kr";
+    private static final String PASSWORD = "Password123!";
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
+
+    @Autowired
+    private PermissionGroupRepository permissionGroupRepository;
+
+    @Autowired
+    private AccountGroupAssignmentRepository accountGroupAssignmentRepository;
+
+    @Autowired
+    private GroupPermissionGrantRepository groupPermissionGrantRepository;
 
     @Autowired
     private DepartmentRepository departmentRepository;
@@ -156,12 +196,23 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         employeeRepository.save(employee1);
         flushAndClear();
 
-        restTestClient.post()
-                .uri("/api/departments/{departmentId}/assign-team-leader", team1.getId())
-                .body(new EmployeeAssignLeaderRequest(employee1.getId()))
-                .exchange()
-                .expectStatus().isOk()
-                .returnResult();
+        accountRepository.save(Account.create(employee1.getIdOrThrow(), USERNAME,
+                requireNonNull(passwordEncoder.encode(PASSWORD))));
+        grantEmployeeWriteAllPermission();
+
+        try {
+            MockHttpSession session = login();
+
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                            .post("/api/departments/{departmentId}/assign-team-leader", team1.getId())
+                            .session(session)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(toJson(new EmployeeAssignLeaderRequest(employee1.getId()))))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+
         flushAndClear();
 
         Department department = departmentRepository.findByIdAndDeletedFalse(team1.getId()).orElseThrow();
@@ -214,6 +265,49 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 type,
                 leaderEmployeeId,
                 parent);
+    }
+
+    private void grantEmployeeWriteAllPermission() {
+        Account account = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
+        Permission permission = permissionRepository.save(Permission.create(
+                "employee.write",
+                "직원 변경",
+                "직원 변경 권한"
+        ));
+        PermissionGroup permissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                "부서 API 테스트 권한 그룹",
+                "부서 API 테스트 권한 그룹",
+                PermissionGroupType.CUSTOM
+        ));
+        accountGroupAssignmentRepository.save(AccountGroupAssignment.create(
+                account.getIdOrThrow(),
+                permissionGroup.getIdOrThrow()
+        ));
+        groupPermissionGrantRepository.save(GroupPermissionGrant.create(
+                permissionGroup.getIdOrThrow(),
+                permission.getIdOrThrow(),
+                PermissionScope.ALL
+        ));
+        flushAndClear();
+    }
+
+    private MockHttpSession login() throws Exception {
+        MvcResult loginResult = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", PASSWORD
+                        ))))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+        return session;
+    }
+
+    private String toJson(Object value) {
+        return objectMapper.writeValueAsString(value);
     }
 
 }

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +29,8 @@ import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
 import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
+import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
+import kr.co.abacus.abms.application.employee.authorization.EmployeeWriteAuthorizationService;
 
 @RequiredArgsConstructor
 @RestController
@@ -34,6 +38,8 @@ public class DepartmentApi {
 
     private final DepartmentFinder departmentFinder;
     private final DepartmentManager departmentManager;
+    private final AuthFinder authFinder;
+    private final EmployeeWriteAuthorizationService employeeWriteAuthorizationService;
 
     @GetMapping("/api/departments/organization-chart")
     public List<OrganizationChartResponse> getOrganizationChart() {
@@ -63,12 +69,18 @@ public class DepartmentApi {
         return PageResponse.of(responses);
     }
 
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @PostMapping("/api/departments/{departmentId}/assign-team-leader")
     public DepartmentAssignLeaderResponse assignTeamLeader(@PathVariable Long departmentId,
-                                                           @Valid @RequestBody EmployeeAssignLeaderRequest request) {
+                                                           @Valid @RequestBody EmployeeAssignLeaderRequest request,
+                                                           Authentication authentication) {
+        employeeWriteAuthorizationService.assertCanAssignDepartmentLeader(resolveAccountId(authentication), departmentId);
         Long id = departmentManager.assignLeader(departmentId, request.leaderEmployeeId());
 
         return DepartmentAssignLeaderResponse.of(id);
     }
 
+    private Long resolveAccountId(Authentication authentication) {
+        return authFinder.getCurrentAccountId(authentication.getName());
+    }
 }

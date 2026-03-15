@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Objects;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,6 @@ import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.account.Account;
-import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.employee.Employee;
 
 @RequiredArgsConstructor
@@ -52,10 +52,19 @@ class EmployeeAuthorizationSupport {
     Set<Long> resolveDepartmentTree(Long rootDepartmentId) {
         Map<Long, List<Long>> childrenByParentId = departmentRepository.findAllByDeletedFalse().stream()
                 .filter(department -> department.getParent() != null)
+                .map(department -> {
+                    try {
+                        return java.util.Map.entry(department.getParent().getIdOrThrow(), department.getIdOrThrow());
+                    } catch (NullPointerException exception) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
                 .collect(java.util.stream.Collectors.groupingBy(
-                        department -> department.getParent().getIdOrThrow(),
+                        java.util.Map.Entry::getKey,
                         LinkedHashMap::new,
-                        java.util.stream.Collectors.mapping(Department::getIdOrThrow, java.util.stream.Collectors.toList())
+                        java.util.stream.Collectors.mapping(java.util.Map.Entry::getValue,
+                                java.util.stream.Collectors.toList())
                 ));
 
         Set<Long> allowedDepartmentIds = new LinkedHashSet<>();

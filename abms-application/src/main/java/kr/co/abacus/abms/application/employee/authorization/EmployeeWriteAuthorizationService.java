@@ -118,6 +118,13 @@ public class EmployeeWriteAuthorizationService {
         assertCanManageTarget(resolveScope(accountId), target, "직원 변경 권한 범위를 벗어났습니다.");
     }
 
+    public void assertCanAssignDepartmentLeader(Long accountId, Long departmentId) {
+        EmployeeWriteScope scope = resolveScope(accountId);
+        if (!scope.canManageTarget(departmentId)) {
+            throw new AccessDeniedException("부서 리더 변경 권한 범위를 벗어났습니다.");
+        }
+    }
+
     public void assertCanUpload(Long accountId, java.util.List<EmployeeCreateCommand> commands) {
         EmployeeWriteScope scope = resolveExcelUploadScope(accountId);
         boolean unauthorizedExists = commands.stream()
