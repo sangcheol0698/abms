@@ -6,6 +6,7 @@ import { renderWithProviders } from '@/test-utils';
 import type { DepartmentSummary } from '@/features/department/models/department';
 
 const canViewEmployeeDetailMock = vi.fn();
+const canManageEmployeeMock = vi.fn();
 
 vi.mock('@/core/composables/useQuerySync', () => ({
   useQuerySync: vi.fn(),
@@ -13,6 +14,7 @@ vi.mock('@/core/composables/useQuerySync', () => ({
 
 vi.mock('@/features/employee/permissions', () => ({
   canViewEmployeeDetail: (...args: unknown[]) => canViewEmployeeDetailMock(...args),
+  canManageEmployee: (...args: unknown[]) => canManageEmployeeMock(...args),
 }));
 
 const routes: RouteRecordRaw[] = [
@@ -60,7 +62,7 @@ async function mountPanel() {
     global: {
       stubs: {
         DepartmentEmployeeList: { template: '<div />' },
-        DepartmentLeaderAssignDialog: { template: '<div />' },
+        DepartmentLeaderAssignDialog: { template: '<div data-test="leader-assign-dialog" />' },
         Tabs: { template: '<div><slot /></div>' },
         TabsList: { template: '<div><slot /></div>' },
         TabsTrigger: { template: '<button type="button"><slot /></button>' },
@@ -80,6 +82,7 @@ async function mountPanel() {
 describe('DepartmentDetailPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    canManageEmployeeMock.mockReturnValue(false);
   });
 
   it('직원 상세 조회 권한이 있으면 부서 리더를 링크로 표시하고 상세로 이동한다', async () => {
@@ -105,6 +108,26 @@ describe('DepartmentDetailPanel', () => {
     expect(wrapper.find('[data-test="leader-employee-link"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="leader-employee-text"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('리더');
+  });
+
+  it('리더 변경 권한이 있으면 변경 버튼과 임명 다이얼로그를 노출한다', async () => {
+    canViewEmployeeDetailMock.mockReturnValue(true);
+    canManageEmployeeMock.mockReturnValue(true);
+
+    const { wrapper } = await mountPanel();
+
+    expect(wrapper.findAll('button').some((button) => button.text().includes('변경'))).toBe(true);
+    expect(wrapper.find('[data-test="leader-assign-dialog"]').exists()).toBe(true);
+  });
+
+  it('리더 변경 권한이 없으면 변경 버튼과 임명 다이얼로그를 숨긴다', async () => {
+    canViewEmployeeDetailMock.mockReturnValue(true);
+    canManageEmployeeMock.mockReturnValue(false);
+
+    const { wrapper } = await mountPanel();
+
+    expect(wrapper.findAll('button').some((button) => button.text().includes('변경'))).toBe(false);
+    expect(wrapper.find('[data-test="leader-assign-dialog"]').exists()).toBe(false);
   });
 });
 

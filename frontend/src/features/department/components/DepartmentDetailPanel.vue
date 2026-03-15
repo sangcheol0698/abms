@@ -31,10 +31,11 @@
             </span>
           </div>
           <Button
+            v-if="canAssignDepartmentLeader"
             variant="ghost"
             size="icon"
             class="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
-            @click="isAssignDialogOpen = true"
+            @click="openAssignDialog"
           >
             <Pencil class="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
@@ -122,10 +123,11 @@
                       리더가 아직 지정되지 않은 부서입니다.
                     </p>
                     <Button
+                      v-if="canAssignDepartmentLeader"
                       variant="outline"
                       size="sm"
                       class="h-7 text-xs"
-                      @click="isAssignDialogOpen = true"
+                      @click="openAssignDialog"
                     >
                       변경
                     </Button>
@@ -186,10 +188,11 @@
     </div>
 
     <DepartmentLeaderAssignDialog
-      v-if="department"
+      v-if="department && canAssignDepartmentLeader"
       v-model:open="isAssignDialogOpen"
       :department-id="department.departmentId"
       :department-name="department.departmentName"
+      :department-chart="departmentChart"
       @assigned="$emit('refresh')"
     />
   </div>
@@ -207,7 +210,7 @@ import { GitBranch, UserRound, Users, Pencil } from 'lucide-vue-next';
 import type { DepartmentChartNode, DepartmentSummary } from '@/features/department/models/department';
 import DepartmentEmployeeList from '@/features/department/components/DepartmentEmployeeList.vue';
 import DepartmentLeaderAssignDialog from '@/features/department/components/DepartmentLeaderAssignDialog.vue';
-import { canViewEmployeeDetail } from '@/features/employee/permissions';
+import { canManageEmployee, canViewEmployeeDetail } from '@/features/employee/permissions';
 
 defineOptions({ name: 'DepartmentDetailPanel' });
 
@@ -257,6 +260,23 @@ const canViewDepartmentLeader = computed(() => {
   );
 });
 
+const canAssignDepartmentLeader = computed(() => {
+  const departmentId = props.department?.departmentId;
+
+  if (!departmentId) {
+    return false;
+  }
+
+  return canManageEmployee(
+    {
+      departmentId,
+    },
+    {
+      departmentChart: props.departmentChart ?? [],
+    },
+  );
+});
+
 // URL 쿼리와 탭 동기화
 useQuerySync({
   state: selectedTab,
@@ -289,6 +309,13 @@ function handleTabChange(newTab: string | number) {
   }
 
   selectedTab.value = newTab as TabValue;
+}
+
+function openAssignDialog() {
+  if (!canAssignDepartmentLeader.value) {
+    return;
+  }
+  isAssignDialogOpen.value = true;
 }
 
 // 직원 상세 페이지로 이동

@@ -24,7 +24,7 @@
             검색 중...
           </CommandEmpty>
           <CommandEmpty
-            v-else-if="employees.length === 0"
+            v-else-if="filteredEmployees.length === 0"
             class="py-6 text-center text-sm text-muted-foreground"
           >
             검색 결과가 없습니다.
@@ -32,7 +32,7 @@
 
           <CommandGroup v-else heading="검색 결과">
             <CommandItem
-              v-for="employee in employees"
+              v-for="employee in filteredEmployees"
               :key="employee.employeeId"
               :value="employee.employeeId"
               @select="selectEmployee(employee)"
@@ -106,12 +106,15 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Loader2, Search } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import { useAssignDepartmentLeaderMutation } from '@/features/department/queries/useDepartmentQueries';
+import type { DepartmentChartNode } from '@/features/department/models/department';
 import { useEmployeesQuery } from '@/features/employee/queries/useEmployeeQueries';
+import { canManageEmployee } from '@/features/employee/permissions';
 
 const props = defineProps<{
   open: boolean;
   departmentId: number;
   departmentName: string;
+  departmentChart?: DepartmentChartNode[];
 }>();
 
 const emit = defineEmits<{
@@ -140,6 +143,13 @@ const employees = computed(() => {
     return [];
   }
   return employeesQuery.data.value?.content ?? [];
+});
+const employeePermissionContext = computed(() => ({
+  departmentChart: props.departmentChart ?? [],
+}));
+const filteredEmployees = computed(() => {
+  return employees.value.filter((employee) =>
+    canManageEmployee(employee, employeePermissionContext.value));
 });
 const isSubmitting = computed(() => assignMutation.isPending.value);
 
