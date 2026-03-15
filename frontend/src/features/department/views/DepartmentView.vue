@@ -86,6 +86,7 @@
             <div class="flex-1 min-h-0 overflow-y-auto pl-2">
               <DepartmentDetailPanel
                 :department="selectedDepartment"
+                :department-chart="chart"
                 :isLoading="isDepartmentLoading"
                 @refresh="handleRefresh"
               />

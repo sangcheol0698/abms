@@ -125,10 +125,8 @@ async function mountProfileDialog() {
         Avatar: { template: '<div><slot /></div>' },
         AvatarFallback: { template: '<div><slot /></div>' },
         AvatarImage: { template: '<img />' },
-        EmployeeSelfProfileDialog: {
-          props: ['open'],
-          template: '<div data-test="self-profile-dialog">{{ String(open) }}</div>',
-        },
+        DatePicker: { template: '<div data-test="date-picker" />' },
+        EmployeeAvatarSelectDialog: { template: '<div data-test="avatar-select-dialog" />' },
       },
     },
   });
@@ -219,7 +217,7 @@ describe('ProfileDialog', () => {
     expect(wrapper.text()).toContain('내 정보 수정');
   });
 
-  it('openSelfProfileEditor가 true면 내 정보 수정 다이얼로그를 바로 연다', async () => {
+  it('openSelfProfileEditor가 true면 계정 정보 탭에서 내 정보 수정 폼이 바로 보인다', async () => {
     storage.user = JSON.stringify({
       name: '테스터',
       email: 'tester@iabacus.co.kr',
@@ -273,15 +271,14 @@ describe('ProfileDialog', () => {
           Avatar: { template: '<div><slot /></div>' },
           AvatarFallback: { template: '<div><slot /></div>' },
           AvatarImage: { template: '<img />' },
-          EmployeeSelfProfileDialog: {
-            props: ['open'],
-            template: '<div data-test="self-profile-dialog">{{ String(open) }}</div>',
-          },
+          DatePicker: { template: '<div data-test="date-picker" />' },
+          EmployeeAvatarSelectDialog: { template: '<div data-test="avatar-select-dialog" />' },
         },
       },
     });
 
-    expect(wrapper.get('[data-test="self-profile-dialog"]').text()).toBe('true');
+    expect(wrapper.find('[data-test="profile-section"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="self-profile-inline-form"]').exists()).toBe(true);
   });
 
   it('알림 설정 메뉴를 누르면 정보 섹션이 표시된다', async () => {

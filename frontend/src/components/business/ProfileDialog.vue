@@ -91,22 +91,81 @@
                 class="rounded-xl border border-border/60 bg-background p-4 shadow-sm"
                 data-test="self-profile-card"
               >
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <form class="grid gap-4" data-test="self-profile-inline-form" @submit.prevent="submitInlineSelfProfileUpdate">
                   <div class="space-y-1">
                     <p class="text-sm font-semibold text-foreground">내 정보 수정</p>
                     <p class="text-xs leading-5 text-muted-foreground">
-                      이름, 생년월일, 아바타를 수정할 수 있습니다.
+                      이름과 이메일은 관리자만 수정할 수 있습니다. 생년월일과 아바타를 바로 변경할 수 있습니다.
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    :disabled="isResolvingCurrentEmployee"
-                    @click="isSelfProfileDialogOpen = true"
-                  >
-                    {{ isResolvingCurrentEmployee ? '불러오는 중...' : '내 정보 수정' }}
-                  </Button>
-                </div>
+
+                  <Alert v-if="selfProfileErrorMessage" variant="destructive">
+                    <AlertTitle>내 정보 수정 실패</AlertTitle>
+                    <AlertDescription>{{ selfProfileErrorMessage }}</AlertDescription>
+                  </Alert>
+
+                  <div class="grid gap-4">
+                    <div class="space-y-2">
+                      <Label class="text-sm font-semibold text-muted-foreground">
+                        아바타
+                        <span class="ml-0.5 text-destructive">*</span>
+                      </Label>
+                      <div
+                        class="flex flex-col gap-4 rounded-2xl border border-border/70 bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div class="flex items-center gap-4">
+                          <Avatar class="h-20 w-20 border border-border/60 bg-background">
+                            <AvatarImage
+                              :src="selectedSelfAvatar.imageUrl"
+                              :alt="selectedSelfAvatar.label || '선택된 아바타'"
+                            />
+                            <AvatarFallback class="text-base font-semibold">
+                              {{ getSelfAvatarFallbackLabel() }}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div class="space-y-1">
+                            <p class="text-base font-semibold text-foreground">
+                              {{ selectedSelfAvatar.label || '아바타 미선택' }}
+                            </p>
+                            <p class="text-sm text-muted-foreground">
+                              이 아바타는 직원 목록과 상세 화면에 표시됩니다.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          class="self-start sm:self-auto"
+                          :disabled="isSelfProfileSubmitting || isResolvingCurrentEmployee || avatarOptions.length === 0"
+                          @click="openAvatarSelect"
+                        >
+                          아바타 선택
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div class="space-y-2">
+                      <Label for="self-profile-birthDate">생년월일</Label>
+                      <DatePicker
+                        id="self-profile-birthDate"
+                        :model-value="toDateValue(selfBirthDate)"
+                        placeholder="생년월일을 선택하세요"
+                        :disabled="isResolvingCurrentEmployee || isSelfProfileSubmitting"
+                        @update:modelValue="(value) => { selfBirthDate = formatDate(value); }"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end pt-1">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      :disabled="!canSubmitSelfProfile"
+                    >
+                      {{ isSelfProfileSubmitting ? '저장 중...' : '저장' }}
+                    </Button>
+                  </div>
+                </form>
               </article>
             </section>
 
@@ -291,14 +350,13 @@
     </AlertDialogContent>
   </AlertDialog>
 
-  <EmployeeSelfProfileDialog
-    :open="isSelfProfileDialogOpen"
-    :employee="currentEmployee"
-    :avatar-options="avatarOptions"
-    :is-submitting="isSelfProfileSubmitting"
-    :error-message="selfProfileErrorMessage"
-    @update:open="handleSelfProfileDialogOpenChange"
-    @submit="submitSelfProfileUpdate"
+  <EmployeeAvatarSelectDialog
+    :open="isAvatarDialogOpen"
+    :options="avatarOptions"
+    :selected-avatar-code="selfAvatarCode"
+    :disabled="isSelfProfileSubmitting || isResolvingCurrentEmployee"
+    @update:open="handleAvatarDialogOpenChange"
+    @select="handleAvatarSelected"
   />
 </template>
 
@@ -334,6 +392,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -355,7 +414,7 @@ import {
   useEmployeeAvatarsQuery,
   useUpdateEmployeeMutation,
 } from '@/features/employee/queries/useEmployeeQueries';
-import EmployeeSelfProfileDialog from '@/features/employee/components/EmployeeSelfProfileDialog.vue';
+import EmployeeAvatarSelectDialog from '@/features/employee/components/EmployeeAvatarSelectDialog.vue';
 import { canAccessOwnProfileEditor } from '@/features/employee/permissions';
 import { authKeys, queryClient } from '@/core/query';
 
@@ -417,12 +476,14 @@ const logoutMutation = useLogoutMutation();
 const activeSection = ref<ProfileSection>('profile');
 const isLogoutDialogOpen = ref(false);
 const isLoggingOut = ref(false);
-const isSelfProfileDialogOpen = ref(false);
+const isAvatarDialogOpen = ref(false);
 const currentPassword = ref('');
 const newPassword = ref('');
 const newPasswordConfirm = ref('');
 const passwordErrorMessage = ref<string | null>(null);
 const selfProfileErrorMessage = ref<string | null>(null);
+const selfBirthDate = ref('');
+const selfAvatarCode = ref('');
 const isChangingPassword = ref(false);
 const STRONG_PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/;
 const canEditSelfProfile = computed(() => canAccessOwnProfileEditor());
@@ -439,23 +500,34 @@ const activeItem = computed(() => {
 const activeSectionLabel = computed(() => activeItem.value.label);
 const currentEmployee = computed(() => currentEmployeeQuery.data.value ?? null);
 const avatarOptions = computed(() => employeeAvatarsQuery.data.value ?? []);
+const selectedSelfAvatar = computed(() => {
+  return (
+    avatarOptions.value.find((option) => option.code === selfAvatarCode.value) ?? avatarOptions.value[0] ?? {
+      code: '',
+      label: '아바타 없음',
+      imageUrl: '',
+    }
+  );
+});
 const isResolvingCurrentEmployee = computed(
   () => currentEmployeeQuery.isLoading.value || currentEmployeeQuery.isFetching.value,
 );
 const isSelfProfileSubmitting = computed(() => updateEmployeeMutation.isPending.value);
+const canSubmitSelfProfile = computed(() => {
+  return (
+    !!currentEmployee.value?.employeeId
+    && selfBirthDate.value.trim().length > 0
+    && selfAvatarCode.value.length > 0
+    && !isResolvingCurrentEmployee.value
+    && !isSelfProfileSubmitting.value
+  );
+});
 
 function resetPasswordForm() {
   currentPassword.value = '';
   newPassword.value = '';
   newPasswordConfirm.value = '';
   passwordErrorMessage.value = null;
-}
-
-function handleSelfProfileDialogOpenChange(value: boolean) {
-  isSelfProfileDialogOpen.value = value;
-  if (!value) {
-    selfProfileErrorMessage.value = null;
-  }
 }
 
 function handleOpenChange(value: boolean) {
@@ -478,6 +550,43 @@ function handleLogoutDialogOpenChange(value: boolean) {
     return;
   }
   isLogoutDialogOpen.value = value;
+}
+
+function openAvatarSelect() {
+  isAvatarDialogOpen.value = true;
+}
+
+function handleAvatarDialogOpenChange(value: boolean) {
+  isAvatarDialogOpen.value = value;
+}
+
+function handleAvatarSelected(code: string) {
+  selfAvatarCode.value = code;
+  isAvatarDialogOpen.value = false;
+}
+
+function getSelfAvatarFallbackLabel(): string {
+  return selectedSelfAvatar.value.label?.slice(0, 2).toUpperCase() || 'AV';
+}
+
+function toDateValue(value: string): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDate(value: Date | null): string {
+  if (!value) {
+    return '';
+  }
+
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function validatePasswordChange(): string | null {
@@ -507,9 +616,23 @@ watch(
   (isOpen) => {
     if (!isOpen) {
       isLogoutDialogOpen.value = false;
-      isSelfProfileDialogOpen.value = false;
+      isAvatarDialogOpen.value = false;
       resetPasswordForm();
     }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => [props.open, currentEmployee.value] as const,
+  ([isOpen, employee]) => {
+    if (!isOpen || !employee) {
+      return;
+    }
+
+    selfBirthDate.value = employee.birthDate;
+    selfAvatarCode.value = employee.avatarCode;
+    selfProfileErrorMessage.value = null;
   },
   { immediate: true },
 );
@@ -522,7 +645,6 @@ watch(
     }
 
     activeSection.value = 'profile';
-    isSelfProfileDialogOpen.value = true;
   },
   { immediate: true },
 );
@@ -602,12 +724,18 @@ async function submitSelfProfileUpdate(payload: { birthDate: string; avatar: str
     ]);
 
     toast.success('내 정보를 수정했습니다.');
-    isSelfProfileDialogOpen.value = false;
   } catch (error) {
     const message =
       error instanceof HttpError ? error.message : '내 정보 수정 중 오류가 발생했습니다.';
     selfProfileErrorMessage.value = message;
     toast.error('내 정보 수정에 실패했습니다.', { description: message });
   }
+}
+
+function submitInlineSelfProfileUpdate() {
+  void submitSelfProfileUpdate({
+    birthDate: selfBirthDate.value,
+    avatar: selfAvatarCode.value,
+  });
 }
 </script>

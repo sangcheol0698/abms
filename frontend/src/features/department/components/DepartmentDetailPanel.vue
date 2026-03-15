@@ -102,12 +102,17 @@
                     <div v-if="department.departmentLeader" class="flex items-center gap-3">
                       <div class="flex items-center gap-2 text-sm">
                         <button
+                          v-if="canViewDepartmentLeader"
                           type="button"
+                          data-test="leader-employee-link"
                           class="text-left font-semibold text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline"
                           @click="navigateToEmployee(department.departmentLeader?.employeeId)"
                         >
                           {{ department.departmentLeader?.employeeName }}
                         </button>
+                        <span v-else data-test="leader-employee-text" class="font-semibold text-foreground">
+                          {{ department.departmentLeader?.employeeName }}
+                        </span>
                         <Badge variant="secondary" class="h-5 px-1.5 text-[10px] font-normal">
                           {{ department.departmentLeader?.position }}
                         </Badge>
@@ -191,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuerySync } from '@/core/composables/useQuerySync';
 import { Badge } from '@/components/ui/badge';
@@ -199,19 +204,22 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { GitBranch, UserRound, Users, Pencil } from 'lucide-vue-next';
-import type { DepartmentSummary } from '@/features/department/models/department';
+import type { DepartmentChartNode, DepartmentSummary } from '@/features/department/models/department';
 import DepartmentEmployeeList from '@/features/department/components/DepartmentEmployeeList.vue';
 import DepartmentLeaderAssignDialog from '@/features/department/components/DepartmentLeaderAssignDialog.vue';
+import { canViewEmployeeDetail } from '@/features/employee/permissions';
 
 defineOptions({ name: 'DepartmentDetailPanel' });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     department: DepartmentSummary | null;
+    departmentChart?: DepartmentChartNode[];
     isLoading?: boolean;
   }>(),
   {
     department: null,
+    departmentChart: () => [],
     isLoading: false,
   },
 );
@@ -229,6 +237,25 @@ const VALID_TABS = ['info', 'employees', 'revenue'] as const;
 type TabValue = (typeof VALID_TABS)[number];
 
 const selectedTab = ref<TabValue>('info');
+
+const canViewDepartmentLeader = computed(() => {
+  const leader = props.department?.departmentLeader;
+  const departmentId = props.department?.departmentId;
+
+  if (!leader?.employeeId || !departmentId) {
+    return false;
+  }
+
+  return canViewEmployeeDetail(
+    {
+      employeeId: leader.employeeId,
+      departmentId,
+    },
+    {
+      departmentChart: props.departmentChart ?? [],
+    },
+  );
+});
 
 // URL 쿼리와 탭 동기화
 useQuerySync({
@@ -266,7 +293,7 @@ function handleTabChange(newTab: string | number) {
 
 // 직원 상세 페이지로 이동
 function navigateToEmployee(employeeId?: number) {
-  if (!employeeId) {
+  if (!employeeId || !canViewDepartmentLeader.value) {
     return;
   }
   router.push({ name: 'employee-detail', params: { employeeId: String(employeeId) } });
