@@ -5,6 +5,7 @@
  */
 import { h } from 'vue';
 import type { ColumnDef } from '@tanstack/vue-table';
+import { formatDate } from '@/lib/utils';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +57,7 @@ function formatDisplayDate(value?: string | null): string {
   if (!value) return '-';
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString('ko-KR');
+  return formatDate(parsed);
 }
 
 /**

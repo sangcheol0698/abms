@@ -51,7 +51,7 @@ function normalizePermissions(rawPermissions: unknown): StoredPermission[] {
 
       const scopes =
         'scopes' in permission && Array.isArray(permission.scopes)
-          ? permission.scopes.filter((scope): scope is string => typeof scope === 'string')
+          ? permission.scopes.filter((scope: unknown): scope is string => typeof scope === 'string')
           : [];
 
       return {

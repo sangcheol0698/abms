@@ -1,14 +1,8 @@
 <template>
-  <div
-    v-if="!employee"
-    class="flex h-full items-center justify-center text-sm text-muted-foreground"
-  >
+  <div v-if="!employee" class="flex h-full items-center justify-center text-sm text-muted-foreground">
     근무 이력을 불러올 직원이 없습니다.
   </div>
-  <div
-    v-else
-    :class="['grid gap-6', showManagementActions ? 'lg:grid-cols-[1fr_320px]' : undefined]"
-  >
+  <div v-else :class="['grid gap-6', showManagementActions ? 'lg:grid-cols-[1fr_320px]' : undefined]">
     <section class="rounded-xl border bg-card p-5 shadow-sm">
       <h2 class="mb-4 text-sm font-semibold text-muted-foreground">근무 타임라인 (최신순)</h2>
 
@@ -18,10 +12,8 @@
 
       <ol v-else class="space-y-6">
         <li v-for="(event, index) in timeline" :key="event.id" class="relative pl-6">
-          <span
-            class="absolute left-0 top-1.5 h-2 w-2 rounded-full"
-            :class="index === 0 ? 'bg-primary' : 'bg-muted-foreground/30'"
-          />
+          <span class="absolute left-0 top-1.5 h-2 w-2 rounded-full"
+            :class="index === 0 ? 'bg-primary' : 'bg-muted-foreground/30'" />
 
           <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
             {{ event.date }}
@@ -96,15 +88,14 @@
           </p>
           <div class="mt-4 flex flex-col gap-3">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <Input
-                v-model="resignationDate"
-                type="date"
-                class="w-full sm:max-w-[220px]"
-                :max="today"
-                :min="minResignationDate"
-                :disabled="isResigned || isResigningAction"
-              />
-              <Button variant="destructive" :disabled="!canSubmitResign" @click="submitResignation">
+              <div class="w-full sm:w-64">
+                <DatePicker
+                  :model-value="resignationDate"
+                  @update:model-value="updateResignationDate"
+                  placeholder="퇴사일을 선택하세요"
+                />
+              </div>
+              <Button variant="destructive" class="w-full sm:w-auto" :disabled="!canSubmitResign" @click="submitResignation">
                 <span v-if="isResigningAction">처리 중...</span>
                 <span v-else>퇴사 처리</span>
               </Button>
@@ -138,7 +129,7 @@
 import { computed, ref } from 'vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import type { PositionHistory } from '@/features/employee/models/positionHistory';
 import { getEmployeePositionOptions } from '@/features/employee/models/employeeFilters';
@@ -270,6 +261,18 @@ const canActivate = computed(() => {
   }
   return props.employee.statusCode !== 'ACTIVE';
 });
+
+function updateResignationDate(val: Date | null | string) {
+  if (!val) {
+    resignationDate.value = '';
+    return;
+  }
+  const dateObj = typeof val === 'string' ? new Date(val) : val;
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  resignationDate.value = `${year}-${month}-${day}`;
+}
 
 function submitResignation() {
   if (!resignationDate.value || !canSubmitResign.value) {

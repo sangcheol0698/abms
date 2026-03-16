@@ -496,7 +496,10 @@ function formatRelativeTime(date: Date): string {
   if (minutes < 60) return `${minutes}분 전`;
   if (hours < 24) return `${hours}시간 전`;
   if (days < 7) return `${days}일 전`;
-  return date.toLocaleDateString('ko-KR');
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 const TOOL_CONFIG: Record<string, { emoji: string; description: string }> = {

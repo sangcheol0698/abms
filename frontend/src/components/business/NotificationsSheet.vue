@@ -173,7 +173,10 @@ function formatRelative(isoString: string) {
   if (diffHours < 24) return `${diffHours}시간 전`;
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays}일 전`;
-  return created.toLocaleDateString();
+  const y = created.getFullYear();
+  const m = String(created.getMonth() + 1).padStart(2, '0');
+  const d = String(created.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 async function markAllAsRead() {

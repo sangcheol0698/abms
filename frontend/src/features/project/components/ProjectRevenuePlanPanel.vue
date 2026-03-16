@@ -160,7 +160,11 @@ const typeLabelMap: Record<string, string> = {
 
 function formatDate(value: string) {
   if (!value) return '-';
-  return new Date(value).toLocaleDateString();
+  const parsed = new Date(value);
+  const y = parsed.getFullYear();
+  const m = String(parsed.getMonth() + 1).padStart(2, '0');
+  const d = String(parsed.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function handleCreate() {
