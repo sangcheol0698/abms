@@ -56,7 +56,7 @@ public class Project extends AbstractEntity {
 
     @Embedded
     @AttributeOverride(name = "startDate", column = @Column(name = "start_date", nullable = false))
-    @AttributeOverride(name = "endDate", column = @Column(name = "end_date"))
+    @AttributeOverride(name = "endDate", column = @Column(name = "end_date", nullable = false))
     private Period period;
 
     private Project(Long partyId, Long leadDepartmentId, String code, String name, @Nullable String description, ProjectStatus status,
