@@ -1,25 +1,27 @@
 <template>
-  <Popover>
-    <PopoverTrigger as-child>
-      <Button
-        variant="field"
-        size="sm"
-        class="h-8 gap-2"
-        :class="[
-          'justify-start border-dashed text-left font-normal',
-          !modelValue?.start && !modelValue?.end && 'text-muted-foreground',
-          dense && '!h-6',
-        ]"
-      >
-        <CalendarIcon class="h-4 w-4" />
-        <span class="hidden sm:inline">
-          {{ formattedDateRange || placeholder }}
-        </span>
-        <span class="sm:hidden">
-          {{ formattedDateRangeMobile || '날짜' }}
-        </span>
-      </Button>
-    </PopoverTrigger>
+  <div class="relative w-full xl:min-w-[240px]">
+    <div class="relative flex items-center">
+      <Input
+        v-model="inputValue"
+        type="text"
+        :placeholder="placeholder"
+        maxlength="23"
+        :class="cn('w-full pr-8 font-normal', !formattedDateRange && 'text-muted-foreground', dense ? 'h-6 text-xs' : 'h-8 text-sm')"
+        @input="handleInput"
+        @blur="handleInputBlur"
+        @keydown.enter.prevent="handleInputBlur"
+      />
+      <Popover v-model:open="isOpen">
+        <PopoverTrigger as-child>
+          <Button
+            variant="ghost"
+            size="icon"
+            class="absolute right-0 top-0 h-full w-8 px-0 opacity-50 hover:opacity-100"
+            tabindex="-1"
+          >
+            <CalendarIcon class="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
 
     <PopoverContent class="w-auto p-0" align="start">
       <div class="flex">
@@ -136,12 +138,16 @@
       </div>
     </PopoverContent>
   </Popover>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { CalendarIcon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -282,19 +288,76 @@ const formattedDateRange = computed(() => {
   return `${formatDate(start)} ~ ${formatDate(end)}`;
 });
 
-// 모바일용 짧은 날짜 범위 표시
-const formattedDateRangeMobile = computed(() => {
-  if (!props.modelValue?.start || !props.modelValue?.end) return '';
-  const start =
-    typeof props.modelValue.start === 'string'
-      ? new Date(props.modelValue.start)
-      : props.modelValue.start;
-  const end =
-    typeof props.modelValue.end === 'string'
-      ? new Date(props.modelValue.end)
-      : props.modelValue.end;
-  return `${formatDateShort(start)}~${formatDateShort(end)}`;
-});
+const isOpen = ref(false);
+const inputValue = ref('');
+
+watch(
+  formattedDateRange,
+  (newVal) => {
+    inputValue.value = newVal || '';
+  },
+  { immediate: true },
+);
+
+function handleInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  let val = target.value.replace(/[^0-9~ -]/g, '');
+  
+  // if user is typing numbers, auto format to YYYY-MM-DD ~ YYYY-MM-DD
+  const justNumbers = val.replace(/[^0-9]/g, '');
+  if (justNumbers.length > 0) {
+    let formatted = justNumbers;
+    if (formatted.length > 4) formatted = formatted.slice(0, 4) + '-' + formatted.slice(4);
+    if (formatted.length > 7) formatted = formatted.slice(0, 7) + '-' + formatted.slice(7);
+    if (formatted.length > 10) formatted = formatted.slice(0, 10) + ' ~ ' + formatted.slice(10);
+    if (formatted.length > 17) formatted = formatted.slice(0, 17) + '-' + formatted.slice(17);
+    if (formatted.length > 20) formatted = formatted.slice(0, 20) + '-' + formatted.slice(20, 22);
+    val = formatted;
+  }
+  
+  inputValue.value = val;
+}
+
+function handleInputBlur() {
+  const val = inputValue.value;
+  if (!val) {
+    clearSelection();
+    return;
+  }
+  
+  if (val.length === 23) {
+    const parts = val.split(' ~ ');
+    if (parts.length === 2) {
+      const s = new Date(parts[0]!);
+      const e = new Date(parts[1]!);
+      if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime())) {
+        let finalStart = s;
+        let finalEnd = e;
+        if (s > e) {
+          finalStart = e;
+          finalEnd = s;
+        }
+        startDateValue.value = fromDate(finalStart, getLocalTimeZone());
+        endDateValue.value = fromDate(finalEnd, getLocalTimeZone());
+        startPlaceholder.value = startDateValue.value;
+        endPlaceholder.value = endDateValue.value;
+        startYear.value = String(finalStart.getFullYear());
+        startMonth.value = String(finalStart.getMonth() + 1);
+        endYear.value = String(finalEnd.getFullYear());
+        endMonth.value = String(finalEnd.getMonth() + 1);
+        dateRange.value = { start: finalStart, end: finalEnd };
+        
+        const result = { start: finalStart, end: finalEnd };
+        emit('update:modelValue', result);
+        emit('change', result);
+        return;
+      }
+    }
+  }
+  
+  inputValue.value = formattedDateRange.value;
+}
+
 
 function formatDate(date: Date | DateValue): string {
   if (date instanceof Date) {
@@ -307,13 +370,7 @@ function formatDate(date: Date | DateValue): string {
   }
 }
 
-function formatDateShort(date: Date | DateValue): string {
-  if (date instanceof Date) {
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  } else {
-    return `${date.month}/${date.day}`;
-  }
-}
+
 
 // Calendar 표시 월/년도(placeholder)
 const startPlaceholder = ref<any>(today(getLocalTimeZone()));
@@ -397,6 +454,7 @@ function applySelection() {
   const result = dateRange.value.start && dateRange.value.end ? dateRange.value : null;
   emit('update:modelValue', result);
   emit('change', result);
+  isOpen.value = false;
 }
 
 // 선택 초기화
@@ -416,6 +474,7 @@ function clearSelection() {
   endCalendarKey.value++;
   emit('update:modelValue', null);
   emit('change', null);
+  isOpen.value = false;
 }
 
 // Props 변경 감지하여 내부 상태 업데이트

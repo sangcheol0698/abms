@@ -239,7 +239,7 @@ function handleInputBlur() {
   }
 
   // 간단한 날짜 파싱 시도 (YYYY-MM-DD 또는 YYYY.MM.DD 등)
-  const normalizedValue = value.replace(/[\.\s\/]/g, '-');
+  const normalizedValue = value.replace(/[.\s/]/g, '-');
   const d = new Date(normalizedValue);
 
   if (!Number.isNaN(d.getTime())) {

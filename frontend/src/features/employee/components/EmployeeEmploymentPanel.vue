@@ -236,7 +236,7 @@ const timeline = computed<TimelineEvent[]>(() => {
 const isResigned = computed(() => props.employee?.statusCode === 'RESIGNED');
 const isOnLeave = computed(() => props.employee?.statusCode === 'ON_LEAVE');
 const isActive = computed(() => props.employee?.statusCode === 'ACTIVE');
-const minResignationDate = computed(() => props.employee?.joinDate ?? undefined);
+
 const isResigningAction = computed(() => props.isResigning);
 const isTakingLeaveAction = computed(() => props.isTakingLeave);
 const isActivatingAction = computed(() => props.isActivating);
