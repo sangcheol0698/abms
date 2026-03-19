@@ -61,7 +61,8 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/api/csrf"
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
