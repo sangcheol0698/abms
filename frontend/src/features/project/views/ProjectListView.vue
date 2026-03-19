@@ -286,6 +286,7 @@ function handleResetFilters() {
 function getColumnLabel(columnId: string): string {
   const labels: Record<string, string> = {
     name: '프로젝트명',
+    leadDepartmentName: '주관 부서',
     partyName: '협력사',
     status: '상태',
     contractAmount: '계약금액',
@@ -343,10 +344,40 @@ const columns: ColumnDef<ProjectListItem>[] = [
     meta: { skeleton: 'title-subtitle' },
   },
   {
+    id: 'leadDepartmentName',
+    accessorFn: (row) => row.leadDepartmentName,
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: '주관 부서', align: 'left' }),
+    cell: ({ row }) =>
+      row.original.leadDepartmentId && row.original.leadDepartmentName
+        ? h(
+            'button',
+            {
+              type: 'button',
+              class:
+                'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+              onClick: () => handleViewDepartment(row.original.leadDepartmentId),
+            },
+            row.original.leadDepartmentName,
+          )
+        : h('span', { class: 'text-sm text-foreground' }, '-'),
+    enableSorting: false,
+    size: 160,
+  },
+  {
     id: 'partyName',
     accessorFn: (row) => row.partyName,
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '협력사', align: 'left' }),
-    cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.partyName || '-'),
+    cell: ({ row }) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class:
+            'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+          onClick: () => handleViewParty(row.original.partyId),
+        },
+        row.original.partyName || '-',
+      ),
     enableSorting: false,
     size: 180,
   },
@@ -536,6 +567,23 @@ function handleViewProject(project: ProjectListItem) {
   router.push({
     name: 'project-detail',
     params: { projectId: project.projectId },
+  });
+}
+
+function handleViewParty(partyId: number) {
+  if (!canReadParties()) {
+    return;
+  }
+  router.push({
+    name: 'party-detail',
+    params: { partyId },
+  });
+}
+
+function handleViewDepartment(departmentId: number) {
+  router.push({
+    name: 'department',
+    params: { departmentId },
   });
 }
 

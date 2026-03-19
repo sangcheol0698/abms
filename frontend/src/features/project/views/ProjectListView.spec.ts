@@ -48,6 +48,8 @@ vi.mock('@/features/project/queries/useProjectQueries', () => ({
             code: 'P-001',
             partyId: 100,
             partyName: '협력사A',
+            leadDepartmentId: 20,
+            leadDepartmentName: '플랫폼팀',
             statusLabel: '진행 중',
             contractAmount: 1000000,
             startDate: '2024-01-01',
@@ -188,6 +190,8 @@ async function mountProjectListView() {
     routes: [
       { path: '/projects', name: 'projects', component: ProjectListView },
       { path: '/projects/:projectId', name: 'project-detail', component: { template: '<div />' } },
+      { path: '/departments/:departmentId', name: 'department', component: { template: '<div />' } },
+      { path: '/parties/:partyId', name: 'party-detail', component: { template: '<div />' } },
     ],
     global: {
       stubs: {

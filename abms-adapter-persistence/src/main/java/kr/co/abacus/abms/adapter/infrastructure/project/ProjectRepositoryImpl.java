@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.adapter.infrastructure.project;
 
+import static kr.co.abacus.abms.domain.department.QDepartment.*;
 import static kr.co.abacus.abms.domain.party.QParty.*;
 import static kr.co.abacus.abms.domain.project.QProject.*;
 import static org.springframework.util.StringUtils.*;
@@ -48,6 +49,8 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         project.id,
                         project.partyId,
                         party.name,
+                        project.leadDepartmentId,
+                        department.name,
                         project.code,
                         project.name,
                         project.description,
@@ -57,6 +60,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         project.period.endDate))
                 .from(project)
                 .join(party).on(project.partyId.eq(party.id))
+                .leftJoin(department).on(project.leadDepartmentId.eq(department.id))
                 .where(
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
@@ -73,6 +77,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                 .select(project.count())
                 .from(project)
                 .join(party).on(project.partyId.eq(party.id))
+                .leftJoin(department).on(project.leadDepartmentId.eq(department.id))
                 .where(
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),

@@ -5,6 +5,8 @@ export interface ProjectListItem {
   projectId: number;
   partyId: number;
   partyName: string;
+  leadDepartmentId: number | null;
+  leadDepartmentName: string | null;
   code: string;
   name: string;
   description: string | null;
@@ -34,6 +36,8 @@ export function mapProjectListItem(input: any): ProjectListItem {
     projectId: Number(input?.projectId ?? 0),
     partyId: Number(input?.partyId ?? 0),
     partyName: String(input?.partyName ?? ''),
+    leadDepartmentId: input?.leadDepartmentId ? Number(input.leadDepartmentId) : null,
+    leadDepartmentName: input?.leadDepartmentName ? String(input.leadDepartmentName) : null,
     code: String(input?.code ?? ''),
     name: String(input?.name ?? ''),
     description: input?.description ?? null,

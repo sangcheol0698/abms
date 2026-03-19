@@ -11,6 +11,8 @@ public record ProjectSummary(
         Long projectId,
         Long partyId,
         String partyName,
+        @Nullable Long leadDepartmentId,
+        @Nullable String leadDepartmentName,
         String code,
         String name,
         @Nullable String description,

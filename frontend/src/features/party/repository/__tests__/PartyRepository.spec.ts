@@ -216,6 +216,8 @@ describe('PartyRepository', () => {
         projectId: 30,
         partyId: 3,
         partyName: '협력사A',
+        leadDepartmentId: null,
+        leadDepartmentName: null,
         code: 'P-030',
         name: '연계 프로젝트',
         description: null,
