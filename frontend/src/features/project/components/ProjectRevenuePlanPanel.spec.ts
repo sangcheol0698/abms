@@ -39,9 +39,11 @@ vi.mock('@/features/project/queries/useProjectQueries', () => ({
   }),
   useIssueProjectRevenuePlanMutation: () => ({
     mutateAsync: issueMutateAsyncMock,
+    isPending: { value: false },
   }),
   useCancelProjectRevenuePlanMutation: () => ({
     mutateAsync: cancelMutateAsyncMock,
+    isPending: { value: false },
   }),
 }));
 
@@ -93,6 +95,22 @@ describe('ProjectRevenuePlanPanel', () => {
           Alert: PassThrough,
           AlertTitle: PassThrough,
           AlertDescription: PassThrough,
+          AlertDialog: PassThrough,
+          AlertDialogContent: PassThrough,
+          AlertDialogHeader: PassThrough,
+          AlertDialogTitle: PassThrough,
+          AlertDialogDescription: PassThrough,
+          AlertDialogFooter: PassThrough,
+          AlertDialogCancel: {
+            props: ['disabled'],
+            emits: ['click'],
+            template: '<button type="button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+          },
+          AlertDialogAction: {
+            props: ['disabled'],
+            emits: ['click'],
+            template: '<button type="button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+          },
           ProjectRevenuePlanRowActions: {
             emits: ['edit', 'toggle-status'],
             template: '<div><button data-test="edit-revenue" @click="$emit(\'edit\')">수정</button><button data-test="issue-revenue" @click="$emit(\'toggle-status\')">발행</button></div>',
@@ -123,6 +141,22 @@ describe('ProjectRevenuePlanPanel', () => {
           Alert: PassThrough,
           AlertTitle: PassThrough,
           AlertDescription: PassThrough,
+          AlertDialog: PassThrough,
+          AlertDialogContent: PassThrough,
+          AlertDialogHeader: PassThrough,
+          AlertDialogTitle: PassThrough,
+          AlertDialogDescription: PassThrough,
+          AlertDialogFooter: PassThrough,
+          AlertDialogCancel: {
+            props: ['disabled'],
+            emits: ['click'],
+            template: '<button type="button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+          },
+          AlertDialogAction: {
+            props: ['disabled'],
+            emits: ['click'],
+            template: '<button type="button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+          },
           ProjectRevenuePlanRowActions: {
             emits: ['edit', 'toggle-status'],
             template: '<button data-test="issue-revenue" @click="$emit(\'toggle-status\')">발행</button>',
@@ -136,6 +170,10 @@ describe('ProjectRevenuePlanPanel', () => {
     });
 
     await wrapper.get('[data-test="issue-revenue"]').trigger('click');
+    expect(wrapper.text()).toContain('매출 일정을 발행하시겠습니까?');
+
+    const confirmButton = wrapper.findAll('button').find((button) => button.text() === '발행하기');
+    await confirmButton?.trigger('click');
 
     expect(issueMutateAsyncMock).toHaveBeenCalledWith({
       projectId: 7,

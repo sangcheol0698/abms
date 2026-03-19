@@ -76,7 +76,10 @@ test.describe('프로젝트 상세', () => {
         return true;
       }
 
-      if (path === '/api/projectRevenuePlans/1/2/issue' && method === 'PATCH') {
+      if (
+        (path === '/api/projectRevenuePlans/1/1/issue' || path === '/api/projectRevenuePlans/1/2/issue')
+        && method === 'PATCH'
+      ) {
         revenuePlans[0] = {
           ...revenuePlans[0],
           status: 'INVOICED',
@@ -85,7 +88,10 @@ test.describe('프로젝트 상세', () => {
         return true;
       }
 
-      if (path === '/api/projectRevenuePlans/1/2/cancel' && method === 'PATCH') {
+      if (
+        (path === '/api/projectRevenuePlans/1/1/cancel' || path === '/api/projectRevenuePlans/1/2/cancel')
+        && method === 'PATCH'
+      ) {
         revenuePlans[0] = {
           ...revenuePlans[0],
           status: 'PLANNED',
@@ -170,10 +176,13 @@ test.describe('프로젝트 상세', () => {
 
     await page.getByRole('button', { name: '매출 일정 메뉴 열기' }).click();
     await page.getByRole('menuitem', { name: '발행' }).click();
+    await page.getByRole('button', { name: '발행하기' }).click();
     await expect(page.getByText('발행', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: '매출 일정 메뉴 열기' }).click();
+    await expect(page.getByRole('menuitem', { name: '발행 취소' })).toBeVisible();
     await page.getByRole('menuitem', { name: '발행 취소' }).click();
+    await page.getByRole('button', { name: '발행 취소하기' }).click();
     await expect(page.getByText('미발행', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: '협력사A' }).first().click();

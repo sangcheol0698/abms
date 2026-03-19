@@ -75,6 +75,26 @@
       @update:open="handleDialogOpenChange"
       @saved="handleSaved"
     />
+
+    <AlertDialog :open="isStatusDialogOpen" @update:open="handleStatusDialogOpenChange">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{{ statusDialogTitle }}</AlertDialogTitle>
+          <AlertDialogDescription>{{ statusDialogDescription }}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <Button variant="outline" :disabled="isStatusProcessing" @click="handleStatusDialogOpenChange(false)">
+            취소
+          </Button>
+          <Button
+            :disabled="isStatusProcessing"
+            @click="confirmToggleIssued"
+          >
+            {{ isStatusProcessing ? '처리 중...' : statusDialogActionLabel }}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
@@ -93,6 +113,14 @@ import {
 } from '@tanstack/vue-table';
 import { Plus } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -128,6 +156,8 @@ const issueRevenuePlanMutation = useIssueProjectRevenuePlanMutation();
 const cancelRevenuePlanMutation = useCancelProjectRevenuePlanMutation();
 const isDialogOpen = ref(false);
 const editingPlan = ref<ProjectRevenuePlanResponse | null>(null);
+const pendingStatusPlan = ref<(ProjectRevenuePlanResponse & { status?: 'PLANNED' | 'INVOICED' }) | null>(null);
+const isStatusDialogOpen = ref(false);
 const canManageProject = computed(() => canManageProjects());
 const columnFilters = ref<ColumnFiltersState>([]);
 const rowSelection = ref<RowSelectionState>({});
@@ -165,6 +195,23 @@ const invoicedAmount = computed(() =>
   items.value
     .filter((item) => item.status === 'INVOICED')
     .reduce((sum, item) => sum + item.amount, 0),
+);
+const isStatusProcessing = computed(
+  () => issueRevenuePlanMutation.isPending.value || cancelRevenuePlanMutation.isPending.value,
+);
+const statusDialogTitle = computed(() =>
+  pendingStatusPlan.value?.status === 'INVOICED' ? '매출 일정 발행을 취소하시겠습니까?' : '매출 일정을 발행하시겠습니까?',
+);
+const statusDialogDescription = computed(() => {
+  if (!pendingStatusPlan.value) {
+    return '';
+  }
+
+  const action = pendingStatusPlan.value.status === 'INVOICED' ? '발행 취소' : '발행';
+  return `${pendingStatusPlan.value.sequence}회차 일정을 ${action}합니다.`;
+});
+const statusDialogActionLabel = computed(() =>
+  pendingStatusPlan.value?.status === 'INVOICED' ? '발행 취소하기' : '발행하기',
 );
 
 const typeLabelMap: Record<string, string> = {
@@ -265,9 +312,10 @@ const columns: ColumnDef<(typeof items.value)[number]>[] = [
     cell: ({ row }) =>
       canManageProject.value
         ? h(ProjectRevenuePlanRowActions, {
+            key: `${row.original.projectId}-${row.original.sequence}-${row.original.status}`,
             status: row.original.status,
             onEdit: () => openEditDialog(row.original),
-            'onToggle-status': () => toggleIssued(row.original),
+            'onToggle-status': () => openStatusDialog(row.original),
           })
         : null,
     enableSorting: false,
@@ -347,8 +395,25 @@ function handleSaved() {
   editingPlan.value = null;
 }
 
-async function toggleIssued(plan: ProjectRevenuePlanResponse & { status?: 'PLANNED' | 'INVOICED' }) {
+function openStatusDialog(plan: ProjectRevenuePlanResponse & { status?: 'PLANNED' | 'INVOICED' }) {
   if (!canManageProject.value) {
+    return;
+  }
+
+  pendingStatusPlan.value = plan;
+  isStatusDialogOpen.value = true;
+}
+
+function handleStatusDialogOpenChange(value: boolean) {
+  isStatusDialogOpen.value = value;
+  if (!value && !isStatusProcessing.value) {
+    pendingStatusPlan.value = null;
+  }
+}
+
+async function confirmToggleIssued() {
+  const plan = pendingStatusPlan.value;
+  if (!plan || !canManageProject.value) {
     return;
   }
 
@@ -359,6 +424,7 @@ async function toggleIssued(plan: ProjectRevenuePlanResponse & { status?: 'PLANN
         sequence: plan.sequence,
       });
       toast.success('매출 일정 발행을 취소했습니다.');
+      handleStatusDialogOpenChange(false);
       return;
     }
 
@@ -367,6 +433,7 @@ async function toggleIssued(plan: ProjectRevenuePlanResponse & { status?: 'PLANN
       sequence: plan.sequence,
     });
     toast.success('매출 일정을 발행했습니다.');
+    handleStatusDialogOpenChange(false);
   } catch (error) {
     const message = error instanceof HttpError ? error.message : '매출 일정 상태 변경 중 오류가 발생했습니다.';
     toast.error('매출 일정 상태 변경에 실패했습니다.', { description: message });
