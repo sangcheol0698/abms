@@ -180,8 +180,6 @@ VALUES (38, 104, 'cy950315@abms.co', '오사원', 'SENIOR_ASSOCIATE', 'FULL_TIME
        (48, 100, 'kidsan20@abms.co', '윤사원', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW',
         '2023-11-05', '1996-02-22', NOW(), NOW(), 1, 1, 0),
        (49, 115, 'sdi4932@abms.co', '신사원', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW',
-        '2023-11-05', '2002-12-07', NOW(), NOW(), 1, 1, 0),
-       (50, 115, 'tkdcjf38@iabacus.co.kr', '박상철', 'SENIOR_ASSOCIATE', 'FULL_TIME', 'ACTIVE', 'JUNIOR', 'SKY_GLOW',
         '2023-11-05', '2002-12-07', NOW(), NOW(), 1, 1, 0);
 
 
