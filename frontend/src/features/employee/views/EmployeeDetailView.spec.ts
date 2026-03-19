@@ -121,9 +121,22 @@ const EmployeeEmploymentPanelStub = defineComponent({
   },
 });
 
-async function mountDetailView() {
+const TabsStub = defineComponent({
+  props: {
+    modelValue: {
+      type: String,
+      default: 'overview',
+    },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { slots }) {
+    return () => h('div', { 'data-test': 'active-tab' }, [props.modelValue, slots.default?.()]);
+  },
+});
+
+async function mountDetailView(route = '/employees/1') {
   return renderWithProviders(EmployeeDetailViewComponent, {
-    route: '/employees/1',
+    route,
     routes: [
       { path: '/employees/:employeeId', name: 'employee-detail', component: EmployeeDetailViewComponent },
       { path: '/employees', name: 'employees', component: { template: '<div />' } },
@@ -135,7 +148,7 @@ async function mountDetailView() {
         AlertDescription: PassThrough,
         AlertTitle: PassThrough,
         Button: ButtonStub,
-        Tabs: PassThrough,
+        Tabs: TabsStub,
         TabsList: PassThrough,
         TabsTrigger: ButtonStub,
         TabsContent: PassThrough,
@@ -308,5 +321,28 @@ describe('EmployeeDetailView', () => {
     expect(wrapper.text()).toContain('승진');
     expect(wrapper.text()).toContain('직원 편집');
     expect(wrapper.text()).toContain('직원 삭제');
+  });
+
+  it('tab query가 있으면 해당 탭을 활성화하고 변경 시 query를 갱신한다', async () => {
+    storage.user = JSON.stringify({
+      name: '관리자',
+      email: 'admin@abms.co.kr',
+      employeeId: 99,
+      departmentId: 10,
+      permissions: [
+        { code: 'employee.read', scopes: ['ALL'] },
+        { code: 'employee.write', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper, router } = await mountDetailView('/employees/1?tab=salary');
+
+    expect(wrapper.get('[data-test="active-tab"]').text()).toContain('salary');
+
+    await router.replace({ path: '/employees/1', query: { tab: 'projects' } });
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.get('[data-test="active-tab"]').text()).toContain('projects');
   });
 });
