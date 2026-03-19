@@ -15,6 +15,9 @@ public interface ProjectAssignmentRepository
         kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository {
 
     @Override
+    List<ProjectAssignment> findByProjectIdAndEmployeeIdAndDeletedFalse(Long projectId, Long employeeId);
+
+    @Override
     @Query("SELECT pa FROM ProjectAssignment pa " +
             "WHERE pa.employeeId = :employeeId " +
             "AND pa.deleted = false " +

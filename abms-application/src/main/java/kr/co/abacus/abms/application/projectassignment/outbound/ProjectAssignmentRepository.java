@@ -16,6 +16,8 @@ public interface ProjectAssignmentRepository extends CustomProjectAssignmentRepo
 
     List<ProjectAssignment> findByProjectId(Long projectId);
 
+    List<ProjectAssignment> findByProjectIdAndEmployeeIdAndDeletedFalse(Long projectId, Long employeeId);
+
     List<ProjectAssignment> findCurrentActiveAssignmentsByEmployeeId(Long employeeId, LocalDate targetDate);
 
     List<ProjectAssignment> findActiveAssignments(LocalDate monthStart, LocalDate monthEnd);
