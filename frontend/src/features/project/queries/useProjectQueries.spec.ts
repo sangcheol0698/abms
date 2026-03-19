@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { dashboardKeys, partyKeys, projectKeys, queryClient } from '@/core/query';
 import {
   useCancelProjectMutation,
+  useCancelProjectRevenuePlanMutation,
   useCompleteProjectMutation,
   useCreateProjectAssignmentMutation,
   useCreateProjectMutation,
   useCreateProjectRevenuePlanMutation,
   useDeleteProjectMutation,
   useEndProjectAssignmentMutation,
+  useIssueProjectRevenuePlanMutation,
   useProjectAssignmentsQuery,
   useProjectDetailQuery,
   useProjectListQuery,
@@ -16,6 +18,7 @@ import {
   useProjectRevenuePlansQuery,
   useProjectStatusesQuery,
   useUpdateProjectAssignmentMutation,
+  useUpdateProjectRevenuePlanMutation,
   useUpdateProjectMutation,
 } from '@/features/project/queries/useProjectQueries';
 
@@ -39,6 +42,9 @@ const projectRepositoryMock = {
 const revenueRepositoryMock = {
   findByProjectId: vi.fn(),
   create: vi.fn(),
+  update: vi.fn(),
+  issue: vi.fn(),
+  cancel: vi.fn(),
 };
 
 const assignmentRepositoryMock = {
@@ -205,6 +211,60 @@ describe('useProjectQueries', () => {
     });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
       queryKey: projectKeys.assignmentsRoot(4),
+    });
+  });
+
+  it('매출 계획 수정 mutation 성공 시 매출 계획 query를 invalidate한다', async () => {
+    const updateRevenuePlanMutation = useUpdateProjectRevenuePlanMutation();
+
+    await updateRevenuePlanMutation.mutationFn({
+      projectId: 3,
+      sequence: 1,
+      payload: {
+        sequence: 2,
+        revenueDate: '2026-02-20',
+        type: 'BALANCE_PAYMENT',
+        amount: 45000000,
+        memo: '수정 후',
+      },
+    });
+    await updateRevenuePlanMutation.onSuccess?.(undefined, {
+      projectId: 3,
+      sequence: 1,
+      payload: {
+        sequence: 2,
+        revenueDate: '2026-02-20',
+        type: 'BALANCE_PAYMENT',
+        amount: 45000000,
+        memo: '수정 후',
+      },
+    });
+
+    expect(revenueRepositoryMock.update).toHaveBeenCalledWith(3, 1, {
+      sequence: 2,
+      revenueDate: '2026-02-20',
+      type: 'BALANCE_PAYMENT',
+      amount: 45000000,
+      memo: '수정 후',
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: projectKeys.revenuePlans(3),
+    });
+  });
+
+  it('매출 계획 발행/취소 mutation 성공 시 매출 계획 query를 invalidate한다', async () => {
+    const issueRevenuePlanMutation = useIssueProjectRevenuePlanMutation();
+    const cancelRevenuePlanMutation = useCancelProjectRevenuePlanMutation();
+
+    await issueRevenuePlanMutation.mutationFn({ projectId: 3, sequence: 1 });
+    await cancelRevenuePlanMutation.mutationFn({ projectId: 3, sequence: 1 });
+    await issueRevenuePlanMutation.onSuccess?.(undefined, { projectId: 3, sequence: 1 });
+    await cancelRevenuePlanMutation.onSuccess?.(undefined, { projectId: 3, sequence: 1 });
+
+    expect(revenueRepositoryMock.issue).toHaveBeenCalledWith(3, 1);
+    expect(revenueRepositoryMock.cancel).toHaveBeenCalledWith(3, 1);
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: projectKeys.revenuePlans(3),
     });
   });
 

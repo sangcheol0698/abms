@@ -1,8 +1,8 @@
 <template>
-  <div class="relative w-full">
+  <div :class="cn('relative w-full', className)">
     <div class="relative">
       <Input v-model="inputValue" type="text" :placeholder="placeholder" maxlength="10"
-        :class="cn('w-full pr-10', !formattedValue && 'text-muted-foreground', className)" :disabled="disabled"
+        :class="cn('w-full pr-10', !formattedValue && 'text-muted-foreground')" :disabled="disabled"
         @input="handleInput" @blur="handleInputBlur" @keydown.enter.prevent="handleInputBlur" />
       <Popover v-model:open="isOpen">
         <PopoverTrigger as-child>

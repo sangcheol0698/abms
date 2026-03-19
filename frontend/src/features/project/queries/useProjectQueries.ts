@@ -8,6 +8,7 @@ import type { ProjectCreateData, ProjectUpdateData } from '@/features/project/mo
 import type { ProjectOverviewSummaryParams } from '@/features/project/repository/ProjectRepository';
 import ProjectRevenueRepository, {
   type ProjectRevenuePlanCreateRequest,
+  type ProjectRevenuePlanUpdatePayload,
 } from '@/features/project/repository/ProjectRevenueRepository';
 import ProjectAssignmentRepository, {
 } from '@/features/project/repository/ProjectAssignmentRepository';
@@ -173,6 +174,51 @@ export function useCreateProjectRevenuePlanMutation() {
     onSuccess: async (_data, request) => {
       await queryClient.invalidateQueries({
         queryKey: projectKeys.revenuePlans(request.projectId),
+      });
+    },
+  });
+}
+
+export function useUpdateProjectRevenuePlanMutation() {
+  const repository = appContainer.resolve(ProjectRevenueRepository);
+
+  return useMutation({
+    mutationFn: (variables: {
+      projectId: number;
+      sequence: number;
+      payload: ProjectRevenuePlanUpdatePayload;
+    }) => repository.update(variables.projectId, variables.sequence, variables.payload),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: projectKeys.revenuePlans(variables.projectId),
+      });
+    },
+  });
+}
+
+export function useIssueProjectRevenuePlanMutation() {
+  const repository = appContainer.resolve(ProjectRevenueRepository);
+
+  return useMutation({
+    mutationFn: (variables: { projectId: number; sequence: number }) =>
+      repository.issue(variables.projectId, variables.sequence),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: projectKeys.revenuePlans(variables.projectId),
+      });
+    },
+  });
+}
+
+export function useCancelProjectRevenuePlanMutation() {
+  const repository = appContainer.resolve(ProjectRevenueRepository);
+
+  return useMutation({
+    mutationFn: (variables: { projectId: number; sequence: number }) =>
+      repository.cancel(variables.projectId, variables.sequence),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: projectKeys.revenuePlans(variables.projectId),
       });
     },
   });

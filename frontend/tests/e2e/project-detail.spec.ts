@@ -5,6 +5,17 @@ import { BASE_URL, fulfillJson, mockApi } from './support/api';
 test.describe('프로젝트 상세', () => {
   test('상세 정보와 탭을 렌더링하고 협력사 상세로 이동한다', async ({ page }) => {
     await mockAuthenticatedSession(page);
+    const revenuePlans = [
+      {
+        projectId: 1,
+        sequence: 1,
+        revenueDate: '2024-04-01',
+        type: 'DOWN_PAYMENT',
+        amount: 1000000,
+        status: 'PLANNED',
+        memo: '초기 메모',
+      },
+    ];
 
     await mockApi(page, async ({ route, path, method, url }) => {
       if (path === '/api/projects/1' && method === 'GET') {
@@ -40,7 +51,46 @@ test.describe('프로젝트 상세', () => {
       }
 
       if (path === '/api/projectRevenuePlans/1' && method === 'GET') {
-        await fulfillJson(route, []);
+        await fulfillJson(route, revenuePlans);
+        return true;
+      }
+
+      if (path === '/api/projectRevenuePlans/1/1' && method === 'PUT') {
+        const body = route.request().postDataJSON() as {
+          sequence: number;
+          revenueDate: string;
+          type: string;
+          amount: number;
+          memo?: string;
+        };
+        revenuePlans[0] = {
+          projectId: 1,
+          sequence: body.sequence,
+          revenueDate: body.revenueDate,
+          type: body.type,
+          amount: body.amount,
+          status: revenuePlans[0].status,
+          memo: body.memo ?? '',
+        };
+        await fulfillJson(route, revenuePlans[0]);
+        return true;
+      }
+
+      if (path === '/api/projectRevenuePlans/1/2/issue' && method === 'PATCH') {
+        revenuePlans[0] = {
+          ...revenuePlans[0],
+          status: 'INVOICED',
+        };
+        await fulfillJson(route, revenuePlans[0]);
+        return true;
+      }
+
+      if (path === '/api/projectRevenuePlans/1/2/cancel' && method === 'PATCH') {
+        revenuePlans[0] = {
+          ...revenuePlans[0],
+          status: 'PLANNED',
+        };
+        await fulfillJson(route, revenuePlans[0]);
         return true;
       }
 
@@ -105,7 +155,26 @@ test.describe('프로젝트 상세', () => {
     await expect(page.getByText('등록된 투입 인력이 없습니다.')).toBeVisible();
 
     await page.getByRole('tab', { name: '매출 일정' }).click();
-    await expect(page.getByText('등록된 매출 일정이 없습니다.')).toBeVisible();
+    await expect(page.getByText('1회차')).toBeVisible();
+    await expect(page.getByText('초기 메모')).toBeVisible();
+
+    await page.getByRole('button', { name: '매출 일정 메뉴 열기' }).click();
+    await page.getByRole('menuitem', { name: '수정' }).click();
+    await page.locator('#sequence').fill('2');
+    await page.locator('#amount').fill('2000000');
+    await page.locator('#description').fill('수정된 메모');
+    await page.getByRole('button', { name: '저장' }).click();
+
+    await expect(page.getByText('2회차')).toBeVisible();
+    await expect(page.getByText('수정된 메모')).toBeVisible();
+
+    await page.getByRole('button', { name: '매출 일정 메뉴 열기' }).click();
+    await page.getByRole('menuitem', { name: '발행' }).click();
+    await expect(page.getByText('발행', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: '매출 일정 메뉴 열기' }).click();
+    await page.getByRole('menuitem', { name: '발행 취소' }).click();
+    await expect(page.getByText('미발행', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: '협력사A' }).first().click();
 

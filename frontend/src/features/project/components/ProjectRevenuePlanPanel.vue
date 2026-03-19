@@ -1,5 +1,10 @@
 <template>
   <div class="flex flex-col gap-6">
+    <Alert v-if="errorMessage" variant="destructive">
+      <AlertTitle>매출 일정 정보를 불러오지 못했습니다.</AlertTitle>
+      <AlertDescription>{{ errorMessage }}</AlertDescription>
+    </Alert>
+
     <div class="grid gap-4 md:grid-cols-3">
       <div class="rounded-xl border bg-card p-4 shadow-sm">
         <div class="text-sm font-medium text-muted-foreground">총 매출 금액</div>
@@ -65,8 +70,9 @@
 
     <ProjectRevenuePlanDialog
       :open="isDialogOpen"
+      :plan="editingPlan"
       :project-id="projectId"
-      @update:open="isDialogOpen = $event"
+      @update:open="handleDialogOpenChange"
       @saved="handleSaved"
     />
   </div>
@@ -74,6 +80,7 @@
 
 <script setup lang="ts">
 import { computed, h, ref, toRef } from 'vue';
+import { toast } from 'vue-sonner';
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -85,6 +92,7 @@ import {
   useVueTable,
 } from '@tanstack/vue-table';
 import { Plus } from 'lucide-vue-next';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -94,14 +102,19 @@ import {
   DataTableFacetedFilter,
   DataTableToolbar,
 } from '@/components/business';
+import HttpError from '@/core/http/HttpError';
 import { formatCurrency } from '@/features/project/models/projectListItem';
 import ProjectRevenuePlanDialog from './ProjectRevenuePlanDialog.vue';
+import ProjectRevenuePlanRowActions from './ProjectRevenuePlanRowActions.vue';
 import {
+  useCancelProjectRevenuePlanMutation,
   useProjectDetailQuery,
+  useIssueProjectRevenuePlanMutation,
   useProjectRevenuePlansQuery,
 } from '@/features/project/queries/useProjectQueries';
 import { canManageProjects } from '@/features/project/permissions';
 import { useProjectRevenuePlanQuerySync } from '@/features/project/composables/useProjectRevenuePlanQuerySync';
+import type { ProjectRevenuePlanResponse } from '@/features/project/repository/ProjectRevenueRepository';
 
 interface Props {
   projectId: number;
@@ -111,7 +124,10 @@ const props = defineProps<Props>();
 const projectId = toRef(props, 'projectId');
 const revenuePlansQuery = useProjectRevenuePlansQuery(projectId);
 const projectDetailQuery = useProjectDetailQuery(projectId);
+const issueRevenuePlanMutation = useIssueProjectRevenuePlanMutation();
+const cancelRevenuePlanMutation = useCancelProjectRevenuePlanMutation();
 const isDialogOpen = ref(false);
+const editingPlan = ref<ProjectRevenuePlanResponse | null>(null);
 const canManageProject = computed(() => canManageProjects());
 const columnFilters = ref<ColumnFiltersState>([]);
 const rowSelection = ref<RowSelectionState>({});
@@ -120,6 +136,14 @@ useProjectRevenuePlanQuerySync({ columnFilters });
 const isLoading = computed(
   () => revenuePlansQuery.isLoading.value || projectDetailQuery.isLoading.value,
 );
+const errorMessage = computed(() => {
+  const error = revenuePlansQuery.error.value ?? projectDetailQuery.error.value;
+  if (!error) {
+    return null;
+  }
+
+  return error instanceof HttpError ? error.message : '매출 일정 정보를 불러오는 중 오류가 발생했습니다.';
+});
 const items = computed(() =>
   (revenuePlansQuery.data.value ?? [])
     .map((item) => ({
@@ -236,6 +260,20 @@ const columns: ColumnDef<(typeof items.value)[number]>[] = [
     cell: ({ row }) => h('span', { class: 'text-sm text-muted-foreground' }, row.original.memo || '-'),
     size: 240,
   },
+  {
+    id: 'actions',
+    cell: ({ row }) =>
+      canManageProject.value
+        ? h(ProjectRevenuePlanRowActions, {
+            status: row.original.status,
+            onEdit: () => openEditDialog(row.original),
+            'onToggle-status': () => toggleIssued(row.original),
+          })
+        : null,
+    enableSorting: false,
+    enableHiding: false,
+    size: 56,
+  },
 ];
 
 const table = useVueTable({
@@ -285,10 +323,53 @@ function handleCreate() {
   if (!canManageProject.value) {
     return;
   }
+  editingPlan.value = null;
   isDialogOpen.value = true;
+}
+
+function openEditDialog(plan: ProjectRevenuePlanResponse) {
+  if (!canManageProject.value) {
+    return;
+  }
+  editingPlan.value = plan;
+  isDialogOpen.value = true;
+}
+
+function handleDialogOpenChange(value: boolean) {
+  isDialogOpen.value = value;
+  if (!value) {
+    editingPlan.value = null;
+  }
 }
 
 function handleSaved() {
   isDialogOpen.value = false;
+  editingPlan.value = null;
+}
+
+async function toggleIssued(plan: ProjectRevenuePlanResponse & { status?: 'PLANNED' | 'INVOICED' }) {
+  if (!canManageProject.value) {
+    return;
+  }
+
+  try {
+    if (plan.status === 'INVOICED') {
+      await cancelRevenuePlanMutation.mutateAsync({
+        projectId: plan.projectId,
+        sequence: plan.sequence,
+      });
+      toast.success('매출 일정 발행을 취소했습니다.');
+      return;
+    }
+
+    await issueRevenuePlanMutation.mutateAsync({
+      projectId: plan.projectId,
+      sequence: plan.sequence,
+    });
+    toast.success('매출 일정을 발행했습니다.');
+  } catch (error) {
+    const message = error instanceof HttpError ? error.message : '매출 일정 상태 변경 중 오류가 발생했습니다.';
+    toast.error('매출 일정 상태 변경에 실패했습니다.', { description: message });
+  }
 }
 </script>
