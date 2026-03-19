@@ -11,10 +11,10 @@ spring:
   jpa:
     defer-datasource-initialization: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
   sql:
     init:
-      mode: always
+      mode: never
   ai:
     openai:
       api-key: ${AI_OPENAI_API_KEY}

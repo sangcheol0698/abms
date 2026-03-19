@@ -154,8 +154,8 @@ docker compose up -d
 
 **런타임 기본값:**
 - 향상된 동시성을 위한 가상 스레드 (Virtual threads)
-- JPA 스키마 자동 생성 (`ddl-auto: create`)
-- 샘플 데이터 초기화 (`local` 프로파일의 `InitData` 클래스 통해)
+- 로컬 JPA 스키마 자동 갱신 (`ddl-auto: update`)
+- 로컬 기본 초기 데이터 적재 없음
 - 실제 파라미터가 포함된 P6Spy SQL 로깅
 - API 부트 기본값: `spring.batch.job.enabled=false`
 - 배치 부트 기본값: `spring.batch.job.enabled=true`
@@ -190,6 +190,10 @@ npm run dev
 
 # 명시적 작업으로 배치 애플리케이션 실행
 ./gradlew :abms-batch-boot:bootRun --args='--spring.batch.job.name=employeeCostJob'
+
+# 배치 전용 로컬 프로필로 실행 (기존 DB/데이터 유지)
+./gradlew :abms-batch-boot:bootRun --args='--spring.profiles.active=local-batch --spring.batch.job.name=employeeCostJob targetDate=2026-02-15'
+./gradlew :abms-batch-boot:bootRun --args='--spring.profiles.active=local-batch --spring.batch.job.name=revenueMonthlySummaryJob targetDate=2026-02-15'
 
 # 테스트 실행
 ./gradlew test
@@ -474,8 +478,8 @@ The server will start on `http://localhost:8080`.
 
 **Runtime Defaults:**
 - Virtual threads for improved concurrency
-- JPA schema auto-creation (`ddl-auto: create`)
-- Sample data initialization (via `InitData` class in `local` profile)
+- Local JPA schema auto-update (`ddl-auto: update`)
+- No default local seed data loading
 - P6Spy SQL logging with actual parameters
 - API boot default: `spring.batch.job.enabled=false`
 - Batch boot default: `spring.batch.job.enabled=true`

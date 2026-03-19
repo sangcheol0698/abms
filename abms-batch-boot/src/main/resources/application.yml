@@ -3,6 +3,10 @@ spring:
     name: abms
   profiles:
     default: local
+    group:
+      local-batch:
+        - local
+        - batch
   jpa:
     open-in-view: false
   threads:
