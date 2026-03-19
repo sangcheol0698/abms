@@ -15,6 +15,7 @@ public record ProjectRevenuePlanResponse(
         LocalDate revenueDate,
         RevenueType type,
         Long amount,
+        String status,
         @Nullable String memo
 ) {
 
@@ -25,6 +26,7 @@ public record ProjectRevenuePlanResponse(
                 projectRevenuePlan.getRevenueDate(),
                 projectRevenuePlan.getType(),
                 projectRevenuePlan.getAmount().amount().longValue(),
+                Boolean.TRUE.equals(projectRevenuePlan.getIsIssued()) ? "INVOICED" : "PLANNED",
                 projectRevenuePlan.getMemo()
         );
     }
