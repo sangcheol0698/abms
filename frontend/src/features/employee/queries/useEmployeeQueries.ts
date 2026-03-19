@@ -4,6 +4,7 @@ import { appContainer } from '@/core/di/container';
 import { authKeys, employeeKeys, departmentKeys, dashboardKeys, queryClient } from '@/core/query';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import type { EmployeeCreatePayload } from '@/features/employee/models/employee';
+import type { ChangeEmployeeSalaryPayload } from '@/features/employee/models/payroll';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
 import type { EmployeeOverviewSummaryParams } from '@/features/employee/repository/EmployeeRepository';
 import AuthRepository from '@/features/auth/repository/AuthRepository';
@@ -158,6 +159,32 @@ export function useEmployeePositionHistoryQuery(
   });
 }
 
+export function useEmployeeCurrentPayrollQuery(
+  employeeIdRef: MaybeRefOrGetter<number | null | undefined>,
+) {
+  const repository = appContainer.resolve(EmployeeRepository);
+  const employeeId = computed(() => Number(toValue(employeeIdRef) ?? 0));
+
+  return useQuery({
+    queryKey: computed(() => employeeKeys.payrollCurrent(employeeId.value)),
+    queryFn: () => repository.fetchCurrentPayroll(employeeId.value),
+    enabled: computed(() => employeeId.value > 0),
+  });
+}
+
+export function useEmployeePayrollHistoryQuery(
+  employeeIdRef: MaybeRefOrGetter<number | null | undefined>,
+) {
+  const repository = appContainer.resolve(EmployeeRepository);
+  const employeeId = computed(() => Number(toValue(employeeIdRef) ?? 0));
+
+  return useQuery({
+    queryKey: computed(() => employeeKeys.payrollHistory(employeeId.value)),
+    queryFn: () => repository.fetchPayrollHistory(employeeId.value),
+    enabled: computed(() => employeeId.value > 0),
+  });
+}
+
 export function useCreateEmployeeMutation() {
   const repository = appContainer.resolve(EmployeeRepository);
 
@@ -245,6 +272,23 @@ export function usePromoteEmployeeMutation() {
       repository.promote(variables.employeeId, variables.position, variables.grade),
     onSuccess: async (_data, variables) => {
       await invalidateEmployeeSideEffects(variables.employeeId);
+    },
+  });
+}
+
+export function useChangeEmployeeSalaryMutation() {
+  const repository = appContainer.resolve(EmployeeRepository);
+
+  return useMutation({
+    mutationFn: (variables: { employeeId: number; payload: ChangeEmployeeSalaryPayload }) =>
+      repository.changeSalary(variables.employeeId, variables.payload),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: employeeKeys.payrollCurrent(variables.employeeId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: employeeKeys.payrollHistory(variables.employeeId),
+      });
     },
   });
 }
