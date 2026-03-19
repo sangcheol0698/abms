@@ -10,8 +10,13 @@ import ProjectRevenueRepository, {
   type ProjectRevenuePlanCreateRequest,
 } from '@/features/project/repository/ProjectRevenueRepository';
 import ProjectAssignmentRepository, {
-  type ProjectAssignmentCreateRequest,
 } from '@/features/project/repository/ProjectAssignmentRepository';
+import type {
+  ProjectAssignmentCreatePayload,
+  ProjectAssignmentEndPayload,
+  ProjectAssignmentSearchParams,
+  ProjectAssignmentUpdatePayload,
+} from '@/features/project/models/projectAssignment';
 
 async function invalidateProjectSideEffects(projectId?: number) {
   const tasks: Promise<unknown>[] = [
@@ -88,14 +93,19 @@ export function useProjectRevenuePlansQuery(
 
 export function useProjectAssignmentsQuery(
   projectIdRef: MaybeRefOrGetter<number | null | undefined>,
+  paramsRef: MaybeRefOrGetter<ProjectAssignmentSearchParams>,
 ) {
   const repository = appContainer.resolve(ProjectAssignmentRepository);
   const projectId = computed(() => Number(toValue(projectIdRef) ?? 0));
+  const params = computed(() => toValue(paramsRef));
 
   return useQuery({
-    queryKey: computed(() => projectKeys.assignments(projectId.value)),
-    queryFn: () => repository.findByProjectId(projectId.value),
+    queryKey: computed(() =>
+      projectKeys.assignments(projectId.value, (params.value ?? {}) as unknown as Record<string, unknown>),
+    ),
+    queryFn: () => repository.findByProjectId(projectId.value, params.value),
     enabled: computed(() => projectId.value > 0),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -172,10 +182,38 @@ export function useCreateProjectAssignmentMutation() {
   const repository = appContainer.resolve(ProjectAssignmentRepository);
 
   return useMutation({
-    mutationFn: (request: ProjectAssignmentCreateRequest) => repository.create(request),
+    mutationFn: (request: ProjectAssignmentCreatePayload) => repository.create(request),
     onSuccess: async (_data, request) => {
       await queryClient.invalidateQueries({
-        queryKey: projectKeys.assignments(request.projectId),
+        queryKey: projectKeys.assignmentsRoot(request.projectId),
+      });
+    },
+  });
+}
+
+export function useUpdateProjectAssignmentMutation() {
+  const repository = appContainer.resolve(ProjectAssignmentRepository);
+
+  return useMutation({
+    mutationFn: (variables: { assignmentId: number; payload: ProjectAssignmentUpdatePayload; projectId: number }) =>
+      repository.update(variables.assignmentId, variables.payload),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: projectKeys.assignmentsRoot(variables.projectId),
+      });
+    },
+  });
+}
+
+export function useEndProjectAssignmentMutation() {
+  const repository = appContainer.resolve(ProjectAssignmentRepository);
+
+  return useMutation({
+    mutationFn: (variables: { assignmentId: number; payload: ProjectAssignmentEndPayload; projectId: number }) =>
+      repository.end(variables.assignmentId, variables.payload),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: projectKeys.assignmentsRoot(variables.projectId),
       });
     },
   });

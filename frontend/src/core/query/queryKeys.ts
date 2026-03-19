@@ -4,6 +4,7 @@ import {
   normalizeEmployeeProjectsParams,
   normalizeLimit,
   normalizePartySearchParams,
+  normalizeProjectAssignmentParams,
   normalizeProjectSearchParams,
 } from '@/core/query/normalizeParams';
 
@@ -81,8 +82,10 @@ export const projectKeys = {
   statuses: () => [...PROJECT_KEY, 'statuses'] as const,
   revenuePlans: (projectId: number | null | undefined) =>
     [...PROJECT_KEY, 'revenue-plans', projectId ?? 0] as const,
-  assignments: (projectId: number | null | undefined) =>
+  assignmentsRoot: (projectId: number | null | undefined) =>
     [...PROJECT_KEY, 'assignments', projectId ?? 0] as const,
+  assignments: (projectId: number | null | undefined, params: Record<string, unknown> = {}) =>
+    [...PROJECT_KEY, 'assignments', projectId ?? 0, normalizeProjectAssignmentParams(params)] as const,
 };
 
 export const dashboardKeys = {
