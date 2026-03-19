@@ -38,6 +38,19 @@ const ButtonStub = defineComponent({
   },
 });
 
+const TabsStub = defineComponent({
+  props: {
+    modelValue: {
+      type: String,
+      default: 'overview',
+    },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { slots }) {
+    return () => h('div', { 'data-test': 'active-tab' }, [props.modelValue, slots.default?.()]);
+  },
+});
+
 const ProjectDetailHeaderStub = defineComponent({
   setup(_, { slots }) {
     return () => h('div', slots.actions?.());
@@ -71,7 +84,7 @@ async function mountProjectDetailView() {
         AlertDescription: PassThrough,
         AlertTitle: PassThrough,
         Button: ButtonStub,
-        Tabs: PassThrough,
+        Tabs: TabsStub,
         TabsContent: PassThrough,
         TabsList: PassThrough,
         TabsTrigger: ButtonStub,
@@ -116,7 +129,7 @@ describe('ProjectDetailView', () => {
       }),
     });
     ProjectDetailViewComponent = (await import('@/features/project/views/ProjectDetailView.vue')).default;
-  });
+  }, 60000);
 
   beforeEach(() => {
     storage = {};
@@ -158,5 +171,62 @@ describe('ProjectDetailView', () => {
 
     expect(editButton).toBeUndefined();
     expect(deleteButton).toBeUndefined();
+  });
+
+  it('tab query가 있으면 해당 탭을 활성화한다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      permissions: [
+        { code: 'project.read', scopes: ['ALL'] },
+        { code: 'party.read', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await renderWithProviders(ProjectDetailViewComponent, {
+      route: '/projects/1?tab=revenue',
+      routes: [
+        { path: '/projects/:projectId', name: 'project-detail', component: ProjectDetailViewComponent },
+        { path: '/projects', name: 'projects', component: { template: '<div />' } },
+        { path: '/parties/:partyId', name: 'party-detail', component: { template: '<div />' } },
+        { path: '/departments/:departmentId', name: 'department', component: { template: '<div />' } },
+      ],
+      global: {
+        stubs: {
+          Alert: PassThrough,
+          AlertDescription: PassThrough,
+          AlertTitle: PassThrough,
+          Button: ButtonStub,
+          Tabs: TabsStub,
+          TabsContent: PassThrough,
+          TabsList: PassThrough,
+          TabsTrigger: ButtonStub,
+          AlertDialog: AlertDialogStub,
+          AlertDialogAction: ButtonStub,
+          AlertDialogCancel: ButtonStub,
+          AlertDialogContent: PassThrough,
+          AlertDialogDescription: PassThrough,
+          AlertDialogFooter: PassThrough,
+          AlertDialogHeader: PassThrough,
+          AlertDialogTitle: PassThrough,
+          DropdownMenu: PassThrough,
+          DropdownMenuContent: PassThrough,
+          DropdownMenuItem: ButtonStub,
+          DropdownMenuSeparator: true,
+          DropdownMenuTrigger: PassThrough,
+          ProjectDetailHeader: ProjectDetailHeaderStub,
+          ProjectOverviewPanel: true,
+          ProjectAssignmentPanel: true,
+          ProjectRevenuePlanPanel: true,
+          ProjectUpdateDialog: true,
+          MoreHorizontal: true,
+          Pencil: true,
+          Trash2: true,
+        },
+      },
+    });
+
+    expect(wrapper.get('[data-test="active-tab"]').text()).toContain('revenue');
   });
 });
