@@ -49,7 +49,10 @@
         </template>
       </EmployeeDetailHeader>
 
-      <Tabs default-value="overview" class="flex min-h-[320px] flex-1 flex-col gap-4">
+      <Tabs
+        v-model="activeTab"
+        class="flex min-h-[320px] flex-1 flex-col gap-4"
+      >
         <TabsList class="flex-wrap">
           <TabsTrigger value="overview">개요</TabsTrigger>
           <TabsTrigger value="employment">근무 정보</TabsTrigger>
@@ -85,7 +88,10 @@
             />
           </TabsContent>
           <TabsContent value="salary" class="flex-1">
-            <EmployeeSalaryPanel :employee="employee" />
+            <EmployeeSalaryPanel
+              :employee-id="employee?.employeeId ?? 0"
+              :show-management-actions="canManageCurrentEmployee"
+            />
           </TabsContent>
           <TabsContent value="projects" class="flex-1">
             <EmployeeProjectsPanel :employee-id="employee?.employeeId ?? 0" />
@@ -187,10 +193,35 @@ import { dispatchOpenProfileDialogEvent } from '@/features/auth/profileDialogEve
 
 const route = useRoute();
 const router = useRouter();
+const EMPLOYEE_DETAIL_TABS = ['overview', 'employment', 'salary', 'projects'] as const;
+type EmployeeDetailTab = (typeof EMPLOYEE_DETAIL_TABS)[number];
+
+function isEmployeeDetailTab(value: unknown): value is EmployeeDetailTab {
+  return typeof value === 'string' && EMPLOYEE_DETAIL_TABS.includes(value as EmployeeDetailTab);
+}
+
 const employeeId = computed(() => {
   const raw = route.params.employeeId;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : 0;
+});
+const activeTab = computed<EmployeeDetailTab>({
+  get() {
+    const tab = Array.isArray(route.query.tab) ? route.query.tab[0] : route.query.tab;
+    return isEmployeeDetailTab(tab) ? tab : 'overview';
+  },
+  async set(tab) {
+    const nextQuery = { ...route.query };
+    if (tab === 'overview') {
+      delete nextQuery.tab;
+    } else {
+      nextQuery.tab = tab;
+    }
+
+    await router.replace({
+      query: nextQuery,
+    });
+  },
 });
 
 const employeeQuery = useEmployeeDetailQuery(employeeId);

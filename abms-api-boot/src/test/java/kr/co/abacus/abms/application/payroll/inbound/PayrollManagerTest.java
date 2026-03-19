@@ -65,6 +65,56 @@ class PayrollManagerTest extends IntegrationTestBase {
         assertThat(payroll.getPeriod()).isEqualTo(new Period(LocalDate.of(2025, 3, 1), null));
     }
 
+    @Test
+    @DisplayName("현재 연봉 시작일과 같거나 이전 날짜로는 변경할 수 없다")
+    void changeSalary_fail_whenStartDateIsNotAfterCurrentSalaryStartDate() {
+        Employee employee = createEmployee();
+        employeeRepository.save(employee);
+
+        payrollManager.changeSalary(employee.getId(), Money.wons(30_000_000L), LocalDate.of(2025, 3, 1));
+        flushAndClear();
+
+        assertThatThrownBy(() ->
+                payrollManager.changeSalary(employee.getId(), Money.wons(40_000_000L), LocalDate.of(2025, 3, 1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("새 연봉 적용 시작일은 기존 연봉 시작일 이후여야 합니다.");
+
+        assertThatThrownBy(() ->
+                payrollManager.changeSalary(employee.getId(), Money.wons(40_000_000L), LocalDate.of(2025, 2, 1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("새 연봉 적용 시작일은 기존 연봉 시작일 이후여야 합니다.");
+    }
+
+    @Test
+    @DisplayName("종료일이 있는 기존 연봉과 겹치면 새 시작일 전날로 종료일을 조정한다")
+    void changeSalary_closesOverlappingFixedRangePayroll() {
+        Employee employee = createEmployee();
+        employeeRepository.save(employee);
+
+        Payroll payroll = Payroll.create(employee.getId(), Money.wons(300_000_000L), LocalDate.of(2026, 1, 1));
+        payroll.close(LocalDate.of(2026, 12, 31));
+        payrollRepository.save(payroll);
+        flushAndClear();
+
+        payrollManager.changeSalary(employee.getId(), Money.wons(310_000_000L), LocalDate.of(2026, 3, 19));
+        flushAndClear();
+
+        var history = payrollRepository.findAllByEmployeeId(employee.getId());
+
+        assertThat(history).hasSize(2);
+        Payroll currentPayroll = history.stream()
+                .filter(candidate -> candidate.getAnnualSalary().equals(Money.wons(310_000_000L)))
+                .findFirst()
+                .orElseThrow();
+        Payroll previousPayroll = history.stream()
+                .filter(candidate -> candidate.getAnnualSalary().equals(Money.wons(300_000_000L)))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(currentPayroll.getPeriod()).isEqualTo(new Period(LocalDate.of(2026, 3, 19), null));
+        assertThat(previousPayroll.getPeriod()).isEqualTo(new Period(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 18)));
+    }
+
     private Employee createEmployee() {
         return Employee.create(
                 1L,

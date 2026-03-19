@@ -1,7 +1,13 @@
 import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
+import HttpError from '@/core/http/HttpError';
 import type { EmployeeCreatePayload, EmployeeSummary } from '@/features/employee/models/employee';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
+import type {
+  ChangeEmployeeSalaryPayload,
+  EmployeeCurrentPayroll,
+  EmployeePayrollHistoryItem,
+} from '@/features/employee/models/payroll';
 import {
   getEmployeeGradeOptions,
   getEmployeePositionOptions,
@@ -35,6 +41,10 @@ import { type EnumResponse, PageResponse, toSelectOption } from '@/core/api';
 
 // 기존 import 문 아래에 추가
 import type { PositionHistory } from '@/features/employee/models/positionHistory';
+import {
+  mapEmployeeCurrentPayroll,
+  mapEmployeePayrollHistoryItem,
+} from '@/features/employee/models/payroll';
 
 /**
  * 상태(Status) API 응답 타입
@@ -446,6 +456,42 @@ export class EmployeeRepository {
   async fetchPositionHistory(employeeId: number): Promise<PositionHistory[]> {
     return this.httpRepository.get({
       path: `/api/positionHistory/${employeeId}`,
+    });
+  }
+
+  async fetchCurrentPayroll(employeeId: number): Promise<EmployeeCurrentPayroll | null> {
+    try {
+      const response = await this.httpRepository.get({
+        path: `/api/employees/${employeeId}/payroll`,
+      });
+      return mapEmployeeCurrentPayroll(response);
+    } catch (error) {
+      if (error instanceof HttpError && error.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async fetchPayrollHistory(employeeId: number): Promise<EmployeePayrollHistoryItem[]> {
+    const response = await this.httpRepository.get({
+      path: `/api/employees/${employeeId}/payroll-history`,
+    });
+
+    if (!Array.isArray(response)) {
+      return [];
+    }
+
+    return response.map(mapEmployeePayrollHistoryItem);
+  }
+
+  async changeSalary(
+    employeeId: number,
+    payload: ChangeEmployeeSalaryPayload,
+  ): Promise<void> {
+    await this.httpRepository.post({
+      path: `/api/employees/${employeeId}/payroll-history`,
+      data: payload,
     });
   }
 }

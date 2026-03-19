@@ -39,6 +39,10 @@ export const employeeKeys = {
   avatars: () => [...EMPLOYEE_KEY, 'avatars'] as const,
   positionHistory: (employeeId: number | null | undefined) =>
     [...EMPLOYEE_KEY, 'position-history', employeeId ?? 0] as const,
+  payrollCurrent: (employeeId: number | null | undefined) =>
+    [...EMPLOYEE_KEY, 'payroll', 'current', employeeId ?? 0] as const,
+  payrollHistory: (employeeId: number | null | undefined) =>
+    [...EMPLOYEE_KEY, 'payroll', 'history', employeeId ?? 0] as const,
 };
 
 export const departmentKeys = {
