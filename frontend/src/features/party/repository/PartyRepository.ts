@@ -5,6 +5,7 @@ import type { PartyListItem, PartySearchParams } from '@/features/party/models/p
 import { mapPartyListItem } from '@/features/party/models/partyListItem';
 import type { ProjectListItem } from '@/features/project/models/projectListItem';
 import { mapProjectListItem } from '@/features/project/models/projectListItem';
+import type { PartyProjectSearchParams } from '@/features/party/models/partyProject';
 import type {
   PartyDetail,
   PartyCreateData,
@@ -135,15 +136,25 @@ export default class PartyRepository {
   /**
    * 협력사 관련 프로젝트 조회
    */
-  async fetchProjects(partyId: number): Promise<ProjectListItem[]> {
-    const response = await this.httpRepository.get({
-      path: `/api/parties/${partyId}/projects`,
-    });
-
-    if (!Array.isArray(response)) {
-      return [];
+  async fetchProjects(
+    partyId: number,
+    params: PartyProjectSearchParams,
+  ): Promise<PageResponse<ProjectListItem>> {
+    const queryParams: Record<string, string> = {
+      page: Math.max(params.page - 1, 0).toString(),
+      size: params.size.toString(),
+    };
+    if (params.name) {
+      queryParams.name = params.name;
+    }
+    if (params.statuses?.length) {
+      queryParams.statuses = params.statuses.join(',');
     }
 
-    return response.map(mapProjectListItem);
+    const response = await this.httpRepository.get({
+      path: `/api/parties/${partyId}/projects`,
+      params: queryParams,
+    });
+    return PageResponse.fromPage(response, mapProjectListItem);
   }
 }

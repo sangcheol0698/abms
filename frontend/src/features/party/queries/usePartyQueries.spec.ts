@@ -64,12 +64,12 @@ describe('usePartyQueries', () => {
   it('상세/프로젝트 query는 partyId가 양수일 때만 활성화한다', async () => {
     const disabledDetail = usePartyDetailQuery(ref(0));
     const enabledDetail = usePartyDetailQuery(ref(9));
-    const enabledProjects = usePartyProjectsQuery(ref(9));
+    const enabledProjects = usePartyProjectsQuery(ref(9), computed(() => ({ page: 1, size: 10 })));
 
     expect(disabledDetail.enabled.value).toBe(false);
     expect(enabledDetail.enabled.value).toBe(true);
     expect(enabledProjects.enabled.value).toBe(true);
-    expect(enabledProjects.queryKey.value).toEqual(partyKeys.projects(9));
+    expect(enabledProjects.queryKey.value).toEqual(partyKeys.projects(9, { page: 1, size: 10 }));
   });
 
   it('생성/수정/삭제 mutation 성공 시 관련 party/project query를 invalidate한다', async () => {
@@ -87,7 +87,7 @@ describe('usePartyQueries', () => {
       queryKey: partyKeys.detail(4),
     });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-      queryKey: partyKeys.projects(4),
+      queryKey: partyKeys.projectsRoot(4),
     });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
       queryKey: partyKeys.detail(5),

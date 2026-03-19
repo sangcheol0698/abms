@@ -130,6 +130,52 @@
                       <FormMessage class="sr-only" />
                     </FormItem>
                   </FormField>
+
+                  <FormField name="leadDepartmentId" v-slot="{ field, handleChange, handleBlur }">
+                    <FormItem class="md:col-span-2">
+                      <FormLabel>
+                        주관 부서
+                        <span class="ml-0.5 text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <div class="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            class="h-9 flex-1 justify-between gap-2 px-3"
+                            :disabled="isSubmitting"
+                            @click="handleDepartmentSelectButton(field.value, handleChange, handleBlur)"
+                          >
+                            <span class="flex min-w-0 items-center gap-2">
+                              <Building2 class="h-4 w-4 shrink-0" />
+                              <span class="truncate">
+                                {{ selectedLeadDepartmentLabel || '주관 부서를 선택하세요' }}
+                              </span>
+                            </span>
+                          </Button>
+                          <Button
+                            v-if="field.value"
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            class="h-9 w-9 shrink-0"
+                            :disabled="isSubmitting"
+                            @click="
+                              () => {
+                                handleChange(0);
+                                selectedLeadDepartmentLabel = '';
+                                handleBlur();
+                              }
+                            "
+                          >
+                            <X class="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormDescription>프로젝트를 관리하는 주관 부서를 선택하세요.</FormDescription>
+                      <FormMessage class="sr-only" />
+                    </FormItem>
+                  </FormField>
                 </div>
               </section>
 
@@ -300,6 +346,12 @@
     @update:open="isPartySelectOpen = $event"
     @select="handlePartySelected"
   />
+  <DepartmentSelectDialog
+    :open="isDepartmentSelectOpen"
+    :selected-department-id="selectedDepartmentIdForDialog"
+    @update:open="isDepartmentSelectOpen = $event"
+    @select="handleDepartmentSelected"
+  />
 </template>
 
 <script setup lang="ts">
@@ -337,8 +389,9 @@ import {
 import { DatePicker } from '@/components/ui/date-picker';
 import { Separator } from '@/components/ui/separator';
 import { MoneyInput } from '@/components/business';
+import DepartmentSelectDialog from '@/features/department/components/DepartmentSelectDialog.vue';
 import PartySelectDialog from '@/features/party/components/PartySelectDialog.vue';
-import { Building, X } from 'lucide-vue-next';
+import { Building, Building2, X } from 'lucide-vue-next';
 import HttpError from '@/core/http/HttpError';
 import type { ProjectDetail } from '@/features/project/models/projectDetail';
 import {
@@ -368,6 +421,7 @@ const emit = defineEmits<{
 
 const schema = z.object({
   partyId: z.number({ required_error: '협력사를 선택하세요.' }).min(1, '협력사를 선택하세요.'),
+  leadDepartmentId: z.number({ required_error: '주관 부서를 선택하세요.' }).min(1, '주관 부서를 선택하세요.'),
   code: z
     .string({ required_error: '프로젝트 코드를 입력하세요.' })
     .min(1, '프로젝트 코드를 입력하세요.')
@@ -397,6 +451,7 @@ const schema = z.object({
 const formSchema = toTypedSchema(schema);
 const initialValues = {
   partyId: 0,
+  leadDepartmentId: 0,
   code: '',
   name: '',
   description: '',
@@ -410,9 +465,13 @@ const formKey = ref(0);
 const formInitialValues = ref({ ...initialValues });
 const errorMessage = ref<string | null>(null);
 const isPartySelectOpen = ref(false);
+const isDepartmentSelectOpen = ref(false);
 const selectedPartyIdForDialog = ref<number | undefined>();
+const selectedDepartmentIdForDialog = ref<number | undefined>();
 const selectedPartyLabel = ref('');
+const selectedLeadDepartmentLabel = ref('');
 const applyPartySelection = ref<((value: number) => void) | null>(null);
+const applyDepartmentSelection = ref<((value: number) => void) | null>(null);
 const projectStatusesQuery = useProjectStatusesQuery();
 const createProjectMutation = useCreateProjectMutation();
 const updateProjectMutation = useUpdateProjectMutation();
@@ -458,13 +517,24 @@ watch(isPartySelectOpen, (next) => {
   }
 });
 
+watch(isDepartmentSelectOpen, (next) => {
+  if (!next) {
+    applyDepartmentSelection.value = null;
+    selectedDepartmentIdForDialog.value = undefined;
+  }
+});
+
 function resetForm() {
   errorMessage.value = null;
   setFormInitialValues(initialValues);
   isPartySelectOpen.value = false;
+  isDepartmentSelectOpen.value = false;
   selectedPartyIdForDialog.value = undefined;
+  selectedDepartmentIdForDialog.value = undefined;
   selectedPartyLabel.value = '';
+  selectedLeadDepartmentLabel.value = '';
   applyPartySelection.value = null;
+  applyDepartmentSelection.value = null;
 }
 
 function handleOpenChange(value: boolean) {
@@ -482,6 +552,7 @@ async function onSubmit(rawValues: Record<string, unknown>) {
 
   const payload = {
     partyId: values.partyId,
+    leadDepartmentId: values.leadDepartmentId,
     code: values.code.trim(),
     name: values.name.trim(),
     description: values.description?.trim() || '',
@@ -489,7 +560,6 @@ async function onSubmit(rawValues: Record<string, unknown>) {
     contractAmount: values.contractAmount,
     startDate: formatDate(values.startDate),
     endDate: values.endDate ? formatDate(values.endDate) : null,
-    leadDepartmentId: props.project?.leadDepartmentId ?? null,
   } as const;
 
   try {
@@ -553,9 +623,11 @@ function initializeFormValues() {
   errorMessage.value = null;
   if (isEditMode.value && props.project) {
     selectedPartyLabel.value = props.project.partyName;
+    selectedLeadDepartmentLabel.value = props.project.leadDepartmentName ?? '';
     setFormInitialValues(mapProjectToFormValues(props.project));
   } else {
     selectedPartyLabel.value = '';
+    selectedLeadDepartmentLabel.value = '';
     setFormInitialValues(initialValues);
   }
 }
@@ -568,6 +640,7 @@ function setFormInitialValues(values: typeof initialValues) {
 function mapProjectToFormValues(project: ProjectDetail): typeof initialValues {
   return {
     partyId: project.partyId,
+    leadDepartmentId: project.leadDepartmentId ?? 0,
     code: project.code,
     name: project.name,
     description: project.description || '',
@@ -601,5 +674,30 @@ function handlePartySelected({ partyId, partyName }: { partyId: number; partyNam
   selectedPartyLabel.value = partyName;
   applyPartySelection.value = null;
   isPartySelectOpen.value = false;
+}
+
+function handleDepartmentSelectButton(
+  currentValue: unknown,
+  onChange?: (value: unknown) => void,
+  onBlur?: () => void,
+) {
+  const currentId = typeof currentValue === 'number' ? currentValue : Number(currentValue) || 0;
+  openDepartmentSelect(currentId, (value: number) => {
+    onChange?.(value);
+    onBlur?.();
+  });
+}
+
+function openDepartmentSelect(currentDepartmentId: number, setter: (value: number) => void) {
+  selectedDepartmentIdForDialog.value = currentDepartmentId || undefined;
+  applyDepartmentSelection.value = setter;
+  isDepartmentSelectOpen.value = true;
+}
+
+function handleDepartmentSelected({ departmentId, departmentName }: { departmentId: number; departmentName: string }) {
+  applyDepartmentSelection.value?.(departmentId);
+  selectedLeadDepartmentLabel.value = departmentName;
+  applyDepartmentSelection.value = null;
+  isDepartmentSelectOpen.value = false;
 }
 </script>

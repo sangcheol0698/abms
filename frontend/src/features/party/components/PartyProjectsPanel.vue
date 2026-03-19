@@ -1,101 +1,130 @@
 <template>
   <div class="flex h-full flex-col gap-6">
-    <header class="flex flex-col gap-2">
-      <h2 class="text-base font-semibold text-foreground">관련 프로젝트</h2>
-      <p class="text-sm text-muted-foreground">
-        이 협력사와 관련된 프로젝트 목록입니다.
-      </p>
-    </header>
-
-    <div
-      v-if="isLoading"
-      class="flex h-[180px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/10 text-sm text-muted-foreground"
-    >
-      프로젝트 정보를 불러오는 중입니다...
-    </div>
-
-    <Alert v-else-if="errorMessage" variant="destructive">
+    <Alert v-if="errorMessage" variant="destructive">
       <AlertTitle>프로젝트 정보를 불러오지 못했습니다.</AlertTitle>
       <AlertDescription>{{ errorMessage }}</AlertDescription>
     </Alert>
 
-    <template v-else>
-      <section class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-muted-foreground">진행 중</h3>
-          <Badge variant="outline">{{ ongoingProjects.length }}</Badge>
-        </div>
-        <div v-if="ongoingProjects.length === 0" class="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-          진행 중인 프로젝트가 없습니다.
-        </div>
-        <div v-else class="grid gap-4 md:grid-cols-2">
-          <Card
-            v-for="project in ongoingProjects"
-            :key="project.projectId"
-            class="border-border/60"
-          >
-            <CardHeader>
-              <div class="flex items-start justify-between gap-2">
-                <CardTitle class="text-base font-semibold text-foreground">{{ project.name }}</CardTitle>
-                <Badge variant="outline">{{ project.statusLabel }}</Badge>
-              </div>
-              <CardDescription>{{ toProjectPeriod(project) }}</CardDescription>
-            </CardHeader>
-            <CardContent class="text-sm text-muted-foreground">
-              계약금액: {{ toContractAmount(project) }}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+    <div class="space-y-4">
+      <DataTableToolbar
+        :table="table"
+        searchPlaceholder="프로젝트명 또는 코드를 입력하세요"
+        searchColumnId="name"
+        :getColumnLabel="getColumnLabel"
+        :applySearchOnEnter="true"
+      >
+        <template #filters>
+          <DataTableFacetedFilter
+            v-if="table.getColumn('status')"
+            :column="table.getColumn('status')"
+            title="상태"
+            :options="statusFilterOptions"
+          />
+        </template>
+      </DataTableToolbar>
 
-      <section class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-muted-foreground">완료</h3>
-          <Badge variant="outline">{{ completedProjects.length }}</Badge>
-        </div>
-        <div v-if="completedProjects.length === 0" class="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-          완료된 프로젝트가 없습니다.
-        </div>
-        <div v-else class="grid gap-4 md:grid-cols-2">
-          <Card
-            v-for="project in completedProjects"
-            :key="project.projectId"
-            class="border-border/60"
-          >
-            <CardHeader>
-              <div class="flex items-start justify-between gap-2">
-                <CardTitle class="text-base font-semibold text-foreground">{{ project.name }}</CardTitle>
-                <Badge variant="outline">{{ project.statusLabel }}</Badge>
-              </div>
-              <CardDescription>{{ toProjectPeriod(project) }}</CardDescription>
-            </CardHeader>
-            <CardContent class="text-sm text-muted-foreground">
-              계약금액: {{ toContractAmount(project) }}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-    </template>
+      <div v-if="isLoading" class="py-10 text-center text-sm text-muted-foreground">
+        프로젝트 정보를 불러오는 중입니다...
+      </div>
+
+      <template v-else>
+        <DataTable
+          :columns="columns"
+          :data="projects"
+          :table-instance="table"
+          empty-message="관련 프로젝트가 없습니다."
+          empty-description="이 협력사와 연결된 프로젝트가 여기에 표시됩니다."
+        />
+
+        <DataTablePagination
+          :page="page"
+          :page-size="pageSize"
+          :total-pages="totalPages"
+          :total-elements="totalElements"
+          :selected-row-count="selectedRowCount"
+          @pageChange="handlePageChange"
+          @pageSizeChange="handlePageSizeChange"
+        />
+      </template>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, toRef } from 'vue';
+import { computed, h, ref, toRef } from 'vue';
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  type RowSelectionState,
+  useVueTable,
+} from '@tanstack/vue-table';
+import { useRouter } from 'vue-router';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DataTable,
+  DataTableFacetedFilter,
+  DataTablePagination,
+  DataTableToolbar,
+} from '@/components/business';
+import { valueUpdater } from '@/components/ui/table/utils';
 import type { ProjectListItem } from '@/features/project/models/projectListItem';
+import type { PartyProjectSearchParams } from '@/features/party/models/partyProject';
 import { formatCurrency, formatProjectPeriod } from '@/features/project/models/projectListItem';
 import { usePartyProjectsQuery } from '@/features/party/queries/usePartyQueries';
+import { useProjectStatusesQuery } from '@/features/project/queries/useProjectQueries';
+import { usePartyProjectsQuerySync } from '@/features/party/composables/usePartyProjectsQuerySync';
 
 interface Props {
   partyId: number;
 }
 
 const props = defineProps<Props>();
+const router = useRouter();
 const partyId = toRef(props, 'partyId');
-const projectsQuery = usePartyProjectsQuery(partyId);
-const projects = computed(() => projectsQuery.data.value ?? []);
+const page = ref(1);
+const pageSize = ref(10);
+const rowSelection = ref<RowSelectionState>({});
+const columnFilters = ref<ColumnFiltersState>([]);
+
+usePartyProjectsQuerySync({
+  page,
+  pageSize,
+  columnFilters,
+});
+
+const searchParams = computed<PartyProjectSearchParams>(() => {
+  const filterMap = new Map<string, unknown>(columnFilters.value.map((filter) => [filter.id, filter.value]));
+  const params: PartyProjectSearchParams = {
+    page: page.value,
+    size: pageSize.value,
+  };
+
+  const name = filterMap.get('name');
+  if (typeof name === 'string' && name.trim().length > 0) {
+    params.name = name.trim();
+  }
+
+  const statuses = toArray(filterMap.get('status'));
+  if (statuses.length > 0) {
+    params.statuses = statuses;
+  }
+
+  return params;
+});
+
+const projectsQuery = usePartyProjectsQuery(partyId, searchParams);
+const projectStatusesQuery = useProjectStatusesQuery();
+const projectsPage = computed(() => projectsQuery.data.value);
+const projects = computed(() => projectsPage.value?.content ?? []);
+const totalPages = computed(() => projectsPage.value?.totalPages ?? 0);
+const totalElements = computed(() => projectsPage.value?.totalElements ?? 0);
+const selectedRowCount = computed(() => Object.keys(rowSelection.value).length);
 const isLoading = computed(() => projectsQuery.isLoading.value);
 const errorMessage = computed(() => {
   const error = projectsQuery.error.value;
@@ -104,47 +133,156 @@ const errorMessage = computed(() => {
   }
   return error instanceof Error ? error.message : '프로젝트 정보를 불러오는 중 오류가 발생했습니다.';
 });
-
-const ongoingStatuses = new Set(['SCHEDULED', 'IN_PROGRESS', 'ON_HOLD']);
-const completedStatuses = new Set(['COMPLETED', 'CANCELLED']);
-
-const ongoingProjects = computed(() =>
-  sortProjects(projects.value.filter((project) => ongoingStatuses.has(project.status))),
+const statusFilterOptions = computed(
+  () => projectStatusesQuery.data.value ?? ([] as { value: string; label: string }[]),
 );
 
-const completedProjects = computed(() =>
-  sortProjects(projects.value.filter((project) => completedStatuses.has(project.status))),
-);
+const columns: ColumnDef<ProjectListItem>[] = [
+  {
+    id: 'select',
+    header: ({ table }) =>
+      h(Checkbox, {
+        modelValue:
+          table.getIsAllPageRowsSelected()
+          || (table.getIsSomePageRowsSelected() && 'indeterminate'),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+          table.toggleAllPageRowsSelected(value === 'indeterminate' ? true : Boolean(value)),
+        ariaLabel: '모두 선택',
+      }),
+    cell: ({ row }) =>
+      h(Checkbox, {
+        modelValue: row.getIsSelected(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+          row.toggleSelected(value === 'indeterminate' ? true : Boolean(value)),
+        ariaLabel: '행 선택',
+      }),
+    enableSorting: false,
+    enableHiding: false,
+    size: 28,
+  },
+  {
+    id: 'name',
+    accessorFn: (row) => row.name,
+    header: () => h('span', '프로젝트명'),
+    cell: ({ row }) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class:
+            'cursor-pointer text-left font-medium text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+          onClick: () => handleProjectClick(row.original.projectId),
+        },
+        row.original.name,
+      ),
+    size: 220,
+  },
+  {
+    id: 'status',
+    accessorFn: (row) => row.statusLabel,
+    header: () => h('span', '상태'),
+    cell: ({ row }) => h(Badge, { variant: 'outline' }, () => row.original.statusLabel),
+    filterFn: (row, _columnId, filterValue) => {
+      const candidate = Array.isArray(filterValue) ? filterValue : [filterValue];
+      return candidate.length === 0 || candidate.includes(row.original.status);
+    },
+    size: 120,
+  },
+  {
+    id: 'leadDepartmentName',
+    accessorFn: (row) => row.leadDepartmentName,
+    header: () => h('span', '주관 부서'),
+    cell: ({ row }) =>
+      row.original.leadDepartmentId && row.original.leadDepartmentName
+        ? h(
+            'button',
+            {
+              type: 'button',
+              class:
+                'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+              onClick: () => handleDepartmentClick(row.original.leadDepartmentId),
+            },
+            row.original.leadDepartmentName,
+          )
+        : h('span', { class: 'text-sm text-muted-foreground' }, '-'),
+    size: 160,
+  },
+  {
+    id: 'period',
+    accessorFn: (row) => row.startDate,
+    header: () => h('span', '계약 기간'),
+    cell: ({ row }) =>
+      h('span', { class: 'text-sm text-muted-foreground' }, formatProjectPeriod(row.original.startDate, row.original.endDate)),
+    size: 200,
+  },
+  {
+    id: 'contractAmount',
+    accessorFn: (row) => row.contractAmount,
+    header: () => h('span', '계약 금액'),
+    cell: ({ row }) => h('span', { class: 'text-sm font-medium text-foreground' }, formatCurrency(row.original.contractAmount)),
+    size: 140,
+  },
+];
 
-function sortProjects(items: ProjectListItem[]) {
-  return [...items].sort((a, b) => {
-    const left = Date.parse(a.startDate);
-    const right = Date.parse(b.startDate);
-    if (Number.isNaN(left) && Number.isNaN(right)) {
-      return 0;
-    }
-    if (Number.isNaN(left)) {
-      return 1;
-    }
-    if (Number.isNaN(right)) {
-      return -1;
-    }
-    return right - left;
-  });
+const table = useVueTable({
+  get data() {
+    return projects.value;
+  },
+  columns,
+  manualPagination: true,
+  manualFiltering: true,
+  state: {
+    get rowSelection() {
+      return rowSelection.value;
+    },
+    get columnFilters() {
+      return columnFilters.value;
+    },
+  },
+  enableRowSelection: true,
+  onRowSelectionChange: (updater) => valueUpdater(updater, rowSelection),
+  onColumnFiltersChange: (updater) => valueUpdater(updater, columnFilters),
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getFacetedRowModel: getFacetedRowModel(),
+  getFacetedUniqueValues: getFacetedUniqueValues(),
+});
+
+function getColumnLabel(columnId: string): string {
+  const labels: Record<string, string> = {
+    name: '프로젝트명',
+    status: '상태',
+    leadDepartmentName: '주관 부서',
+    period: '계약 기간',
+    contractAmount: '계약 금액',
+  };
+  return labels[columnId] ?? columnId;
 }
 
-function toProjectPeriod(project: ProjectListItem) {
-  if (!project.startDate) {
-    return '기간 정보 없음';
+function handleProjectClick(projectIdValue: number) {
+  router.push({ name: 'project-detail', params: { projectId: projectIdValue } });
+}
+
+function handleDepartmentClick(departmentIdValue: number) {
+  router.push({ name: 'department', params: { departmentId: departmentIdValue } });
+}
+
+function handlePageChange(nextPage: number) {
+  page.value = nextPage;
+}
+
+function handlePageSizeChange(nextPageSize: number) {
+  pageSize.value = nextPageSize;
+  page.value = 1;
+}
+
+function toArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string');
   }
-  return formatProjectPeriod(project.startDate, project.endDate);
-}
-
-function toContractAmount(project: ProjectListItem) {
-  if (!project.contractAmount || project.contractAmount <= 0) {
-    return '—';
+  if (typeof value === 'string') {
+    return [value];
   }
-  return formatCurrency(project.contractAmount);
+  return [];
 }
-
 </script>

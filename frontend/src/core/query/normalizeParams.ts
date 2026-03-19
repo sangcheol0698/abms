@@ -211,6 +211,24 @@ export function normalizePartySearchParams(params: Record<string, unknown> = {})
   };
 }
 
+export interface NormalizedPartyProjectsParams {
+  page: number;
+  size: number;
+  name: string | null;
+  statuses: string[];
+}
+
+export function normalizePartyProjectsParams(
+  params: Record<string, unknown> = {},
+): NormalizedPartyProjectsParams {
+  return {
+    page: toPositiveInteger(params.page, 1),
+    size: toPositiveInteger(params.size, 10),
+    name: toNullableString(params.name),
+    statuses: toSortedUniqueStrings(params.statuses),
+  };
+}
+
 export function normalizeLimit(limit: unknown, fallback = 20): number {
   return toPositiveInteger(limit, fallback);
 }

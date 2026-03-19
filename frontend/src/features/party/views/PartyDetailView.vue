@@ -20,7 +20,7 @@
         @delete="openDeleteDialog"
       />
 
-      <Tabs default-value="overview" class="flex min-h-[320px] flex-1 flex-col gap-4">
+      <Tabs v-model="activeTab" class="flex min-h-[320px] flex-1 flex-col gap-4">
         <TabsList class="flex-wrap">
           <TabsTrigger value="overview">개요</TabsTrigger>
           <TabsTrigger v-if="canViewProjectsTab" value="projects">프로젝트</TabsTrigger>
@@ -96,10 +96,38 @@ defineOptions({ name: 'PartyDetailView' });
 
 const route = useRoute();
 const router = useRouter();
+const PARTY_DETAIL_TABS = ['overview', 'projects'] as const;
+type PartyDetailTab = (typeof PARTY_DETAIL_TABS)[number];
+
+function isPartyDetailTab(value: unknown): value is PartyDetailTab {
+  return typeof value === 'string' && PARTY_DETAIL_TABS.includes(value as PartyDetailTab);
+}
+
 const partyId = computed(() => {
   const raw = route.params.partyId;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : 0;
+});
+const activeTab = computed<PartyDetailTab>({
+  get() {
+    const tab = Array.isArray(route.query.tab) ? route.query.tab[0] : route.query.tab;
+    if (tab === 'projects' && !canViewProjectsTab.value) {
+      return 'overview';
+    }
+    return isPartyDetailTab(tab) ? tab : 'overview';
+  },
+  async set(tab) {
+    const nextQuery = { ...route.query };
+    if (tab === 'overview') {
+      delete nextQuery.tab;
+    } else {
+      nextQuery.tab = tab;
+    }
+
+    await router.replace({
+      query: nextQuery,
+    });
+  },
 });
 
 const isFormDialogOpen = ref(false);

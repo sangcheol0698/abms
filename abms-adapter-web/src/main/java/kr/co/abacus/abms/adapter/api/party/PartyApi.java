@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyCreateApiRequest;
+import kr.co.abacus.abms.adapter.api.party.dto.PartyProjectSearchRequest;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyResponse;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyUpdateApiRequest;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
@@ -30,8 +31,8 @@ import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.application.party.inbound.PartyManager;
 import kr.co.abacus.abms.application.project.authorization.ProjectReadAuthorizationService;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
+import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.domain.party.Party;
-import kr.co.abacus.abms.domain.project.Project;
 
 import java.util.List;
 
@@ -91,16 +92,24 @@ public class PartyApi {
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')"
             + " and @permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
     @GetMapping("/api/parties/{id}/projects")
-    public List<ProjectResponse> getPartyProjects(@PathVariable Long id, Authentication authentication) {
+    public PageResponse<ProjectResponse> getPartyProjects(
+            @PathVariable Long id,
+            PartyProjectSearchRequest request,
+            Pageable pageable,
+            Authentication authentication
+    ) {
         Party party = partyManager.findById(id);
-        List<Project> projects = projectFinder.findAllByPartyId(id);
         Long accountId = authFinder.getCurrentAccountId(authentication.getName());
+        ProjectSearchCondition authorizedCondition = projectReadAuthorizationService.authorizeSearchCondition(
+                accountId,
+                request.toCondition(id)
+        );
+        Page<kr.co.abacus.abms.application.project.dto.ProjectSummary> projects = projectFinder.search(
+                authorizedCondition,
+                pageable
+        );
 
-        return projects.stream()
-                .filter(project -> projectReadAuthorizationService.resolveScope(accountId)
-                        .canRead(project.getIdOrThrow(), project.getLeadDepartmentId()))
-                .map(project -> ProjectResponse.from(project, party.getName()))
-                .toList();
+        return PageResponse.of(projects.map(ProjectResponse::from));
     }
 
 }

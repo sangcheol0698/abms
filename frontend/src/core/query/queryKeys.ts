@@ -3,6 +3,7 @@ import {
   normalizeEmployeeSearchParams,
   normalizeEmployeeProjectsParams,
   normalizeLimit,
+  normalizePartyProjectsParams,
   normalizePartySearchParams,
   normalizeProjectAssignmentParams,
   normalizeProjectSearchParams,
@@ -68,7 +69,9 @@ export const partyKeys = {
   summary: (params: Record<string, unknown> = {}) =>
     [...PARTY_KEY, 'summary', normalizePartySearchParams(params)] as const,
   detail: (partyId: number | null | undefined) => [...PARTY_KEY, 'detail', partyId ?? 0] as const,
-  projects: (partyId: number | null | undefined) => [...PARTY_KEY, 'projects', partyId ?? 0] as const,
+  projectsRoot: (partyId: number | null | undefined) => [...PARTY_KEY, 'projects', partyId ?? 0] as const,
+  projects: (partyId: number | null | undefined, params: Record<string, unknown> = {}) =>
+    [...PARTY_KEY, 'projects', partyId ?? 0, normalizePartyProjectsParams(params)] as const,
 };
 
 export const projectKeys = {

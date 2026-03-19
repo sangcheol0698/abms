@@ -146,9 +146,10 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     void create() throws Exception {
         // Given
         Long partyId = createParty("테스트 협력사 A");
+        Long leadDepartmentId = createLeadDepartment("프로젝트 생성 부서");
         ProjectCreateApiRequest request = new ProjectCreateApiRequest(
                 partyId,
-                1L,
+                leadDepartmentId,
                 "PRJ-TEST-001",
                 "테스트 프로젝트",
                 "테스트 프로젝트 설명",
@@ -302,14 +303,15 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         // Given
         Long oldPartyId = createParty("테스트 협력사 Old");
         Long newPartyId = createParty("테스트 협력사 New");
-        Project project = createProject("PRJ-UPDATE-001", "테스트 프로젝트", oldPartyId, 1L, ProjectStatus.IN_PROGRESS,
+        Long leadDepartmentId = createLeadDepartment("프로젝트 수정 부서");
+        Project project = createProject("PRJ-UPDATE-001", "테스트 프로젝트", oldPartyId, leadDepartmentId, ProjectStatus.IN_PROGRESS,
                 LocalDate.of(2024, 1, 1));
         projectRepository.save(project);
         flushAndClear();
 
         ProjectUpdateApiRequest request = new ProjectUpdateApiRequest(
                 newPartyId,
-                1L,
+                leadDepartmentId,
                 "수정된 프로젝트명",
                 "수정된 설명",
                 ProjectStatus.IN_PROGRESS.name(),
@@ -489,6 +491,17 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         Party party = partyRepository.save(Party.create(
                 new PartyCreateRequest(name, null, null, null, null)));
         return party.getIdOrThrow();
+    }
+
+    private Long createLeadDepartment(String name) {
+        Department department = departmentRepository.save(Department.create(
+                "PRJ-" + Math.abs(name.hashCode()),
+                name,
+                DepartmentType.TEAM,
+                null,
+                null
+        ));
+        return department.getIdOrThrow();
     }
 
     private void grant(PermissionGroup permissionGroup, String code, String name) {

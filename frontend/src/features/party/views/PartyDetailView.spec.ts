@@ -28,6 +28,19 @@ const ButtonStub = defineComponent({
   },
 });
 
+const TabsStub = defineComponent({
+  props: {
+    modelValue: {
+      type: String,
+      default: 'overview',
+    },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { slots }) {
+    return () => h('div', { 'data-test': 'active-tab' }, [props.modelValue, slots.default?.()]);
+  },
+});
+
 const PartyDetailHeaderStub = defineComponent({
   props: {
     canManage: {
@@ -52,7 +65,7 @@ async function mountPartyDetailView() {
         Alert: PassThrough,
         AlertDescription: PassThrough,
         AlertTitle: PassThrough,
-        Tabs: PassThrough,
+        Tabs: TabsStub,
         TabsContent: PassThrough,
         TabsList: PassThrough,
         TabsTrigger: ButtonStub,
@@ -75,7 +88,7 @@ async function mountPartyDetailView() {
         PartyFormDialog: true,
       },
     },
-  });
+  }, 60000);
 }
 
 describe('PartyDetailView', () => {
@@ -126,5 +139,55 @@ describe('PartyDetailView', () => {
     const { wrapper } = await mountPartyDetailView();
 
     expect(wrapper.text()).not.toContain('프로젝트');
+  });
+
+  it('tab query가 있으면 해당 탭을 활성화한다', async () => {
+    storage.user = JSON.stringify({
+      name: '홍길동',
+      email: 'hong@abms.co.kr',
+      permissions: [
+        { code: 'party.read', scopes: ['ALL'] },
+        { code: 'project.read', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await renderWithProviders(PartyDetailViewComponent, {
+      route: '/parties/1?tab=projects',
+      routes: [
+        { path: '/parties/:partyId', name: 'party-detail', component: PartyDetailViewComponent },
+        { path: '/parties', name: 'parties', component: { template: '<div />' } },
+      ],
+      global: {
+        stubs: {
+          Alert: PassThrough,
+          AlertDescription: PassThrough,
+          AlertTitle: PassThrough,
+          Tabs: TabsStub,
+          TabsContent: PassThrough,
+          TabsList: PassThrough,
+          TabsTrigger: ButtonStub,
+          AlertDialog: PassThrough,
+          AlertDialogAction: ButtonStub,
+          AlertDialogCancel: ButtonStub,
+          AlertDialogContent: PassThrough,
+          AlertDialogDescription: PassThrough,
+          AlertDialogFooter: PassThrough,
+          AlertDialogHeader: PassThrough,
+          AlertDialogTitle: PassThrough,
+          DropdownMenu: PassThrough,
+          DropdownMenuContent: PassThrough,
+          DropdownMenuItem: ButtonStub,
+          DropdownMenuSeparator: true,
+          DropdownMenuTrigger: PassThrough,
+          PartyDetailHeader: PartyDetailHeaderStub,
+          PartyOverviewPanel: true,
+          PartyProjectsPanel: true,
+          PartyFormDialog: true,
+        },
+      },
+    });
+
+    expect(wrapper.get('[data-test="active-tab"]').text()).toContain('projects');
   });
 });

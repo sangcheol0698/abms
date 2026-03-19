@@ -22,34 +22,46 @@ test.describe('협력사 상세', () => {
       }
 
       if (path === '/api/parties/1/projects' && method === 'GET') {
-        await fulfillJson(route, [
-          {
-            projectId: 10,
-            partyId: 1,
-            partyName: '협력사A',
-            code: 'P-010',
-            name: '진행 프로젝트',
-            description: null,
-            status: 'IN_PROGRESS',
-            statusDescription: '진행 중',
-            contractAmount: 2000000,
-            startDate: '2024-01-01',
-            endDate: '2024-06-30',
-          },
-          {
-            projectId: 11,
-            partyId: 1,
-            partyName: '협력사A',
-            code: 'P-011',
-            name: '완료 프로젝트',
-            description: null,
-            status: 'COMPLETED',
-            statusDescription: '완료',
-            contractAmount: 3000000,
-            startDate: '2023-01-01',
-            endDate: '2023-12-31',
-          },
-        ]);
+        await fulfillJson(route, {
+          content: [
+            {
+              projectId: 10,
+              partyId: 1,
+              partyName: '협력사A',
+              code: 'P-010',
+              name: '진행 프로젝트',
+              description: null,
+              status: 'IN_PROGRESS',
+              statusDescription: '진행 중',
+              contractAmount: 2000000,
+              startDate: '2024-01-01',
+              endDate: '2024-06-30',
+              leadDepartmentId: 10,
+              leadDepartmentName: '플랫폼팀',
+            },
+            {
+              projectId: 11,
+              partyId: 1,
+              partyName: '협력사A',
+              code: 'P-011',
+              name: '완료 프로젝트',
+              description: null,
+              status: 'COMPLETED',
+              statusDescription: '완료',
+              contractAmount: 3000000,
+              startDate: '2023-01-01',
+              endDate: '2023-12-31',
+              leadDepartmentId: 11,
+              leadDepartmentName: '백엔드팀',
+            },
+          ],
+          pageNumber: 0,
+          pageSize: 10,
+          totalPages: 1,
+          totalElements: 2,
+          first: true,
+          last: true,
+        });
         return true;
       }
 
@@ -104,8 +116,8 @@ test.describe('협력사 상세', () => {
     await expect(page.getByRole('heading', { name: '협력사A' })).toBeVisible();
 
     await page.getByRole('tab', { name: '프로젝트' }).click();
-    await expect(page.getByRole('heading', { name: '진행 프로젝트' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '완료 프로젝트' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '진행 프로젝트', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '완료 프로젝트', exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: '더보기' }).click();
     await page.getByRole('menuitem', { name: '삭제' }).click();

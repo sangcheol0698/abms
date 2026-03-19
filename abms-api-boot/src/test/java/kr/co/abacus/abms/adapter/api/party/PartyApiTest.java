@@ -212,8 +212,8 @@ class PartyApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = login();
         mockMvc.perform(MockMvcRequestBuilders.get("/api/parties/{id}/projects", party.getId()).session(session))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].partyId").value(party.getId()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[*].code").isArray());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].partyId").value(party.getId()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[*].code").isArray());
     }
 
     @Test

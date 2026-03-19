@@ -190,43 +190,61 @@ describe('PartyRepository', () => {
   });
 
   it('협력사 프로젝트 조회 응답이 배열이 아니면 빈 배열을 반환한다', async () => {
-    httpGet.mockResolvedValueOnce(null);
-    await expect(repository.fetchProjects(3)).resolves.toEqual([]);
+    httpGet.mockResolvedValueOnce({
+      content: [],
+      number: 0,
+      size: 10,
+      totalPages: 0,
+      totalElements: 0,
+    });
+    await expect(repository.fetchProjects(3, { page: 1, size: 10 })).resolves.toEqual(
+      expect.objectContaining({ content: [] }),
+    );
   });
 
   it('협력사 프로젝트 응답을 프로젝트 목록 모델로 매핑한다', async () => {
-    httpGet.mockResolvedValueOnce([
-      {
-        projectId: 30,
-        partyId: 3,
-        partyName: '협력사A',
-        code: 'P-030',
-        name: '연계 프로젝트',
-        description: null,
-        status: 'IN_PROGRESS',
-        statusDescription: '진행 중',
-        contractAmount: 5000,
-        startDate: '2024-02-01',
-        endDate: null,
-      },
-    ]);
+    httpGet.mockResolvedValueOnce({
+      content: [
+        {
+          projectId: 30,
+          partyId: 3,
+          partyName: '협력사A',
+          code: 'P-030',
+          name: '연계 프로젝트',
+          description: null,
+          status: 'IN_PROGRESS',
+          statusDescription: '진행 중',
+          contractAmount: 5000,
+          startDate: '2024-02-01',
+          endDate: null,
+        },
+      ],
+      number: 0,
+      size: 10,
+      totalPages: 1,
+      totalElements: 1,
+    });
 
-    await expect(repository.fetchProjects(3)).resolves.toEqual([
-      {
-        projectId: 30,
-        partyId: 3,
-        partyName: '협력사A',
-        leadDepartmentId: null,
-        leadDepartmentName: null,
-        code: 'P-030',
-        name: '연계 프로젝트',
-        description: null,
-        status: 'IN_PROGRESS',
-        statusLabel: '진행 중',
-        contractAmount: 5000,
-        startDate: '2024-02-01',
-        endDate: null,
-      },
-    ]);
+    await expect(repository.fetchProjects(3, { page: 1, size: 10 })).resolves.toEqual(
+      expect.objectContaining({
+        content: [
+          {
+            projectId: 30,
+            partyId: 3,
+            partyName: '협력사A',
+            leadDepartmentId: null,
+            leadDepartmentName: null,
+            code: 'P-030',
+            name: '연계 프로젝트',
+            description: null,
+            status: 'IN_PROGRESS',
+            statusLabel: '진행 중',
+            contractAmount: 5000,
+            startDate: '2024-02-01',
+            endDate: null,
+          },
+        ],
+      }),
+    );
   });
 });

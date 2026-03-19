@@ -4,6 +4,7 @@ import { appContainer } from '@/core/di/container';
 import { partyKeys, projectKeys, queryClient } from '@/core/query';
 import PartyRepository from '@/features/party/repository/PartyRepository';
 import type { PartySearchParams } from '@/features/party/models/partyListItem';
+import type { PartyProjectSearchParams } from '@/features/party/models/partyProject';
 import type { PartyCreateData, PartyUpdateData } from '@/features/party/models/partyDetail';
 import type { PartyOverviewSummaryParams } from '@/features/party/repository/PartyRepository';
 
@@ -15,7 +16,7 @@ async function invalidatePartySideEffects(partyId?: number) {
 
   if (partyId && partyId > 0) {
     tasks.push(queryClient.invalidateQueries({ queryKey: partyKeys.detail(partyId) }));
-    tasks.push(queryClient.invalidateQueries({ queryKey: partyKeys.projects(partyId) }));
+    tasks.push(queryClient.invalidateQueries({ queryKey: partyKeys.projectsRoot(partyId) }));
   }
 
   await Promise.all(tasks);
@@ -63,14 +64,21 @@ export function usePartyDetailQuery(partyIdRef: MaybeRefOrGetter<number | null |
   });
 }
 
-export function usePartyProjectsQuery(partyIdRef: MaybeRefOrGetter<number | null | undefined>) {
+export function usePartyProjectsQuery(
+  partyIdRef: MaybeRefOrGetter<number | null | undefined>,
+  paramsRef: MaybeRefOrGetter<PartyProjectSearchParams>,
+) {
   const repository = appContainer.resolve(PartyRepository);
   const partyId = computed(() => Number(toValue(partyIdRef) ?? 0));
+  const params = computed(() => toValue(paramsRef));
 
   return useQuery({
-    queryKey: computed(() => partyKeys.projects(partyId.value)),
-    queryFn: () => repository.fetchProjects(partyId.value),
+    queryKey: computed(() =>
+      partyKeys.projects(partyId.value, (params.value ?? {}) as unknown as Record<string, unknown>),
+    ),
+    queryFn: () => repository.fetchProjects(partyId.value, params.value),
     enabled: computed(() => partyId.value > 0),
+    placeholderData: keepPreviousData,
   });
 }
 
