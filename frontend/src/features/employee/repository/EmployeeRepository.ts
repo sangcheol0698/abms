@@ -4,6 +4,10 @@ import HttpError from '@/core/http/HttpError';
 import type { EmployeeCreatePayload, EmployeeSummary } from '@/features/employee/models/employee';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 import type {
+  EmployeeProjectItem,
+  EmployeeProjectsSearchParams,
+} from '@/features/employee/models/project';
+import type {
   ChangeEmployeeSalaryPayload,
   EmployeeCurrentPayroll,
   EmployeePayrollHistoryItem,
@@ -45,6 +49,7 @@ import {
   mapEmployeeCurrentPayroll,
   mapEmployeePayrollHistoryItem,
 } from '@/features/employee/models/payroll';
+import { mapEmployeeProjectItem } from '@/features/employee/models/project';
 
 /**
  * 상태(Status) API 응답 타입
@@ -494,4 +499,45 @@ export class EmployeeRepository {
       data: payload,
     });
   }
+
+  async fetchProjects(
+    employeeId: number,
+    params: EmployeeProjectsSearchParams,
+  ): Promise<PageResponse<EmployeeProjectItem>> {
+    const response = await this.httpRepository.get({
+      path: `/api/employees/${employeeId}/projects`,
+      params: buildEmployeeProjectRequestParams(params),
+    });
+
+    return new PageResponse<EmployeeProjectItem>({
+      page: Number(response?.pageNumber ?? response?.number ?? 0) + 1,
+      size: Number(response?.pageSize ?? response?.size ?? params.size),
+      totalPages: Number(response?.totalPages ?? 0),
+      totalElements: Number(response?.totalElements ?? 0),
+      content: Array.isArray(response?.content) ? response.content.map(mapEmployeeProjectItem) : [],
+    });
+  }
+}
+
+function buildEmployeeProjectRequestParams(
+  params: EmployeeProjectsSearchParams,
+): Record<string, string> {
+  const query: Record<string, string> = {
+    page: Math.max(params.page - 1, 0).toString(),
+    size: params.size.toString(),
+  };
+
+  if (params.name) {
+    query.name = params.name;
+  }
+
+  if (params.assignmentStatuses && params.assignmentStatuses.length > 0) {
+    query.assignmentStatuses = params.assignmentStatuses.join(',');
+  }
+
+  if (params.projectStatuses && params.projectStatuses.length > 0) {
+    query.projectStatuses = params.projectStatuses.join(',');
+  }
+
+  return query;
 }

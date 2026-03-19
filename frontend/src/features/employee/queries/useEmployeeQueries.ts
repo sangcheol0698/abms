@@ -4,6 +4,7 @@ import { appContainer } from '@/core/di/container';
 import { authKeys, employeeKeys, departmentKeys, dashboardKeys, queryClient } from '@/core/query';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
 import type { EmployeeCreatePayload } from '@/features/employee/models/employee';
+import type { EmployeeProjectsSearchParams } from '@/features/employee/models/project';
 import type { ChangeEmployeeSalaryPayload } from '@/features/employee/models/payroll';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
 import type { EmployeeOverviewSummaryParams } from '@/features/employee/repository/EmployeeRepository';
@@ -182,6 +183,24 @@ export function useEmployeePayrollHistoryQuery(
     queryKey: computed(() => employeeKeys.payrollHistory(employeeId.value)),
     queryFn: () => repository.fetchPayrollHistory(employeeId.value),
     enabled: computed(() => employeeId.value > 0),
+  });
+}
+
+export function useEmployeeProjectsQuery(
+  employeeIdRef: MaybeRefOrGetter<number | null | undefined>,
+  paramsRef: MaybeRefOrGetter<EmployeeProjectsSearchParams>,
+) {
+  const repository = appContainer.resolve(EmployeeRepository);
+  const employeeId = computed(() => Number(toValue(employeeIdRef) ?? 0));
+  const params = computed(() => toValue(paramsRef));
+
+  return useQuery({
+    queryKey: computed(() =>
+      employeeKeys.projects(employeeId.value, (params.value ?? {}) as unknown as Record<string, unknown>),
+    ),
+    queryFn: () => repository.fetchProjects(employeeId.value, params.value),
+    enabled: computed(() => employeeId.value > 0),
+    placeholderData: keepPreviousData,
   });
 }
 

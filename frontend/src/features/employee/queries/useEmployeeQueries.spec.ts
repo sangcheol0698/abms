@@ -4,6 +4,7 @@ import { employeeKeys, queryClient } from '@/core/query';
 import {
   useChangeEmployeeSalaryMutation,
   useEmployeeCurrentPayrollQuery,
+  useEmployeeProjectsQuery,
   useEmployeePayrollHistoryQuery,
 } from '@/features/employee/queries/useEmployeeQueries';
 
@@ -15,6 +16,7 @@ const vueQueryMocks = vi.hoisted(() => ({
 const employeeRepositoryMock = {
   fetchCurrentPayroll: vi.fn(),
   fetchPayrollHistory: vi.fn(),
+  fetchProjects: vi.fn(),
   changeSalary: vi.fn(),
 };
 
@@ -57,6 +59,19 @@ describe('useEmployeeQueries payroll', () => {
 
     expect(employeeRepositoryMock.fetchCurrentPayroll).toHaveBeenCalledWith(3);
     expect(employeeRepositoryMock.fetchPayrollHistory).toHaveBeenCalledWith(3);
+  });
+
+  it('직원 프로젝트 query를 저장소와 query key에 연결한다', async () => {
+    employeeRepositoryMock.fetchProjects.mockResolvedValueOnce([]);
+
+    const query = useEmployeeProjectsQuery(ref(5), computed(() => ({ page: 1, size: 10 })));
+
+    expect(query.queryKey.value).toEqual(employeeKeys.projects(5, { page: 1, size: 10 }));
+    expect(query.enabled.value).toBe(true);
+
+    await query.queryFn();
+
+    expect(employeeRepositoryMock.fetchProjects).toHaveBeenCalledWith(5, { page: 1, size: 10 });
   });
 
   it('연봉 변경 mutation 성공 시 현재 연봉과 이력을 invalidate한다', async () => {
