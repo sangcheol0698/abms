@@ -25,8 +25,17 @@ public class PayrollModifyService implements PayrollManager {
     public void changeSalary(Long employeeId, Money annualSalary, LocalDate startDate) {
         checkEmployeeExists(employeeId);
 
-        payrollRepository.findCurrentSalaryByEmployeeId(employeeId).ifPresent(
-                currentSalary -> closeCurrentSalaryBefore(startDate.minusDays(1), currentSalary));
+        payrollRepository.lockByEmployeeIdAndTargetDate(employeeId, startDate).ifPresent(overlappingSalary -> {
+            if (!startDate.isAfter(overlappingSalary.getPeriod().startDate())) {
+                throw new IllegalArgumentException("새 연봉 적용 시작일은 기존 연봉 시작일 이후여야 합니다.");
+            }
+            closeCurrentSalaryBefore(startDate.minusDays(1), overlappingSalary);
+        });
+
+        if (payrollRepository.lockByEmployeeIdAndTargetDate(employeeId, startDate).isEmpty()
+                && payrollRepository.lockNextSalaryByEmployeeId(employeeId, startDate).isPresent()) {
+            throw new IllegalArgumentException("새 연봉 적용 시작일은 기존 연봉 시작일 이후여야 합니다.");
+        }
 
         Payroll payroll = Payroll.create(employeeId, annualSalary, startDate);
 

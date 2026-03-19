@@ -24,6 +24,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeExcelException;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
 import kr.co.abacus.abms.domain.notification.NotificationNotFoundException;
+import kr.co.abacus.abms.domain.payroll.PayrollNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectCodeDuplicateException;
 import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
 import kr.co.abacus.abms.domain.permission.PermissionNotFoundException;
@@ -62,7 +63,8 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
             ProjectNotFoundException.class,
             AccountNotFoundException.class,
             NotificationNotFoundException.class,
-            PermissionGroupNotFoundException.class
+            PermissionGroupNotFoundException.class,
+            PayrollNotFoundException.class
     })
     public ProblemDetail handleNotFoundException(Exception exception) {
         return getProblemDetail(HttpStatus.NOT_FOUND, exception);
