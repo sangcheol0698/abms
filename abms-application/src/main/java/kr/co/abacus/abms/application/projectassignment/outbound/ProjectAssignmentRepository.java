@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 
-public interface ProjectAssignmentRepository {
+public interface ProjectAssignmentRepository extends CustomProjectAssignmentRepository {
 
     ProjectAssignment save(ProjectAssignment projectAssignment);
 

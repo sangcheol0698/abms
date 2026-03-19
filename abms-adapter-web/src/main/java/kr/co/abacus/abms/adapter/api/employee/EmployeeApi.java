@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -40,6 +41,8 @@ import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDetailResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeProjectResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeProjectSearchRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateResponse;
@@ -55,6 +58,10 @@ import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
+import kr.co.abacus.abms.application.project.authorization.ProjectReadAuthorizationService;
+import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectSearchCondition;
+import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentFinder;
+import kr.co.abacus.abms.application.project.authorization.ProjectReadScope;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
@@ -72,6 +79,8 @@ public class EmployeeApi {
     private final AuthFinder authFinder;
     private final EmployeeReadAuthorizationService employeeReadAuthorizationService;
     private final EmployeeWriteAuthorizationService employeeWriteAuthorizationService;
+    private final ProjectReadAuthorizationService projectReadAuthorizationService;
+    private final ProjectAssignmentFinder projectAssignmentFinder;
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @PostMapping("/api/employees")
@@ -95,6 +104,33 @@ public class EmployeeApi {
         }
 
         return EmployeeDetailResponse.of(detail);
+    }
+
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')"
+            + " and @permissionAuthorizationChecker.hasPermission(authentication, 'project.read')")
+    @GetMapping("/api/employees/{id}/projects")
+    public PageResponse<EmployeeProjectResponse> findEmployeeProjects(
+            @PathVariable Long id,
+            EmployeeProjectSearchRequest request,
+            Pageable pageable,
+            Authentication authentication
+    ) {
+        EmployeeDetail detail = employeeFinder.findEmployeeDetail(id);
+        if (detail == null) {
+            throw new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id);
+        }
+        if (!resolveEmployeeReadScope(authentication).canRead(detail.employeeId(), detail.departmentId())) {
+            throw new AccessDeniedException("직원 조회 권한 범위를 벗어났습니다.");
+        }
+
+        ProjectReadScope projectReadScope = projectReadAuthorizationService.resolveScope(resolveAccountId(authentication));
+        EmployeeProjectSearchCondition authorizedCondition = request.toCondition(id).withAccess(
+                projectReadScope.allAllowed() ? null : List.copyOf(projectReadScope.allowedProjectIds()),
+                projectReadScope.allAllowed() ? null : List.copyOf(projectReadScope.allowedLeadDepartmentIds())
+        );
+
+        return PageResponse.of(projectAssignmentFinder.findByEmployeeId(authorizedCondition, pageable)
+                .map(EmployeeProjectResponse::from));
     }
 
     @GetMapping("/api/employees")

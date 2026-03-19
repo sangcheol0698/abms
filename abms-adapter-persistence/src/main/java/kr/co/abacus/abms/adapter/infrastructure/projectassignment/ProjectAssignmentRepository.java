@@ -11,6 +11,7 @@ import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 
 public interface ProjectAssignmentRepository
         extends JpaRepository<ProjectAssignment, Long>,
+        kr.co.abacus.abms.application.projectassignment.outbound.CustomProjectAssignmentRepository,
         kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository {
 
     @Override
