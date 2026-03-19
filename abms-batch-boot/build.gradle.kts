@@ -14,4 +14,9 @@ dependencies {
     runtimeOnly("com.mysql:mysql-connector-j")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-batch")
+    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    testImplementation(project(":abms-application"))
+    testImplementation(project(":abms-domain"))
+    testImplementation(project(":abms-adapter-persistence"))
 }
