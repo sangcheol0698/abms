@@ -8,12 +8,14 @@ import {
   useCreateProjectMutation,
   useCreateProjectRevenuePlanMutation,
   useDeleteProjectMutation,
+  useEndProjectAssignmentMutation,
   useProjectAssignmentsQuery,
   useProjectDetailQuery,
   useProjectListQuery,
   useProjectOverviewSummaryQuery,
   useProjectRevenuePlansQuery,
   useProjectStatusesQuery,
+  useUpdateProjectAssignmentMutation,
   useUpdateProjectMutation,
 } from '@/features/project/queries/useProjectQueries';
 
@@ -42,6 +44,8 @@ const revenueRepositoryMock = {
 const assignmentRepositoryMock = {
   findByProjectId: vi.fn(),
   create: vi.fn(),
+  update: vi.fn(),
+  end: vi.fn(),
 };
 
 vi.mock('@tanstack/vue-query', async () => {
@@ -117,11 +121,11 @@ describe('useProjectQueries', () => {
 
     const statusesQuery = useProjectStatusesQuery();
     const revenuePlansQuery = useProjectRevenuePlansQuery(ref(5));
-    const assignmentsQuery = useProjectAssignmentsQuery(ref(5));
+    const assignmentsQuery = useProjectAssignmentsQuery(ref(5), computed(() => ({ page: 1, size: 10 })));
 
     expect(statusesQuery.queryKey).toEqual(projectKeys.statuses());
     expect(revenuePlansQuery.queryKey.value).toEqual(projectKeys.revenuePlans(5));
-    expect(assignmentsQuery.queryKey.value).toEqual(projectKeys.assignments(5));
+    expect(assignmentsQuery.queryKey.value).toEqual(projectKeys.assignments(5, { page: 1, size: 10 }));
     expect(revenuePlansQuery.enabled.value).toBe(true);
     expect(assignmentsQuery.enabled.value).toBe(true);
 
@@ -131,7 +135,7 @@ describe('useProjectQueries', () => {
 
     expect(projectRepositoryMock.fetchStatuses).toHaveBeenCalled();
     expect(revenueRepositoryMock.findByProjectId).toHaveBeenCalledWith(5);
-    expect(assignmentRepositoryMock.findByProjectId).toHaveBeenCalledWith(5);
+    expect(assignmentRepositoryMock.findByProjectId).toHaveBeenCalledWith(5, { page: 1, size: 10 });
   });
 
   it('생성 mutation 성공 시 project, party, dashboard와 상세 query를 invalidate한다', async () => {
@@ -200,7 +204,61 @@ describe('useProjectQueries', () => {
       queryKey: projectKeys.revenuePlans(3),
     });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-      queryKey: projectKeys.assignments(4),
+      queryKey: projectKeys.assignmentsRoot(4),
+    });
+  });
+
+  it('배정 수정/종료 mutation 성공 시 투입 query를 invalidate한다', async () => {
+    const updateAssignmentMutation = useUpdateProjectAssignmentMutation();
+    const endAssignmentMutation = useEndProjectAssignmentMutation();
+
+    await updateAssignmentMutation.mutationFn({
+      assignmentId: 11,
+      projectId: 4,
+      payload: {
+        employeeId: 2,
+        role: 'DEV',
+        startDate: '2026-01-01',
+        endDate: '2026-03-31',
+      },
+    });
+    await endAssignmentMutation.mutationFn({
+      assignmentId: 11,
+      projectId: 4,
+      payload: {
+        endDate: '2026-02-28',
+      },
+    });
+
+    await updateAssignmentMutation.onSuccess?.(undefined, {
+      assignmentId: 11,
+      projectId: 4,
+      payload: {
+        employeeId: 2,
+        role: 'DEV',
+        startDate: '2026-01-01',
+        endDate: '2026-03-31',
+      },
+    });
+    await endAssignmentMutation.onSuccess?.(undefined, {
+      assignmentId: 11,
+      projectId: 4,
+      payload: {
+        endDate: '2026-02-28',
+      },
+    });
+
+    expect(assignmentRepositoryMock.update).toHaveBeenCalledWith(11, {
+      employeeId: 2,
+      role: 'DEV',
+      startDate: '2026-01-01',
+      endDate: '2026-03-31',
+    });
+    expect(assignmentRepositoryMock.end).toHaveBeenCalledWith(11, {
+      endDate: '2026-02-28',
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: projectKeys.assignmentsRoot(4),
     });
   });
 });

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Component } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 import { renderWithProviders } from '@/test-utils';
@@ -50,9 +50,10 @@ const department: DepartmentSummary = {
   childDepartmentCount: 1,
 };
 
+let DepartmentDetailPanelComponent: Component;
+
 async function mountPanel() {
-  const component = (await import('@/features/department/components/DepartmentDetailPanel.vue')).default as Component;
-  return renderWithProviders(component, {
+  return renderWithProviders(DepartmentDetailPanelComponent, {
     route: '/',
     routes,
     props: {
@@ -90,6 +91,10 @@ async function mountPanel() {
 }
 
 describe('DepartmentDetailPanel', () => {
+  beforeAll(async () => {
+    DepartmentDetailPanelComponent = (await import('@/features/department/components/DepartmentDetailPanel.vue')).default as Component;
+  }, 30000);
+
   beforeEach(() => {
     vi.clearAllMocks();
     canManageEmployeeMock.mockReturnValue(false);

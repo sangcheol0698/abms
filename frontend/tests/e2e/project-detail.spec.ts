@@ -27,7 +27,15 @@ test.describe('프로젝트 상세', () => {
       }
 
       if (path === '/api/project-assignments' && method === 'GET') {
-        await fulfillJson(route, []);
+        await fulfillJson(route, {
+          content: [],
+          pageNumber: 0,
+          pageSize: 10,
+          totalPages: 0,
+          totalElements: 0,
+          first: true,
+          last: true,
+        });
         return true;
       }
 
@@ -94,7 +102,7 @@ test.describe('프로젝트 상세', () => {
     await expect(page.getByText('1,000,000원').first()).toBeVisible();
 
     await page.getByRole('tab', { name: '투입인력' }).click();
-    await expect(page.getByText('현재 투입 중인 인력이 없습니다.')).toBeVisible();
+    await expect(page.getByText('등록된 투입 인력이 없습니다.')).toBeVisible();
 
     await page.getByRole('tab', { name: '매출 일정' }).click();
     await expect(page.getByText('등록된 매출 일정이 없습니다.')).toBeVisible();

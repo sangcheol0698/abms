@@ -175,6 +175,26 @@ export function normalizeProjectSearchParams(params: Record<string, unknown> = {
   };
 }
 
+export interface NormalizedProjectAssignmentParams {
+  page: number;
+  size: number;
+  name: string | null;
+  assignmentStatuses: string[];
+  roles: string[];
+}
+
+export function normalizeProjectAssignmentParams(
+  params: Record<string, unknown> = {},
+): NormalizedProjectAssignmentParams {
+  return {
+    page: toPositiveInteger(params.page, 1),
+    size: toPositiveInteger(params.size, 10),
+    name: toNullableString(params.name),
+    assignmentStatuses: toSortedUniqueStrings(params.assignmentStatuses),
+    roles: toSortedUniqueStrings(params.roles),
+  };
+}
+
 export interface NormalizedPartySearchParams {
   page: number;
   size: number;

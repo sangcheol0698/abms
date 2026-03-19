@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.adapter.infrastructure.projectassignment;
 
 import static kr.co.abacus.abms.domain.department.QDepartment.*;
+import static kr.co.abacus.abms.domain.employee.QEmployee.*;
 import static kr.co.abacus.abms.domain.party.QParty.*;
 import static kr.co.abacus.abms.domain.project.QProject.*;
 import static kr.co.abacus.abms.domain.projectassignment.QProjectAssignment.*;
@@ -24,9 +25,12 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectItem;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectSearchCondition;
+import kr.co.abacus.abms.application.projectassignment.dto.ProjectAssignmentItem;
+import kr.co.abacus.abms.application.projectassignment.dto.ProjectAssignmentSearchCondition;
 import kr.co.abacus.abms.application.projectassignment.dto.ProjectAssignmentStatus;
 import kr.co.abacus.abms.application.projectassignment.outbound.CustomProjectAssignmentRepository;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
+import kr.co.abacus.abms.domain.projectassignment.AssignmentRole;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -97,6 +101,83 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
+    @Override
+    public List<ProjectAssignmentItem> findProjectAssignments(Long projectId) {
+        LocalDate today = LocalDate.now();
+
+        return queryFactory
+                .select(Projections.constructor(ProjectAssignmentItem.class,
+                        projectAssignment.id,
+                        projectAssignment.projectId,
+                        projectAssignment.employeeId,
+                        employee.name,
+                        department.id,
+                        department.name,
+                        projectAssignment.role.stringValue(),
+                        projectAssignment.period.startDate,
+                        projectAssignment.period.endDate,
+                        assignmentStatusExpression(today)
+                ))
+                .from(projectAssignment)
+                .leftJoin(employee).on(projectAssignment.employeeId.eq(employee.id))
+                .leftJoin(department).on(employee.departmentId.eq(department.id))
+                .where(
+                        projectAssignment.projectId.eq(projectId),
+                        projectAssignment.deleted.isFalse()
+                )
+                .orderBy(projectAssignment.period.startDate.desc(), projectAssignment.id.desc())
+                .fetch();
+    }
+
+    @Override
+    public Page<ProjectAssignmentItem> searchProjectAssignments(ProjectAssignmentSearchCondition condition, Pageable pageable) {
+        LocalDate today = LocalDate.now();
+
+        List<ProjectAssignmentItem> content = queryFactory
+                .select(Projections.constructor(ProjectAssignmentItem.class,
+                        projectAssignment.id,
+                        projectAssignment.projectId,
+                        projectAssignment.employeeId,
+                        employee.name,
+                        department.id,
+                        department.name,
+                        projectAssignment.role.stringValue(),
+                        projectAssignment.period.startDate,
+                        projectAssignment.period.endDate,
+                        assignmentStatusExpression(today)
+                ))
+                .from(projectAssignment)
+                .leftJoin(employee).on(projectAssignment.employeeId.eq(employee.id))
+                .leftJoin(department).on(employee.departmentId.eq(department.id))
+                .where(
+                        projectAssignment.projectId.eq(condition.projectId()),
+                        containsEmployeeName(condition.name()),
+                        inAssignmentStatuses(condition.assignmentStatuses(), today),
+                        inAssignmentRoles(condition.roles()),
+                        projectAssignment.deleted.isFalse(),
+                        employee.deleted.isFalse()
+                )
+                .orderBy(projectAssignment.period.startDate.desc(), projectAssignment.id.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        JPAQuery<Long> countQuery = queryFactory
+                .select(projectAssignment.count())
+                .from(projectAssignment)
+                .leftJoin(employee).on(projectAssignment.employeeId.eq(employee.id))
+                .where(
+                        projectAssignment.projectId.eq(condition.projectId()),
+                        containsEmployeeName(condition.name()),
+                        inAssignmentStatuses(condition.assignmentStatuses(), today),
+                        inAssignmentRoles(condition.roles()),
+                        projectAssignment.deleted.isFalse(),
+                        employee.deleted.isFalse()
+                );
+
+        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
     private @Nullable BooleanExpression containsProjectNameOrCode(@Nullable String name) {
         if (!hasText(name)) {
             return null;
@@ -134,6 +215,29 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
         }
 
         return expression;
+    }
+
+    private @Nullable BooleanExpression inAssignmentRoles(@Nullable List<AssignmentRole> roles) {
+        if (ObjectUtils.isEmpty(roles)) {
+            return null;
+        }
+        return projectAssignment.role.in(roles);
+    }
+
+    private @Nullable BooleanExpression containsEmployeeName(@Nullable String name) {
+        if (!hasText(name)) {
+            return null;
+        }
+
+        return employee.name.containsIgnoreCase(name);
+    }
+
+    private com.querydsl.core.types.Expression<String> assignmentStatusExpression(LocalDate today) {
+        return new CaseBuilder()
+                .when(projectAssignment.period.startDate.gt(today)).then(ProjectAssignmentStatus.SCHEDULED.name())
+                .when(projectAssignment.period.endDate.isNull()
+                        .or(projectAssignment.period.endDate.goe(today))).then(ProjectAssignmentStatus.CURRENT.name())
+                .otherwise(ProjectAssignmentStatus.ENDED.name());
     }
 
     private @Nullable BooleanExpression inAccessibleScope(

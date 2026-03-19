@@ -37,7 +37,7 @@
         </template>
       </ProjectDetailHeader>
 
-      <Tabs default-value="overview" class="flex min-h-[320px] flex-1 flex-col gap-4">
+      <Tabs v-model="activeTab" class="flex min-h-[320px] flex-1 flex-col gap-4">
         <TabsList class="flex-wrap">
           <TabsTrigger value="overview">개요</TabsTrigger>
           <TabsTrigger value="assignments">투입인력</TabsTrigger>
@@ -54,7 +54,7 @@
             />
           </TabsContent>
           <TabsContent value="assignments" class="flex-1">
-            <ProjectAssignmentPanel :project-id="project?.projectId ?? 0" />
+            <ProjectAssignmentPanel :project="project" />
           </TabsContent>
           <TabsContent value="revenue" class="flex-1">
             <ProjectRevenuePlanPanel :project-id="project?.projectId ?? 0" />
@@ -131,10 +131,35 @@ defineOptions({ name: 'ProjectDetailView' });
 
 const route = useRoute();
 const router = useRouter();
+const PROJECT_DETAIL_TABS = ['overview', 'assignments', 'revenue'] as const;
+type ProjectDetailTab = (typeof PROJECT_DETAIL_TABS)[number];
+
+function isProjectDetailTab(value: unknown): value is ProjectDetailTab {
+  return typeof value === 'string' && PROJECT_DETAIL_TABS.includes(value as ProjectDetailTab);
+}
+
 const projectId = computed(() => {
   const raw = route.params.projectId;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : 0;
+});
+const activeTab = computed<ProjectDetailTab>({
+  get() {
+    const tab = Array.isArray(route.query.tab) ? route.query.tab[0] : route.query.tab;
+    return isProjectDetailTab(tab) ? tab : 'overview';
+  },
+  async set(tab) {
+    const nextQuery = { ...route.query };
+    if (tab === 'overview') {
+      delete nextQuery.tab;
+    } else {
+      nextQuery.tab = tab;
+    }
+
+    await router.replace({
+      query: nextQuery,
+    });
+  },
 });
 
 const isProjectUpdateDialogOpen = ref(false);

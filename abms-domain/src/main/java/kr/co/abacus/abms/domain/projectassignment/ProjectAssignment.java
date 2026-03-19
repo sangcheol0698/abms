@@ -48,16 +48,7 @@ public class ProjectAssignment extends AbstractEntity {
 
     public static ProjectAssignment assign(Project project, ProjectAssignmentCreateRequest request) {
         ProjectAssignment assignment = new ProjectAssignment();
-
-        // 프로젝트 투입 기간 유효성 검사
-        if (request.startDate().isBefore(project.getPeriod().startDate())) {
-            throw new IllegalArgumentException("투입 시작일은 프로젝트 시작일보다 빠를 수 없습니다.");
-        }
-        if (project.getPeriod().endDate() != null) {
-            if (request.endDate() == null || request.endDate().isAfter(project.getPeriod().endDate())) {
-                throw new IllegalArgumentException("투입 종료일은 프로젝트 종료일보다 늦을 수 없습니다.");
-            }
-        }
+        validatePeriod(project, request.startDate(), request.endDate());
 
         assignment.projectId = Objects.requireNonNull(request.projectId());
         assignment.employeeId = Objects.requireNonNull(request.employeeId());
@@ -65,6 +56,19 @@ public class ProjectAssignment extends AbstractEntity {
         assignment.period = new Period(Objects.requireNonNull(request.startDate()), request.endDate());
 
         return assignment;
+    }
+
+    public void update(Project project, ProjectAssignmentUpdateRequest request) {
+        validatePeriod(project, request.startDate(), request.endDate());
+
+        this.employeeId = Objects.requireNonNull(request.employeeId());
+        this.role = request.role();
+        this.period = new Period(Objects.requireNonNull(request.startDate()), request.endDate());
+    }
+
+    public void end(Project project, ProjectAssignmentEndRequest request) {
+        validatePeriod(project, this.period.startDate(), request.endDate());
+        this.period = new Period(this.period.startDate(), request.endDate());
     }
 
     /**
@@ -103,6 +107,20 @@ public class ProjectAssignment extends AbstractEntity {
         // 예: 14 / 28 = 0.5
         return BigDecimal.valueOf(workedDays)
             .divide(BigDecimal.valueOf(totalDaysInMonth), 1, RoundingMode.HALF_UP);
+    }
+
+    private static void validatePeriod(Project project, LocalDate startDate, @Nullable LocalDate endDate) {
+        if (startDate.isBefore(project.getPeriod().startDate())) {
+            throw new IllegalArgumentException("투입 시작일은 프로젝트 시작일보다 빠를 수 없습니다.");
+        }
+        if (endDate != null && endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("투입 종료일은 투입 시작일보다 빠를 수 없습니다.");
+        }
+        if (project.getPeriod().endDate() != null) {
+            if (endDate == null || endDate.isAfter(project.getPeriod().endDate())) {
+                throw new IllegalArgumentException("투입 종료일은 프로젝트 종료일보다 늦을 수 없습니다.");
+            }
+        }
     }
 
 }

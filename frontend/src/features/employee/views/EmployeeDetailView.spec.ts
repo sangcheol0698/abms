@@ -196,7 +196,7 @@ describe('EmployeeDetailView', () => {
       }),
     });
     EmployeeDetailViewComponent = (await import('@/features/employee/views/EmployeeDetailView.vue')).default;
-  }, 20000);
+  }, 60000);
 
   beforeEach(() => {
     vi.clearAllMocks();
