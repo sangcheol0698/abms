@@ -347,19 +347,25 @@ const columns: ColumnDef<ProjectListItem>[] = [
     id: 'leadDepartmentName',
     accessorFn: (row) => row.leadDepartmentName,
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '주관 부서', align: 'left' }),
-    cell: ({ row }) =>
-      row.original.leadDepartmentId && row.original.leadDepartmentName
-        ? h(
-            'button',
-            {
-              type: 'button',
-              class:
-                'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-              onClick: () => handleViewDepartment(row.original.leadDepartmentId),
-            },
-            row.original.leadDepartmentName,
-          )
-        : h('span', { class: 'text-sm text-foreground' }, '-'),
+    cell: ({ row }) => {
+      const departmentId = row.original.leadDepartmentId;
+      const departmentName = row.original.leadDepartmentName;
+
+      if (departmentId == null || !departmentName) {
+        return h('span', { class: 'text-sm text-foreground' }, '-');
+      }
+
+      return h(
+        'button',
+        {
+          type: 'button',
+          class:
+            'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+          onClick: () => handleViewDepartment(departmentId),
+        },
+        departmentName,
+      );
+    },
     enableSorting: false,
     size: 160,
   },
@@ -367,17 +373,25 @@ const columns: ColumnDef<ProjectListItem>[] = [
     id: 'partyName',
     accessorFn: (row) => row.partyName,
     header: ({ column }) => h(DataTableColumnHeader, { column, title: '협력사', align: 'left' }),
-    cell: ({ row }) =>
-      h(
+    cell: ({ row }) => {
+      const partyId = row.original.partyId;
+      const partyName = row.original.partyName;
+
+      if (partyId == null || !partyName) {
+        return h('span', { class: 'text-sm text-foreground' }, partyName || '-');
+      }
+
+      return h(
         'button',
         {
           type: 'button',
           class:
             'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-          onClick: () => handleViewParty(row.original.partyId),
+          onClick: () => handleViewParty(partyId),
         },
-        row.original.partyName || '-',
-      ),
+        partyName,
+      );
+    },
     enableSorting: false,
     size: 180,
   },

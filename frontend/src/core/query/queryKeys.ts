@@ -9,6 +9,12 @@ import {
   normalizeProjectSearchParams,
 } from '@/core/query/normalizeParams';
 
+type QueryKeyParams = object | null | undefined;
+
+function toQueryRecord(params: QueryKeyParams): Record<string, unknown> {
+  return (params ?? {}) as Record<string, unknown>;
+}
+
 const AUTH_KEY = ['auth'] as const;
 const EMPLOYEE_KEY = ['employee'] as const;
 const DEPARTMENT_KEY = ['department'] as const;
@@ -27,10 +33,10 @@ export const authKeys = {
 export const employeeKeys = {
   all: EMPLOYEE_KEY,
   listRoot: () => [...EMPLOYEE_KEY, 'list'] as const,
-  list: (params: Record<string, unknown> = {}) =>
-    [...EMPLOYEE_KEY, 'list', normalizeEmployeeSearchParams(params)] as const,
-  summary: (params: Record<string, unknown> = {}) =>
-    [...EMPLOYEE_KEY, 'summary', normalizeEmployeeSearchParams(params)] as const,
+  list: (params: QueryKeyParams = {}) =>
+    [...EMPLOYEE_KEY, 'list', normalizeEmployeeSearchParams(toQueryRecord(params))] as const,
+  summary: (params: QueryKeyParams = {}) =>
+    [...EMPLOYEE_KEY, 'summary', normalizeEmployeeSearchParams(toQueryRecord(params))] as const,
   detail: (employeeId: number | null | undefined) =>
     [...EMPLOYEE_KEY, 'detail', employeeId ?? 0] as const,
   currentProfile: (email: string | null | undefined = '') =>
@@ -46,8 +52,8 @@ export const employeeKeys = {
     [...EMPLOYEE_KEY, 'payroll', 'current', employeeId ?? 0] as const,
   payrollHistory: (employeeId: number | null | undefined) =>
     [...EMPLOYEE_KEY, 'payroll', 'history', employeeId ?? 0] as const,
-  projects: (employeeId: number | null | undefined, params: Record<string, unknown> = {}) =>
-    [...EMPLOYEE_KEY, 'projects', employeeId ?? 0, normalizeEmployeeProjectsParams(params)] as const,
+  projects: (employeeId: number | null | undefined, params: QueryKeyParams = {}) =>
+    [...EMPLOYEE_KEY, 'projects', employeeId ?? 0, normalizeEmployeeProjectsParams(toQueryRecord(params))] as const,
 };
 
 export const departmentKeys = {
@@ -57,38 +63,38 @@ export const departmentKeys = {
     [...DEPARTMENT_KEY, 'detail', departmentId ?? 0] as const,
   employeesRoot: (departmentId: number | null | undefined) =>
     [...DEPARTMENT_KEY, 'employees', departmentId ?? 0] as const,
-  employees: (departmentId: number | null | undefined, params: Record<string, unknown> = {}) =>
-    [...DEPARTMENT_KEY, 'employees', departmentId ?? 0, normalizeDepartmentEmployeesParams(params)] as const,
+  employees: (departmentId: number | null | undefined, params: QueryKeyParams = {}) =>
+    [...DEPARTMENT_KEY, 'employees', departmentId ?? 0, normalizeDepartmentEmployeesParams(toQueryRecord(params))] as const,
 };
 
 export const partyKeys = {
   all: PARTY_KEY,
   listRoot: () => [...PARTY_KEY, 'list'] as const,
-  list: (params: Record<string, unknown> = {}) =>
-    [...PARTY_KEY, 'list', normalizePartySearchParams(params)] as const,
-  summary: (params: Record<string, unknown> = {}) =>
-    [...PARTY_KEY, 'summary', normalizePartySearchParams(params)] as const,
+  list: (params: QueryKeyParams = {}) =>
+    [...PARTY_KEY, 'list', normalizePartySearchParams(toQueryRecord(params))] as const,
+  summary: (params: QueryKeyParams = {}) =>
+    [...PARTY_KEY, 'summary', normalizePartySearchParams(toQueryRecord(params))] as const,
   detail: (partyId: number | null | undefined) => [...PARTY_KEY, 'detail', partyId ?? 0] as const,
   projectsRoot: (partyId: number | null | undefined) => [...PARTY_KEY, 'projects', partyId ?? 0] as const,
-  projects: (partyId: number | null | undefined, params: Record<string, unknown> = {}) =>
-    [...PARTY_KEY, 'projects', partyId ?? 0, normalizePartyProjectsParams(params)] as const,
+  projects: (partyId: number | null | undefined, params: QueryKeyParams = {}) =>
+    [...PARTY_KEY, 'projects', partyId ?? 0, normalizePartyProjectsParams(toQueryRecord(params))] as const,
 };
 
 export const projectKeys = {
   all: PROJECT_KEY,
   listRoot: () => [...PROJECT_KEY, 'list'] as const,
-  list: (params: Record<string, unknown> = {}) =>
-    [...PROJECT_KEY, 'list', normalizeProjectSearchParams(params)] as const,
-  summary: (params: Record<string, unknown> = {}) =>
-    [...PROJECT_KEY, 'summary', normalizeProjectSearchParams(params)] as const,
+  list: (params: QueryKeyParams = {}) =>
+    [...PROJECT_KEY, 'list', normalizeProjectSearchParams(toQueryRecord(params))] as const,
+  summary: (params: QueryKeyParams = {}) =>
+    [...PROJECT_KEY, 'summary', normalizeProjectSearchParams(toQueryRecord(params))] as const,
   detail: (projectId: number | null | undefined) => [...PROJECT_KEY, 'detail', projectId ?? 0] as const,
   statuses: () => [...PROJECT_KEY, 'statuses'] as const,
   revenuePlans: (projectId: number | null | undefined) =>
     [...PROJECT_KEY, 'revenue-plans', projectId ?? 0] as const,
   assignmentsRoot: (projectId: number | null | undefined) =>
     [...PROJECT_KEY, 'assignments', projectId ?? 0] as const,
-  assignments: (projectId: number | null | undefined, params: Record<string, unknown> = {}) =>
-    [...PROJECT_KEY, 'assignments', projectId ?? 0, normalizeProjectAssignmentParams(params)] as const,
+  assignments: (projectId: number | null | undefined, params: QueryKeyParams = {}) =>
+    [...PROJECT_KEY, 'assignments', projectId ?? 0, normalizeProjectAssignmentParams(toQueryRecord(params))] as const,
 };
 
 export const dashboardKeys = {
@@ -116,15 +122,15 @@ export const adminKeys = {
   all: ADMIN_KEY,
   permissionGroups: {
     all: [...ADMIN_KEY, 'permission-groups'] as const,
-    list: (params: Record<string, unknown> = {}) =>
-      [...ADMIN_KEY, 'permission-groups', 'list', params] as const,
+    list: (params: QueryKeyParams = {}) =>
+      [...ADMIN_KEY, 'permission-groups', 'list', toQueryRecord(params)] as const,
     detail: (permissionGroupId: number | null | undefined) =>
       [...ADMIN_KEY, 'permission-groups', 'detail', permissionGroupId ?? 0] as const,
     catalog: () => [...ADMIN_KEY, 'permission-groups', 'catalog'] as const,
   },
   accounts: {
     all: [...ADMIN_KEY, 'accounts'] as const,
-    assignable: (permissionGroupId: number | null | undefined, params: Record<string, unknown> = {}) =>
-      [...ADMIN_KEY, 'accounts', 'assignable', permissionGroupId ?? 0, params] as const,
+    assignable: (permissionGroupId: number | null | undefined, params: QueryKeyParams = {}) =>
+      [...ADMIN_KEY, 'accounts', 'assignable', permissionGroupId ?? 0, toQueryRecord(params)] as const,
   },
 };

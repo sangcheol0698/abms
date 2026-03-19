@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref, toRef, watch } from 'vue';
+import { computed, h, ref, toRef } from 'vue';
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -215,37 +215,49 @@ const columns: ColumnDef<EmployeeProjectItem>[] = [
   {
     accessorKey: 'leadDepartmentName',
     header: () => h('span', '주관 부서'),
-    cell: ({ row }) =>
-      row.original.leadDepartmentId && row.original.leadDepartmentName
-        ? h(
-            'button',
-            {
-              type: 'button',
-              class:
-                'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-              onClick: () => handleDepartmentClick(row.original.leadDepartmentId),
-            },
-            row.original.leadDepartmentName,
-          )
-        : h('span', { class: 'text-sm text-foreground' }, '-'),
+    cell: ({ row }) => {
+      const departmentId = row.original.leadDepartmentId;
+      const departmentName = row.original.leadDepartmentName;
+
+      if (departmentId == null || !departmentName) {
+        return h('span', { class: 'text-sm text-foreground' }, '-');
+      }
+
+      return h(
+        'button',
+        {
+          type: 'button',
+          class:
+            'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+          onClick: () => handleDepartmentClick(departmentId),
+        },
+        departmentName,
+      );
+    },
     size: 140,
   },
   {
     accessorKey: 'partyName',
     header: () => h('span', '협력사'),
-    cell: ({ row }) =>
-      canReadParties()
-        ? h(
-            'button',
-            {
-              type: 'button',
-              class:
-                'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-              onClick: () => handlePartyClick(row.original.partyId),
-            },
-            row.original.partyName,
-          )
-        : h('span', { class: 'text-sm text-foreground' }, row.original.partyName),
+    cell: ({ row }) => {
+      const partyId = row.original.partyId;
+      const partyName = row.original.partyName;
+
+      if (!canReadParties() || partyId == null || !partyName) {
+        return h('span', { class: 'text-sm text-foreground' }, partyName || '-');
+      }
+
+      return h(
+        'button',
+        {
+          type: 'button',
+          class:
+            'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+          onClick: () => handlePartyClick(partyId),
+        },
+        partyName,
+      );
+    },
     size: 140,
   },
 ];

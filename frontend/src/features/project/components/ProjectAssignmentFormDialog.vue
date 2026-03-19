@@ -96,6 +96,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import type { AcceptableValue } from 'reka-ui';
 import { toast } from 'vue-sonner';
 import HttpError from '@/core/http/HttpError';
 import { formatProjectDate } from '@/features/project/models/projectListItem';
@@ -226,7 +227,12 @@ function handleEndDateChange(value: Date | null) {
   endDate.value = formatDate(value);
 }
 
-function updateRole(value: string) {
+function updateRole(value: AcceptableValue | AcceptableValue[]) {
+  if (!value || Array.isArray(value)) {
+    role.value = null;
+    return;
+  }
+
   role.value = value as ProjectAssignmentRole;
 }
 

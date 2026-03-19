@@ -504,18 +504,12 @@ export class EmployeeRepository {
     employeeId: number,
     params: EmployeeProjectsSearchParams,
   ): Promise<PageResponse<EmployeeProjectItem>> {
-    const response = await this.httpRepository.get({
+    const response = await this.httpRepository.get<unknown>({
       path: `/api/employees/${employeeId}/projects`,
       params: buildEmployeeProjectRequestParams(params),
     });
 
-    return new PageResponse<EmployeeProjectItem>({
-      page: Number(response?.pageNumber ?? response?.number ?? 0) + 1,
-      size: Number(response?.pageSize ?? response?.size ?? params.size),
-      totalPages: Number(response?.totalPages ?? 0),
-      totalElements: Number(response?.totalElements ?? 0),
-      content: Array.isArray(response?.content) ? response.content.map(mapEmployeeProjectItem) : [],
-    });
+    return PageResponse.fromPage(response, mapEmployeeProjectItem);
   }
 }
 

@@ -18,7 +18,7 @@ NProgress.configure({
 });
 
 const NPROGRESS_DELAY_MS = 120;
-let progressStartTimer: ReturnType<typeof setTimeout> | null = null;
+let progressStartTimer: number | null = null;
 
 const routes = [
   {
@@ -373,7 +373,7 @@ function scheduleProgressStart() {
 
 function stopProgress() {
   if (progressStartTimer != null) {
-    clearTimeout(progressStartTimer);
+    window.clearTimeout(progressStartTimer);
     progressStartTimer = null;
   }
 

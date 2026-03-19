@@ -23,11 +23,15 @@
     }
   },
   "include": [
+    "src/**/*.d.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue"
   ],
   "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/__tests__/**",
     "src/components/ui/auto-form/**/*",
     "src/components/ui/chart*/**/*",
     "src/components/ui/chart/**/*",

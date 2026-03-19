@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref, toRef } from 'vue';
+import { computed, h, ref } from 'vue';
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -239,19 +239,25 @@ const columns: ColumnDef<ProjectAssignmentItem>[] = [
     id: 'departmentName',
     accessorFn: (row) => row.departmentName,
     header: () => h('span', '소속 부서'),
-    cell: ({ row }) =>
-      row.original.departmentId && row.original.departmentName
-        ? h(
-            'button',
-            {
-              type: 'button',
-              class:
-                'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
-              onClick: () => handleDepartmentClick(row.original.departmentId),
-            },
-            row.original.departmentName,
-          )
-        : h('span', { class: 'text-sm text-muted-foreground' }, '-'),
+    cell: ({ row }) => {
+      const departmentId = row.original.departmentId;
+      const departmentName = row.original.departmentName;
+
+      if (departmentId == null || !departmentName) {
+        return h('span', { class: 'text-sm text-muted-foreground' }, '-');
+      }
+
+      return h(
+        'button',
+        {
+          type: 'button',
+          class:
+            'cursor-pointer text-left text-sm text-primary underline underline-offset-4 hover:underline focus:outline-none focus:underline focus-visible:ring-0',
+          onClick: () => handleDepartmentClick(departmentId),
+        },
+        departmentName,
+      );
+    },
     size: 160,
   },
   {

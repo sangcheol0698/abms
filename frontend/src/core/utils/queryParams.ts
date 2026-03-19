@@ -5,8 +5,10 @@
  * 모든 List View에서 재사용 가능합니다.
  */
 
-import type { LocationQuery } from 'vue-router';
+import type { LocationQuery, LocationQueryValue } from 'vue-router';
 import type { SortingState } from '@tanstack/vue-table';
+
+type QueryLike = Record<string, LocationQueryValue | readonly LocationQueryValue[] | undefined>;
 
 /**
  * 페이징 정보를 쿼리 파라미터로 직렬화
@@ -19,7 +21,7 @@ import type { SortingState } from '@tanstack/vue-table';
  * serializePagination(2, 20)
  * // { page: '2', size: '20' }
  */
-export function serializePagination(page: number, size: number): Record<string, string> {
+export function serializePagination(page: number, size: number): { page: string; size: string } {
   return {
     page: page.toString(),
     size: size.toString(),
@@ -36,7 +38,9 @@ export function serializePagination(page: number, size: number): Record<string, 
  * deserializePagination({ page: '2', size: '20' })
  * // { page: 2, size: 20 }
  */
-export function deserializePagination(query: LocationQuery): { page: number; size: number } {
+export function deserializePagination(
+  query: Partial<Pick<QueryLike, 'page' | 'size'>> | LocationQuery,
+): { page: number; size: number } {
   const page = Number(query.page) || 1;
   const size = Number(query.size) || 10;
   return { page, size };
@@ -137,9 +141,12 @@ export function serializeSingleFilter(
  * @param key - 쿼리 파라미터 키
  * @returns 필터 값 또는 null
  */
-export function deserializeSingleFilter(query: LocationQuery, key: string): string | null {
+export function deserializeSingleFilter(query: QueryLike | LocationQuery, key: string): string | null {
   const value = query[key];
   if (!value) return null;
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value;
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) {
+    return typeof value[0] === 'string' ? value[0] : null;
+  }
+  return null;
 }

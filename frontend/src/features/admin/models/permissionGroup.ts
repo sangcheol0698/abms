@@ -130,12 +130,12 @@ export function mapPermissionGroupDetailItem(response: any): PermissionGroupDeta
 export function mapPermissionGroupCatalog(response: any): PermissionGroupCatalog {
   return {
     permissions: Array.isArray(response.permissions)
-      ? response.permissions.map((item) => ({
+      ? response.permissions.map((item: any) => ({
           code: String(item.code ?? ''),
           name: String(item.name ?? ''),
           description: String(item.description ?? ''),
           availableScopes: Array.isArray(item.availableScopes)
-            ? item.availableScopes.map((scope) => ({
+            ? item.availableScopes.map((scope: any) => ({
                 code: String(scope.code ?? ''),
                 description: String(scope.description ?? ''),
                 level: Number(scope.level ?? 0),
@@ -144,7 +144,7 @@ export function mapPermissionGroupCatalog(response: any): PermissionGroupCatalog
         }))
       : [],
     scopes: Array.isArray(response.scopes)
-      ? response.scopes.map((scope) => ({
+      ? response.scopes.map((scope: any) => ({
           code: String(scope.code ?? ''),
           description: String(scope.description ?? ''),
           level: Number(scope.level ?? 0),

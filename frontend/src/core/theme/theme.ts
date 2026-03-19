@@ -40,5 +40,5 @@ export const statusColorVars = {
 } as const;
 
 export function getChartColor(index: number): string {
-  return chartColorVars[index % chartColorVars.length];
+  return chartColorVars[index % chartColorVars.length] ?? chartColorVars[0];
 }
