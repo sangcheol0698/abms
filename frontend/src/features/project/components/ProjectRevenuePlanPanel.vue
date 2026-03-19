@@ -1,5 +1,24 @@
 <template>
   <div class="flex flex-col gap-6">
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="rounded-xl border bg-card p-4 shadow-sm">
+        <div class="text-sm font-medium text-muted-foreground">총 매출 금액</div>
+        <div class="mt-2 text-2xl font-bold">{{ formatCurrency(totalAmount) }}</div>
+      </div>
+      <div class="rounded-xl border bg-card p-4 shadow-sm">
+        <div class="text-sm font-medium text-muted-foreground">예정 금액</div>
+        <div class="mt-2 text-2xl font-bold text-muted-foreground">
+          {{ formatCurrency(plannedAmount) }}
+        </div>
+      </div>
+      <div class="rounded-xl border bg-card p-4 shadow-sm">
+        <div class="text-sm font-medium text-muted-foreground">발행된 금액</div>
+        <div class="mt-2 text-2xl font-bold text-primary">
+          {{ formatCurrency(invoicedAmount) }}
+        </div>
+      </div>
+    </div>
+
     <div class="space-y-4">
       <DataTableToolbar
         :table="table"
@@ -91,13 +110,16 @@ interface Props {
 const props = defineProps<Props>();
 const projectId = toRef(props, 'projectId');
 const revenuePlansQuery = useProjectRevenuePlansQuery(projectId);
+const projectDetailQuery = useProjectDetailQuery(projectId);
 const isDialogOpen = ref(false);
 const canManageProject = computed(() => canManageProjects());
 const columnFilters = ref<ColumnFiltersState>([]);
 const rowSelection = ref<RowSelectionState>({});
 useProjectRevenuePlanQuerySync({ columnFilters });
 
-const isLoading = computed(() => revenuePlansQuery.isLoading.value);
+const isLoading = computed(
+  () => revenuePlansQuery.isLoading.value || projectDetailQuery.isLoading.value,
+);
 const items = computed(() =>
   (revenuePlansQuery.data.value ?? [])
     .map((item) => ({
@@ -107,6 +129,18 @@ const items = computed(() =>
       statusLabel: (item.status ?? 'PLANNED') === 'INVOICED' ? '발행' : '미발행',
     }))
     .sort((a, b) => a.sequence - b.sequence),
+);
+const contractAmount = computed(() => projectDetailQuery.data.value?.contractAmount ?? 0);
+const totalAmount = computed(() => contractAmount.value);
+const plannedAmount = computed(() =>
+  items.value
+    .filter((item) => item.status !== 'INVOICED')
+    .reduce((sum, item) => sum + item.amount, 0),
+);
+const invoicedAmount = computed(() =>
+  items.value
+    .filter((item) => item.status === 'INVOICED')
+    .reduce((sum, item) => sum + item.amount, 0),
 );
 
 const typeLabelMap: Record<string, string> = {
