@@ -130,8 +130,10 @@ describe('DepartmentLeaderAssignDialog', () => {
     canManageEmployeeMock.mockImplementation((target: { departmentId?: number }) => target.departmentId === 10);
 
     const { wrapper } = await mountDialog();
+    const input = wrapper.get('input');
 
-    await wrapper.find('input').setValue('직원');
+    (input.element as HTMLInputElement).value = '직원';
+    await input.trigger('input');
 
     expect(wrapper.text()).toContain('허용 직원');
     expect(wrapper.text()).not.toContain('차단 직원');
@@ -141,10 +143,11 @@ describe('DepartmentLeaderAssignDialog', () => {
     canManageEmployeeMock.mockReturnValue(false);
 
     const { wrapper } = await mountDialog();
+    const input = wrapper.get('input');
 
-    await wrapper.find('input').setValue('직원');
+    (input.element as HTMLInputElement).value = '직원';
+    await input.trigger('input');
 
     expect(wrapper.text()).toContain('검색 결과가 없습니다.');
   });
 });
-

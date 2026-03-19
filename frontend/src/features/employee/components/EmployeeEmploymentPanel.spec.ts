@@ -62,18 +62,20 @@ describe('EmployeeEmploymentPanel', () => {
 
   it('관리 권한이 있으면 상태 변경 액션을 렌더링하고 실행할 수 있다', async () => {
     const wrapper = mountPanel(true);
-    const buttons = wrapper.findAll('button');
-    const resignationDate = (wrapper.get('input[type="date"]').element as HTMLInputElement).value;
+    const takeLeaveButton = wrapper.findAll('button').find((button) => button.text().includes('휴직 처리'));
+    const activateButton = wrapper.findAll('button').find((button) => button.text().includes('재직 처리'));
+    const resignButton = wrapper.findAll('button').find((button) => button.text().includes('퇴사 처리'));
+    const resignationDate = (wrapper.get('input[placeholder="퇴사일을 선택하세요"]').element as HTMLInputElement).value;
 
     expect(wrapper.text()).toContain('관리 메모');
     expect(wrapper.text()).toContain('상태 변경');
     expect(wrapper.text()).toContain('퇴사 처리');
 
-    await buttons[0]?.trigger('click');
-    await buttons[2]?.trigger('click');
+    await takeLeaveButton?.trigger('click');
+    await resignButton?.trigger('click');
 
     expect(wrapper.emitted('take-leave')).toHaveLength(1);
-    expect(buttons[1]?.attributes('disabled')).toBeDefined();
+    expect(activateButton?.attributes('disabled')).toBeDefined();
     expect(wrapper.emitted('activate')).toBeUndefined();
     expect(wrapper.emitted('resign')).toEqual([[resignationDate]]);
   });

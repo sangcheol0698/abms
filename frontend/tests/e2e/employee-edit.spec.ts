@@ -149,7 +149,7 @@ test.describe('직원 수정 다이얼로그', () => {
     const dialog = page.getByRole('dialog', { name: '직원 편집' });
     await expect(dialog).toBeVisible();
 
-    await expect(dialog.getByRole('button', { name: /1999\.?\s*03\.?\s*09/ })).toBeVisible();
-    await expect(dialog.getByRole('button', { name: /2024\.?\s*01\.?\s*02/ })).toBeVisible();
+    await expect(dialog.getByPlaceholder('생년월일을 선택하세요')).toHaveValue('1999-03-09');
+    await expect(dialog.getByPlaceholder('입사일을 선택하세요')).toHaveValue('2024-01-02');
   });
 });
