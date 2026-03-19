@@ -1,6 +1,7 @@
 import {
   normalizeDepartmentEmployeesParams,
   normalizeEmployeeSearchParams,
+  normalizeEmployeeProjectsParams,
   normalizeLimit,
   normalizePartySearchParams,
   normalizeProjectSearchParams,
@@ -43,6 +44,8 @@ export const employeeKeys = {
     [...EMPLOYEE_KEY, 'payroll', 'current', employeeId ?? 0] as const,
   payrollHistory: (employeeId: number | null | undefined) =>
     [...EMPLOYEE_KEY, 'payroll', 'history', employeeId ?? 0] as const,
+  projects: (employeeId: number | null | undefined, params: Record<string, unknown> = {}) =>
+    [...EMPLOYEE_KEY, 'projects', employeeId ?? 0, normalizeEmployeeProjectsParams(params)] as const,
 };
 
 export const departmentKeys = {

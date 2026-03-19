@@ -105,6 +105,26 @@ export function normalizeEmployeeSearchParams(params: Record<string, unknown> = 
   };
 }
 
+export interface NormalizedEmployeeProjectsParams {
+  page: number;
+  size: number;
+  name: string | null;
+  assignmentStatuses: string[];
+  projectStatuses: string[];
+}
+
+export function normalizeEmployeeProjectsParams(
+  params: Record<string, unknown> = {},
+): NormalizedEmployeeProjectsParams {
+  return {
+    page: toPositiveInteger(params.page, 1),
+    size: toPositiveInteger(params.size, 10),
+    name: toNullableString(params.name),
+    assignmentStatuses: toSortedUniqueStrings(params.assignmentStatuses),
+    projectStatuses: toSortedUniqueStrings(params.projectStatuses),
+  };
+}
+
 export interface NormalizedDepartmentEmployeesParams {
   page: number;
   size: number;

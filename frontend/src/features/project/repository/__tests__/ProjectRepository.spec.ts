@@ -88,6 +88,8 @@ describe('ProjectRepository', () => {
           projectId: 3,
           partyId: 9,
           partyName: '협력사A',
+          leadDepartmentId: 12,
+          leadDepartmentName: '개발팀',
           code: 'P-003',
           name: '프로젝트',
           description: '설명',
@@ -112,6 +114,8 @@ describe('ProjectRepository', () => {
       projectId: 3,
       partyId: 9,
       partyName: '협력사A',
+      leadDepartmentId: 12,
+      leadDepartmentName: '개발팀',
       statusLabel: '진행 중',
       contractAmount: 12000000,
     });

@@ -13,6 +13,8 @@ describe('project models', () => {
       projectId: 0,
       partyId: 0,
       partyName: '',
+      leadDepartmentId: null,
+      leadDepartmentName: null,
       code: '',
       name: '',
       description: null,
@@ -28,6 +30,8 @@ describe('project models', () => {
         projectId: 1,
         partyId: 2,
         partyName: '협력사',
+        leadDepartmentId: 12,
+        leadDepartmentName: '개발팀',
         code: 'P-001',
         name: '프로젝트',
         description: '설명',
@@ -41,6 +45,8 @@ describe('project models', () => {
       projectId: 1,
       partyId: 2,
       statusLabel: '진행 중',
+      leadDepartmentId: 12,
+      leadDepartmentName: '개발팀',
       contractAmount: 1000,
     });
   });

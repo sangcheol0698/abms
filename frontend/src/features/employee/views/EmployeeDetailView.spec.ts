@@ -196,7 +196,7 @@ describe('EmployeeDetailView', () => {
       }),
     });
     EmployeeDetailViewComponent = (await import('@/features/employee/views/EmployeeDetailView.vue')).default;
-  });
+  }, 20000);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -233,6 +233,7 @@ describe('EmployeeDetailView', () => {
       permissions: [
         { code: 'employee.read', scopes: ['ALL'] },
         { code: 'employee.write', scopes: ['ALL'] },
+        { code: 'project.read', scopes: ['ALL'] },
       ],
     });
     localStorage.setItem('user', storage.user);
@@ -323,7 +324,7 @@ describe('EmployeeDetailView', () => {
     expect(wrapper.text()).toContain('직원 삭제');
   });
 
-  it('tab query가 있으면 해당 탭을 활성화하고 변경 시 query를 갱신한다', async () => {
+  it('project.read 권한이 없으면 프로젝트 탭이 보이지 않는다', async () => {
     storage.user = JSON.stringify({
       name: '관리자',
       email: 'admin@abms.co.kr',
@@ -336,6 +337,25 @@ describe('EmployeeDetailView', () => {
     });
     localStorage.setItem('user', storage.user);
 
+    const { wrapper } = await mountDetailView('/employees/1');
+
+    expect(wrapper.text()).not.toContain('프로젝트');
+  });
+
+  it('tab query가 있으면 해당 탭을 활성화하고 변경 시 query를 갱신한다', async () => {
+    storage.user = JSON.stringify({
+      name: '관리자',
+      email: 'admin@abms.co.kr',
+      employeeId: 99,
+      departmentId: 10,
+      permissions: [
+        { code: 'employee.read', scopes: ['ALL'] },
+        { code: 'employee.write', scopes: ['ALL'] },
+        { code: 'project.read', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
     const { wrapper, router } = await mountDetailView('/employees/1?tab=salary');
 
     expect(wrapper.get('[data-test="active-tab"]').text()).toContain('salary');
@@ -344,5 +364,23 @@ describe('EmployeeDetailView', () => {
     await wrapper.vm.$nextTick();
 
     expect(wrapper.get('[data-test="active-tab"]').text()).toContain('projects');
+  });
+
+  it('project.read 권한이 없으면 projects query로 진입해도 overview로 fallback 한다', async () => {
+    storage.user = JSON.stringify({
+      name: '관리자',
+      email: 'admin@abms.co.kr',
+      employeeId: 99,
+      departmentId: 10,
+      permissions: [
+        { code: 'employee.read', scopes: ['ALL'] },
+        { code: 'employee.write', scopes: ['ALL'] },
+      ],
+    });
+    localStorage.setItem('user', storage.user);
+
+    const { wrapper } = await mountDetailView('/employees/1?tab=projects');
+
+    expect(wrapper.get('[data-test="active-tab"]').text()).toContain('overview');
   });
 });

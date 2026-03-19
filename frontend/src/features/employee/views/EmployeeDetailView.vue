@@ -57,7 +57,7 @@
           <TabsTrigger value="overview">개요</TabsTrigger>
           <TabsTrigger value="employment">근무 정보</TabsTrigger>
           <TabsTrigger value="salary">연봉</TabsTrigger>
-          <TabsTrigger value="projects">프로젝트</TabsTrigger>
+          <TabsTrigger v-if="canViewProjectsTab" value="projects">프로젝트</TabsTrigger>
         </TabsList>
 
         <div class="flex flex-1 flex-col gap-4">
@@ -93,7 +93,7 @@
               :show-management-actions="canManageCurrentEmployee"
             />
           </TabsContent>
-          <TabsContent value="projects" class="flex-1">
+          <TabsContent v-if="canViewProjectsTab" value="projects" class="flex-1">
             <EmployeeProjectsPanel :employee-id="employee?.employeeId ?? 0" />
           </TabsContent>
         </div>
@@ -190,6 +190,7 @@ import {
 import { employeeKeys, queryClient } from '@/core/query';
 import { canEditOwnProfile, canManageEmployee } from '@/features/employee/permissions';
 import { dispatchOpenProfileDialogEvent } from '@/features/auth/profileDialogEvents';
+import { canReadProjects } from '@/features/project/permissions';
 
 const route = useRoute();
 const router = useRouter();
@@ -208,6 +209,9 @@ const employeeId = computed(() => {
 const activeTab = computed<EmployeeDetailTab>({
   get() {
     const tab = Array.isArray(route.query.tab) ? route.query.tab[0] : route.query.tab;
+    if (tab === 'projects' && !canReadProjects()) {
+      return 'overview';
+    }
     return isEmployeeDetailTab(tab) ? tab : 'overview';
   },
   async set(tab) {
@@ -275,6 +279,7 @@ const canOpenOwnProfileEdit = computed(() => {
   }
   return !canManageCurrentEmployee.value && canEditOwnProfile(employee.value);
 });
+const canViewProjectsTab = computed(() => canReadProjects());
 
 const isEmployeeUpdateDialogOpen = ref(false);
 const isPromotionDialogOpen = ref(false);
