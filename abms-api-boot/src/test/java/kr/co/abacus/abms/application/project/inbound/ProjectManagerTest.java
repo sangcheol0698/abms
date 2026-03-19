@@ -8,9 +8,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 import kr.co.abacus.abms.application.project.dto.ProjectUpdateCommand;
+import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
@@ -33,14 +36,18 @@ class ProjectManagerTest extends IntegrationTestBase {
     @Autowired
     private PartyRepository partyRepository;
 
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
     @Test
     @DisplayName("command 기반으로 프로젝트를 생성한다")
     void create() {
         Long partyId = createParty("생성 협력사");
+        Long leadDepartmentId = createDepartment("생성부서");
 
         Long projectId = projectManager.create(new ProjectCreateCommand(
                 partyId,
-                1L,
+                leadDepartmentId,
                 "PRJ-CMD-001",
                 "command 생성 프로젝트",
                 "설명",
@@ -61,9 +68,10 @@ class ProjectManagerTest extends IntegrationTestBase {
     void update() {
         Long oldPartyId = createParty("기존 협력사");
         Long newPartyId = createParty("변경 협력사");
+        Long leadDepartmentId = createDepartment("수정부서");
         Project project = projectRepository.save(Project.create(
                 oldPartyId,
-                1L,
+                leadDepartmentId,
                 "PRJ-CMD-UPDATE-001",
                 "기존 프로젝트",
                 "설명",
@@ -76,7 +84,7 @@ class ProjectManagerTest extends IntegrationTestBase {
 
         Long projectId = projectManager.update(project.getIdOrThrow(), new ProjectUpdateCommand(
                 newPartyId,
-                1L,
+                leadDepartmentId,
                 "수정된 프로젝트",
                 "수정 설명",
                 ProjectStatus.ON_HOLD,
@@ -98,6 +106,17 @@ class ProjectManagerTest extends IntegrationTestBase {
     private Long createParty(String name) {
         Party party = partyRepository.save(Party.create(new PartyCreateRequest(name, null, null, null, null)));
         return party.getIdOrThrow();
+    }
+
+    private Long createDepartment(String name) {
+        Department department = departmentRepository.save(Department.create(
+                "DEPT-" + Math.abs(name.hashCode()),
+                name,
+                DepartmentType.TEAM,
+                null,
+                null
+        ));
+        return department.getIdOrThrow();
     }
 
 }

@@ -6,8 +6,10 @@ import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +22,7 @@ import kr.co.abacus.abms.application.project.authorization.ProjectReadAuthorizat
 import kr.co.abacus.abms.application.project.authorization.ProjectWriteAuthorizationService;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlanCreateRequest;
+import kr.co.abacus.abms.domain.project.ProjectRevenuePlanUpdateRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +52,43 @@ public class ProjectRevenuePlanApi {
     public ProjectRevenuePlanResponse create(@RequestBody ProjectRevenuePlanCreateRequest request, Authentication authentication) {
         projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), request.projectId());
         ProjectRevenuePlan projectRevenuePlan = projectRevenuePlanManager.create(request);
+        return ProjectRevenuePlanResponse.from(projectRevenuePlan);
+    }
+
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
+    @PutMapping("/api/projectRevenuePlans/{projectId}/{sequence}")
+    public ProjectRevenuePlanResponse update(
+            @PathVariable Long projectId,
+            @PathVariable Integer sequence,
+            @RequestBody ProjectRevenuePlanUpdateRequest request,
+            Authentication authentication
+    ) {
+        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), projectId);
+        ProjectRevenuePlan projectRevenuePlan = projectRevenuePlanManager.update(projectId, sequence, request);
+        return ProjectRevenuePlanResponse.from(projectRevenuePlan);
+    }
+
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
+    @PatchMapping("/api/projectRevenuePlans/{projectId}/{sequence}/issue")
+    public ProjectRevenuePlanResponse issue(
+            @PathVariable Long projectId,
+            @PathVariable Integer sequence,
+            Authentication authentication
+    ) {
+        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), projectId);
+        ProjectRevenuePlan projectRevenuePlan = projectRevenuePlanManager.issue(projectId, sequence);
+        return ProjectRevenuePlanResponse.from(projectRevenuePlan);
+    }
+
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
+    @PatchMapping("/api/projectRevenuePlans/{projectId}/{sequence}/cancel")
+    public ProjectRevenuePlanResponse cancel(
+            @PathVariable Long projectId,
+            @PathVariable Integer sequence,
+            Authentication authentication
+    ) {
+        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), projectId);
+        ProjectRevenuePlan projectRevenuePlan = projectRevenuePlanManager.cancel(projectId, sequence);
         return ProjectRevenuePlanResponse.from(projectRevenuePlan);
     }
 

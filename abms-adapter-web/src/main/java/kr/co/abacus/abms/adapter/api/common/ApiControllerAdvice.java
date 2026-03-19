@@ -27,6 +27,7 @@ import kr.co.abacus.abms.domain.notification.NotificationNotFoundException;
 import kr.co.abacus.abms.domain.payroll.PayrollNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectCodeDuplicateException;
 import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
+import kr.co.abacus.abms.domain.project.ProjectRevenuePlanNotFoundException;
 import kr.co.abacus.abms.domain.permission.PermissionNotFoundException;
 import kr.co.abacus.abms.domain.permissiongroup.DuplicatePermissionGroupNameException;
 import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupNotFoundException;
@@ -61,6 +62,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
             EmployeeNotFoundException.class,
             DepartmentNotFoundException.class,
             ProjectNotFoundException.class,
+            ProjectRevenuePlanNotFoundException.class,
             AccountNotFoundException.class,
             NotificationNotFoundException.class,
             PermissionGroupNotFoundException.class,

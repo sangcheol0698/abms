@@ -72,4 +72,12 @@ public class ProjectRevenuePlan extends AbstractEntity {
         this.isIssued = false;
     }
 
+    public void update(ProjectRevenuePlanUpdateRequest updateRequest) {
+        this.sequence = Objects.requireNonNull(updateRequest.sequence());
+        this.revenueDate = Objects.requireNonNull(updateRequest.revenueDate());
+        this.type = Objects.requireNonNull(updateRequest.type());
+        this.amount = Objects.requireNonNull(Money.wons(updateRequest.amount()));
+        this.memo = updateRequest.memo();
+    }
+
 }
