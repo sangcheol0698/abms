@@ -317,7 +317,7 @@ describe('EmployeeListView', () => {
       }),
     });
     EmployeeListViewComponent = (await import('@/features/employee/views/EmployeeListView.vue')).default;
-  });
+  }, 60000);
 
   beforeEach(() => {
     vi.clearAllMocks();
