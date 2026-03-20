@@ -13,7 +13,7 @@ import HttpRepository from '@/core/http/HttpRepository';
 
 @singleton()
 export class RemoteChatRepository implements ChatRepository {
-  private readonly baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  private readonly baseUrl = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_BASE_URL || '');
 
   constructor(@inject(HttpRepository) private readonly httpRepository: HttpRepository) {}
 

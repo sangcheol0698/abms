@@ -59,9 +59,16 @@ export interface ChatSessionResponse {
   updatedAt: string;
 }
 
+let chatMessageSequence = 0;
+
+function createChatMessageId(): string {
+  chatMessageSequence += 1;
+  return `chat-${Date.now()}-${chatMessageSequence}`;
+}
+
 export function createChatMessage(role: ChatRole, content: string): ChatMessage {
   return {
-    id: crypto.randomUUID(),
+    id: createChatMessageId(),
     role,
     content,
     toolStatus: undefined,
