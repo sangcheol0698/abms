@@ -50,6 +50,7 @@ spy.log
 .env
 /.env.*
 !.env.example
+deploy.sh
 /frontend/.env.*
 !/frontend/.env.example
 /.junie/
