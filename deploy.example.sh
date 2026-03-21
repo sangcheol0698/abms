@@ -11,7 +11,7 @@ rm -rf ./abms-api-boot/src/main/resources/static/*
 mkdir -p ./abms-api-boot/src/main/resources/static
 cp -r ./frontend/dist/* ./abms-api-boot/src/main/resources/static/
 
-./gradlew clean build -x test
+./gradlew clean build
 
 mv ./abms-api-boot/build/libs/*.jar ./abms-api-boot/build/libs/abms-api.jar
 mv ./abms-batch-boot/build/libs/*.jar ./abms-batch-boot/build/libs/abms-batch.jar
