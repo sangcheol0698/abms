@@ -7,16 +7,8 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
-import kr.co.abacus.abms.application.permission.inbound.PermissionFinder;
-import kr.co.abacus.abms.domain.account.AccountNotFoundException;
-
-@RequiredArgsConstructor
 @Component("permissionAuthorizationChecker")
 public class PermissionAuthorizationChecker {
-
-    private final AuthFinder authFinder;
-    private final PermissionFinder permissionFinder;
 
     public boolean hasPermission(@Nullable Authentication authentication, String permissionCode) {
         if (authentication == null
@@ -25,14 +17,8 @@ public class PermissionAuthorizationChecker {
             return false;
         }
 
-        try {
-            Long accountId = authFinder.getCurrentAccountId(authentication.getName());
-
-            return permissionFinder.findPermissions(accountId).permissions().stream()
-                    .anyMatch(permission -> permission.code().equals(permissionCode));
-        } catch (AccountNotFoundException | IllegalArgumentException exception) {
-            return false;
-        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> permissionCode.equals(authority.getAuthority()));
     }
 
 }

@@ -16,10 +16,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 
+import kr.co.abacus.abms.adapter.security.CustomUserDetails;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.auth.outbound.DefaultPermissionGroupRepository;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationTokenRepository;
@@ -199,6 +202,58 @@ class AuthApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.permissions[1].code").value("employee.read"))
                 .andExpect(jsonPath("$.permissions[1].scopes[0]").value("OWN_DEPARTMENT"))
                 .andExpect(jsonPath("$.permissions[1].scopes[1]").value("SELF"));
+    }
+
+    @Test
+    @DisplayName("로그인 세션 principal에는 계정과 권한 스냅샷이 저장된다")
+    void should_storePrincipalSnapshotInSession() throws Exception {
+        Account account = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
+        Permission employeeReadPermission = permissionRepository.save(Permission.create(
+                "employee.read",
+                "직원 조회",
+                "직원 조회 권한"
+        ));
+        PermissionGroup readPermissionGroup = permissionGroupRepository.save(PermissionGroup.create(
+                "직원 조회 스냅샷 그룹",
+                "직원 조회 스냅샷 권한 그룹",
+                PermissionGroupType.CUSTOM
+        ));
+        accountGroupAssignmentRepository.save(AccountGroupAssignment.create(
+                account.getIdOrThrow(),
+                readPermissionGroup.getIdOrThrow()
+        ));
+        groupPermissionGrantRepository.save(GroupPermissionGrant.create(
+                readPermissionGroup.getIdOrThrow(),
+                employeeReadPermission.getIdOrThrow(),
+                PermissionScope.SELF
+        ));
+        flushAndClear();
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", PASSWORD
+                        ))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+
+        SecurityContext securityContext = (SecurityContext) session.getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        assertThat(securityContext).isNotNull();
+        assertThat(securityContext.getAuthentication().getPrincipal()).isInstanceOf(CustomUserDetails.class);
+
+        CustomUserDetails principal = (CustomUserDetails) securityContext.getAuthentication().getPrincipal();
+        assertThat(principal.getAccountId()).isNotNull();
+        assertThat(principal.getEmployeeId()).isNotNull();
+        assertThat(principal.getDepartmentId()).isNotNull();
+        assertThat(principal.getPermissionsByCode()).containsKey("employee.read");
+        assertThat(principal.getAuthorities())
+                .extracting(authority -> authority.getAuthority())
+                .contains("employee.read");
     }
 
     @Test

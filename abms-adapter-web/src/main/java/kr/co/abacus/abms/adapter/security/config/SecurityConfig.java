@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -26,6 +27,12 @@ import kr.co.abacus.abms.adapter.security.filter.CsrfCookieFilter;
 @EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
+
+    private final SessionRegistry sessionRegistry;
+
+    public SecurityConfig(SessionRegistry sessionRegistry) {
+        this.sessionRegistry = sessionRegistry;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,6 +51,9 @@ public class SecurityConfig {
                         .sessionFixation(fixation -> fixation.changeSessionId())
                         .maximumSessions(2)
                         .maxSessionsPreventsLogin(false)
+                        .sessionRegistry(sessionRegistry)
+                        .expiredSessionStrategy(event ->
+                                event.getResponse().sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session Expired"))
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)

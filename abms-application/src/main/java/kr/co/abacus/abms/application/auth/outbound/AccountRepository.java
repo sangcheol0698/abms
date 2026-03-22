@@ -14,6 +14,8 @@ public interface AccountRepository {
 
     Optional<Account> findByIdAndDeletedFalse(Long id);
 
+    Optional<Account> findByEmployeeIdAndDeletedFalse(Long employeeId);
+
     List<Account> findAllByIdInAndDeletedFalse(List<Long> ids);
 
     List<Account> findAllByDeletedFalse();

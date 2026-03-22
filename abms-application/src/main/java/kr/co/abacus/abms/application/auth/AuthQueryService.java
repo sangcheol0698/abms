@@ -35,6 +35,23 @@ public class AuthQueryService implements AuthFinder {
     }
 
     @Override
+    public AuthenticatedUserInfo getCurrentUser(CurrentActor actor) {
+        if (actor.employeeId() == null) {
+            return fallbackUserInfo(actor.username(), actor.grantedPermissions());
+        }
+
+        return employeeRepository.findByIdAndDeletedFalse(actor.employeeId())
+                .map(employee -> new AuthenticatedUserInfo(
+                        employee.getName(),
+                        employee.getEmail().address(),
+                        employee.getIdOrThrow(),
+                        employee.getDepartmentId(),
+                        actor.grantedPermissions()
+                ))
+                .orElseGet(() -> fallbackUserInfo(actor.username(), actor.grantedPermissions()));
+    }
+
+    @Override
     public Long getCurrentAccountId(String username) {
         Email userEmail = new Email(username);
         return accountRepository.findByUsername(userEmail)
@@ -52,13 +69,20 @@ public class AuthQueryService implements AuthFinder {
                         employee.getDepartmentId(),
                         permissionFinder.findPermissions(account.getIdOrThrow()).permissions()
                 ))
-                .orElseGet(() -> fallbackUserInfo(account.getUsername().address()));
+                .orElseGet(() -> fallbackUserInfo(account.getUsername().address(), java.util.List.of()));
     }
 
     private AuthenticatedUserInfo fallbackUserInfo(String email) {
+        return fallbackUserInfo(email, java.util.List.of());
+    }
+
+    private AuthenticatedUserInfo fallbackUserInfo(
+            String email,
+            java.util.List<kr.co.abacus.abms.application.permission.dto.GrantedPermissionDetail> permissions
+    ) {
         String localPart = email.split("@")[0];
         String normalizedName = localPart.isBlank() ? email : localPart;
-        return new AuthenticatedUserInfo(normalizedName, email, null, null, java.util.List.of());
+        return new AuthenticatedUserInfo(normalizedName, email, null, null, permissions);
     }
 
 }

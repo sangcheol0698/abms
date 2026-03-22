@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.api.auth.dto.AuthMeResponse;
+import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.auth.dto.ChangePasswordRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.LoginRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationConfirmRequest;
@@ -29,6 +31,8 @@ public class AuthApi {
 
     private final AuthManager authManager;
     private final AuthFinder authFinder;
+    private final CurrentActorResolver currentActorResolver;
+    private final SessionRegistry sessionRegistry;
     private final SecurityContextRepository securityContextRepository;
 
     @PostMapping("/api/auth/login")
@@ -38,11 +42,18 @@ public class AuthApi {
             HttpServletResponse httpServletResponse
     ) {
         authManager.login(request.toCommand());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         securityContextRepository.saveContext(
                 SecurityContextHolder.getContext(),
                 httpServletRequest,
                 httpServletResponse
         );
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+            if (principal != null) {
+                sessionRegistry.registerNewSession(httpServletRequest.getSession().getId(), principal);
+            }
+        }
     }
 
     @PostMapping("/api/auth/registration-requests")
@@ -57,7 +68,7 @@ public class AuthApi {
 
     @GetMapping("/api/auth/me")
     public AuthMeResponse me(Authentication authentication) {
-        return AuthMeResponse.from(authFinder.getCurrentUser(authentication.getName()));
+        return AuthMeResponse.from(authFinder.getCurrentUser(currentActorResolver.resolve(authentication)));
     }
 
     @PatchMapping("/api/auth/password")
