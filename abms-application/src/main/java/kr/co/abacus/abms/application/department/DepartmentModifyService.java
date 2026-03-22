@@ -7,6 +7,8 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
+import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
 import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
 import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
 import kr.co.abacus.abms.application.department.event.OrganizationChartInvalidationRequestedEvent;
@@ -26,9 +28,20 @@ public class DepartmentModifyService implements DepartmentManager {
     private final DepartmentFinder departmentFinder;
     private final EmployeeFinder employeeFinder;
     private final ApplicationEventPublisher eventPublisher;
+    private final CurrentActorPermissionSupport permissionSupport;
 
     @Override
     public Long assignLeader(Long departmentId, Long leaderEmployeeId) {
+        return doAssignLeader(departmentId, leaderEmployeeId);
+    }
+
+    @Override
+    public Long assignLeader(CurrentActor actor, Long departmentId, Long leaderEmployeeId) {
+        validateCanAssignLeader(actor, departmentId);
+        return doAssignLeader(departmentId, leaderEmployeeId);
+    }
+
+    private Long doAssignLeader(Long departmentId, Long leaderEmployeeId) {
         Department department = departmentFinder.find(departmentId);
         Employee employee = employeeFinder.find(leaderEmployeeId);
 
@@ -39,6 +52,15 @@ public class DepartmentModifyService implements DepartmentManager {
         requestOrganizationChartCacheInvalidation();
 
         return id;
+    }
+
+    private void validateCanAssignLeader(CurrentActor actor, Long departmentId) {
+        permissionSupport.validateDepartmentAccess(
+                actor,
+                "employee.write",
+                departmentId,
+                "부서 리더 변경 권한 범위를 벗어났습니다."
+        );
     }
 
     private void requestOrganizationChartCacheInvalidation() {

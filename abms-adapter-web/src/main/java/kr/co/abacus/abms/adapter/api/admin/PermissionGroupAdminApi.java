@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.api.admin.dto.PermissionCatalogResponse;
+import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.admin.dto.PermissionGroupAccountAssignRequest;
 import kr.co.abacus.abms.adapter.api.admin.dto.PermissionGroupAccountResponse;
 import kr.co.abacus.abms.adapter.api.admin.dto.PermissionGroupCatalogResponse;
@@ -28,7 +29,6 @@ import kr.co.abacus.abms.adapter.api.admin.dto.PermissionGroupGrantResponse;
 import kr.co.abacus.abms.adapter.api.admin.dto.PermissionGroupListResponse;
 import kr.co.abacus.abms.adapter.api.admin.dto.PermissionGroupUpsertRequest;
 import kr.co.abacus.abms.adapter.api.common.EnumResponse;
-import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.permission.inbound.PermissionGroupAdminFinder;
 import kr.co.abacus.abms.application.permission.inbound.PermissionGroupAdminManager;
 import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType;
@@ -41,7 +41,7 @@ public class PermissionGroupAdminApi {
 
     private final PermissionGroupAdminFinder permissionGroupAdminFinder;
     private final PermissionGroupAdminManager permissionGroupAdminManager;
-    private final AuthFinder authFinder;
+    private final CurrentActorResolver currentActorResolver;
 
     @GetMapping("/permission-groups")
     public List<PermissionGroupListResponse> searchGroups(
@@ -89,7 +89,7 @@ public class PermissionGroupAdminApi {
 
     @DeleteMapping("/permission-groups/{id}")
     public void deleteGroup(@PathVariable Long id, Authentication authentication) {
-        permissionGroupAdminManager.deleteGroup(id, resolveCurrentAccountId(authentication));
+        permissionGroupAdminManager.deleteGroup(id, currentActorResolver.resolve(authentication).accountId());
     }
 
     @GetMapping("/accounts")
@@ -113,10 +113,10 @@ public class PermissionGroupAdminApi {
             @PathVariable Long accountId,
             Authentication authentication
     ) {
-        permissionGroupAdminManager.unassignAccount(id, accountId, resolveCurrentAccountId(authentication));
-    }
-
-    private Long resolveCurrentAccountId(Authentication authentication) {
-        return authFinder.getCurrentAccountId(authentication.getName());
+        permissionGroupAdminManager.unassignAccount(
+                id,
+                accountId,
+                currentActorResolver.resolve(authentication).accountId()
+        );
     }
 }

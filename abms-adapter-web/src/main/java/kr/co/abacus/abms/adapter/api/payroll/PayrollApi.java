@@ -16,12 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.api.payroll.dto.EmployeePayrollChangeRequest;
+import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.payroll.dto.EmployeePayrollCurrentResponse;
 import kr.co.abacus.abms.adapter.api.payroll.dto.EmployeePayrollHistoryResponse;
 import kr.co.abacus.abms.adapter.api.payroll.dto.PayrollCreateRequest;
-import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
-import kr.co.abacus.abms.application.employee.authorization.EmployeeReadAuthorizationService;
-import kr.co.abacus.abms.application.employee.authorization.EmployeeWriteAuthorizationService;
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.payroll.inbound.PayrollFinder;
 import kr.co.abacus.abms.application.payroll.inbound.PayrollManager;
@@ -35,14 +34,12 @@ public class PayrollApi {
     private final PayrollFinder payrollFinder;
     private final PayrollManager payrollManager;
     private final EmployeeFinder employeeFinder;
-    private final AuthFinder authFinder;
-    private final EmployeeReadAuthorizationService employeeReadAuthorizationService;
-    private final EmployeeWriteAuthorizationService employeeWriteAuthorizationService;
+    private final CurrentActorResolver currentActorResolver;
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/{employeeId}/payroll")
     public EmployeePayrollCurrentResponse getCurrentPayroll(@PathVariable Long employeeId, Authentication authentication) {
-        authorizeRead(employeeId, authentication);
+        authorizeRead(employeeId, currentActorResolver.resolve(authentication));
         var currentPayroll = payrollFinder.findCurrentPayroll(employeeId);
         if (currentPayroll == null) {
             throw new PayrollNotFoundException("현재 연봉 정보가 없습니다: " + employeeId);
@@ -53,7 +50,7 @@ public class PayrollApi {
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/{employeeId}/payroll-history")
     public List<EmployeePayrollHistoryResponse> getPayrollHistory(@PathVariable Long employeeId, Authentication authentication) {
-        authorizeRead(employeeId, authentication);
+        authorizeRead(employeeId, currentActorResolver.resolve(authentication));
         return payrollFinder.findPayrollHistory(employeeId).stream()
                 .map(EmployeePayrollHistoryResponse::from)
                 .toList();
@@ -66,8 +63,12 @@ public class PayrollApi {
             @RequestBody @Valid EmployeePayrollChangeRequest request,
             Authentication authentication
     ) {
-        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), employeeId);
-        payrollManager.changeSalary(employeeId, Money.wons(request.annualSalary()), request.startDate());
+        payrollManager.changeSalary(
+                currentActorResolver.resolve(authentication),
+                employeeId,
+                Money.wons(request.annualSalary()),
+                request.startDate()
+        );
         return ResponseEntity.noContent().build();
     }
 
@@ -75,21 +76,21 @@ public class PayrollApi {
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @PostMapping("/api/salary-history")
     public ResponseEntity<Void> changeSalary(@RequestBody @Valid PayrollCreateRequest request, Authentication authentication) {
-        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), request.employeeId());
-        payrollManager.changeSalary(request.employeeId(), Money.wons(request.annualSalary()), request.startDate());
+        payrollManager.changeSalary(
+                currentActorResolver.resolve(authentication),
+                request.employeeId(),
+                Money.wons(request.annualSalary()),
+                request.startDate()
+        );
         return ResponseEntity.noContent().build();
     }
 
-    private void authorizeRead(Long employeeId, Authentication authentication) {
-        var employee = employeeFinder.find(employeeId);
-        if (!employeeReadAuthorizationService.resolveScope(resolveAccountId(authentication))
-                .canRead(employee.getIdOrThrow(), employee.getDepartmentId())) {
+    private void authorizeRead(Long employeeId, CurrentActor actor) {
+        if (employeeFinder.find(employeeId) == null) {
+            throw new PayrollNotFoundException("현재 연봉 정보가 없습니다: " + employeeId);
+        }
+        if (employeeFinder.findEmployeeDetail(employeeId, actor) == null) {
             throw new org.springframework.security.access.AccessDeniedException("직원 조회 권한 범위를 벗어났습니다.");
         }
     }
-
-    private Long resolveAccountId(Authentication authentication) {
-        return authFinder.getCurrentAccountId(authentication.getName());
-    }
-
 }

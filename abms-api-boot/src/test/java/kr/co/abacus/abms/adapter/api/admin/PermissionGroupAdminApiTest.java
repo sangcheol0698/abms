@@ -357,17 +357,35 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                         .content(toJson(Map.of("accountId", adminAccountId))))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/admin/permission-groups/{id}", systemGroupId).session(session))
+        MockHttpSession assignedAdminSession = login(ADMIN_USERNAME);
+
+        mockMvc.perform(get("/api/admin/permission-groups/{id}", systemGroupId).session(assignedAdminSession))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accounts[*].accountId", hasItem(adminAccountId.intValue())));
 
         mockMvc.perform(delete("/api/admin/permission-groups/{id}/accounts/{accountId}", systemGroupId, adminAccountId)
-                        .session(session))
+                        .session(assignedAdminSession))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/admin/permission-groups/{id}", systemGroupId).session(session))
+        MockHttpSession refreshedAdminSession = login(ADMIN_USERNAME);
+
+        mockMvc.perform(get("/api/admin/permission-groups/{id}", systemGroupId).session(refreshedAdminSession))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accounts[*].accountId", not(hasItem(adminAccountId.intValue()))));
+    }
+
+    @Test
+    @DisplayName("권한 그룹 변경 후 대상 계정의 기존 세션은 만료된다")
+    void should_expireTargetSessionAfterPermissionMutation() throws Exception {
+        MockHttpSession adminSession = login(ADMIN_USERNAME);
+        MockHttpSession userSession = login(USER_USERNAME);
+
+        mockMvc.perform(delete("/api/admin/permission-groups/{id}/accounts/{accountId}", customGroupId, userAccountId)
+                        .session(adminSession))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/auth/me").session(userSession))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

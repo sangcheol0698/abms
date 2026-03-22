@@ -22,13 +22,13 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatMessageResponse;
+import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatSendRequest;
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatSessionResponse;
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatSessionTitleUpdateRequest;
 import kr.co.abacus.abms.adapter.api.chat.dto.ChatStreamChunk;
 import kr.co.abacus.abms.application.chat.ChatCommandService;
 import kr.co.abacus.abms.application.chat.ChatQueryService;
-import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.chat.dto.command.ChatSendCommand;
 import kr.co.abacus.abms.application.chat.dto.query.ChatSessionDetail;
 import kr.co.abacus.abms.application.chat.dto.query.ChatSessionSummary;
@@ -40,13 +40,13 @@ public class ChatApi {
 
     private final ChatCommandService chatCommandService;
     private final ChatQueryService chatQueryService;
-    private final AuthFinder authFinder;
+    private final CurrentActorResolver currentActorResolver;
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ChatStreamChunk> streamChat(
             @RequestBody @Valid ChatSendRequest request,
             Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
+        Long accountId = currentActorResolver.resolve(authentication).accountId();
         ChatSendCommand command = request.toCommand();
         return chatCommandService.streamMessage(accountId, command)
                 .flatMapMany(result -> {
@@ -68,7 +68,7 @@ public class ChatApi {
     public ChatMessageResponse sendMessage(
             @RequestBody @Valid ChatSendRequest request,
             Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
+        Long accountId = currentActorResolver.resolve(authentication).accountId();
         ChatSendCommand command = request.toCommand();
         String content = chatCommandService.sendMessage(accountId, command);
         return ChatMessageResponse.assistantResponse(content);
@@ -78,7 +78,7 @@ public class ChatApi {
     public List<ChatSessionResponse> getRecentSessions(
             @RequestParam(defaultValue = "20") int limit,
             Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
+        Long accountId = currentActorResolver.resolve(authentication).accountId();
         List<ChatSessionSummary> sessions = chatQueryService.getRecentSessions(accountId, limit);
         return sessions.stream()
                 .map(ChatSessionResponse::from)
@@ -87,7 +87,7 @@ public class ChatApi {
 
     @GetMapping("/sessions/favorites")
     public List<ChatSessionResponse> getFavoriteSessions(Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
+        Long accountId = currentActorResolver.resolve(authentication).accountId();
         List<ChatSessionSummary> sessions = chatQueryService.getFavoriteSessions(accountId);
         return sessions.stream()
                 .map(ChatSessionResponse::from)
@@ -96,14 +96,14 @@ public class ChatApi {
 
     @GetMapping("/sessions/{sessionId}")
     public ChatSessionResponse getSessionDetail(@PathVariable String sessionId, Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
+        Long accountId = currentActorResolver.resolve(authentication).accountId();
         ChatSessionDetail detail = chatQueryService.getSessionDetail(accountId, sessionId);
         return ChatSessionResponse.from(detail);
     }
 
     @PostMapping("/sessions/{sessionId}/favorite")
     public void toggleFavorite(@PathVariable String sessionId, Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
+        Long accountId = currentActorResolver.resolve(authentication).accountId();
         chatCommandService.toggleFavorite(accountId, sessionId);
     }
 
@@ -113,19 +113,14 @@ public class ChatApi {
             @PathVariable String sessionId,
             @RequestBody @Valid ChatSessionTitleUpdateRequest request,
             Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
+        Long accountId = currentActorResolver.resolve(authentication).accountId();
         chatCommandService.updateSessionTitle(accountId, sessionId, request.title());
     }
 
     @DeleteMapping("/sessions/{sessionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSession(@PathVariable String sessionId, Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
+        Long accountId = currentActorResolver.resolve(authentication).accountId();
         chatCommandService.deleteSession(accountId, sessionId);
     }
-
-    private Long resolveAccountId(Authentication authentication) {
-        return authFinder.getCurrentAccountId(authentication.getName());
-    }
-
 }

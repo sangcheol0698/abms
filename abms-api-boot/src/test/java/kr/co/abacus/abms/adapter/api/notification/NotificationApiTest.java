@@ -1,7 +1,7 @@
 package kr.co.abacus.abms.adapter.api.notification;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -14,8 +14,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MvcResult;
 
+import kr.co.abacus.abms.adapter.security.CustomUserDetails;
 import kr.co.abacus.abms.adapter.api.notification.dto.NotificationResponse;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.notification.outbound.NotificationRepository;
@@ -59,7 +61,7 @@ class NotificationApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         MvcResult result = mockMvc.perform(get("/api/notifications")
-                        .with(user(TEST_USERNAME)))
+                        .with(authentication(authenticateAccount())))
                 .andExpect(status().isOk())
                 .andReturn();
         String responseBody = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -87,7 +89,7 @@ class NotificationApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         mockMvc.perform(patch("/api/notifications/{id}/read", notification.getId())
-                        .with(user(TEST_USERNAME)))
+                        .with(authentication(authenticateAccount())))
                 .andExpect(status().isNoContent());
 
         flushAndClear();
@@ -115,7 +117,7 @@ class NotificationApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         mockMvc.perform(patch("/api/notifications/read-all")
-                        .with(user(TEST_USERNAME)))
+                        .with(authentication(authenticateAccount())))
                 .andExpect(status().isNoContent());
 
         flushAndClear();
@@ -144,7 +146,7 @@ class NotificationApiTest extends ApiIntegrationTestBase {
         flushAndClear();
 
         mockMvc.perform(delete("/api/notifications")
-                        .with(user(TEST_USERNAME)))
+                        .with(authentication(authenticateAccount())))
                 .andExpect(status().isNoContent());
 
         flushAndClear();
@@ -152,6 +154,11 @@ class NotificationApiTest extends ApiIntegrationTestBase {
         List<Notification> notifications = notificationRepository
                 .findAllByAccountIdAndDeletedFalseOrderByCreatedAtDesc(accountId);
         assertThat(notifications).isEmpty();
+    }
+
+    private UsernamePasswordAuthenticationToken authenticateAccount() {
+        Account account = accountRepository.findByUsername(new Email(TEST_USERNAME)).orElseThrow();
+        return UsernamePasswordAuthenticationToken.authenticated(new CustomUserDetails(account), null, List.of());
     }
 
 }

@@ -3,6 +3,7 @@ package kr.co.abacus.abms.application.projectassignment.outbound;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectItem;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectSearchCondition;
 import kr.co.abacus.abms.application.projectassignment.dto.ProjectAssignmentItem;
@@ -11,6 +12,12 @@ import kr.co.abacus.abms.application.projectassignment.dto.ProjectAssignmentSear
 public interface CustomProjectAssignmentRepository {
 
     Page<EmployeeProjectItem> searchEmployeeProjects(EmployeeProjectSearchCondition condition, Pageable pageable);
+
+    Page<EmployeeProjectItem> searchEmployeeProjects(
+            EmployeeProjectSearchCondition condition,
+            CurrentActor actor,
+            Pageable pageable
+    );
 
     java.util.List<ProjectAssignmentItem> findProjectAssignments(Long projectId);
 

@@ -5,7 +5,13 @@ import static kr.co.abacus.abms.domain.employee.QEmployee.*;
 import static org.springframework.util.StringUtils.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.ArrayDeque;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
@@ -26,7 +32,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 
-import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
@@ -37,6 +43,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 
 @RequiredArgsConstructor
 @Repository
@@ -94,23 +101,23 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
 
     @Override
     public EmployeeOverviewSummary summarize(EmployeeSearchCondition condition) {
+        return summarize(condition, null);
+    }
+
+    @Override
+    public EmployeeOverviewSummary summarize(EmployeeSearchCondition condition, @Nullable CurrentActor actor) {
         return new EmployeeOverviewSummary(
-                countEmployees(condition, null),
-                countEmployees(condition, employee.status.eq(EmployeeStatus.ACTIVE)),
-                countEmployees(condition, employee.status.eq(EmployeeStatus.ON_LEAVE)),
-                countEmployees(condition, employee.type.eq(EmployeeType.FULL_TIME)),
-                countEmployees(condition, employee.type.eq(EmployeeType.FREELANCER)),
-                countEmployees(condition, employee.type.eq(EmployeeType.OUTSOURCING)),
-                countEmployees(condition, employee.type.eq(EmployeeType.PART_TIME)));
+                countEmployees(condition, actor, null),
+                countEmployees(condition, actor, employee.status.eq(EmployeeStatus.ACTIVE)),
+                countEmployees(condition, actor, employee.status.eq(EmployeeStatus.ON_LEAVE)),
+                countEmployees(condition, actor, employee.type.eq(EmployeeType.FULL_TIME)),
+                countEmployees(condition, actor, employee.type.eq(EmployeeType.FREELANCER)),
+                countEmployees(condition, actor, employee.type.eq(EmployeeType.OUTSOURCING)),
+                countEmployees(condition, actor, employee.type.eq(EmployeeType.PART_TIME)));
     }
 
     @Override
     public List<Employee> search(EmployeeSearchCondition request) {
-        return search(request, EmployeeReadScope.all());
-    }
-
-    @Override
-    public List<Employee> search(EmployeeSearchCondition request, EmployeeReadScope scope) {
         return queryFactory.select(employee)
                 .from(employee)
                 .where(
@@ -120,7 +127,23 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                         inGrades(request.grades()),
                         inDepartments(request.departmentIds()),
                         inStatuses(request.statuses()),
-                        scopeCondition(scope),
+                        employee.deleted.isFalse())
+                .orderBy(defaultSort())
+                .fetch();
+    }
+
+    @Override
+    public List<Employee> search(EmployeeSearchCondition request, CurrentActor actor) {
+        return queryFactory.select(employee)
+                .from(employee)
+                .where(
+                        containsName(request.name()),
+                        inPositions(request.positions()),
+                        inTypes(request.types()),
+                        inGrades(request.grades()),
+                        inDepartments(request.departmentIds()),
+                        inStatuses(request.statuses()),
+                        accessCondition(actor, EMPLOYEE_EXCEL_DOWNLOAD_PERMISSION_CODE),
                         employee.deleted.isFalse())
                 .orderBy(defaultSort())
                 .fetch();
@@ -151,6 +174,34 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                 .fetchOne();
     }
 
+    @Override
+    public @Nullable EmployeeDetail findEmployeeDetail(Long id, CurrentActor actor) {
+        return queryFactory
+                .select(Projections.constructor(EmployeeDetail.class,
+                        department.id,
+                        department.name,
+                        employee.id,
+                        employee.name,
+                        employee.email,
+                        employee.joinDate,
+                        employee.birthDate,
+                        employee.position,
+                        employee.status,
+                        employee.grade,
+                        employee.type,
+                        employee.avatar,
+                        employee.memo))
+                .from(employee)
+                .join(department).on(employee.departmentId.eq(department.id))
+                .where(
+                        employee.id.eq(id),
+                        accessCondition(actor, EMPLOYEE_READ_PERMISSION_CODE),
+                        employee.deleted.isFalse())
+                .fetchOne();
+    }
+
+    private static final String EMPLOYEE_READ_PERMISSION_CODE = "employee.read";
+    private static final String EMPLOYEE_EXCEL_DOWNLOAD_PERMISSION_CODE = "employee.excel.download";
     private @Nullable BooleanExpression containsName(@Nullable String name) {
         return hasText(name) ? employee.name.containsIgnoreCase(name) : null;
     }
@@ -190,17 +241,62 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
         return employee.status.in(statuses);
     }
 
-    private @Nullable BooleanExpression scopeCondition(@Nullable EmployeeReadScope scope) {
-        if (scope == null || scope.allAllowed()) {
+    private @Nullable BooleanExpression accessCondition(@Nullable CurrentActor actor, String permissionCode) {
+        if (actor == null || !actor.hasPermission(permissionCode)) {
+            return actor == null ? null : employee.id.isNull();
+        }
+        Set<PermissionScope> scopes = actor.scopesOf(permissionCode);
+        if (scopes.contains(PermissionScope.ALL)) {
             return null;
         }
-        if (scope.usesDepartmentScope()) {
-            return employee.departmentId.in(scope.allowedDepartmentIds());
+        LinkedHashSet<Long> departmentIds = new LinkedHashSet<>();
+        if (actor.departmentId() != null && scopes.contains(PermissionScope.OWN_DEPARTMENT)) {
+            departmentIds.add(actor.departmentId());
         }
-        if (scope.selfEmployeeId() != null) {
-            return employee.id.eq(scope.selfEmployeeId());
+        if (actor.departmentId() != null && scopes.contains(PermissionScope.OWN_DEPARTMENT_TREE)) {
+            departmentIds.addAll(resolveDepartmentTree(actor.departmentId()));
+        }
+        BooleanExpression departmentCondition = departmentIds.isEmpty()
+                ? null
+                : employee.departmentId.in(departmentIds);
+        BooleanExpression selfCondition = scopes.contains(PermissionScope.SELF) && actor.employeeId() != null
+                ? employee.id.eq(actor.employeeId())
+                : null;
+        if (departmentCondition != null && selfCondition != null) {
+            return departmentCondition.or(selfCondition);
+        }
+        if (departmentCondition != null) {
+            return departmentCondition;
+        }
+        if (selfCondition != null) {
+            return selfCondition;
         }
         return employee.id.isNull();
+    }
+
+    private LinkedHashSet<Long> resolveDepartmentTree(Long rootDepartmentId) {
+        Map<Long, List<Long>> childrenByParentId = queryFactory.select(department.id, department.parent.id)
+                .from(department)
+                .where(department.deleted.isFalse(), department.parent.id.isNotNull())
+                .fetch()
+                .stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        tuple -> tuple.get(department.parent.id),
+                        LinkedHashMap::new,
+                        java.util.stream.Collectors.mapping(tuple -> tuple.get(department.id),
+                                java.util.stream.Collectors.toList())
+                ));
+        LinkedHashSet<Long> departmentIds = new LinkedHashSet<>();
+        Queue<Long> queue = new ArrayDeque<>();
+        queue.add(rootDepartmentId);
+        while (!queue.isEmpty()) {
+            Long departmentId = queue.poll();
+            if (!departmentIds.add(departmentId)) {
+                continue;
+            }
+            queue.addAll(childrenByParentId.getOrDefault(departmentId, List.of()));
+        }
+        return departmentIds;
     }
 
     private OrderSpecifier<?>[] resolveSort(Pageable pageable) {
@@ -262,7 +358,11 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
         return employee.createdAt.desc();
     }
 
-    private long countEmployees(EmployeeSearchCondition condition, @Nullable BooleanExpression extraCondition) {
+    private long countEmployees(
+            EmployeeSearchCondition condition,
+            @Nullable CurrentActor actor,
+            @Nullable BooleanExpression extraCondition
+    ) {
         Long value = queryFactory
                 .select(employee.count())
                 .from(employee)
@@ -273,6 +373,7 @@ public class EmployeeRepositoryImpl implements CustomEmployeeRepository {
                         inGrades(condition.grades()),
                         inDepartments(condition.departmentIds()),
                         inStatuses(condition.statuses()),
+                        accessCondition(actor, EMPLOYEE_READ_PERMISSION_CODE),
                         extraCondition,
                         employee.deleted.isFalse())
                 .fetchOne();

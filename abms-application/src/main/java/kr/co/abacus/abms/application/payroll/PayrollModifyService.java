@@ -7,9 +7,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
+import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.payroll.inbound.PayrollManager;
 import kr.co.abacus.abms.application.payroll.outbound.PayrollRepository;
+import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.payroll.Payroll;
 import kr.co.abacus.abms.domain.shared.Money;
 
@@ -20,9 +23,21 @@ public class PayrollModifyService implements PayrollManager {
 
     private final PayrollRepository payrollRepository;
     private final EmployeeFinder employeeFinder;
+    private final CurrentActorPermissionSupport permissionSupport;
 
     @Override
     public void changeSalary(Long employeeId, Money annualSalary, LocalDate startDate) {
+        doChangeSalary(employeeId, annualSalary, startDate);
+    }
+
+    @Override
+    public void changeSalary(CurrentActor actor, Long employeeId, Money annualSalary, LocalDate startDate) {
+        Employee employee = employeeFinder.find(employeeId);
+        validateCanManage(actor, employee);
+        doChangeSalary(employeeId, annualSalary, startDate);
+    }
+
+    private void doChangeSalary(Long employeeId, Money annualSalary, LocalDate startDate) {
         checkEmployeeExists(employeeId);
 
         payrollRepository.lockByEmployeeIdAndTargetDate(employeeId, startDate).ifPresent(overlappingSalary -> {
@@ -40,6 +55,10 @@ public class PayrollModifyService implements PayrollManager {
         Payroll payroll = Payroll.create(employeeId, annualSalary, startDate);
 
         payrollRepository.save(payroll);
+    }
+
+    private void validateCanManage(CurrentActor actor, Employee employee) {
+        permissionSupport.validateDepartmentAccess(actor, "employee.write", employee.getDepartmentId(), "직원 변경 권한 범위를 벗어났습니다.");
     }
 
     private void checkEmployeeExists(Long employeeId) {

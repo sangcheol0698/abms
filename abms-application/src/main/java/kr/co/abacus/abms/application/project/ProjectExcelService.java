@@ -1,11 +1,13 @@
 package kr.co.abacus.abms.application.project;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
+import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
+import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 import kr.co.abacus.abms.application.project.dto.ProjectExcelUploadResult;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.inbound.ProjectManager;
-import kr.co.abacus.abms.application.project.authorization.ProjectWriteAuthorizationService;
 import kr.co.abacus.abms.application.project.outbound.ProjectExcelExporter;
 import kr.co.abacus.abms.application.project.outbound.ProjectExcelImporter;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
@@ -30,14 +32,15 @@ import java.util.stream.Collectors;
 public class ProjectExcelService {
 
     private final ProjectRepository projectRepository;
+    private final DepartmentRepository departmentRepository;
     private final PartyRepository partyRepository;
     private final ProjectManager projectManager;
     private final ProjectExcelExporter projectExcelExporter;
     private final ProjectExcelImporter projectExcelImporter;
-    private final ProjectWriteAuthorizationService projectWriteAuthorizationService;
+    private final CurrentActorPermissionSupport permissionSupport;
 
-    public byte[] download(ProjectSearchCondition condition) {
-        List<Project> projects = projectRepository.search(condition);
+    public byte[] download(ProjectSearchCondition condition, CurrentActor actor) {
+        List<Project> projects = projectRepository.search(condition, actor);
         Map<Long, String> partyNames = loadPartyNameMap();
         return projectExcelExporter.export(projects, partyNames);
     }
@@ -47,9 +50,9 @@ public class ProjectExcelService {
     }
 
     @Transactional
-    public ProjectExcelUploadResult upload(InputStream inputStream, Long accountId) {
+    public ProjectExcelUploadResult upload(InputStream inputStream, CurrentActor actor) {
         List<ProjectCreateCommand> commands = projectExcelImporter.importProjects(inputStream, this::getPartyIdByName);
-        projectWriteAuthorizationService.assertCanUpload(accountId, commands);
+        validateCanUpload(actor, commands);
 
         List<ProjectExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
         int successCount = 0;
@@ -101,6 +104,26 @@ public class ProjectExcelService {
             return ex.getClass().getSimpleName();
         }
         return message;
+    }
+
+    private void validateCanUpload(CurrentActor actor, List<ProjectCreateCommand> commands) {
+        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes = permissionSupport.requirePermission(
+                actor,
+                "project.excel.upload",
+                "프로젝트 엑셀 업로드 권한 범위를 벗어났습니다."
+        );
+        if (scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.ALL)) {
+            return;
+        }
+
+        java.util.Set<Long> allowedDepartmentIds = permissionSupport.resolveAllowedDepartmentIds(actor, scopes);
+
+        boolean unauthorizedExists = commands.stream()
+                .map(ProjectCreateCommand::leadDepartmentId)
+                .anyMatch(leadDepartmentId -> !allowedDepartmentIds.contains(leadDepartmentId));
+        if (unauthorizedExists) {
+            throw new org.springframework.security.access.AccessDeniedException("프로젝트 엑셀 업로드 권한 범위를 벗어났습니다.");
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.auth.outbound.SessionInvalidator;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.permission.dto.PermissionGroupGrantCommand;
 import kr.co.abacus.abms.application.permission.dto.PermissionGroupUpsertCommand;
@@ -41,6 +42,7 @@ public class PermissionGroupAdminModifyService implements PermissionGroupAdminMa
     private final GroupPermissionGrantRepository groupPermissionGrantRepository;
     private final AccountGroupAssignmentRepository accountGroupAssignmentRepository;
     private final AccountRepository accountRepository;
+    private final SessionInvalidator sessionInvalidator;
 
     @Override
     public Long createGroup(PermissionGroupUpsertCommand command) {
@@ -59,16 +61,19 @@ public class PermissionGroupAdminModifyService implements PermissionGroupAdminMa
         PermissionGroup group = findActiveGroup(id);
         ensureCustomGroup(group);
         validateUniqueCustomGroupName(command.name(), id);
+        List<Long> affectedAccountIds = findActiveAccountIds(group.getIdOrThrow());
 
         group.updateInfo(command.name().trim(), command.description().trim());
         permissionGroupRepository.save(group);
         syncGrants(group.getIdOrThrow(), command.grants());
+        sessionInvalidator.invalidateSessions(affectedAccountIds);
     }
 
     @Override
     public void deleteGroup(Long id, Long actorAccountId) {
         PermissionGroup group = findActiveGroup(id);
         ensureCustomGroup(group);
+        List<Long> affectedAccountIds = findActiveAccountIds(group.getIdOrThrow());
 
         accountGroupAssignmentRepository.findAllByPermissionGroupIdAndDeletedFalse(group.getIdOrThrow())
                 .forEach(assignment -> assignment.softDelete(actorAccountId));
@@ -77,6 +82,7 @@ public class PermissionGroupAdminModifyService implements PermissionGroupAdminMa
         group.softDelete(actorAccountId);
 
         permissionGroupRepository.save(group);
+        sessionInvalidator.invalidateSessions(affectedAccountIds);
     }
 
     @Override
@@ -95,6 +101,7 @@ public class PermissionGroupAdminModifyService implements PermissionGroupAdminMa
                 }, () -> accountGroupAssignmentRepository.save(AccountGroupAssignment.create(
                         account.getIdOrThrow(),
                         group.getIdOrThrow())));
+        sessionInvalidator.invalidateSessions(List.of(account.getIdOrThrow()));
     }
 
     @Override
@@ -107,6 +114,7 @@ public class PermissionGroupAdminModifyService implements PermissionGroupAdminMa
 
         assignment.softDelete(actorAccountId);
         accountGroupAssignmentRepository.save(assignment);
+        sessionInvalidator.invalidateSessions(List.of(accountId));
     }
 
     private PermissionGroup findActiveGroup(Long id) {
@@ -132,6 +140,13 @@ public class PermissionGroupAdminModifyService implements PermissionGroupAdminMa
         if (exists) {
             throw new DuplicatePermissionGroupNameException("이미 존재하는 커스텀 권한 그룹 이름입니다: " + normalizedName);
         }
+    }
+
+    private List<Long> findActiveAccountIds(Long permissionGroupId) {
+        return accountGroupAssignmentRepository.findAllByPermissionGroupIdAndDeletedFalse(permissionGroupId).stream()
+                .map(AccountGroupAssignment::getAccountId)
+                .distinct()
+                .toList();
     }
 
     private void syncGrants(Long permissionGroupId, List<PermissionGroupGrantCommand> commands) {

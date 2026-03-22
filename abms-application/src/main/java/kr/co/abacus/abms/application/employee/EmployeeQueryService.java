@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
@@ -33,6 +34,11 @@ public class EmployeeQueryService implements EmployeeFinder {
     @Override
     public @Nullable EmployeeDetail findEmployeeDetail(Long id) {
         return employeeRepository.findEmployeeDetail(id);
+    }
+
+    @Override
+    public @Nullable EmployeeDetail findEmployeeDetail(Long id, CurrentActor actor) {
+        return employeeRepository.findEmployeeDetail(id, actor);
     }
 
     @Override

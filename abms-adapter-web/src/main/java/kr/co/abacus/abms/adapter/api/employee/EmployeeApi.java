@@ -36,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import kr.co.abacus.abms.adapter.api.common.EnumResponse;
 import kr.co.abacus.abms.adapter.api.common.FilenameBuilder;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
+import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDetailResponse;
@@ -46,11 +47,8 @@ import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeProjectSearchRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateResponse;
-import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.employee.EmployeeExcelService;
-import kr.co.abacus.abms.application.employee.authorization.EmployeeReadAuthorizationService;
-import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
-import kr.co.abacus.abms.application.employee.authorization.EmployeeWriteAuthorizationService;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
@@ -58,10 +56,8 @@ import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
-import kr.co.abacus.abms.application.project.authorization.ProjectReadAuthorizationService;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectSearchCondition;
 import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentFinder;
-import kr.co.abacus.abms.application.project.authorization.ProjectReadScope;
 import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
@@ -76,17 +72,13 @@ public class EmployeeApi {
     private final EmployeeManager employeeManager;
     private final EmployeeFinder employeeFinder;
     private final EmployeeExcelService employeeExcelService;
-    private final AuthFinder authFinder;
-    private final EmployeeReadAuthorizationService employeeReadAuthorizationService;
-    private final EmployeeWriteAuthorizationService employeeWriteAuthorizationService;
-    private final ProjectReadAuthorizationService projectReadAuthorizationService;
+    private final CurrentActorResolver currentActorResolver;
     private final ProjectAssignmentFinder projectAssignmentFinder;
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @PostMapping("/api/employees")
     public EmployeeCreateResponse create(@RequestBody @Valid EmployeeCreateRequest request, Authentication authentication) {
-        employeeWriteAuthorizationService.assertCanCreate(resolveAccountId(authentication), request.departmentId());
-        Long employeeId = employeeManager.create(request.toCommand());
+        Long employeeId = employeeManager.create(currentActorResolver.resolve(authentication), request.toCommand());
 
         return EmployeeCreateResponse.of(employeeId);
     }
@@ -95,11 +87,12 @@ public class EmployeeApi {
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.read')")
     @GetMapping("/api/employees/{id}")
     public EmployeeDetailResponse findEmployeeDetail(@PathVariable Long id, Authentication authentication) {
+        CurrentActor actor = currentActorResolver.resolve(authentication);
         EmployeeDetail detail = employeeFinder.findEmployeeDetail(id);
         if (detail == null) {
             throw new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id);
         }
-        if (!resolveEmployeeReadScope(authentication).canRead(detail.employeeId(), detail.departmentId())) {
+        if (employeeFinder.findEmployeeDetail(id, actor) == null) {
             throw new AccessDeniedException("직원 조회 권한 범위를 벗어났습니다.");
         }
 
@@ -115,21 +108,17 @@ public class EmployeeApi {
             Pageable pageable,
             Authentication authentication
     ) {
+        CurrentActor actor = currentActorResolver.resolve(authentication);
         EmployeeDetail detail = employeeFinder.findEmployeeDetail(id);
         if (detail == null) {
             throw new EmployeeNotFoundException("존재하지 않는 직원입니다: " + id);
         }
-        if (!resolveEmployeeReadScope(authentication).canRead(detail.employeeId(), detail.departmentId())) {
+        if (employeeFinder.findEmployeeDetail(id, actor) == null) {
             throw new AccessDeniedException("직원 조회 권한 범위를 벗어났습니다.");
         }
 
-        ProjectReadScope projectReadScope = projectReadAuthorizationService.resolveScope(resolveAccountId(authentication));
-        EmployeeProjectSearchCondition authorizedCondition = request.toCondition(id).withAccess(
-                projectReadScope.allAllowed() ? null : List.copyOf(projectReadScope.allowedProjectIds()),
-                projectReadScope.allAllowed() ? null : List.copyOf(projectReadScope.allowedLeadDepartmentIds())
-        );
-
-        return PageResponse.of(projectAssignmentFinder.findByEmployeeId(authorizedCondition, pageable)
+        EmployeeProjectSearchCondition condition = request.toCondition(id);
+        return PageResponse.of(projectAssignmentFinder.findByEmployeeId(condition, actor, pageable)
                 .map(EmployeeProjectResponse::from));
     }
 
@@ -154,8 +143,7 @@ public class EmployeeApi {
             @RequestBody @Valid EmployeeUpdateRequest request,
             Authentication authentication
     ) {
-        employeeWriteAuthorizationService.assertCanUpdate(resolveAccountId(authentication), id, request.toCommand());
-        Long employeeId = employeeManager.updateInfo(id, request.toCommand());
+        Long employeeId = employeeManager.updateInfo(currentActorResolver.resolve(authentication), id, request.toCommand());
 
         return EmployeeUpdateResponse.of(employeeId);
     }
@@ -164,41 +152,36 @@ public class EmployeeApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/api/employees/{id}")
     public void delete(@PathVariable Long id, Authentication authentication) {
-        Long accountId = resolveAccountId(authentication);
-        employeeWriteAuthorizationService.assertCanManage(accountId, id);
-        employeeManager.delete(id, accountId);
+        CurrentActor actor = currentActorResolver.resolve(authentication);
+        employeeManager.delete(actor, id, actor.accountId());
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/restore")
     public void restore(@PathVariable Long id, Authentication authentication) {
-        employeeWriteAuthorizationService.assertCanManageIncludingDeleted(resolveAccountId(authentication), id);
-        employeeManager.restore(id);
+        employeeManager.restore(currentActorResolver.resolve(authentication), id);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/resign")
     public void resign(@PathVariable Long id, @RequestParam LocalDate resignationDate, Authentication authentication) {
-        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
-        employeeManager.resign(id, resignationDate);
+        employeeManager.resign(currentActorResolver.resolve(authentication), id, resignationDate);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/take-leave")
     public void takeLeave(@PathVariable Long id, Authentication authentication) {
-        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
-        employeeManager.takeLeave(id);
+        employeeManager.takeLeave(currentActorResolver.resolve(authentication), id);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/api/employees/{id}/activate")
     public void activate(@PathVariable Long id, Authentication authentication) {
-        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
-        employeeManager.activate(id);
+        employeeManager.activate(currentActorResolver.resolve(authentication), id);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
@@ -209,8 +192,7 @@ public class EmployeeApi {
             @RequestBody EmployeePositionUpdateRequest request,
             Authentication authentication
     ) {
-        employeeWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), id);
-        employeeManager.promote(id, request.position(), request.grade());
+        employeeManager.promote(currentActorResolver.resolve(authentication), id, request.position(), request.grade());
     }
 
     @GetMapping("/api/employees/positions")
@@ -254,9 +236,7 @@ public class EmployeeApi {
             @Valid EmployeeSearchCondition request,
             Authentication authentication
     ) {
-        EmployeeReadScope scope = resolveEmployeeExcelDownloadScope(authentication)
-                .limitToRequestedDepartments(request.departmentIds());
-        byte[] content = employeeExcelService.download(request, scope);
+        byte[] content = employeeExcelService.download(request, currentActorResolver.resolve(authentication));
         String filename = FilenameBuilder.build("employees");
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
@@ -281,25 +261,11 @@ public class EmployeeApi {
             throw new IllegalArgumentException("업로드할 파일을 선택하세요.");
         }
         try (InputStream inputStream = file.getInputStream()) {
-            EmployeeExcelUploadResult result = employeeExcelService.upload(inputStream, resolveAccountId(authentication));
+            EmployeeExcelUploadResult result = employeeExcelService.upload(inputStream, currentActorResolver.resolve(authentication));
             return EmployeeExcelUploadResponse.of(result);
         } catch (IOException ex) {
             throw new IllegalArgumentException("엑셀 파일을 읽는 중 오류가 발생했습니다.", ex);
         }
-    }
-
-    private Long resolveAccountId(Authentication authentication) {
-        return authFinder.getCurrentAccountId(authentication.getName());
-    }
-
-    private EmployeeReadScope resolveEmployeeReadScope(Authentication authentication) {
-        Long accountId = authFinder.getCurrentAccountId(authentication.getName());
-        return employeeReadAuthorizationService.resolveScope(accountId);
-    }
-
-    private EmployeeReadScope resolveEmployeeExcelDownloadScope(Authentication authentication) {
-        Long accountId = authFinder.getCurrentAccountId(authentication.getName());
-        return employeeReadAuthorizationService.resolveExcelDownloadScope(accountId);
     }
 
 }

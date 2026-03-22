@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
 import kr.co.abacus.abms.application.employee.dto.EmployeeDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
@@ -18,6 +19,8 @@ public interface EmployeeFinder {
     Employee find(Long id);
 
     @Nullable EmployeeDetail findEmployeeDetail(Long id);
+
+    @Nullable EmployeeDetail findEmployeeDetail(Long id, CurrentActor actor);
 
     Page<EmployeeSummary> search(EmployeeSearchCondition condition, Pageable pageable);
 

@@ -18,6 +18,9 @@ public interface AccountRepository
     java.util.Optional<Account> findByIdAndDeletedFalse(Long id);
 
     @Override
+    java.util.Optional<Account> findByEmployeeIdAndDeletedFalse(Long employeeId);
+
+    @Override
     java.util.List<Account> findAllByIdInAndDeletedFalse(java.util.List<Long> ids);
 
     @Override

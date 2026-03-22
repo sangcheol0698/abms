@@ -23,6 +23,7 @@ import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectItem;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectSearchCondition;
 import kr.co.abacus.abms.application.projectassignment.dto.ProjectAssignmentItem;
@@ -41,6 +42,15 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
 
     @Override
     public Page<EmployeeProjectItem> searchEmployeeProjects(EmployeeProjectSearchCondition condition, Pageable pageable) {
+        return searchEmployeeProjects(condition, null, pageable);
+    }
+
+    @Override
+    public Page<EmployeeProjectItem> searchEmployeeProjects(
+            EmployeeProjectSearchCondition condition,
+            CurrentActor actor,
+            Pageable pageable
+    ) {
         LocalDate today = LocalDate.now();
 
         List<EmployeeProjectItem> content = queryFactory
@@ -77,7 +87,7 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
                         containsProjectNameOrCode(condition.name()),
                         inAssignmentStatuses(condition.assignmentStatuses(), today),
                         inProjectStatuses(condition.projectStatuses()),
-                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
+                        inAccessibleScope(actor),
                         projectAssignment.deleted.isFalse(),
                         project.deleted.isFalse())
                 .orderBy(projectAssignment.period.startDate.desc(), projectAssignment.id.desc())
@@ -94,7 +104,7 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
                         containsProjectNameOrCode(condition.name()),
                         inAssignmentStatuses(condition.assignmentStatuses(), today),
                         inProjectStatuses(condition.projectStatuses()),
-                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
+                        inAccessibleScope(actor),
                         projectAssignment.deleted.isFalse(),
                         project.deleted.isFalse());
 
@@ -240,28 +250,87 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
                 .otherwise(ProjectAssignmentStatus.ENDED.name());
     }
 
-    private @Nullable BooleanExpression inAccessibleScope(
-            @Nullable List<Long> accessibleProjectIds,
-            @Nullable List<Long> accessibleLeadDepartmentIds
-    ) {
-        if (accessibleProjectIds == null && accessibleLeadDepartmentIds == null) {
+    private @Nullable BooleanExpression inAccessibleScope(@Nullable CurrentActor actor) {
+        if (actor == null) {
+            return null;
+        }
+        if (!actor.hasPermission("project.read")) {
+            return project.id.isNull();
+        }
+        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes = actor.scopesOf("project.read");
+        if (scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.ALL)) {
             return null;
         }
 
-        BooleanExpression projectScope = accessibleProjectIds != null
-                ? project.id.in(accessibleProjectIds.isEmpty() ? List.of(-1L) : accessibleProjectIds)
+        java.util.LinkedHashSet<Long> accessibleProjectIds = new java.util.LinkedHashSet<>();
+        java.util.LinkedHashSet<Long> accessibleLeadDepartmentIds = new java.util.LinkedHashSet<>();
+        if (actor.departmentId() != null
+                && scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.OWN_DEPARTMENT)) {
+            accessibleLeadDepartmentIds.add(actor.departmentId());
+        }
+        if (actor.departmentId() != null
+                && scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.OWN_DEPARTMENT_TREE)) {
+            accessibleLeadDepartmentIds.addAll(resolveDepartmentTree(actor.departmentId()));
+        }
+        if (actor.employeeId() != null
+                && scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.CURRENT_PARTICIPATION)) {
+            accessibleProjectIds.addAll(resolveCurrentParticipationProjectIds(actor.employeeId()));
+        }
+
+        BooleanExpression projectScope = !accessibleProjectIds.isEmpty()
+                ? project.id.in(accessibleProjectIds)
                 : null;
-        BooleanExpression departmentScope = accessibleLeadDepartmentIds != null
-                ? project.leadDepartmentId.in(
-                        accessibleLeadDepartmentIds.isEmpty() ? List.of(-1L) : accessibleLeadDepartmentIds)
+        BooleanExpression departmentScope = !accessibleLeadDepartmentIds.isEmpty()
+                ? project.leadDepartmentId.in(accessibleLeadDepartmentIds)
                 : null;
 
         if (projectScope == null) {
-            return departmentScope;
+            return departmentScope != null ? departmentScope : project.id.isNull();
         }
         if (departmentScope == null) {
             return projectScope;
         }
         return projectScope.or(departmentScope);
+    }
+
+    private java.util.LinkedHashSet<Long> resolveDepartmentTree(Long rootDepartmentId) {
+        java.util.Map<Long, java.util.List<Long>> childrenByParentId = queryFactory
+                .select(department.id, department.parent.id)
+                .from(department)
+                .where(department.deleted.isFalse(), department.parent.id.isNotNull())
+                .fetch()
+                .stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        tuple -> tuple.get(department.parent.id),
+                        java.util.LinkedHashMap::new,
+                        java.util.stream.Collectors.mapping(tuple -> tuple.get(department.id), java.util.stream.Collectors.toList())
+                ));
+        java.util.LinkedHashSet<Long> departmentIds = new java.util.LinkedHashSet<>();
+        java.util.ArrayDeque<Long> queue = new java.util.ArrayDeque<>();
+        queue.add(rootDepartmentId);
+        while (!queue.isEmpty()) {
+            Long departmentId = queue.poll();
+            if (!departmentIds.add(departmentId)) {
+                continue;
+            }
+            queue.addAll(childrenByParentId.getOrDefault(departmentId, java.util.List.of()));
+        }
+        return departmentIds;
+    }
+
+    private java.util.LinkedHashSet<Long> resolveCurrentParticipationProjectIds(Long employeeId) {
+        LocalDate today = LocalDate.now();
+        return new java.util.LinkedHashSet<>(queryFactory
+                .select(project.id)
+                .from(project)
+                .join(projectAssignment).on(projectAssignment.projectId.eq(project.id))
+                .where(
+                        projectAssignment.employeeId.eq(employeeId),
+                        projectAssignment.deleted.isFalse(),
+                        project.deleted.isFalse(),
+                        projectAssignment.period.startDate.loe(today),
+                        projectAssignment.period.endDate.isNull().or(projectAssignment.period.endDate.goe(today))
+                )
+                .fetch());
     }
 }

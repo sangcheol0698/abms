@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectItem;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectSearchCondition;
 import kr.co.abacus.abms.application.projectassignment.dto.ProjectAssignmentItem;
@@ -22,4 +23,10 @@ public interface ProjectAssignmentFinder {
     Page<ProjectAssignmentItem> searchByProjectId(ProjectAssignmentSearchCondition condition, Pageable pageable);
 
     Page<EmployeeProjectItem> findByEmployeeId(EmployeeProjectSearchCondition condition, Pageable pageable);
+
+    Page<EmployeeProjectItem> findByEmployeeId(
+            EmployeeProjectSearchCondition condition,
+            CurrentActor actor,
+            Pageable pageable
+    );
 }

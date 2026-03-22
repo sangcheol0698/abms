@@ -27,6 +27,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.application.project.dto.ProjectSummary;
@@ -38,10 +39,39 @@ import kr.co.abacus.abms.domain.project.ProjectStatus;
 @Repository
 public class ProjectRepositoryImpl implements CustomProjectRepository {
 
+    private static final String PROJECT_READ_PERMISSION_CODE = "project.read";
+    private static final String PROJECT_EXCEL_DOWNLOAD_PERMISSION_CODE = "project.excel.download";
+
     private final JPAQueryFactory queryFactory;
 
     @Override
     public Page<ProjectSummary> search(ProjectSearchCondition condition, Pageable pageable) {
+        return searchInternal(condition, null, pageable);
+    }
+
+    @Override
+    public Page<ProjectSummary> search(ProjectSearchCondition condition, @Nullable CurrentActor actor, Pageable pageable) {
+        return searchInternal(condition, actor, pageable);
+    }
+
+    @Override
+    public boolean canRead(Long projectId, CurrentActor actor) {
+        Integer exists = queryFactory
+                .selectOne()
+                .from(project)
+                .where(
+                        project.id.eq(projectId),
+                        inAccessibleScope(actor, PROJECT_READ_PERMISSION_CODE),
+                        project.deleted.isFalse())
+                .fetchFirst();
+        return exists != null;
+    }
+
+    private Page<ProjectSummary> searchInternal(
+            ProjectSearchCondition condition,
+            @Nullable CurrentActor actor,
+            Pageable pageable
+    ) {
         OrderSpecifier<?>[] orderSpecifiers = resolveSort(pageable);
 
         List<ProjectSummary> content = queryFactory
@@ -65,7 +95,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
+                        inAccessibleScope(actor, PROJECT_READ_PERMISSION_CODE),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .orderBy(orderSpecifiers)
@@ -82,7 +112,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
+                        inAccessibleScope(actor, PROJECT_READ_PERMISSION_CODE),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse());
 
@@ -91,24 +121,38 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
 
     @Override
     public ProjectOverviewSummary summarize(ProjectSearchCondition condition) {
+        return summarize(condition, null);
+    }
+
+    @Override
+    public ProjectOverviewSummary summarize(ProjectSearchCondition condition, @Nullable CurrentActor actor) {
         return new ProjectOverviewSummary(
-                countProjects(condition, null),
-                countProjects(condition, project.status.eq(ProjectStatus.SCHEDULED)),
-                countProjects(condition, project.status.eq(ProjectStatus.IN_PROGRESS)),
-                countProjects(condition, project.status.eq(ProjectStatus.COMPLETED)),
-                countProjects(condition, project.status.eq(ProjectStatus.ON_HOLD)),
-                countProjects(condition, project.status.eq(ProjectStatus.CANCELLED)),
-                sumContractAmount(condition));
+                countProjects(condition, actor, PROJECT_READ_PERMISSION_CODE, null),
+                countProjects(condition, actor, PROJECT_READ_PERMISSION_CODE, project.status.eq(ProjectStatus.SCHEDULED)),
+                countProjects(condition, actor, PROJECT_READ_PERMISSION_CODE, project.status.eq(ProjectStatus.IN_PROGRESS)),
+                countProjects(condition, actor, PROJECT_READ_PERMISSION_CODE, project.status.eq(ProjectStatus.COMPLETED)),
+                countProjects(condition, actor, PROJECT_READ_PERMISSION_CODE, project.status.eq(ProjectStatus.ON_HOLD)),
+                countProjects(condition, actor, PROJECT_READ_PERMISSION_CODE, project.status.eq(ProjectStatus.CANCELLED)),
+                sumContractAmount(condition, actor, PROJECT_READ_PERMISSION_CODE));
     }
 
     @Override
     public List<Project> search(ProjectSearchCondition condition) {
+        return searchInternal(condition, null);
+    }
+
+    @Override
+    public List<Project> search(ProjectSearchCondition condition, @Nullable CurrentActor actor) {
+        return searchInternal(condition, actor);
+    }
+
+    private List<Project> searchInternal(ProjectSearchCondition condition, @Nullable CurrentActor actor) {
         return queryFactory.selectFrom(project)
                 .where(
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
+                        inAccessibleScope(actor, PROJECT_EXCEL_DOWNLOAD_PERMISSION_CODE),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .orderBy(defaultSort())
@@ -181,7 +225,12 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
         return project.createdAt.desc();
     }
 
-    private long countProjects(ProjectSearchCondition condition, @Nullable BooleanExpression extraCondition) {
+    private long countProjects(
+            ProjectSearchCondition condition,
+            @Nullable CurrentActor actor,
+            String permissionCode,
+            @Nullable BooleanExpression extraCondition
+    ) {
         Long value = queryFactory
                 .select(project.count())
                 .from(project)
@@ -189,7 +238,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
+                        inAccessibleScope(actor, permissionCode),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         extraCondition,
                         project.deleted.isFalse())
@@ -197,7 +246,11 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
         return value != null ? value : 0L;
     }
 
-    private long sumContractAmount(ProjectSearchCondition condition) {
+    private long sumContractAmount(
+            ProjectSearchCondition condition,
+            @Nullable CurrentActor actor,
+            String permissionCode
+    ) {
         Long value = queryFactory
                 .select(Expressions.numberTemplate(Long.class, "coalesce(sum({0}), 0)", project.contractAmount.amount))
                 .from(project)
@@ -205,35 +258,97 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
-                        inAccessibleScope(condition.accessibleProjectIds(), condition.accessibleLeadDepartmentIds()),
+                        inAccessibleScope(actor, permissionCode),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         project.deleted.isFalse())
                 .fetchOne();
         return value != null ? value : 0L;
     }
 
-    private @Nullable BooleanExpression inAccessibleScope(
-            @Nullable List<Long> accessibleProjectIds,
-            @Nullable List<Long> accessibleLeadDepartmentIds
-    ) {
-        if (accessibleProjectIds == null && accessibleLeadDepartmentIds == null) {
+    private @Nullable BooleanExpression inAccessibleScope(@Nullable CurrentActor actor, String permissionCode) {
+        if (actor == null) {
+            return null;
+        }
+        if (!actor.hasPermission(permissionCode)) {
+            return project.id.isNull();
+        }
+        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes = actor.scopesOf(permissionCode);
+        if (scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.ALL)) {
             return null;
         }
 
-        BooleanExpression projectScope = accessibleProjectIds != null
-                ? project.id.in(accessibleProjectIds.isEmpty() ? List.of(-1L) : accessibleProjectIds)
+        java.util.LinkedHashSet<Long> accessibleProjectIds = new java.util.LinkedHashSet<>();
+        java.util.LinkedHashSet<Long> accessibleLeadDepartmentIds = new java.util.LinkedHashSet<>();
+        if (actor.departmentId() != null
+                && scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.OWN_DEPARTMENT)) {
+            accessibleLeadDepartmentIds.add(actor.departmentId());
+        }
+        if (actor.departmentId() != null
+                && scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.OWN_DEPARTMENT_TREE)) {
+            accessibleLeadDepartmentIds.addAll(resolveDepartmentTree(actor.departmentId()));
+        }
+        if (actor.employeeId() != null
+                && scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.CURRENT_PARTICIPATION)) {
+            accessibleProjectIds.addAll(resolveCurrentParticipationProjectIds(actor.employeeId()));
+        }
+
+        BooleanExpression projectScope = !accessibleProjectIds.isEmpty()
+                ? project.id.in(accessibleProjectIds)
                 : null;
-        BooleanExpression departmentScope = accessibleLeadDepartmentIds != null
-                ? project.leadDepartmentId.in(accessibleLeadDepartmentIds.isEmpty() ? List.of(-1L) : accessibleLeadDepartmentIds)
+        BooleanExpression departmentScope = !accessibleLeadDepartmentIds.isEmpty()
+                ? project.leadDepartmentId.in(accessibleLeadDepartmentIds)
                 : null;
 
         if (projectScope == null) {
-            return departmentScope;
+            return departmentScope != null ? departmentScope : project.id.isNull();
         }
         if (departmentScope == null) {
             return projectScope;
         }
         return projectScope.or(departmentScope);
+    }
+
+    private java.util.LinkedHashSet<Long> resolveDepartmentTree(Long rootDepartmentId) {
+        java.util.Map<Long, java.util.List<Long>> childrenByParentId = queryFactory
+                .select(department.id, department.parent.id)
+                .from(department)
+                .where(department.deleted.isFalse(), department.parent.id.isNotNull())
+                .fetch()
+                .stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        tuple -> tuple.get(department.parent.id),
+                        java.util.LinkedHashMap::new,
+                        java.util.stream.Collectors.mapping(tuple -> tuple.get(department.id), java.util.stream.Collectors.toList())
+                ));
+        java.util.LinkedHashSet<Long> departmentIds = new java.util.LinkedHashSet<>();
+        java.util.ArrayDeque<Long> queue = new java.util.ArrayDeque<>();
+        queue.add(rootDepartmentId);
+        while (!queue.isEmpty()) {
+            Long departmentId = queue.poll();
+            if (!departmentIds.add(departmentId)) {
+                continue;
+            }
+            queue.addAll(childrenByParentId.getOrDefault(departmentId, java.util.List.of()));
+        }
+        return departmentIds;
+    }
+
+    private java.util.LinkedHashSet<Long> resolveCurrentParticipationProjectIds(Long employeeId) {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        return new java.util.LinkedHashSet<>(queryFactory
+                .select(project.id)
+                .from(project)
+                .join(kr.co.abacus.abms.domain.projectassignment.QProjectAssignment.projectAssignment)
+                .on(kr.co.abacus.abms.domain.projectassignment.QProjectAssignment.projectAssignment.projectId.eq(project.id))
+                .where(
+                        kr.co.abacus.abms.domain.projectassignment.QProjectAssignment.projectAssignment.employeeId.eq(employeeId),
+                        kr.co.abacus.abms.domain.projectassignment.QProjectAssignment.projectAssignment.deleted.isFalse(),
+                        project.deleted.isFalse(),
+                        kr.co.abacus.abms.domain.projectassignment.QProjectAssignment.projectAssignment.period.startDate.loe(today),
+                        kr.co.abacus.abms.domain.projectassignment.QProjectAssignment.projectAssignment.period.endDate.isNull()
+                                .or(kr.co.abacus.abms.domain.projectassignment.QProjectAssignment.projectAssignment.period.endDate.goe(today))
+                )
+                .fetch());
     }
 
 }

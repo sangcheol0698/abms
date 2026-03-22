@@ -23,18 +23,14 @@ import kr.co.abacus.abms.adapter.api.party.dto.PartyProjectSearchRequest;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyResponse;
 import kr.co.abacus.abms.adapter.api.party.dto.PartyUpdateApiRequest;
 import kr.co.abacus.abms.adapter.api.project.dto.ProjectResponse;
-import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
+import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.application.party.dto.PartyListItem;
 import kr.co.abacus.abms.application.party.dto.PartyOverviewSummary;
 import kr.co.abacus.abms.application.party.dto.PartySearchCondition;
 import kr.co.abacus.abms.application.party.inbound.PartyFinder;
 import kr.co.abacus.abms.application.party.inbound.PartyManager;
-import kr.co.abacus.abms.application.project.authorization.ProjectReadAuthorizationService;
 import kr.co.abacus.abms.application.project.inbound.ProjectFinder;
-import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
 import kr.co.abacus.abms.domain.party.Party;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -43,8 +39,7 @@ public class PartyApi {
     private final PartyFinder partyFinder;
     private final PartyManager partyManager;
     private final ProjectFinder projectFinder;
-    private final AuthFinder authFinder;
-    private final ProjectReadAuthorizationService projectReadAuthorizationService;
+    private final CurrentActorResolver currentActorResolver;
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')")
     @GetMapping("/api/parties")
@@ -99,13 +94,9 @@ public class PartyApi {
             Authentication authentication
     ) {
         Party party = partyManager.findById(id);
-        Long accountId = authFinder.getCurrentAccountId(authentication.getName());
-        ProjectSearchCondition authorizedCondition = projectReadAuthorizationService.authorizeSearchCondition(
-                accountId,
-                request.toCondition(id)
-        );
         Page<kr.co.abacus.abms.application.project.dto.ProjectSummary> projects = projectFinder.search(
-                authorizedCondition,
+                request.toCondition(id),
+                currentActorResolver.resolve(authentication),
                 pageable
         );
 

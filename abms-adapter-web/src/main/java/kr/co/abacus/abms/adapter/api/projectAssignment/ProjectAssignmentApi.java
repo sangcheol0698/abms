@@ -15,17 +15,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.projectAssignment.dto.ProjectAssignmentCreateResponse;
 import kr.co.abacus.abms.adapter.api.projectAssignment.dto.ProjectAssignmentEndApiRequest;
 import kr.co.abacus.abms.adapter.api.projectAssignment.dto.ProjectAssignmentResponse;
 import kr.co.abacus.abms.adapter.api.projectAssignment.dto.ProjectAssignmentSearchRequest;
 import kr.co.abacus.abms.adapter.api.projectAssignment.dto.ProjectAssignmentUpdateApiRequest;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
-import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.project.ProjectQueryService;
-import kr.co.abacus.abms.application.project.authorization.ProjectReadAuthorizationService;
-import kr.co.abacus.abms.application.project.authorization.ProjectWriteAuthorizationService;
 import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentFinder;
 import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentManager;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentNotFoundException;
@@ -39,10 +37,8 @@ public class ProjectAssignmentApi {
     private final ProjectAssignmentManager projectAssignmentManager;
     private final ProjectAssignmentFinder projectAssignmentFinder;
     private final ProjectQueryService projectQueryService;
-    private final AuthFinder authFinder;
+    private final CurrentActorResolver currentActorResolver;
     private final EmployeeFinder employeeFinder;
-    private final ProjectReadAuthorizationService projectReadAuthorizationService;
-    private final ProjectWriteAuthorizationService projectWriteAuthorizationService;
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'project.write')")
     @PostMapping("/api/project-assignments")
@@ -50,8 +46,7 @@ public class ProjectAssignmentApi {
             @RequestBody @Valid ProjectAssignmentCreateRequest request,
             Authentication authentication
     ) {
-        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), request.projectId());
-        Long id = projectAssignmentManager.create(request).getIdOrThrow();
+        Long id = projectAssignmentManager.create(currentActorResolver.resolve(authentication), request).getIdOrThrow();
         return ProjectAssignmentCreateResponse.of(id);
     }
 
@@ -63,8 +58,10 @@ public class ProjectAssignmentApi {
             Pageable pageable,
             Authentication authentication
     ) {
-        var detail = projectQueryService.findDetail(projectId);
-        projectReadAuthorizationService.assertCanRead(resolveAccountId(authentication), detail.projectId(), detail.leadDepartmentId());
+        var actor = currentActorResolver.resolve(authentication);
+        if (!projectQueryService.canRead(projectId, actor)) {
+            throw new org.springframework.security.access.AccessDeniedException("프로젝트 조회 권한 범위를 벗어났습니다.");
+        }
         return PageResponse.of(projectAssignmentFinder.searchByProjectId(request.toCondition(projectId), pageable)
             .map(item -> ProjectAssignmentResponse.from(
                     projectAssignmentFinder.findById(item.id()),
@@ -80,9 +77,8 @@ public class ProjectAssignmentApi {
             @RequestBody @Valid ProjectAssignmentUpdateApiRequest request,
             Authentication authentication
     ) {
-        Long projectId = projectAssignmentFinder.findById(id).getProjectId();
-        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), projectId);
-        Long updatedId = projectAssignmentManager.update(id, request.toRequest()).getIdOrThrow();
+        Long updatedId = projectAssignmentManager.update(currentActorResolver.resolve(authentication), id, request.toRequest())
+                .getIdOrThrow();
         return ProjectAssignmentCreateResponse.of(updatedId);
     }
 
@@ -93,14 +89,9 @@ public class ProjectAssignmentApi {
             @RequestBody @Valid ProjectAssignmentEndApiRequest request,
             Authentication authentication
     ) {
-        Long projectId = projectAssignmentFinder.findById(id).getProjectId();
-        projectWriteAuthorizationService.assertCanManage(resolveAccountId(authentication), projectId);
-        Long endedId = projectAssignmentManager.end(id, request.toRequest()).getIdOrThrow();
+        Long endedId = projectAssignmentManager.end(currentActorResolver.resolve(authentication), id, request.toRequest())
+                .getIdOrThrow();
         return ProjectAssignmentCreateResponse.of(endedId);
-    }
-
-    private Long resolveAccountId(Authentication authentication) {
-        return authFinder.getCurrentAccountId(authentication.getName());
     }
 
     private String resolveAssignmentStatus(kr.co.abacus.abms.domain.projectassignment.ProjectAssignment assignment) {

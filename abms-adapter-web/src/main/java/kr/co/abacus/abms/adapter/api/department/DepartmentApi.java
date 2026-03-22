@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
+import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.department.dto.DepartmentAssignLeaderResponse;
 import kr.co.abacus.abms.adapter.api.department.dto.DepartmentDetailResponse;
 import kr.co.abacus.abms.adapter.api.department.dto.EmployeeAssignLeaderRequest;
@@ -29,8 +30,6 @@ import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
 import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
-import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
-import kr.co.abacus.abms.application.employee.authorization.EmployeeWriteAuthorizationService;
 
 @RequiredArgsConstructor
 @RestController
@@ -38,8 +37,7 @@ public class DepartmentApi {
 
     private final DepartmentFinder departmentFinder;
     private final DepartmentManager departmentManager;
-    private final AuthFinder authFinder;
-    private final EmployeeWriteAuthorizationService employeeWriteAuthorizationService;
+    private final CurrentActorResolver currentActorResolver;
 
     @GetMapping("/api/departments/organization-chart")
     public List<OrganizationChartResponse> getOrganizationChart() {
@@ -74,13 +72,12 @@ public class DepartmentApi {
     public DepartmentAssignLeaderResponse assignTeamLeader(@PathVariable Long departmentId,
                                                            @Valid @RequestBody EmployeeAssignLeaderRequest request,
                                                            Authentication authentication) {
-        employeeWriteAuthorizationService.assertCanAssignDepartmentLeader(resolveAccountId(authentication), departmentId);
-        Long id = departmentManager.assignLeader(departmentId, request.leaderEmployeeId());
+        Long id = departmentManager.assignLeader(
+                currentActorResolver.resolve(authentication),
+                departmentId,
+                request.leaderEmployeeId()
+        );
 
         return DepartmentAssignLeaderResponse.of(id);
-    }
-
-    private Long resolveAccountId(Authentication authentication) {
-        return authFinder.getCurrentAccountId(authentication.getName());
     }
 }

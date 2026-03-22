@@ -11,9 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
+import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
-import kr.co.abacus.abms.application.employee.authorization.EmployeeReadScope;
-import kr.co.abacus.abms.application.employee.authorization.EmployeeWriteAuthorizationService;
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSearchCondition;
@@ -35,10 +35,10 @@ public class EmployeeExcelService {
     private final EmployeeManager employeeManager;
     private final EmployeeExcelExporter employeeExcelExporter;
     private final EmployeeExcelImporter employeeExcelImporter;
-    private final EmployeeWriteAuthorizationService employeeWriteAuthorizationService;
+    private final CurrentActorPermissionSupport permissionSupport;
 
-    public byte[] download(EmployeeSearchCondition condition, EmployeeReadScope scope) {
-        List<Employee> employees = employeeRepository.search(condition, scope);
+    public byte[] download(EmployeeSearchCondition condition, CurrentActor actor) {
+        List<Employee> employees = employeeRepository.search(condition, actor);
 
         Map<Long, String> departmentNames = loadDepartmentNameMap();
 
@@ -50,10 +50,10 @@ public class EmployeeExcelService {
     }
 
     @Transactional
-    public EmployeeExcelUploadResult upload(InputStream inputStream, Long accountId) {
+    public EmployeeExcelUploadResult upload(InputStream inputStream, CurrentActor actor) {
         Map<String, Long> departmentCodeMap = loadDepartmentCodeMap();
         List<EmployeeCreateCommand> commands = employeeExcelImporter.importEmployees(inputStream, departmentCodeMap);
-        employeeWriteAuthorizationService.assertCanUpload(accountId, commands);
+        validateCanUpload(actor, commands);
 
         List<EmployeeExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
         int successCount = 0;
@@ -109,6 +109,26 @@ public class EmployeeExcelService {
             return ex.getClass().getSimpleName();
         }
         return message;
+    }
+
+    private void validateCanUpload(CurrentActor actor, List<EmployeeCreateCommand> commands) {
+        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes = permissionSupport.requirePermission(
+                actor,
+                "employee.excel.upload",
+                "직원 엑셀 업로드 권한 범위를 벗어났습니다."
+        );
+        if (scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.ALL)) {
+            return;
+        }
+
+        java.util.Set<Long> allowedDepartmentIds = permissionSupport.resolveAllowedDepartmentIds(actor, scopes);
+
+        boolean unauthorizedExists = commands.stream()
+                .map(EmployeeCreateCommand::departmentId)
+                .anyMatch(departmentId -> !allowedDepartmentIds.contains(departmentId));
+        if (unauthorizedExists) {
+            throw new org.springframework.security.access.AccessDeniedException("직원 엑셀 업로드 권한 범위를 벗어났습니다.");
+        }
     }
 
 }

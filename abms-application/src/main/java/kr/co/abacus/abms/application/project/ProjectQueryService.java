@@ -12,6 +12,7 @@ import kr.co.abacus.abms.application.party.PartyQueryService;
 
 import lombok.RequiredArgsConstructor;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.project.dto.ProjectDetail;
 import kr.co.abacus.abms.application.project.dto.ProjectOverviewSummary;
 import kr.co.abacus.abms.application.project.dto.ProjectSearchCondition;
@@ -68,13 +69,28 @@ public class ProjectQueryService implements ProjectFinder {
     }
 
     @Override
+    public boolean canRead(Long projectId, CurrentActor actor) {
+        return projectRepository.canRead(projectId, actor);
+    }
+
+    @Override
     public Page<ProjectSummary> search(ProjectSearchCondition condition, Pageable pageable) {
         return projectRepository.search(condition, pageable);
     }
 
     @Override
+    public Page<ProjectSummary> search(ProjectSearchCondition condition, CurrentActor actor, Pageable pageable) {
+        return projectRepository.search(condition, actor, pageable);
+    }
+
+    @Override
     public ProjectOverviewSummary getOverviewSummary(ProjectSearchCondition condition) {
         return projectRepository.summarize(condition);
+    }
+
+    @Override
+    public ProjectOverviewSummary getOverviewSummary(ProjectSearchCondition condition, CurrentActor actor) {
+        return projectRepository.summarize(condition, actor);
     }
 
 }

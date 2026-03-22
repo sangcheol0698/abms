@@ -6,6 +6,8 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
+import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentManager;
 import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository;
@@ -24,9 +26,20 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
 
     private final ProjectRepository projectRepository;
     private final ProjectAssignmentRepository projectAssignmentRepository;
+    private final CurrentActorPermissionSupport permissionSupport;
 
     @Override
     public ProjectAssignment create(ProjectAssignmentCreateRequest createRequest) {
+        return doCreate(createRequest);
+    }
+
+    @Override
+    public ProjectAssignment create(CurrentActor actor, ProjectAssignmentCreateRequest createRequest) {
+        validateCanManage(actor, createRequest.projectId());
+        return doCreate(createRequest);
+    }
+
+    private ProjectAssignment doCreate(ProjectAssignmentCreateRequest createRequest) {
         Project project = projectRepository.findById(createRequest.projectId())
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프로젝트입니다."));
         validateNoOverlap(null, createRequest.projectId(), createRequest.employeeId(), createRequest.startDate(), createRequest.endDate());
@@ -38,6 +51,16 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
 
     @Override
     public ProjectAssignment update(Long assignmentId, ProjectAssignmentUpdateRequest updateRequest) {
+        return doUpdate(assignmentId, updateRequest);
+    }
+
+    @Override
+    public ProjectAssignment update(CurrentActor actor, Long assignmentId, ProjectAssignmentUpdateRequest updateRequest) {
+        validateCanManage(actor, loadAssignment(assignmentId).getProjectId());
+        return doUpdate(assignmentId, updateRequest);
+    }
+
+    private ProjectAssignment doUpdate(Long assignmentId, ProjectAssignmentUpdateRequest updateRequest) {
         ProjectAssignment assignment = loadAssignment(assignmentId);
         Project project = loadProject(assignment.getProjectId());
 
@@ -55,6 +78,16 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
 
     @Override
     public ProjectAssignment end(Long assignmentId, ProjectAssignmentEndRequest endRequest) {
+        return doEnd(assignmentId, endRequest);
+    }
+
+    @Override
+    public ProjectAssignment end(CurrentActor actor, Long assignmentId, ProjectAssignmentEndRequest endRequest) {
+        validateCanManage(actor, loadAssignment(assignmentId).getProjectId());
+        return doEnd(assignmentId, endRequest);
+    }
+
+    private ProjectAssignment doEnd(Long assignmentId, ProjectAssignmentEndRequest endRequest) {
         ProjectAssignment assignment = loadAssignment(assignmentId);
         Project project = loadProject(assignment.getProjectId());
 
@@ -107,6 +140,11 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
         LocalDate normalizedEnd = endDate != null ? endDate : LocalDate.MAX;
 
         return !existingStartDate.isAfter(normalizedEnd) && !startDate.isAfter(normalizedExistingEnd);
+    }
+
+    private void validateCanManage(CurrentActor actor, Long projectId) {
+        Project project = loadProject(projectId);
+        permissionSupport.validateDepartmentAccess(actor, "project.write", project.getLeadDepartmentId(), "프로젝트 변경 권한 범위를 벗어났습니다.");
     }
 
 }

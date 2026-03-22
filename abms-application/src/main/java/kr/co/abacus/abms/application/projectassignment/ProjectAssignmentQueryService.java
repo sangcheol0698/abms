@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectItem;
 import kr.co.abacus.abms.application.projectassignment.dto.EmployeeProjectSearchCondition;
 import kr.co.abacus.abms.application.projectassignment.dto.ProjectAssignmentItem;
@@ -48,5 +49,14 @@ public class ProjectAssignmentQueryService implements ProjectAssignmentFinder {
     @Override
     public Page<EmployeeProjectItem> findByEmployeeId(EmployeeProjectSearchCondition condition, Pageable pageable) {
         return projectAssignmentRepository.searchEmployeeProjects(condition, pageable);
+    }
+
+    @Override
+    public Page<EmployeeProjectItem> findByEmployeeId(
+            EmployeeProjectSearchCondition condition,
+            CurrentActor actor,
+            Pageable pageable
+    ) {
+        return projectAssignmentRepository.searchEmployeeProjects(condition, actor, pageable);
     }
 }
