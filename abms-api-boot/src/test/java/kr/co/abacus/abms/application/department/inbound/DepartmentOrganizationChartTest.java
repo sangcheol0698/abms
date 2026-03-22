@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +19,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
@@ -30,6 +33,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
 @DisplayName("조직도 조회 (DepartmentOrganizationChart)")
@@ -166,7 +170,7 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
         assertThat(companyChartBefore.employeeCount()).isEqualTo(0);
         assertThat(cache.get(SimpleKey.EMPTY)).isNotNull();
 
-        employeeManager.create(EmployeeCreateCommand.builder()
+        employeeManager.create(employeeWriteActor(), EmployeeCreateCommand.builder()
                 .departmentId(company.getIdOrThrow())
                 .email("cache-event-test@abms.co")
                 .name("캐시테스트")
@@ -245,6 +249,16 @@ class DepartmentOrganizationChartTest extends IntegrationTestBase {
                 type,
                 leaderEmployeeId,
                 parent);
+    }
+
+    private CurrentActor employeeWriteActor() {
+        return new CurrentActor(
+                1L,
+                "department-organization-chart-test",
+                null,
+                null,
+                Map.of("employee.write", Set.of(PermissionScope.ALL))
+        );
     }
 
 }

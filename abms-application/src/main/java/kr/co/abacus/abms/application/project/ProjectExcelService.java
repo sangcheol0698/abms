@@ -52,14 +52,15 @@ public class ProjectExcelService {
     @Transactional
     public ProjectExcelUploadResult upload(InputStream inputStream, CurrentActor actor) {
         List<ProjectCreateCommand> commands = projectExcelImporter.importProjects(inputStream, this::getPartyIdByName);
-        validateCanUpload(actor, commands);
+        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> uploadScopes = validateCanUpload(actor, commands);
+        CurrentActor writeActor = createWriteActor(actor, uploadScopes);
 
         List<ProjectExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
         int successCount = 0;
 
         for (int i = 0; i < commands.size(); i++) {
             try {
-                projectManager.create(commands.get(i));
+                projectManager.create(writeActor, commands.get(i));
                 successCount++;
             } catch (Exception ex) {
                 excelFailures.add(new ProjectExcelUploadResult.ExcelFailure(i + 2, resolveMessage(ex)));
@@ -106,14 +107,17 @@ public class ProjectExcelService {
         return message;
     }
 
-    private void validateCanUpload(CurrentActor actor, List<ProjectCreateCommand> commands) {
+    private java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> validateCanUpload(
+            CurrentActor actor,
+            List<ProjectCreateCommand> commands
+    ) {
         java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes = permissionSupport.requirePermission(
                 actor,
                 "project.excel.upload",
                 "프로젝트 엑셀 업로드 권한 범위를 벗어났습니다."
         );
         if (scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.ALL)) {
-            return;
+            return scopes;
         }
 
         java.util.Set<Long> allowedDepartmentIds = permissionSupport.resolveAllowedDepartmentIds(actor, scopes);
@@ -124,6 +128,21 @@ public class ProjectExcelService {
         if (unauthorizedExists) {
             throw new org.springframework.security.access.AccessDeniedException("프로젝트 엑셀 업로드 권한 범위를 벗어났습니다.");
         }
+
+        return scopes;
+    }
+
+    private CurrentActor createWriteActor(
+            CurrentActor actor,
+            java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes
+    ) {
+        return new CurrentActor(
+                actor.accountId(),
+                actor.username(),
+                actor.employeeId(),
+                actor.departmentId(),
+                java.util.Map.of("project.write", scopes)
+        );
     }
 
 }

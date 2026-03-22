@@ -34,6 +34,7 @@ import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.employee.dto.EmployeeOverviewSummary;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -698,7 +699,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void delete_alreadyDeleted() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "delete-target@email.com", "삭제 대상")).getId();
 
-        employeeManager.delete(employeeId, 1L);
+        employeeManager.delete(employeeWriteActor(), employeeId, 1L);
         flushAndClear();
 
         MockHttpSession session = login();
@@ -714,7 +715,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void restore() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
 
-        employeeManager.delete(employeeId, 1L);
+        employeeManager.delete(employeeWriteActor(), employeeId, 1L);
         flushAndClear();
 
         MockHttpSession session = login();
@@ -773,7 +774,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
+        employeeManager.resign(employeeWriteActor(), employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
         EmployeePositionUpdateRequest request = new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE, null);
@@ -827,7 +828,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
+        employeeManager.resign(employeeWriteActor(), employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
         MockHttpSession session = login();
@@ -860,7 +861,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
         flushAndClear();
 
-        employeeManager.resign(employeeId, LocalDate.of(2025, 1, 30));
+        employeeManager.resign(employeeWriteActor(), employeeId, LocalDate.of(2025, 1, 30));
         flushAndClear();
 
         MockHttpSession session = login();
@@ -873,7 +874,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     @DisplayName("직원을 휴직중에서 재직중으로 복직시킨다.")
     void activate() throws Exception {
         Long employeeId = employeeRepository.save(createEmployee(teamId, "restore@email.com", "홍길동")).getId();
-        employeeManager.takeLeave(employeeId);
+        employeeManager.takeLeave(employeeWriteActor(), employeeId);
         flushAndClear();
 
         MockHttpSession session = login();
@@ -1011,6 +1012,16 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 departmentType,
                 null,
                 null);
+    }
+
+    private CurrentActor employeeWriteActor() {
+        return new CurrentActor(
+                1L,
+                "employee-api-test",
+                null,
+                null,
+                Map.of("employee.write", Set.of(PermissionScope.ALL))
+        );
     }
 
 }

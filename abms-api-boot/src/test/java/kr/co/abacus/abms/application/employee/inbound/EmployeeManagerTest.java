@@ -4,12 +4,15 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
@@ -26,6 +29,7 @@ import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
@@ -80,7 +84,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
                 .avatar(EmployeeAvatar.SKY_GLOW)
                 .build();
 
-        Long employeeId = employeeManager.create(command);
+        Long employeeId = employeeManager.create(employeeWriteActor(), command);
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -105,7 +109,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
                 .avatar(EmployeeAvatar.SKY_GLOW)
                 .build();
 
-        Long employeeId = employeeManager.create(command);
+        Long employeeId = employeeManager.create(employeeWriteActor(), command);
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -126,10 +130,10 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("중복된 이메일로 직원 생성 시 예외가 발생한다")
     void duplicateEmail() {
-        employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")))
+        assertThatThrownBy(() -> employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com")))
                 .isInstanceOf(DuplicateEmailException.class)
                 .hasMessageContaining("이미 존재하는 이메일입니다");
     }
@@ -137,11 +141,11 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("직원 정보를 수정한다")
     void updateInfo() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(divisionId, "updateUser@email.com"));
+        employeeManager.updateInfo(employeeWriteActor(), employee.getId(), createEmployeeUpdateCommand(divisionId, "updateUser@email.com"));
         flushAndClear();
 
         Employee updatedEmployee = employeeFinder.find(employee.getId());
@@ -159,12 +163,12 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("이메일 변경 없이 직원 정보 수정 시 중복 체크를 하지 않는다")
     void updateInfo_noChangeEmail() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
 
         // 이메일이 변경되지 않은 경우, 이메일 중복 체크를 하지 않음
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.updateInfo(employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(),
+        employeeManager.updateInfo(employeeWriteActor(), employee.getId(), createEmployeeUpdateCommand(employee.getDepartmentId(),
                 employee.getName(), employee.getEmail().address()));
         flushAndClear();
 
@@ -176,13 +180,13 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @DisplayName("이미 존재하는 이메일로 직원 정보 수정 시 예외가 발생한다")
     void updateInfoFail_duplicateEmail() {
 
-        Long employeeId1 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
-        Long employeeId2 = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser2@email.com"));
+        Long employeeId1 = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId2 = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser2@email.com"));
         flushAndClear();
 
         Employee employee1 = employeeFinder.find(employeeId1);
         Employee employee2 = employeeFinder.find(employeeId2);
-        assertThatThrownBy(() -> employeeManager.updateInfo(employee1.getId(),
+        assertThatThrownBy(() -> employeeManager.updateInfo(employeeWriteActor(), employee1.getId(),
                 createEmployeeUpdateCommand(employee1.getDepartmentId(), employee2.getEmail().address())))
                 .isInstanceOf(DuplicateEmailException.class)
                 .hasMessageContaining("이미 존재하는 이메일입니다");
@@ -191,7 +195,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("직원을 퇴사 처리한다")
     void resign() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
         // 2025,
         // 1, 1
         flushAndClear();
@@ -199,7 +203,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         Employee employee = employeeFinder.find(employeeId);
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
 
-        employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
+        employeeManager.resign(employeeWriteActor(), employee.getId(), LocalDate.of(2025, 12, 31));
         flushAndClear();
 
         Employee resignedEmployee = employeeFinder.find(employee.getId());
@@ -210,15 +214,15 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("이미 퇴사한 직원을 다시 퇴사 처리할 수 없다")
     void resignFail_alreadyResigned() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
         // 2025,
         // 1, 1
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
+        employeeManager.resign(employeeWriteActor(), employee.getId(), LocalDate.of(2025, 12, 31));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2026, 1, 1)))
+        assertThatThrownBy(() -> employeeManager.resign(employeeWriteActor(), employee.getId(), LocalDate.of(2026, 1, 1)))
                 .isInstanceOf(InvalidEmployeeStatusException.class)
                 .hasMessage("이미 퇴사한 직원입니다.");
     }
@@ -226,13 +230,13 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("입사일 이전 날짜로 퇴사 처리할 수 없다")
     void resignFail_beforeJoinDate() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com")); // 입사일:
         // 2025,
         // 1, 1
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        assertThatThrownBy(() -> employeeManager.resign(employee.getId(), LocalDate.of(2024, 12, 31)))
+        assertThatThrownBy(() -> employeeManager.resign(employeeWriteActor(), employee.getId(), LocalDate.of(2024, 12, 31)))
                 .isInstanceOf(InvalidEmployeeStatusException.class)
                 .hasMessage("퇴사일은 입사일 이후여야 합니다.");
     }
@@ -240,13 +244,13 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("직원을 휴직 처리한다")
     void takeLeave() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.ACTIVE);
 
-        employeeManager.takeLeave(employee.getId());
+        employeeManager.takeLeave(employeeWriteActor(), employee.getId());
         flushAndClear();
 
         Employee onLeaveEmployee = employeeFinder.find(employee.getId());
@@ -256,13 +260,13 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("재직 중이 아닌 직원은 휴직 처리할 수 없다")
     void takeLeaveFail_notActive() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com"));
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31));
+        employeeManager.resign(employeeWriteActor(), employee.getId(), LocalDate.of(2025, 12, 31));
         flushAndClear();
 
-        assertThatThrownBy(() -> employeeManager.takeLeave(employee.getId()))
+        assertThatThrownBy(() -> employeeManager.takeLeave(employeeWriteActor(), employee.getId()))
                 .isInstanceOf(InvalidEmployeeStatusException.class)
                 .hasMessage("재직 중인 직원만 휴직 처리 할 수 있습니다.");
     }
@@ -270,14 +274,14 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("퇴사한 직원을 복직(재활성) 처리한다")
     void activate() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.resign(employee.getId(), LocalDate.of(2025, 12, 31)); // 퇴사 처리
+        employeeManager.resign(employeeWriteActor(), employee.getId(), LocalDate.of(2025, 12, 31)); // 퇴사 처리
         flushAndClear();
 
-        employeeManager.activate(employee.getId());
+        employeeManager.activate(employeeWriteActor(), employee.getId());
         flushAndClear();
 
         Employee activatedEmployee = employeeFinder.find(employee.getId());
@@ -288,11 +292,11 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("직원이 사원에서 선임으로 승진한다")
     void promote() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.promote(employee.getId(), EmployeePosition.SENIOR_ASSOCIATE, null); // 승진
+        employeeManager.promote(employeeWriteActor(), employee.getId(), EmployeePosition.SENIOR_ASSOCIATE, null); // 승진
         flushAndClear();
 
         assertThat(employee.getPosition()).isEqualTo(EmployeePosition.SENIOR_ASSOCIATE);
@@ -301,7 +305,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("직원 승진 시, 직급 이력도 생성된다")
     void promoteWithPositionHistory() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
@@ -309,7 +313,7 @@ class EmployeeManagerTest extends IntegrationTestBase {
         /**
          * 승진 시, 직급 이력 생성
          */
-        employeeManager.promote(employee.getId(), EmployeePosition.SENIOR_ASSOCIATE, null); // 승진
+        employeeManager.promote(employeeWriteActor(), employee.getId(), EmployeePosition.SENIOR_ASSOCIATE, null); // 승진
         flushAndClear();
 
         PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(employee.getId()).getLast();
@@ -319,11 +323,11 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("이미 재직 중인 직원은 복직 처리할 수 없다")
     void activateFail_alreadyActive() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        assertThatThrownBy(() -> employeeManager.activate(employee.getId()))
+        assertThatThrownBy(() -> employeeManager.activate(employeeWriteActor(), employee.getId()))
                 .isInstanceOf(InvalidEmployeeStatusException.class)
                 .hasMessage("이미 재직 중인 직원입니다.");
     }
@@ -331,11 +335,11 @@ class EmployeeManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("직원을 논리 삭제(soft delete)한다")
     void delete() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "testUser@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.delete(employee.getId(), 1L);
+        employeeManager.delete(employeeWriteActor(), employee.getId(), 1L);
         flushAndClear();
 
         Employee deletedEmployee = employeeRepository.findById(employee.getId()).orElseThrow();
@@ -347,14 +351,14 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
     @Test
     void restore() {
-        Long employeeId = employeeManager.create(createEmployeeCreateCommand(companyId, "restore@email.com", "홍길동"));
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "restore@email.com", "홍길동"));
         flushAndClear();
 
         Employee employee = employeeFinder.find(employeeId);
-        employeeManager.delete(employee.getId(), 1L);
+        employeeManager.delete(employeeWriteActor(), employee.getId(), 1L);
         flushAndClear();
 
-        employeeManager.restore(employee.getId());
+        employeeManager.restore(employeeWriteActor(), employee.getId());
         flushAndClear();
 
         Employee restoredEmployee = employeeFinder.find(employee.getId());
@@ -428,6 +432,16 @@ class EmployeeManagerTest extends IntegrationTestBase {
                 .type(EmployeeType.FULL_TIME)
                 .avatar(EmployeeAvatar.SKY_GLOW)
                 .build();
+    }
+
+    private CurrentActor employeeWriteActor() {
+        return new CurrentActor(
+                1L,
+                "employee-manager-test",
+                null,
+                null,
+                Map.of("employee.write", Set.of(PermissionScope.ALL))
+        );
     }
 
 }

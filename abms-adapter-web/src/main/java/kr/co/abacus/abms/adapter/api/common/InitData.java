@@ -2,6 +2,7 @@ package kr.co.abacus.abms.adapter.api.common;
 
 import jakarta.annotation.PostConstruct;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.department.DepartmentModifyService;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.EmployeeModifyService;
@@ -17,6 +18,7 @@ import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmen
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.*;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.domain.payroll.Payroll;
@@ -40,6 +42,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Profile({"local", "default"})
@@ -176,7 +180,7 @@ public class InitData {
         // ---------------------------------------------------------
 
         // 임원진
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         company.getIdOrThrow(), "lyt@abms.co", "임회장", LocalDate.of(2001, 1, 30),
                         LocalDate.of(1960, 5, 12),
@@ -184,7 +188,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "대표이사")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         company.getIdOrThrow(), "chaesungsoo@abms.co", "채사장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -192,7 +196,7 @@ public class InitData {
                         EmployeeAvatar.SUNSET_BREEZE,
                         "사업총괄")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         telDivision.getIdOrThrow(), "ydp@abms.co", "유부사장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -200,7 +204,7 @@ public class InitData {
                         EmployeeAvatar.CORAL_SPARK,
                         "통신")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         mngDivision.getIdOrThrow(), "chin@abms.co", "진부사장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -208,7 +212,7 @@ public class InitData {
                         EmployeeAvatar.CORAL_SPARK,
                         "경영")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         futDivision.getIdOrThrow(), "jhkim@abms.co", "김상무", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -216,7 +220,7 @@ public class InitData {
                         EmployeeAvatar.FOREST_MINT,
                         "미래")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         mngBillGroup.getIdOrThrow(), "hades@abms.co", "허담당", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -224,7 +228,7 @@ public class InitData {
                         EmployeeAvatar.FOREST_MINT,
                         "경영빌링담당")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         futDivision.getIdOrThrow(), "hyosang@abms.co", "홍이사", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -232,7 +236,7 @@ public class InitData {
                         EmployeeAvatar.FOREST_MINT,
                         "미래")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         futDivision.getIdOrThrow(), "harryson@abms.co", "손이사", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -240,7 +244,7 @@ public class InitData {
                         EmployeeAvatar.FOREST_MINT,
                         "미래")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         rndDivision.getIdOrThrow(), "yjeepark@abms.co", "박상무", LocalDate.of(2007, 6, 1),
                         LocalDate.of(1968, 10, 10),
@@ -250,7 +254,7 @@ public class InitData {
         );
 
         // 중간 관리자
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3102.getIdOrThrow(), "ysfl@abms.co", "고팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -258,7 +262,7 @@ public class InitData {
                         EmployeeAvatar.GOLDEN_RAY,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3201.getIdOrThrow(), "krinsa@abms.co", "류팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -266,7 +270,7 @@ public class InitData {
                         EmployeeAvatar.SAGE_GUARD,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2105.getIdOrThrow(), "sh3817@abms.co", "김팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -274,7 +278,7 @@ public class InitData {
                         EmployeeAvatar.SAGE_GUARD,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3202.getIdOrThrow(), "babopuding@abms.co", "금팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -282,7 +286,7 @@ public class InitData {
                         EmployeeAvatar.SAGE_GUARD,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2204.getIdOrThrow(), "zase98@abms.co", "박팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -290,7 +294,7 @@ public class InitData {
                         EmployeeAvatar.SAGE_GUARD,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3101.getIdOrThrow(), "uhchae@abms.co", "채팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -298,7 +302,7 @@ public class InitData {
                         EmployeeAvatar.SAGE_GUARD,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2102.getIdOrThrow(), "higo100@abms.co", "양팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -306,7 +310,7 @@ public class InitData {
                         EmployeeAvatar.SAGE_GUARD,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2101.getIdOrThrow(), "ladder@abms.co", "김팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -314,7 +318,7 @@ public class InitData {
                         EmployeeAvatar.SAGE_GUARD,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3203.getIdOrThrow(), "jyc939393@abms.co", "지팀장", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -322,7 +326,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2205.getIdOrThrow(), "sogarib@abms.co", "봉팀장", LocalDate.of(2026, 2, 5),
                         LocalDate.of(1962, 7, 1),
@@ -332,7 +336,7 @@ public class InitData {
         );
 
         // 실무진
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2204.getIdOrThrow(), "cidlist@abms.co", "권책임", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -340,7 +344,7 @@ public class InitData {
                         EmployeeAvatar.AQUA_SPLASH,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2203.getIdOrThrow(), "bsaba@abms.co", "김책임", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1962, 7, 1),
@@ -348,7 +352,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         mngDivision.getIdOrThrow(), "azure00@abms.co", "김책임", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1969, 7, 1),
@@ -356,7 +360,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2101.getIdOrThrow(), "breadco@abms.co", "류책임", LocalDate.of(2002, 3, 1),
                         LocalDate.of(1971, 7, 1),
@@ -364,7 +368,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         strgGroup.getIdOrThrow(), "ojpark2010@abms.co", "박책임", LocalDate.of(2012, 4, 11),
                         LocalDate.of(1979, 7, 1),
@@ -372,7 +376,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2204.getIdOrThrow(), "needless2@abms.co", "오책임", LocalDate.of(2016, 3, 13),
                         LocalDate.of(1988, 8, 8),
@@ -380,7 +384,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2104.getIdOrThrow(), "springbi@abms.co", "임책임", LocalDate.of(2020, 2, 19),
                         LocalDate.of(1977, 4, 4),
@@ -388,7 +392,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2103.getIdOrThrow(), "dogbank@abms.co", "이책임", LocalDate.of(2009, 12, 11),
                         LocalDate.of(1980, 3, 3),
@@ -396,7 +400,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        Long employeeJang = employeeModifyService.create(
+        Long employeeJang = employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3204.getIdOrThrow(), "myride@abms.co", "장책임", LocalDate.of(2012, 3, 1),
                         LocalDate.of(1972, 7, 1),
@@ -405,7 +409,7 @@ public class InitData {
                         "")
         );
 
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3205.getIdOrThrow(), "jason0814@abms.co", "방선임", LocalDate.of(2020, 3, 1),
                         LocalDate.of(1993, 7, 1),
@@ -413,7 +417,7 @@ public class InitData {
                         EmployeeAvatar.BLOSSOM_SMILE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2201.getIdOrThrow(), "sdi4931@abms.co", "신선임", LocalDate.of(2020, 3, 1),
                         LocalDate.of(1996, 10, 27),
@@ -421,7 +425,7 @@ public class InitData {
                         EmployeeAvatar.MIDNIGHT_WINK,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2102.getIdOrThrow(), "wessuh11@abms.co", "서선임", LocalDate.of(2021, 9, 5),
                         LocalDate.of(1995, 1, 15),
@@ -429,7 +433,7 @@ public class InitData {
                         EmployeeAvatar.MIDNIGHT_WINK,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2104.getIdOrThrow(), "woong22@abms.co", "이선임", LocalDate.of(2021, 9, 6),
                         LocalDate.of(1992, 8, 20),
@@ -437,7 +441,7 @@ public class InitData {
                         EmployeeAvatar.MIDNIGHT_WINK,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3103.getIdOrThrow(), "dyd5795@abms.co", "장선임", LocalDate.of(2021, 9, 6),
                         LocalDate.of(1991, 10, 14),
@@ -445,7 +449,7 @@ public class InitData {
                         EmployeeAvatar.MIDNIGHT_WINK,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3101.getIdOrThrow(), "hoonjoo@abms.co", "장선임", LocalDate.of(2025, 7, 2),
                         LocalDate.of(1998, 7, 1),
@@ -453,7 +457,7 @@ public class InitData {
                         EmployeeAvatar.ORANGE_BURST,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2202.getIdOrThrow(), "3097mk@abms.co", "최선임", LocalDate.of(2024, 3, 1),
                         LocalDate.of(1987, 6, 12),
@@ -461,7 +465,7 @@ public class InitData {
                         EmployeeAvatar.LAVENDER_MOON,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2203.getIdOrThrow(), "moomstone2@abms.co", "허선임", LocalDate.of(2019, 5, 10),
                         LocalDate.of(1991, 1, 1),
@@ -469,7 +473,7 @@ public class InitData {
                         EmployeeAvatar.SAGE_GUARD,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2205.getIdOrThrow(), "mjs6350@abms.co", "문선임", LocalDate.of(2017, 1, 6),
                         LocalDate.of(1990, 7, 1),
@@ -478,7 +482,7 @@ public class InitData {
                         "")
         );
 
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3104.getIdOrThrow(), "cy950315@abms.co", "오사원", LocalDate.of(2023, 11, 5),
                         LocalDate.of(1995, 3, 1),
@@ -486,7 +490,7 @@ public class InitData {
                         EmployeeAvatar.COBALT_WAVE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3103.getIdOrThrow(), "dlwltn6604@abms.co", "이사원", LocalDate.of(2024, 11, 21),
                         LocalDate.of(1999, 2, 1),
@@ -494,7 +498,7 @@ public class InitData {
                         EmployeeAvatar.COBALT_WAVE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3103.getIdOrThrow(), "woouk747@abms.co", "이사원", LocalDate.of(2024, 9, 21),
                         LocalDate.of(1998, 2, 12),
@@ -502,7 +506,7 @@ public class InitData {
                         EmployeeAvatar.COBALT_WAVE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3101.getIdOrThrow(), "heeseokoh@abms.co", "오사원", LocalDate.of(2025, 9, 21),
                         LocalDate.of(1997, 12, 8),
@@ -510,7 +514,7 @@ public class InitData {
                         EmployeeAvatar.COBALT_WAVE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3104.getIdOrThrow(), "dhflgkwls@abms.co", "윤사원", LocalDate.of(2023, 9, 21),
                         LocalDate.of(1996, 4, 17),
@@ -518,7 +522,7 @@ public class InitData {
                         EmployeeAvatar.COBALT_WAVE,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2101.getIdOrThrow(), "vicent77@abms.co", "임사원", LocalDate.of(2024, 11, 21),
                         LocalDate.of(1996, 9, 29),
@@ -526,7 +530,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2101.getIdOrThrow(), "ABC3202@abms.co", "정사원", LocalDate.of(2024, 11, 21),
                         LocalDate.of(1996, 10, 31),
@@ -534,7 +538,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         mngDivision.getIdOrThrow(), "zyz9229@abms.co", "제사원", LocalDate.of(2022, 11, 21),
                         LocalDate.of(1996, 5, 5),
@@ -542,7 +546,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2104.getIdOrThrow(), "rainbow2774@abms.co", "차사원", LocalDate.of(2022, 11, 21),
                         LocalDate.of(1996, 6, 16),
@@ -550,7 +554,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC3201.getIdOrThrow(), "sychoi9089@abms.co", "최사원", LocalDate.of(2022, 11, 21),
                         LocalDate.of(1996, 7, 3),
@@ -558,7 +562,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "")
         );
-        employeeModifyService.create(
+        employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC4101.getIdOrThrow(), "kidsan20@abms.co", "윤사원", LocalDate.of(2023, 11, 5),
                         LocalDate.of(1996, 2, 22),
@@ -566,7 +570,7 @@ public class InitData {
                         EmployeeAvatar.SKY_GLOW,
                         "")
         );
-        Long employeeShin = employeeModifyService.create(
+        Long employeeShin = employeeModifyService.create(employeeWriteActor(), 
                 createEmployeeCreateCommand(
                         ABC2201.getIdOrThrow(), "sdi4932@abms.co", "신사원", LocalDate.of(2023, 11, 5),
                         LocalDate.of(2002, 12, 7),
@@ -737,8 +741,8 @@ public class InitData {
         // ---------------------------------------------------------
         // 직급이력 구성
         // ---------------------------------------------------------
-        employeeModifyService.promote(1L, EmployeePosition.CHAIRMAN, null, LocalDate.of(2026, 1, 30));
-        employeeModifyService.promote(2L, EmployeePosition.PRESIDENT, null, LocalDate.of(2026, 1, 30));
+        employeeModifyService.promote(employeeWriteActor(), 1L, EmployeePosition.CHAIRMAN, null, LocalDate.of(2026, 1, 30));
+        employeeModifyService.promote(employeeWriteActor(), 2L, EmployeePosition.PRESIDENT, null, LocalDate.of(2026, 1, 30));
     }
 
     private Employee createEmployee(Long departmentId, String email, String name, LocalDate joinDate,
@@ -772,6 +776,16 @@ public class InitData {
                 .avatar(avatar)
                 .memo(memo)
                 .build();
+    }
+
+    private CurrentActor employeeWriteActor() {
+        return new CurrentActor(
+                0L,
+                "init-data",
+                null,
+                null,
+                Map.of("employee.write", Set.of(PermissionScope.ALL))
+        );
     }
 
 }

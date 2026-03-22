@@ -3,17 +3,21 @@ package kr.co.abacus.abms.application.project.inbound;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 import kr.co.abacus.abms.application.project.dto.ProjectUpdateCommand;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentType;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
@@ -45,7 +49,7 @@ class ProjectManagerTest extends IntegrationTestBase {
         Long partyId = createParty("생성 협력사");
         Long leadDepartmentId = createDepartment("생성부서");
 
-        Long projectId = projectManager.create(new ProjectCreateCommand(
+        Long projectId = projectManager.create(projectWriteActor(), new ProjectCreateCommand(
                 partyId,
                 leadDepartmentId,
                 "PRJ-CMD-001",
@@ -82,7 +86,7 @@ class ProjectManagerTest extends IntegrationTestBase {
         ));
         flushAndClear();
 
-        Long projectId = projectManager.update(project.getIdOrThrow(), new ProjectUpdateCommand(
+        Long projectId = projectManager.update(projectWriteActor(), project.getIdOrThrow(), new ProjectUpdateCommand(
                 newPartyId,
                 leadDepartmentId,
                 "수정된 프로젝트",
@@ -117,6 +121,16 @@ class ProjectManagerTest extends IntegrationTestBase {
                 null
         ));
         return department.getIdOrThrow();
+    }
+
+    private CurrentActor projectWriteActor() {
+        return new CurrentActor(
+                1L,
+                "project-manager-test",
+                null,
+                null,
+                Map.of("project.write", Set.of(PermissionScope.ALL))
+        );
     }
 
 }

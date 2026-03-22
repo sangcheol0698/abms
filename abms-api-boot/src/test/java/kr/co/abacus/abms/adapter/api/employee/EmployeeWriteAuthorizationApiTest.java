@@ -25,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
@@ -339,7 +340,7 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(patch("/api/employees/{id}/restore", childDepartmentEmployeeId).session(session))
                 .andExpect(status().isNoContent());
 
-        employeeManager.delete(outsideDepartmentEmployeeId, 1L);
+        employeeManager.delete(employeeWriteActor(), outsideDepartmentEmployeeId, 1L);
         flushAndClear();
 
         mockMvc.perform(patch("/api/employees/{id}/restore", outsideDepartmentEmployeeId).session(session))
@@ -651,6 +652,16 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
                 EmployeeGrade.JUNIOR,
                 EmployeeAvatar.SKY_GLOW,
                 null
+        );
+    }
+
+    private CurrentActor employeeWriteActor() {
+        return new CurrentActor(
+                1L,
+                "employee-write-authorization-test",
+                null,
+                null,
+                Map.of("employee.write", Set.of(PermissionScope.ALL))
         );
     }
 }
