@@ -13,7 +13,6 @@ import jakarta.persistence.EntityManagerFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -66,7 +65,6 @@ public class RevenueMonthlySummaryBatchConfig {
     public Job revenueMonthlySummaryJob() {
         return new JobBuilder("revenueMonthlySummaryJob", jobRepository)
             .start(revenueMonthlySummaryStep())
-            .incrementer(new RunIdIncrementer())
             .build();
     }
 
