@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.application.auth.CurrentActor;
-import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.project.inbound.ProjectRevenuePlanManager;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
@@ -27,7 +26,7 @@ public class ProjectRevenuePlanModifyService implements ProjectRevenuePlanManage
     private final DepartmentRepository departmentRepository;
     private final ProjectRepository projectRepository;
     private final ProjectRevenuePlanRepository projectRevenuePlanRepository;
-    private final CurrentActorPermissionSupport permissionSupport;
+    private final ProjectAuthorizationValidator projectAuthorizationValidator;
 
     @Override
     public ProjectRevenuePlan create(ProjectRevenuePlanCreateRequest createRequest) {
@@ -121,7 +120,7 @@ public class ProjectRevenuePlanModifyService implements ProjectRevenuePlanManage
     private void validateCanManage(CurrentActor actor, Long projectId) {
         kr.co.abacus.abms.domain.project.Project project = projectRepository.findByIdAndDeletedFalse(projectId)
                 .orElseThrow(() -> new kr.co.abacus.abms.domain.project.ProjectNotFoundException("존재하지 않는 프로젝트입니다: " + projectId));
-        permissionSupport.validateDepartmentAccess(actor, PROJECT_WRITE_PERMISSION_CODE, project.getLeadDepartmentId(), "프로젝트 변경 권한 범위를 벗어났습니다.");
+        projectAuthorizationValidator.validateManageProject(actor, project, "프로젝트 변경 권한 범위를 벗어났습니다.");
     }
 
 }

@@ -45,7 +45,7 @@ public class EmployeeModifyService implements EmployeeManager {
 
     @Override
     public Long create(CurrentActor actor, EmployeeCreateCommand command) {
-        employeeAuthorizationValidator.validateCreate(actor, command.departmentId(), "직원 생성 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageDepartment(actor, command.departmentId(), "직원 생성 권한 범위를 벗어났습니다.");
         validateDepartmentExists(command.departmentId());
         validateDuplicateEmail(command.email());
 
@@ -103,7 +103,7 @@ public class EmployeeModifyService implements EmployeeManager {
     @Override
     public void resign(CurrentActor actor, Long id, LocalDate resignationDate) {
         Employee employee = find(id);
-        employeeAuthorizationValidator.validateManage(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
 
         employee.resign(resignationDate);
 
@@ -115,7 +115,7 @@ public class EmployeeModifyService implements EmployeeManager {
     @Override
     public void takeLeave(CurrentActor actor, Long id) {
         Employee employee = find(id);
-        employeeAuthorizationValidator.validateManage(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
 
         employee.takeLeave();
 
@@ -127,7 +127,7 @@ public class EmployeeModifyService implements EmployeeManager {
     @Override
     public void activate(CurrentActor actor, Long id) {
         Employee employee = find(id);
-        employeeAuthorizationValidator.validateManage(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
 
         employee.activate();
 
@@ -139,7 +139,7 @@ public class EmployeeModifyService implements EmployeeManager {
     @Override
     public void promote(CurrentActor actor, Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade) {
         Employee employee = find(id);
-        employeeAuthorizationValidator.validateManage(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
 
         employee.promote(newPosition, newGrade);
 
@@ -162,7 +162,7 @@ public class EmployeeModifyService implements EmployeeManager {
     @Override
     public void promote(CurrentActor actor, Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade, LocalDate promotedDate) {
         Employee employee = find(id);
-        employeeAuthorizationValidator.validateManage(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
 
         employee.promote(newPosition, newGrade);
 
@@ -185,7 +185,7 @@ public class EmployeeModifyService implements EmployeeManager {
     @Override
     public void delete(CurrentActor actor, Long id, @Nullable Long deleteBy) {
         Employee employee = find(id);
-        employeeAuthorizationValidator.validateManage(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
 
         employee.softDelete(deleteBy);
 
@@ -198,7 +198,7 @@ public class EmployeeModifyService implements EmployeeManager {
     @Override
     public void restore(CurrentActor actor, Long id) {
         Employee employee = findIncludeDeleted(id);
-        employeeAuthorizationValidator.validateManage(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
 
         employee.restore();
 

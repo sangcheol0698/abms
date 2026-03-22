@@ -1,7 +1,6 @@
 package kr.co.abacus.abms.application.project;
 
 import kr.co.abacus.abms.application.auth.CurrentActor;
-import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
@@ -37,7 +36,7 @@ public class ProjectExcelService {
     private final ProjectManager projectManager;
     private final ProjectExcelExporter projectExcelExporter;
     private final ProjectExcelImporter projectExcelImporter;
-    private final CurrentActorPermissionSupport permissionSupport;
+    private final ProjectAuthorizationValidator projectAuthorizationValidator;
 
     public byte[] download(ProjectSearchCondition condition, CurrentActor actor) {
         List<Project> projects = projectRepository.search(condition, actor);
@@ -52,8 +51,7 @@ public class ProjectExcelService {
     @Transactional
     public ProjectExcelUploadResult upload(InputStream inputStream, CurrentActor actor) {
         List<ProjectCreateCommand> commands = projectExcelImporter.importProjects(inputStream, this::getPartyIdByName);
-        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> uploadScopes = validateCanUpload(actor, commands);
-        CurrentActor writeActor = createWriteActor(actor, uploadScopes);
+        CurrentActor writeActor = projectAuthorizationValidator.authorizeExcelUpload(actor, commands);
 
         List<ProjectExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
         int successCount = 0;
@@ -105,44 +103,6 @@ public class ProjectExcelService {
             return ex.getClass().getSimpleName();
         }
         return message;
-    }
-
-    private java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> validateCanUpload(
-            CurrentActor actor,
-            List<ProjectCreateCommand> commands
-    ) {
-        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes = permissionSupport.requirePermission(
-                actor,
-                "project.excel.upload",
-                "프로젝트 엑셀 업로드 권한 범위를 벗어났습니다."
-        );
-        if (scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.ALL)) {
-            return scopes;
-        }
-
-        java.util.Set<Long> allowedDepartmentIds = permissionSupport.resolveAllowedDepartmentIds(actor, scopes);
-
-        boolean unauthorizedExists = commands.stream()
-                .map(ProjectCreateCommand::leadDepartmentId)
-                .anyMatch(leadDepartmentId -> !allowedDepartmentIds.contains(leadDepartmentId));
-        if (unauthorizedExists) {
-            throw new org.springframework.security.access.AccessDeniedException("프로젝트 엑셀 업로드 권한 범위를 벗어났습니다.");
-        }
-
-        return scopes;
-    }
-
-    private CurrentActor createWriteActor(
-            CurrentActor actor,
-            java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes
-    ) {
-        return new CurrentActor(
-                actor.accountId(),
-                actor.username(),
-                actor.employeeId(),
-                actor.departmentId(),
-                java.util.Map.of("project.write", scopes)
-        );
     }
 
 }

@@ -65,23 +65,27 @@ public class PartyApi {
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.write')")
     @PostMapping("/api/parties")
     @ResponseStatus(HttpStatus.CREATED)
-    public PartyResponse create(@RequestBody PartyCreateApiRequest request) {
-        Party party = partyManager.create(request.toDomainRequest());
+    public PartyResponse create(@RequestBody PartyCreateApiRequest request, Authentication authentication) {
+        Party party = partyManager.create(currentActorResolver.resolve(authentication), request.toDomainRequest());
         return PartyResponse.from(party);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.write')")
     @PutMapping("/api/parties/{id}")
-    public PartyResponse update(@PathVariable Long id, @RequestBody PartyUpdateApiRequest request) {
-        Party party = partyManager.update(id, request.toDomainRequest());
+    public PartyResponse update(
+            @PathVariable Long id,
+            @RequestBody PartyUpdateApiRequest request,
+            Authentication authentication
+    ) {
+        Party party = partyManager.update(currentActorResolver.resolve(authentication), id, request.toDomainRequest());
         return PartyResponse.from(party);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.write')")
     @DeleteMapping("/api/parties/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        partyManager.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        partyManager.delete(currentActorResolver.resolve(authentication), id);
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.read')"

@@ -2,11 +2,16 @@ package kr.co.abacus.abms.application.party.inbound;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
+import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.domain.party.PartyNotFoundException;
@@ -27,7 +32,7 @@ class PartyManagerTest extends IntegrationTestBase {
     void create() {
         PartyCreateRequest request = createRequest("신규 협력사", "김대표", "이담당", "010-1111-2222", "party@test.com");
 
-        Party created = partyManager.create(request);
+        Party created = partyManager.create(partyWriteActor(), request);
         flushAndClear();
 
         Party found = partyRepository.findByIdAndDeletedFalse(created.getId()).orElseThrow();
@@ -44,7 +49,11 @@ class PartyManagerTest extends IntegrationTestBase {
         Party saved = partyRepository.save(createParty("수정 전 협력사"));
         flushAndClear();
 
-        partyManager.update(saved.getId(), updateRequest("수정 후 협력사", "박대표", "최담당", "010-3333-4444", "updated@test.com"));
+        partyManager.update(
+                partyWriteActor(),
+                saved.getId(),
+                updateRequest("수정 후 협력사", "박대표", "최담당", "010-3333-4444", "updated@test.com")
+        );
         flushAndClear();
 
         Party updated = partyRepository.findByIdAndDeletedFalse(saved.getId()).orElseThrow();
@@ -61,7 +70,7 @@ class PartyManagerTest extends IntegrationTestBase {
         Party saved = partyRepository.save(createParty("삭제 대상 협력사"));
         flushAndClear();
 
-        partyManager.delete(saved.getId());
+        partyManager.delete(partyWriteActor(), saved.getId());
         flushAndClear();
 
         Party deleted = partyRepository.findById(saved.getId()).orElseThrow();
@@ -82,7 +91,7 @@ class PartyManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("존재하지 않는 협력사를 수정하면 예외가 발생한다")
     void update_notFound() {
-        assertThatThrownBy(() -> partyManager.update(9999L,
+        assertThatThrownBy(() -> partyManager.update(partyWriteActor(), 9999L,
                 updateRequest("없는 협력사", "대표", "담당", "010-0000-0000", "missing@test.com")))
                 .isInstanceOf(PartyNotFoundException.class)
                 .hasMessage("협력사를 찾을 수 없습니다: 9999");
@@ -91,7 +100,7 @@ class PartyManagerTest extends IntegrationTestBase {
     @Test
     @DisplayName("존재하지 않는 협력사를 삭제하면 예외가 발생한다")
     void delete_notFound() {
-        assertThatThrownBy(() -> partyManager.delete(9999L))
+        assertThatThrownBy(() -> partyManager.delete(partyWriteActor(), 9999L))
                 .isInstanceOf(PartyNotFoundException.class)
                 .hasMessage("협력사를 찾을 수 없습니다: 9999");
     }
@@ -108,6 +117,16 @@ class PartyManagerTest extends IntegrationTestBase {
     private PartyUpdateRequest updateRequest(String name, String ceoName, String salesRepName, String salesRepPhone,
                                              String salesRepEmail) {
         return new PartyUpdateRequest(name, ceoName, salesRepName, salesRepPhone, salesRepEmail);
+    }
+
+    private CurrentActor partyWriteActor() {
+        return new CurrentActor(
+                1L,
+                "party-manager-test",
+                null,
+                null,
+                Map.of("party.write", Set.of(PermissionScope.ALL))
+        );
     }
 
 }

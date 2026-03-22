@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.auth.CurrentActor;
-import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
+import kr.co.abacus.abms.application.employee.EmployeeAuthorizationValidator;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeFinder;
 import kr.co.abacus.abms.application.payroll.inbound.PayrollManager;
 import kr.co.abacus.abms.application.payroll.outbound.PayrollRepository;
@@ -23,7 +23,7 @@ public class PayrollModifyService implements PayrollManager {
 
     private final PayrollRepository payrollRepository;
     private final EmployeeFinder employeeFinder;
-    private final CurrentActorPermissionSupport permissionSupport;
+    private final EmployeeAuthorizationValidator employeeAuthorizationValidator;
 
     @Override
     public void changeSalary(Long employeeId, Money annualSalary, LocalDate startDate) {
@@ -33,7 +33,7 @@ public class PayrollModifyService implements PayrollManager {
     @Override
     public void changeSalary(CurrentActor actor, Long employeeId, Money annualSalary, LocalDate startDate) {
         Employee employee = employeeFinder.find(employeeId);
-        validateCanManage(actor, employee);
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
         doChangeSalary(employeeId, annualSalary, startDate);
     }
 
@@ -55,10 +55,6 @@ public class PayrollModifyService implements PayrollManager {
         Payroll payroll = Payroll.create(employeeId, annualSalary, startDate);
 
         payrollRepository.save(payroll);
-    }
-
-    private void validateCanManage(CurrentActor actor, Employee employee) {
-        permissionSupport.validateDepartmentAccess(actor, "employee.write", employee.getDepartmentId(), "직원 변경 권한 범위를 벗어났습니다.");
     }
 
     private void checkEmployeeExists(Long employeeId) {

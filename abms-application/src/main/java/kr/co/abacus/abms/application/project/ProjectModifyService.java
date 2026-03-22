@@ -78,7 +78,7 @@ public class ProjectModifyService implements ProjectManager {
     @Override
     public void complete(CurrentActor actor, Long id) {
         Project project = projectFinder.find(id);
-        projectAuthorizationValidator.validateManage(actor, project, "프로젝트 변경 권한 범위를 벗어났습니다.");
+        projectAuthorizationValidator.validateManageProject(actor, project, "프로젝트 변경 권한 범위를 벗어났습니다.");
         project.complete();
 
         projectRepository.save(project);
@@ -87,7 +87,7 @@ public class ProjectModifyService implements ProjectManager {
     @Override
     public void cancel(CurrentActor actor, Long id) {
         Project project = projectFinder.find(id);
-        projectAuthorizationValidator.validateManage(actor, project, "프로젝트 변경 권한 범위를 벗어났습니다.");
+        projectAuthorizationValidator.validateManageProject(actor, project, "프로젝트 변경 권한 범위를 벗어났습니다.");
         project.cancel();
 
         projectRepository.save(project);
@@ -96,7 +96,7 @@ public class ProjectModifyService implements ProjectManager {
     @Override
     public void delete(CurrentActor actor, Long id) {
         Project project = projectFinder.find(id);
-        projectAuthorizationValidator.validateManage(actor, project, "프로젝트 변경 권한 범위를 벗어났습니다.");
+        projectAuthorizationValidator.validateManageProject(actor, project, "프로젝트 변경 권한 범위를 벗어났습니다.");
         project.softDelete(null);
 
         projectRepository.save(project);

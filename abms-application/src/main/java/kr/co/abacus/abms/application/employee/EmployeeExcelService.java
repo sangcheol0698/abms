@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.auth.CurrentActor;
-import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeExcelUploadResult;
@@ -35,7 +34,7 @@ public class EmployeeExcelService {
     private final EmployeeManager employeeManager;
     private final EmployeeExcelExporter employeeExcelExporter;
     private final EmployeeExcelImporter employeeExcelImporter;
-    private final CurrentActorPermissionSupport permissionSupport;
+    private final EmployeeAuthorizationValidator employeeAuthorizationValidator;
 
     public byte[] download(EmployeeSearchCondition condition, CurrentActor actor) {
         List<Employee> employees = employeeRepository.search(condition, actor);
@@ -53,8 +52,7 @@ public class EmployeeExcelService {
     public EmployeeExcelUploadResult upload(InputStream inputStream, CurrentActor actor) {
         Map<String, Long> departmentCodeMap = loadDepartmentCodeMap();
         List<EmployeeCreateCommand> commands = employeeExcelImporter.importEmployees(inputStream, departmentCodeMap);
-        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> uploadScopes = validateCanUpload(actor, commands);
-        CurrentActor writeActor = createWriteActor(actor, uploadScopes);
+        CurrentActor writeActor = employeeAuthorizationValidator.authorizeExcelUpload(actor, commands);
 
         List<EmployeeExcelUploadResult.ExcelFailure> excelFailures = new ArrayList<>();
         int successCount = 0;
@@ -110,44 +108,6 @@ public class EmployeeExcelService {
             return ex.getClass().getSimpleName();
         }
         return message;
-    }
-
-    private java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> validateCanUpload(
-            CurrentActor actor,
-            List<EmployeeCreateCommand> commands
-    ) {
-        java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes = permissionSupport.requirePermission(
-                actor,
-                "employee.excel.upload",
-                "직원 엑셀 업로드 권한 범위를 벗어났습니다."
-        );
-        if (scopes.contains(kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope.ALL)) {
-            return scopes;
-        }
-
-        java.util.Set<Long> allowedDepartmentIds = permissionSupport.resolveAllowedDepartmentIds(actor, scopes);
-
-        boolean unauthorizedExists = commands.stream()
-                .map(EmployeeCreateCommand::departmentId)
-                .anyMatch(departmentId -> !allowedDepartmentIds.contains(departmentId));
-        if (unauthorizedExists) {
-            throw new org.springframework.security.access.AccessDeniedException("직원 엑셀 업로드 권한 범위를 벗어났습니다.");
-        }
-
-        return scopes;
-    }
-
-    private CurrentActor createWriteActor(
-            CurrentActor actor,
-            java.util.Set<kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope> scopes
-    ) {
-        return new CurrentActor(
-                actor.accountId(),
-                actor.username(),
-                actor.employeeId(),
-                actor.departmentId(),
-                java.util.Map.of("employee.write", scopes)
-        );
     }
 
 }

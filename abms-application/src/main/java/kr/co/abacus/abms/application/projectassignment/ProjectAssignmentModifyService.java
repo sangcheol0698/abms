@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.application.auth.CurrentActor;
-import kr.co.abacus.abms.application.auth.CurrentActorPermissionSupport;
+import kr.co.abacus.abms.application.project.ProjectAuthorizationValidator;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentManager;
 import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository;
@@ -26,7 +26,7 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
 
     private final ProjectRepository projectRepository;
     private final ProjectAssignmentRepository projectAssignmentRepository;
-    private final CurrentActorPermissionSupport permissionSupport;
+    private final ProjectAuthorizationValidator projectAuthorizationValidator;
 
     @Override
     public ProjectAssignment create(ProjectAssignmentCreateRequest createRequest) {
@@ -144,7 +144,7 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
 
     private void validateCanManage(CurrentActor actor, Long projectId) {
         Project project = loadProject(projectId);
-        permissionSupport.validateDepartmentAccess(actor, "project.write", project.getLeadDepartmentId(), "프로젝트 변경 권한 범위를 벗어났습니다.");
+        projectAuthorizationValidator.validateManageProject(actor, project, "프로젝트 변경 권한 범위를 벗어났습니다.");
     }
 
 }
