@@ -247,6 +247,7 @@ import type { EmployeeSummary } from '@/features/employee/models/employee';
 import HttpError from '@/core/http/HttpError';
 import { useEmployeeDeletion } from '@/features/employee/composables/useEmployeeDeletion';
 import { getExcelErrorMessage } from '@/core/utils/excel';
+import { copyTextToClipboard } from '@/core/utils/clipboard';
 import type { DepartmentChartNode } from '@/features/department/models/department';
 import { useEmployeeQuerySync } from '@/features/employee/composables/useEmployeeQuerySync.ts';
 import { useDepartmentOrganizationChartQuery } from '@/features/department/queries/useDepartmentQueries';
@@ -614,42 +615,12 @@ async function handleEditEmployee(row: EmployeeListItem) {
 
 async function handleCopyEmail(row: EmployeeListItem) {
   try {
-    await copyText(row.email);
+    await copyTextToClipboard(row.email);
     toast.success('이메일을 복사했어요.', {
       description: row.email,
     });
   } catch {
     toast.error('이메일 복사에 실패했습니다.');
-  }
-}
-
-async function copyText(text: string) {
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return;
-    } catch {
-      // Fallback to the legacy copy path below.
-    }
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.top = '0';
-  textarea.style.left = '0';
-  textarea.style.opacity = '0';
-
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-
-  const copied = document.execCommand('copy');
-  document.body.removeChild(textarea);
-
-  if (!copied) {
-    throw new Error('Failed to copy text');
   }
 }
 

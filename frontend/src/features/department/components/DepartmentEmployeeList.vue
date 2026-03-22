@@ -92,6 +92,7 @@ import {
 import { useQuerySync } from '@/core/composables/useQuerySync';
 import { toast } from 'vue-sonner';
 import HttpError from '@/core/http/HttpError';
+import { copyTextToClipboard } from '@/core/utils/clipboard';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
 import type { EmployeeSummary } from '@/features/employee/models/employee';
 import { createEmployeeTableColumns } from '@/features/employee/configs/tableColumns';
@@ -353,19 +354,17 @@ async function handleEditEmployee(employee: EmployeeListItem) {
   }
 }
 
-function handleCopyEmail(employee: EmployeeListItem) {
+async function handleCopyEmail(employee: EmployeeListItem) {
   if (!employee.email) {
     toast.error('이메일 정보가 없습니다.');
     return;
   }
-  navigator.clipboard
-    .writeText(employee.email)
-    .then(() => {
-      toast.success('이메일을 클립보드에 복사했습니다.');
-    })
-    .catch(() => {
-      toast.error('이메일 복사에 실패했습니다.');
-    });
+  try {
+    await copyTextToClipboard(employee.email);
+    toast.success('이메일을 클립보드에 복사했습니다.');
+  } catch {
+    toast.error('이메일 복사에 실패했습니다.');
+  }
 }
 
 function handleDeleteEmployee(employee: EmployeeListItem) {

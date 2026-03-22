@@ -229,6 +229,7 @@ import {
   useProjectStatusesQuery,
 } from '@/features/project/queries/useProjectQueries';
 import { projectKeys, queryClient } from '@/core/query';
+import { copyTextToClipboard } from '@/core/utils/clipboard';
 import {
   canDownloadProjectExcel,
   canManageProjects,
@@ -693,11 +694,15 @@ function handleExcelUploadSuccess() {
   toast.success('프로젝트가 업로드되었습니다.');
 }
 
-function handleCopyCode(project: ProjectListItem) {
-  navigator.clipboard.writeText(project.code);
-  toast.success('프로젝트 코드를 복사했습니다.', {
-    description: project.code,
-  });
+async function handleCopyCode(project: ProjectListItem) {
+  try {
+    await copyTextToClipboard(project.code);
+    toast.success('프로젝트 코드를 복사했습니다.', {
+      description: project.code,
+    });
+  } catch {
+    toast.error('프로젝트 코드 복사에 실패했습니다.');
+  }
 }
 
 function openPartyDialog() {

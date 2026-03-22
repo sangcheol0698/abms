@@ -349,6 +349,7 @@ import {
 } from '@tanstack/vue-table';
 import { Menu, Search } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
+import { copyTextToClipboard } from '@/core/utils/clipboard';
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import { useQuerySync } from '@/core/composables/useQuerySync';
 import { DataTable, DataTableColumnHeader, DataTableToolbar } from '@/components/business';
@@ -888,7 +889,7 @@ async function confirmUnassign() {
 
 async function handleCopyAccountEmail(email: string) {
   try {
-    await navigator.clipboard.writeText(email);
+    await copyTextToClipboard(email);
     toast.success('이메일을 복사했습니다.');
   } catch {
     toast.error('이메일 복사에 실패했습니다.');
