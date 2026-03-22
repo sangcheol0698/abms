@@ -74,6 +74,7 @@ async function mountPanel() {
       stubs: {
         DepartmentEmployeeList: { template: '<div />' },
         DepartmentLeaderAssignDialog: { template: '<div data-test="leader-assign-dialog" />' },
+        DepartmentRevenuePanel: { template: '<div data-test="department-revenue-panel" />' },
         Tabs: { template: '<div><slot /></div>' },
         TabsList: { template: '<div><slot /></div>' },
         TabsTrigger: { template: '<button type="button"><slot /></button>' },

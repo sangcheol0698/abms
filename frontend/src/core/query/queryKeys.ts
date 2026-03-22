@@ -61,6 +61,8 @@ export const departmentKeys = {
   organizationChart: () => [...DEPARTMENT_KEY, 'organization-chart'] as const,
   detail: (departmentId: number | null | undefined) =>
     [...DEPARTMENT_KEY, 'detail', departmentId ?? 0] as const,
+  revenueTrend: (departmentId: number | null | undefined, yearMonth: string | null | undefined = '') =>
+    [...DEPARTMENT_KEY, 'revenue-trend', departmentId ?? 0, yearMonth ?? ''] as const,
   employeesRoot: (departmentId: number | null | undefined) =>
     [...DEPARTMENT_KEY, 'employees', departmentId ?? 0] as const,
   employees: (departmentId: number | null | undefined, params: QueryKeyParams = {}) =>

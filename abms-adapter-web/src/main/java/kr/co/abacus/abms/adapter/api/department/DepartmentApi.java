@@ -25,7 +25,9 @@ import kr.co.abacus.abms.adapter.api.department.dto.DepartmentDetailResponse;
 import kr.co.abacus.abms.adapter.api.department.dto.EmployeeAssignLeaderRequest;
 import kr.co.abacus.abms.adapter.api.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.adapter.api.summary.dto.MonthlyRevenueSummaryResponse;
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
+import kr.co.abacus.abms.application.department.dto.DepartmentRevenueSummary;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
 import kr.co.abacus.abms.application.department.inbound.DepartmentManager;
@@ -65,6 +67,22 @@ public class DepartmentApi {
         Page<EmployeeSearchResponse> responses = employeesPage.map(EmployeeSearchResponse::of);
 
         return PageResponse.of(responses);
+    }
+
+    @GetMapping("/api/departments/{departmentId}/revenue/sixMonthTrend")
+    public List<MonthlyRevenueSummaryResponse> getDepartmentRevenueTrend(
+            @PathVariable Long departmentId,
+            @RequestParam("yearMonth") String yearMonth) {
+        List<DepartmentRevenueSummary> summaries = departmentFinder.getRevenueTrend(departmentId, yearMonth);
+
+        return summaries.stream()
+                .map(summary -> new MonthlyRevenueSummaryResponse(
+                        summary.targetMonth(),
+                        summary.revenue().amount(),
+                        summary.cost().amount(),
+                        summary.profit().amount()
+                ))
+                .toList();
     }
 
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")

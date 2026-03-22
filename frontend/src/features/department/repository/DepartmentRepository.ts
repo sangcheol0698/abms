@@ -3,8 +3,10 @@ import HttpRepository from '@/core/http/HttpRepository';
 import {
   normalizeDepartmentChartResponse,
   mapDepartmentDetail,
+  mapDepartmentRevenueSummary,
   type DepartmentChartNode,
   type DepartmentDetail,
+  type DepartmentRevenueSummary,
 } from '@/features/department/models/department';
 import { PageResponse } from '@/core/api';
 import type { EmployeeListItem } from '@/features/employee/models/employeeListItem';
@@ -82,5 +84,21 @@ export default class DepartmentRepository {
       path: `/api/departments/${departmentId}/assign-team-leader`,
       data: { leaderEmployeeId: employeeId },
     });
+  }
+
+  async fetchDepartmentRevenueTrend(
+    departmentId: number,
+    yearMonth: string,
+  ): Promise<DepartmentRevenueSummary[]> {
+    const response = await this.httpRepository.get({
+      path: `/api/departments/${departmentId}/revenue/sixMonthTrend`,
+      params: { yearMonth },
+    });
+
+    if (!Array.isArray(response)) {
+      return [];
+    }
+
+    return response.map(mapDepartmentRevenueSummary);
   }
 }

@@ -10,5 +10,11 @@ public interface MonthlyRevenueSummaryRepository {
 
     Optional<MonthlyRevenueSummary> findFirstBySummaryDateBetweenOrderBySummaryDateDesc(LocalDate start, LocalDate end);
 
+    List<MonthlyRevenueSummary> findAllByLeadDepartmentIdAndSummaryDateBetweenAndDeletedFalseOrderBySummaryDateAscIdAsc(
+        Long leadDepartmentId,
+        LocalDate start,
+        LocalDate end
+    );
+
     <S extends MonthlyRevenueSummary> List<S> saveAll(Iterable<S> summaries);
 }

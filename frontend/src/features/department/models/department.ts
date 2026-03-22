@@ -109,6 +109,13 @@ export interface DepartmentSummary {
   childDepartmentCount: number;
 }
 
+export interface DepartmentRevenueSummary {
+  targetMonth: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
 export function mapDepartmentDetail(input: any): DepartmentDetail {
   const employees = mapEmployees(input?.employees);
 
@@ -121,5 +128,14 @@ export function mapDepartmentDetail(input: any): DepartmentDetail {
     employees,
     employeeCount:
       typeof input?.employeeCount === 'number' ? Number(input.employeeCount) : employees.length,
+  };
+}
+
+export function mapDepartmentRevenueSummary(input: any): DepartmentRevenueSummary {
+  return {
+    targetMonth: String(input?.targetMonth ?? ''),
+    revenue: Number(input?.revenue ?? 0),
+    cost: Number(input?.cost ?? 0),
+    profit: Number(input?.profit ?? 0),
   };
 }

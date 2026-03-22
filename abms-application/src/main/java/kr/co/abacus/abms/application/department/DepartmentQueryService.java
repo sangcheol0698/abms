@@ -1,7 +1,12 @@
 package kr.co.abacus.abms.application.department;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
 import kr.co.abacus.abms.application.department.dto.DepartmentLeaderDetail;
 import kr.co.abacus.abms.application.department.dto.DepartmentProjection;
+import kr.co.abacus.abms.application.department.dto.DepartmentRevenueSummary;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.department.inbound.DepartmentFinder;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -28,6 +34,9 @@ import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.domain.department.Department;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
+import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
+import kr.co.abacus.abms.application.summary.outbound.MonthlyRevenueSummaryRepository;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,6 +46,7 @@ public class DepartmentQueryService implements DepartmentFinder {
 
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
+    private final MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
 
     @Override
     public Department find(Long id) {
@@ -66,6 +76,58 @@ public class DepartmentQueryService implements DepartmentFinder {
     public DepartmentDetail findDetail(Long departmentId) {
         return departmentRepository.findDetail(departmentId)
                 .orElseThrow(() -> new DepartmentNotFoundException("존재하지 않는 부서입니다: " + departmentId));
+    }
+
+    @Override
+    public List<DepartmentRevenueSummary> getRevenueTrend(Long departmentId, String yearMonth) {
+        find(departmentId);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
+        YearMonth targetMonth = YearMonth.parse(yearMonth, formatter);
+        LocalDate startOfRange = targetMonth.minusMonths(5).atDay(1);
+        LocalDate endOfRange = targetMonth.atEndOfMonth();
+
+        List<MonthlyRevenueSummary> summaries = monthlyRevenueSummaryRepository
+                .findAllByLeadDepartmentIdAndSummaryDateBetweenAndDeletedFalseOrderBySummaryDateAscIdAsc(
+                        departmentId,
+                        startOfRange,
+                        endOfRange
+                );
+
+        Map<ProjectMonthKey, MonthlyRevenueSummary> latestProjectSnapshots = new LinkedHashMap<>();
+        for (MonthlyRevenueSummary summary : summaries) {
+            latestProjectSnapshots.put(
+                    new ProjectMonthKey(YearMonth.from(summary.getSummaryDate()), summary.getProjectId()),
+                    summary
+            );
+        }
+
+        Map<YearMonth, List<MonthlyRevenueSummary>> summariesByMonth = latestProjectSnapshots.values().stream()
+                .collect(Collectors.groupingBy(
+                        summary -> YearMonth.from(summary.getSummaryDate()),
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        List<DepartmentRevenueSummary> result = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            YearMonth month = targetMonth.minusMonths(i);
+            List<MonthlyRevenueSummary> monthlySummaries = summariesByMonth.getOrDefault(month, List.of());
+
+            Money revenue = monthlySummaries.stream()
+                    .map(MonthlyRevenueSummary::getRevenueAmount)
+                    .reduce(Money.zero(), Money::add);
+            Money cost = monthlySummaries.stream()
+                    .map(MonthlyRevenueSummary::getCostAmount)
+                    .reduce(Money.zero(), Money::add);
+            Money profit = monthlySummaries.stream()
+                    .map(MonthlyRevenueSummary::getProfitAmount)
+                    .reduce(Money.zero(), Money::add);
+
+            result.add(new DepartmentRevenueSummary(month.atDay(1), revenue, cost, profit));
+        }
+
+        return result;
     }
 
     @Cacheable("organizationChart")
@@ -124,6 +186,9 @@ public class DepartmentQueryService implements DepartmentFinder {
                                 current.leaderEmployeePosition()) : null,
                 current.employeeCount(),
                 children);
+    }
+
+    private record ProjectMonthKey(YearMonth month, Long projectId) {
     }
 
 }

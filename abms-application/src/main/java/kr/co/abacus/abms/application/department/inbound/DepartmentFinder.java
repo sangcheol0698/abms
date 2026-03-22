@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import kr.co.abacus.abms.application.department.dto.DepartmentDetail;
+import kr.co.abacus.abms.application.department.dto.DepartmentRevenueSummary;
 import kr.co.abacus.abms.application.department.dto.OrganizationChartDetail;
 import kr.co.abacus.abms.application.employee.dto.EmployeeSummary;
 import kr.co.abacus.abms.domain.department.Department;
@@ -20,6 +21,8 @@ public interface DepartmentFinder {
     Page<EmployeeSummary> getEmployees(Long departmentId, @Nullable String name, Pageable pageable);
 
     DepartmentDetail findDetail(Long departmentId);
+
+    List<DepartmentRevenueSummary> getRevenueTrend(Long departmentId, String yearMonth);
 
     void clearOrganizationChartCache();
 

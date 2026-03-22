@@ -22,6 +22,7 @@ import kr.co.abacus.abms.adapter.api.department.dto.DepartmentDetailResponse;
 import kr.co.abacus.abms.adapter.api.department.dto.EmployeeAssignLeaderRequest;
 import kr.co.abacus.abms.adapter.api.department.dto.OrganizationChartResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
+import kr.co.abacus.abms.adapter.api.summary.dto.MonthlyRevenueSummaryResponse;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
@@ -29,6 +30,7 @@ import kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentR
 import kr.co.abacus.abms.application.permission.outbound.GroupPermissionGrantRepository;
 import kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository;
 import kr.co.abacus.abms.application.permission.outbound.PermissionRepository;
+import kr.co.abacus.abms.application.summary.outbound.MonthlyRevenueSummaryRepository;
 import kr.co.abacus.abms.domain.account.Account;
 import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
 import kr.co.abacus.abms.domain.department.Department;
@@ -44,6 +46,9 @@ import kr.co.abacus.abms.domain.permission.Permission;
 import kr.co.abacus.abms.domain.permissiongroup.PermissionGroup;
 import kr.co.abacus.abms.domain.permissiongroup.PermissionGroupType;
 import kr.co.abacus.abms.domain.shared.Email;
+import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryCreateRequest;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
 @DisplayName("부서 API (DepartmentApi)")
@@ -75,6 +80,9 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
 
     @Test
     @DisplayName("전체 부서 계층 구조를 올바르게 반환한다")
@@ -220,6 +228,67 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         assertThat(department.getLeaderEmployeeId()).isEqualTo(employee1.getId());
     }
 
+    @Test
+    @DisplayName("부서별 최근 6개월 매출 추이를 최신 프로젝트 스냅샷 기준으로 집계한다")
+    void getDepartmentRevenueTrend() {
+        Department team = createDepartment("TEAM001", "개발팀", DepartmentType.TEAM, null, null);
+        Department otherTeam = createDepartment("TEAM002", "운영팀", DepartmentType.TEAM, null, null);
+        departmentRepository.saveAll(List.of(team, otherTeam));
+        flushAndClear();
+
+        monthlyRevenueSummaryRepository.saveAll(List.of(
+                createMonthlyRevenueSummary(team, 100L, "PRJ-100", "개발 프로젝트 A",
+                        LocalDate.of(2026, 1, 31), 100_000_000L, 60_000_000L, 40_000_000L),
+                createMonthlyRevenueSummary(team, 200L, "PRJ-200", "개발 프로젝트 B",
+                        LocalDate.of(2026, 2, 10), 50_000_000L, 20_000_000L, 30_000_000L),
+                createMonthlyRevenueSummary(team, 200L, "PRJ-200", "개발 프로젝트 B",
+                        LocalDate.of(2026, 2, 20), 70_000_000L, 30_000_000L, 40_000_000L),
+                createMonthlyRevenueSummary(team, 200L, "PRJ-200", "개발 프로젝트 B",
+                        LocalDate.of(2026, 2, 20), 75_000_000L, 35_000_000L, 40_000_000L),
+                createMonthlyRevenueSummary(team, 300L, "PRJ-300", "개발 프로젝트 C",
+                        LocalDate.of(2026, 3, 15), 90_000_000L, 55_000_000L, 35_000_000L),
+                createMonthlyRevenueSummary(otherTeam, 400L, "PRJ-400", "운영 프로젝트 D",
+                        LocalDate.of(2026, 3, 15), 999_000_000L, 111_000_000L, 888_000_000L)
+        ));
+        flushAndClear();
+
+        List<MonthlyRevenueSummaryResponse> response = restTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/departments/{departmentId}/revenue/sixMonthTrend")
+                        .queryParam("yearMonth", "202603")
+                        .build(team.getId()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<List<MonthlyRevenueSummaryResponse>>() {
+                })
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).hasSize(6);
+        assertThat(response)
+                .extracting(MonthlyRevenueSummaryResponse::targetMonth)
+                .containsExactly(
+                        LocalDate.of(2025, 10, 1),
+                        LocalDate.of(2025, 11, 1),
+                        LocalDate.of(2025, 12, 1),
+                        LocalDate.of(2026, 1, 1),
+                        LocalDate.of(2026, 2, 1),
+                        LocalDate.of(2026, 3, 1)
+                );
+
+        assertThat(response.get(3).revenue()).isEqualByComparingTo("100000000");
+        assertThat(response.get(3).cost()).isEqualByComparingTo("60000000");
+        assertThat(response.get(3).profit()).isEqualByComparingTo("40000000");
+
+        assertThat(response.get(4).revenue()).isEqualByComparingTo("75000000");
+        assertThat(response.get(4).cost()).isEqualByComparingTo("35000000");
+        assertThat(response.get(4).profit()).isEqualByComparingTo("40000000");
+
+        assertThat(response.get(5).revenue()).isEqualByComparingTo("90000000");
+        assertThat(response.get(5).cost()).isEqualByComparingTo("55000000");
+        assertThat(response.get(5).profit()).isEqualByComparingTo("35000000");
+    }
+
     private void assertDepartmentNode(OrganizationChartResponse node, Department expected, int expectedChildrenSize) {
         assertThat(node.departmentId()).isEqualTo(expected.getId());
         assertThat(node.departmentName()).isEqualTo(expected.getName());
@@ -265,6 +334,29 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 type,
                 leaderEmployeeId,
                 parent);
+    }
+
+    private MonthlyRevenueSummary createMonthlyRevenueSummary(
+            Department department,
+            Long projectId,
+            String projectCode,
+            String projectName,
+            LocalDate summaryDate,
+            long revenue,
+            long cost,
+            long profit) {
+        return MonthlyRevenueSummary.create(new MonthlyRevenueSummaryCreateRequest(
+                projectId,
+                projectCode,
+                projectName,
+                department.getIdOrThrow(),
+                department.getCode(),
+                department.getName(),
+                summaryDate,
+                Money.wons(revenue),
+                Money.wons(cost),
+                Money.wons(profit)
+        ));
     }
 
     private void grantEmployeeWriteAllPermission() {

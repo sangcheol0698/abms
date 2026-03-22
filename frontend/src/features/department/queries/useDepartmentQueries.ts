@@ -38,6 +38,22 @@ export function useDepartmentDetailQuery(
   });
 }
 
+export function useDepartmentRevenueTrendQuery(
+  departmentIdRef: MaybeRefOrGetter<number | null | undefined>,
+  yearMonthRef: MaybeRefOrGetter<string>,
+) {
+  const repository = appContainer.resolve(DepartmentRepository);
+  const departmentId = computed(() => Number(toValue(departmentIdRef) ?? 0));
+  const yearMonth = computed(() => String(toValue(yearMonthRef) ?? ''));
+
+  return useQuery({
+    queryKey: computed(() => departmentKeys.revenueTrend(departmentId.value, yearMonth.value)),
+    queryFn: () => repository.fetchDepartmentRevenueTrend(departmentId.value, yearMonth.value),
+    enabled: computed(() => departmentId.value > 0 && yearMonth.value.length > 0),
+    placeholderData: keepPreviousData,
+  });
+}
+
 export function useDepartmentEmployeesQuery(
   paramsRef: MaybeRefOrGetter<DepartmentEmployeesQueryParams>,
 ) {

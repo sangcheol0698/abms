@@ -164,13 +164,10 @@
             </TabsContent>
 
             <TabsContent value="revenue" class="flex flex-col">
-              <div class="flex flex-col gap-3 rounded-xl border bg-card p-4 text-sm shadow-sm">
-                <p class="text-sm font-semibold text-foreground">매출 지표</p>
-                <p class="text-xs text-muted-foreground">
-                  매출 데이터 연동을 준비 중입니다. 연결된 ERP 또는 회계 시스템 API가 마련되면 이
-                  탭에서 월별 매출 및 목표 대비 실적을 시각화할 예정입니다.
-                </p>
-              </div>
+              <DepartmentRevenuePanel
+                v-if="department.departmentId"
+                :department-id="department.departmentId"
+              />
             </TabsContent>
           </div>
         </Tabs>
@@ -210,6 +207,7 @@ import { GitBranch, UserRound, Users, Pencil } from 'lucide-vue-next';
 import type { DepartmentChartNode, DepartmentSummary } from '@/features/department/models/department';
 import DepartmentEmployeeList from '@/features/department/components/DepartmentEmployeeList.vue';
 import DepartmentLeaderAssignDialog from '@/features/department/components/DepartmentLeaderAssignDialog.vue';
+import DepartmentRevenuePanel from '@/features/department/components/DepartmentRevenuePanel.vue';
 import { canManageEmployee, canViewEmployeeDetail } from '@/features/employee/permissions';
 
 defineOptions({ name: 'DepartmentDetailPanel' });
