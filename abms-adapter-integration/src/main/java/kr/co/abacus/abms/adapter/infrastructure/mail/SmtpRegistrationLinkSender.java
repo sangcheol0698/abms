@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationLinkSender;
 import kr.co.abacus.abms.domain.shared.Email;
 
@@ -32,6 +33,7 @@ public class SmtpRegistrationLinkSender implements RegistrationLinkSender {
     private final String confirmUrl;
     private final String logoPath;
     private final String logoUrl;
+    private final MeterRegistry meterRegistry;
 
     public SmtpRegistrationLinkSender(
             JavaMailSender mailSender,
@@ -39,7 +41,8 @@ public class SmtpRegistrationLinkSender implements RegistrationLinkSender {
             @Value("${app.auth.registration-mail.subject}") String subject,
             @Value("${app.auth.registration-mail.confirm-url}") String confirmUrl,
             @Value("${app.auth.registration-mail.logo-path:mail/main_logo.png}") String logoPath,
-            @Value("${app.auth.registration-mail.logo-url:}") String logoUrl
+            @Value("${app.auth.registration-mail.logo-url:}") String logoUrl,
+            MeterRegistry meterRegistry
     ) {
         this.mailSender = mailSender;
         this.fromAddress = fromAddress;
@@ -47,6 +50,7 @@ public class SmtpRegistrationLinkSender implements RegistrationLinkSender {
         this.confirmUrl = confirmUrl;
         this.logoPath = logoPath;
         this.logoUrl = logoUrl;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -55,6 +59,7 @@ public class SmtpRegistrationLinkSender implements RegistrationLinkSender {
                 .queryParam("token", token)
                 .build(true)
                 .toUriString();
+        long startedAt = System.nanoTime();
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -71,9 +76,20 @@ public class SmtpRegistrationLinkSender implements RegistrationLinkSender {
                 helper.addInline(LOGO_CONTENT_ID, new ClassPathResource(logoPath), "image/png");
             }
             mailSender.send(message);
+            recordMail("success", startedAt);
         } catch (MessagingException exception) {
+            recordMail("failure", startedAt);
             throw new IllegalStateException("회원가입 메일 생성 중 오류가 발생했습니다.", exception);
+        } catch (RuntimeException exception) {
+            recordMail("failure", startedAt);
+            throw exception;
         }
+    }
+
+    private void recordMail(String outcome, long startedAt) {
+        long durationMs = (System.nanoTime() - startedAt) / 1_000_000L;
+        meterRegistry.counter("abms.mail.send.total", "outcome", outcome).increment();
+        meterRegistry.timer("abms.mail.send.duration", "outcome", outcome).record(durationMs, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
 
     private String buildHtmlBody(String link, LocalDateTime expiresAt) {

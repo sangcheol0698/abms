@@ -1,6 +1,8 @@
 package kr.co.abacus.abms.adapter.api.payroll;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -136,6 +138,11 @@ class PayrollApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = login();
 
         mockMvc.perform(get("/api/employees/{employeeId}/payroll", sameDepartmentEmployeeId).session(session))
+                .andDo(document("payroll/current",
+                        pathParameters(
+                                parameterWithName("employeeId").description("현재 연봉을 조회할 직원 ID")
+                        ),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.employeeId").value(sameDepartmentEmployeeId))
                 .andExpect(jsonPath("$.annualSalary").value(36_000_000L))
@@ -143,6 +150,11 @@ class PayrollApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.status").value("CURRENT"));
 
         mockMvc.perform(get("/api/employees/{employeeId}/payroll-history", sameDepartmentEmployeeId).session(session))
+                .andDo(document("payroll/history",
+                        pathParameters(
+                                parameterWithName("employeeId").description("연봉 이력을 조회할 직원 ID")
+                        ),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].annualSalary").value(36_000_000L))
                 .andExpect(jsonPath("$[0].status").value("CURRENT"))
@@ -209,6 +221,8 @@ class PayrollApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(responseJson)
                         .session(session))
+                .andDo(document("payroll/legacy-change",
+                        requestBody()))
                 .andExpect(status().isNoContent());
     }
 
@@ -224,6 +238,11 @@ class PayrollApiTest extends ApiIntegrationTestBase {
                                 BigDecimal.valueOf(30_000_000L),
                                 LocalDate.of(2025, 1, 1))))
                         .session(session))
+                .andDo(document("payroll/change",
+                        pathParameters(
+                                parameterWithName("employeeId").description("연봉을 변경할 직원 ID")
+                        ),
+                        requestBody()))
                 .andExpect(status().isNoContent());
 
         Payroll currentPayroll = payrollRepository.findCurrentSalaryByEmployeeId(sameDepartmentEmployeeId).orElseThrow();

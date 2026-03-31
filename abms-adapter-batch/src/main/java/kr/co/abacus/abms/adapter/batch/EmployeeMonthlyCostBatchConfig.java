@@ -48,10 +48,12 @@ public class EmployeeMonthlyCostBatchConfig {
     private final PayrollRepository payrollRepository;
     private final EmployeeCostPolicyRepository policyRepository;
     private final EmployeeMonthlyCostRepository monthlyCostRepository;
+    private final BatchObservabilityListener batchObservabilityListener;
 
     @Bean
     public Job employeeCostJob() {
         return new JobBuilder("employeeCostJob", jobRepository)
+            .listener(batchObservabilityListener)
             .start(employeeCostStep())
             .build();
     }
@@ -61,6 +63,7 @@ public class EmployeeMonthlyCostBatchConfig {
         return new StepBuilder("employeeCostStep", jobRepository)
             .<Employee, EmployeeMonthlyCost>chunk(100)
             .transactionManager(transactionManager)
+            .listener(batchObservabilityListener)
             .reader(employeeReader())
             .processor(employeeCostProcessor(null))
             .writer(employeeCostWriter())

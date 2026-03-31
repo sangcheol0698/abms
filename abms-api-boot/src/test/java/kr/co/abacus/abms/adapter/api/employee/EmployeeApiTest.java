@@ -1,6 +1,8 @@
 package kr.co.abacus.abms.adapter.api.employee;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
@@ -184,6 +187,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .session(session))
+                .andDo(document("employee/create",
+                        requestFields(employeeUpsertRequestFields()),
+                        responseFields(
+                                fieldWithPath("employeeId").description("생성된 직원 ID")
+                        )))
                 .andExpect(status().isOk())
                 .andReturn();
         EmployeeCreateResponse response = objectMapper.readValue(
@@ -238,6 +246,11 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         // when & then
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(get("/api/employees/{id}", employee.getId()).session(session))
+                .andDo(document("employee/get",
+                        pathParameters(
+                                parameterWithName("id").description("직원 ID")
+                        ),
+                        responseFields(employeeDetailResponseFields())))
                 .andExpect(status().isOk())
                 .andReturn();
         EmployeeDetailResponse response = objectMapper.readValue(
@@ -270,6 +283,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                         .param("size", "10")
                         .param("page", "0")
                         .session(session))
+                .andDo(document("employee/list",
+                        queryParameters(
+                                parameterWithName("sort").description("정렬 조건").optional(),
+                                parameterWithName("size").description("페이지 크기"),
+                                parameterWithName("page").description("페이지 번호")
+                        ),
+                        responseFields(employeePageResponseFields())))
                 .andExpect(status().isOk())
                 .andReturn();
         PageResponse<EmployeeSearchResponse> responsePage = readPageResponse(result, EmployeeSearchResponse.class);
@@ -309,6 +329,19 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         MvcResult result = mockMvc.perform(get("/api/employees/summary")
                         .param("name", "요약 직원")
                         .session(session))
+                .andDo(document("employee/summary",
+                        queryParameters(
+                                parameterWithName("name").description("직원 이름 검색어").optional()
+                        ),
+                        responseFields(
+                                fieldWithPath("totalCount").description("전체 직원 수"),
+                                fieldWithPath("activeCount").description("재직 중인 직원 수"),
+                                fieldWithPath("onLeaveCount").description("휴직 중인 직원 수"),
+                                fieldWithPath("fullTimeCount").description("정규직 직원 수"),
+                                fieldWithPath("freelancerCount").description("프리랜서 직원 수"),
+                                fieldWithPath("outsourcingCount").description("외주 인력 수"),
+                                fieldWithPath("partTimeCount").description("시간제 직원 수")
+                        )))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -372,6 +405,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void getEmployeeGrades() throws Exception {
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(get("/api/employees/grades").session(session))
+                .andDo(document("employee/grades", responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
         List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
@@ -392,6 +426,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void getEmployeePositions() throws Exception {
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(get("/api/employees/positions").session(session))
+                .andDo(document("employee/positions", responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
         List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
@@ -412,6 +447,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void getEmployeeTypes() throws Exception {
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(get("/api/employees/types").session(session))
+                .andDo(document("employee/types", responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
         List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
@@ -434,6 +470,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void getEmployeeStatuses() throws Exception {
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(get("/api/employees/statuses").session(session))
+                .andDo(document("employee/statuses", responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
         List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
@@ -456,6 +493,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
     void getEmployeeAvatars() throws Exception {
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(get("/api/employees/avatars").session(session))
+                .andDo(document("employee/avatars", responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
         List<EnumResponse> responses = readListResponse(result, EnumResponse.class);
@@ -479,6 +517,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(get("/api/employees/excel/download").session(session))
+                .andDo(document("employee/excel-download"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .andExpect(header().exists("Content-Disposition"))
@@ -489,16 +528,16 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("직원 등록용 엑셀 샘플 파일을 다운로드한다")
-    void downloadExcelSample() {
-        restTestClient.get()
-                .uri("/api/employees/excel/sample")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                .expectHeader().exists("Content-Disposition")
-                .expectHeader().valueMatches("Content-Disposition", ".*attachment; filename=.*")
-                .expectBody(byte[].class)
-                .value(body -> assertThat(body).isNotEmpty());
+    void downloadExcelSample() throws Exception {
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(get("/api/employees/excel/sample").session(session))
+                .andDo(document("employee/excel-sample"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(header().exists("Content-Disposition"))
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsByteArray()).isNotEmpty();
     }
 
     @Test
@@ -552,6 +591,16 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         var mvcResult = mockMvc.perform(multipart("/api/employees/excel/upload")
                         .file(mockFile)
                         .session(session))
+                .andDo(document("employee/excel-upload",
+                        requestParts(
+                                partWithName("file").description("직원 일괄 등록 엑셀 파일")
+                        ),
+                        responseFields(
+                                fieldWithPath("successCount").description("성공적으로 등록된 직원 수"),
+                                fieldWithPath("failures").description("실패 내역 목록"),
+                                fieldWithPath("failures[].rowNumber").description("실패한 행 번호").optional(),
+                                fieldWithPath("failures[].message").description("실패 사유").optional()
+                        )))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -642,6 +691,14 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .session(session))
+                .andDo(document("employee/update",
+                        pathParameters(
+                                parameterWithName("id").description("수정할 직원 ID")
+                        ),
+                        requestFields(employeeUpsertRequestFields()),
+                        responseFields(
+                                fieldWithPath("employeeId").description("수정된 직원 ID")
+                        )))
                 .andExpect(status().isOk());
         flushAndClear();
 
@@ -687,6 +744,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .delete("/api/employees/{id}", employeeId)
                         .session(session))
+                .andDo(document("employee/delete",
+                        pathParameters(
+                                parameterWithName("id").description("삭제할 직원 ID")
+                        )))
                 .andExpect(status().isNoContent());
         flushAndClear();
 
@@ -723,6 +784,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = login();
 
         mockMvc.perform(patch("/api/employees/{id}/restore", employeeId).session(session))
+                .andDo(document("employee/restore",
+                        pathParameters(
+                                parameterWithName("id").description("복구할 직원 ID")
+                        )))
                 .andExpect(status().isNoContent());
         flushAndClear();
 
@@ -747,6 +812,14 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .session(session))
+                .andDo(document("employee/promote",
+                        pathParameters(
+                                parameterWithName("id").description("승진시킬 직원 ID")
+                        ),
+                        requestFields(
+                                fieldWithPath("position").description("변경할 직책 코드"),
+                                fieldWithPath("grade").description("변경할 등급 코드").optional()
+                        )))
                 .andExpect(status().isNoContent());
         flushAndClear();
 
@@ -801,6 +874,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new EmployeeDepartmentTransferRequest(divisionId)))
                         .session(session))
+                .andDo(document("employee/transfer-department",
+                        pathParameters(
+                                parameterWithName("id").description("부서를 이동할 직원 ID")
+                        ),
+                        requestFields(
+                                fieldWithPath("departmentId").description("이동할 대상 부서 ID")
+                        )))
                 .andExpect(status().isNoContent());
         flushAndClear();
 
@@ -835,6 +915,13 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new EmployeeEmploymentTypeConvertRequest(EmployeeType.PART_TIME)))
                         .session(session))
+                .andDo(document("employee/convert-employment-type",
+                        pathParameters(
+                                parameterWithName("id").description("고용유형을 변경할 직원 ID")
+                        ),
+                        requestFields(
+                                fieldWithPath("type").description("변경할 고용유형 코드")
+                        )))
                 .andExpect(status().isNoContent());
         flushAndClear();
 
@@ -866,9 +953,15 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         LocalDate resignationDate = LocalDate.of(2025, 6, 30);
         MockHttpSession session = login();
 
-        mockMvc.perform(patch("/api/employees/{id}/resign", employeeId)
-                        .param("resignationDate", resignationDate.toString())
+        mockMvc.perform(patch("/api/employees/{id}/resign?resignationDate={resignationDate}", employeeId, resignationDate)
                         .session(session))
+                .andDo(document("employee/resign",
+                        pathParameters(
+                                parameterWithName("id").description("퇴사 처리할 직원 ID")
+                        ),
+                        queryParameters(
+                                parameterWithName("resignationDate").description("퇴사일")
+                        )))
                 .andExpect(status().isNoContent());
         flushAndClear();
 
@@ -918,6 +1011,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = login();
 
         mockMvc.perform(patch("/api/employees/{id}/take-leave", employeeId).session(session))
+                .andDo(document("employee/take-leave",
+                        pathParameters(
+                                parameterWithName("id").description("휴직 처리할 직원 ID")
+                        )))
                 .andExpect(status().isNoContent());
         flushAndClear();
 
@@ -950,6 +1047,10 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = login();
 
         mockMvc.perform(patch("/api/employees/{id}/activate", employeeId).session(session))
+                .andDo(document("employee/activate",
+                        pathParameters(
+                                parameterWithName("id").description("복직 처리할 직원 ID")
+                        )))
                 .andExpect(status().isNoContent());
 
         flushAndClear();
@@ -1030,6 +1131,82 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 result.getResponse().getContentAsString(),
                 objectMapper.getTypeFactory().constructCollectionType(List.class, elementType)
         );
+    }
+
+    private FieldDescriptor[] employeeUpsertRequestFields() {
+        return new FieldDescriptor[] {
+                fieldWithPath("departmentId").description("소속 부서 ID"),
+                fieldWithPath("email").description("직원 이메일"),
+                fieldWithPath("name").description("직원 이름"),
+                fieldWithPath("joinDate").description("입사일"),
+                fieldWithPath("birthDate").description("생년월일"),
+                fieldWithPath("position").description("직책 코드"),
+                fieldWithPath("type").description("고용유형 코드"),
+                fieldWithPath("grade").description("등급 코드"),
+                fieldWithPath("avatar").description("아바타 코드"),
+                fieldWithPath("memo").description("비고").optional()
+        };
+    }
+
+    private FieldDescriptor[] employeeDetailResponseFields() {
+        return new FieldDescriptor[] {
+                fieldWithPath("departmentId").description("소속 부서 ID"),
+                fieldWithPath("departmentName").description("소속 부서명"),
+                fieldWithPath("employeeId").description("직원 ID"),
+                fieldWithPath("name").description("직원 이름"),
+                fieldWithPath("email").description("직원 이메일"),
+                fieldWithPath("joinDate").description("입사일"),
+                fieldWithPath("birthDate").description("생년월일"),
+                fieldWithPath("position.code").description("직책 코드"),
+                fieldWithPath("position.description").description("직책 설명"),
+                fieldWithPath("position.level").description("직책 레벨"),
+                fieldWithPath("status.code").description("재직 상태 코드"),
+                fieldWithPath("status.description").description("재직 상태 설명"),
+                fieldWithPath("status.level").description("재직 상태 레벨"),
+                fieldWithPath("grade.code").description("등급 코드"),
+                fieldWithPath("grade.description").description("등급 설명"),
+                fieldWithPath("grade.level").description("등급 레벨"),
+                fieldWithPath("type.code").description("고용유형 코드"),
+                fieldWithPath("type.description").description("고용유형 설명"),
+                fieldWithPath("type.level").description("고용유형 레벨"),
+                fieldWithPath("avatar.code").description("아바타 코드"),
+                fieldWithPath("avatar.description").description("아바타 설명"),
+                fieldWithPath("avatar.level").description("아바타 레벨"),
+                fieldWithPath("memo").description("비고").optional()
+        };
+    }
+
+    private FieldDescriptor[] employeePageResponseFields() {
+        return new FieldDescriptor[] {
+                fieldWithPath("content").description("직원 목록"),
+                fieldWithPath("content[].departmentId").description("소속 부서 ID"),
+                fieldWithPath("content[].departmentName").description("소속 부서명"),
+                fieldWithPath("content[].employeeId").description("직원 ID"),
+                fieldWithPath("content[].name").description("직원 이름"),
+                fieldWithPath("content[].email").description("직원 이메일"),
+                fieldWithPath("content[].joinDate").description("입사일"),
+                fieldWithPath("content[].position.code").description("직책 코드"),
+                fieldWithPath("content[].position.description").description("직책 설명"),
+                fieldWithPath("content[].position.level").description("직책 레벨"),
+                fieldWithPath("content[].status.code").description("재직 상태 코드"),
+                fieldWithPath("content[].status.description").description("재직 상태 설명"),
+                fieldWithPath("content[].status.level").description("재직 상태 레벨"),
+                fieldWithPath("content[].grade.code").description("등급 코드"),
+                fieldWithPath("content[].grade.description").description("등급 설명"),
+                fieldWithPath("content[].grade.level").description("등급 레벨"),
+                fieldWithPath("content[].type.code").description("고용유형 코드"),
+                fieldWithPath("content[].type.description").description("고용유형 설명"),
+                fieldWithPath("content[].type.level").description("고용유형 레벨"),
+                fieldWithPath("content[].avatar.code").description("아바타 코드"),
+                fieldWithPath("content[].avatar.description").description("아바타 설명"),
+                fieldWithPath("content[].avatar.level").description("아바타 레벨"),
+                fieldWithPath("pageNumber").description("현재 페이지 번호"),
+                fieldWithPath("pageSize").description("페이지 크기"),
+                fieldWithPath("totalElements").description("전체 데이터 수"),
+                fieldWithPath("totalPages").description("전체 페이지 수"),
+                fieldWithPath("first").description("첫 페이지 여부"),
+                fieldWithPath("last").description("마지막 페이지 여부")
+        };
     }
 
     private Employee createEmployee(Long teamId, String email, String name) {

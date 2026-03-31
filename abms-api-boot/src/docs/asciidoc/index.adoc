@@ -1,0 +1,1251 @@
+= ABMS API Documentation
+:toc: left
+:toclevels: 2
+:sectanchors:
+:source-highlighter: highlightjs
+
+== Authentication API
+
+=== Login
+
+사용자 계정으로 로그인하고 세션 쿠키를 발급합니다.
+로그인 성공 이후의 인증 상태는 세션 기반으로 유지됩니다.
+브라우저 클라이언트는 응답의 세션 쿠키를 이후 요청에 함께 전달해야 합니다.
+
+.Request fields
+include::{snippets}/auth/login/request-fields.adoc[]
+
+.HTTP request
+include::{snippets}/auth/login/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/login/http-response.adoc[]
+
+=== Initialize CSRF Token
+
+브라우저 세션용 CSRF 토큰 쿠키를 초기화합니다.
+변경 계열 요청(`POST`, `PUT`, `PATCH`, `DELETE`) 전 호출하여 CSRF 쿠키를 준비하는 용도입니다.
+
+.HTTP request
+include::{snippets}/auth/csrf/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/csrf/http-response.adoc[]
+
+=== Request Registration
+
+사내 이메일로 회원가입 요청을 시작하고 등록 토큰을 발급합니다.
+
+.Request body
+include::{snippets}/auth/registration-request/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/auth/registration-request/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/registration-request/http-response.adoc[]
+
+=== Confirm Registration
+
+등록 토큰과 비밀번호로 계정 생성을 확정합니다.
+
+.Request body
+include::{snippets}/auth/registration-confirmation/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/auth/registration-confirmation/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/registration-confirmation/http-response.adoc[]
+
+=== Current User
+
+현재 로그인한 사용자의 기본 정보와 권한 목록을 조회합니다.
+
+.Response fields
+include::{snippets}/auth/me/response-fields.adoc[]
+
+.HTTP request
+include::{snippets}/auth/me/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/me/http-response.adoc[]
+
+=== Change Password
+
+현재 비밀번호를 검증한 뒤 새 비밀번호로 변경합니다.
+새 비밀번호는 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.
+
+.Request body
+include::{snippets}/auth/change-password/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/auth/change-password/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/change-password/http-response.adoc[]
+
+=== Logout
+
+현재 세션을 종료합니다.
+로그아웃 이후에는 기존 세션 쿠키로 보호된 API에 접근할 수 없습니다.
+
+.HTTP request
+include::{snippets}/auth/logout/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/logout/http-response.adoc[]
+
+== Dashboard API
+
+=== Summary
+
+.Response body
+include::{snippets}/dashboard/summary/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/dashboard/summary/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/dashboard/summary/http-response.adoc[]
+
+== Monthly Revenue Summary API
+
+=== Get Monthly Revenue Summary
+
+.Query parameters
+include::{snippets}/monthly-revenue-summary/get/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/monthly-revenue-summary/get/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/monthly-revenue-summary/get/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/monthly-revenue-summary/get/http-response.adoc[]
+
+=== Get Six Month Trend
+
+.Query parameters
+include::{snippets}/monthly-revenue-summary/six-month-trend/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/monthly-revenue-summary/six-month-trend/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/monthly-revenue-summary/six-month-trend/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/monthly-revenue-summary/six-month-trend/http-response.adoc[]
+
+== Common Error Response
+
+ABMS API는 도메인 오류와 검증 오류에 대해 `ProblemDetail` 형식의 공통 오류 응답을 사용합니다.
+아래 예시는 대표적인 `400`, `404` 응답 구조입니다.
+
+=== Bad Request
+
+.Response fields
+include::{snippets}/errors/bad-request/response-fields.adoc[]
+
+.HTTP response
+include::{snippets}/errors/bad-request/http-response.adoc[]
+
+=== Not Found
+
+.Path parameters
+include::{snippets}/errors/not-found/path-parameters.adoc[]
+
+.Response fields
+include::{snippets}/errors/not-found/response-fields.adoc[]
+
+.HTTP response
+include::{snippets}/errors/not-found/http-response.adoc[]
+
+== Position History API
+
+=== List Position History
+
+.Path parameters
+include::{snippets}/position-history/list/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/position-history/list/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/position-history/list/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/position-history/list/http-response.adoc[]
+
+== Employee API
+
+=== Create Employee
+
+.Request body
+include::{snippets}/employee/create/request-body.adoc[]
+
+.Response body
+include::{snippets}/employee/create/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/create/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/create/http-response.adoc[]
+
+=== Get Employee
+
+.Path parameters
+include::{snippets}/employee/get/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/employee/get/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/get/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/get/http-response.adoc[]
+
+=== List Employees
+
+.Query parameters
+include::{snippets}/employee/list/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/employee/list/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/list/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/list/http-response.adoc[]
+
+=== Employee Summary
+
+.Query parameters
+include::{snippets}/employee/summary/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/employee/summary/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/summary/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/summary/http-response.adoc[]
+
+=== Update Employee
+
+.Path parameters
+include::{snippets}/employee/update/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/employee/update/request-body.adoc[]
+
+.Response body
+include::{snippets}/employee/update/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/update/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/update/http-response.adoc[]
+
+=== Delete Employee
+
+.Path parameters
+include::{snippets}/employee/delete/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/employee/delete/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/delete/http-response.adoc[]
+
+=== Restore Employee
+
+.Path parameters
+include::{snippets}/employee/restore/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/employee/restore/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/restore/http-response.adoc[]
+
+=== Resign Employee
+
+.Path parameters
+include::{snippets}/employee/resign/path-parameters.adoc[]
+
+.Query parameters
+include::{snippets}/employee/resign/query-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/employee/resign/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/resign/http-response.adoc[]
+
+=== Take Leave
+
+.Path parameters
+include::{snippets}/employee/take-leave/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/employee/take-leave/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/take-leave/http-response.adoc[]
+
+=== Activate Employee
+
+.Path parameters
+include::{snippets}/employee/activate/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/employee/activate/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/activate/http-response.adoc[]
+
+=== Promote Employee
+
+.Path parameters
+include::{snippets}/employee/promote/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/employee/promote/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/promote/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/promote/http-response.adoc[]
+
+=== Transfer Department
+
+.Path parameters
+include::{snippets}/employee/transfer-department/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/employee/transfer-department/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/transfer-department/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/transfer-department/http-response.adoc[]
+
+=== Convert Employment Type
+
+.Path parameters
+include::{snippets}/employee/convert-employment-type/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/employee/convert-employment-type/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/convert-employment-type/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/convert-employment-type/http-response.adoc[]
+
+=== List Employee Projects
+
+.Path parameters
+include::{snippets}/employee/projects/path-parameters.adoc[]
+
+.Query parameters
+include::{snippets}/employee/projects/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/employee/projects/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/projects/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/projects/http-response.adoc[]
+
+=== Employee Positions
+
+.Response body
+include::{snippets}/employee/positions/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/positions/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/positions/http-response.adoc[]
+
+=== Employee Grades
+
+.Response body
+include::{snippets}/employee/grades/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/grades/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/grades/http-response.adoc[]
+
+=== Employee Types
+
+.Response body
+include::{snippets}/employee/types/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/types/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/types/http-response.adoc[]
+
+=== Employee Statuses
+
+.Response body
+include::{snippets}/employee/statuses/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/statuses/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/statuses/http-response.adoc[]
+
+=== Employee Avatars
+
+.Response body
+include::{snippets}/employee/avatars/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/avatars/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/avatars/http-response.adoc[]
+
+=== Download Employee Excel
+
+.HTTP request
+include::{snippets}/employee/excel-download/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/excel-download/http-response.adoc[]
+
+=== Download Employee Excel Sample
+
+.HTTP request
+include::{snippets}/employee/excel-sample/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/excel-sample/http-response.adoc[]
+
+=== Upload Employee Excel
+
+.Request parts
+include::{snippets}/employee/excel-upload/request-parts.adoc[]
+
+.Response body
+include::{snippets}/employee/excel-upload/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/employee/excel-upload/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/employee/excel-upload/http-response.adoc[]
+
+== Department API
+
+=== Organization Chart
+
+.Response body
+include::{snippets}/department/organization-chart/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/department/organization-chart/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/department/organization-chart/http-response.adoc[]
+
+=== Get Department
+
+.Path parameters
+include::{snippets}/department/get/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/department/get/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/department/get/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/department/get/http-response.adoc[]
+
+=== List Department Employees
+
+.Path parameters
+include::{snippets}/department/employees/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/department/employees/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/department/employees/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/department/employees/http-response.adoc[]
+
+=== Assign Team Leader
+
+.Path parameters
+include::{snippets}/department/assign-team-leader/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/department/assign-team-leader/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/department/assign-team-leader/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/department/assign-team-leader/http-response.adoc[]
+
+=== Department Revenue Trend
+
+.Path parameters
+include::{snippets}/department/revenue-trend/path-parameters.adoc[]
+
+.Query parameters
+include::{snippets}/department/revenue-trend/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/department/revenue-trend/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/department/revenue-trend/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/department/revenue-trend/http-response.adoc[]
+
+== Payroll API
+
+=== Get Current Payroll
+
+.Path parameters
+include::{snippets}/payroll/current/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/payroll/current/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/payroll/current/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/payroll/current/http-response.adoc[]
+
+=== Get Payroll History
+
+.Path parameters
+include::{snippets}/payroll/history/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/payroll/history/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/payroll/history/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/payroll/history/http-response.adoc[]
+
+=== Change Payroll
+
+.Path parameters
+include::{snippets}/payroll/change/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/payroll/change/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/payroll/change/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/payroll/change/http-response.adoc[]
+
+=== Legacy Change Payroll
+
+.Request body
+include::{snippets}/payroll/legacy-change/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/payroll/legacy-change/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/payroll/legacy-change/http-response.adoc[]
+
+== Notification API
+
+=== List Notifications
+
+.Response body
+include::{snippets}/notifications/list/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/notifications/list/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/notifications/list/http-response.adoc[]
+
+=== Create Notification
+
+.Request body
+include::{snippets}/notifications/create/request-body.adoc[]
+
+.Response body
+include::{snippets}/notifications/create/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/notifications/create/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/notifications/create/http-response.adoc[]
+
+=== Mark Notification Read
+
+.Path parameters
+include::{snippets}/notifications/mark-read/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/notifications/mark-read/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/notifications/mark-read/http-response.adoc[]
+
+=== Mark All Notifications Read
+
+.HTTP request
+include::{snippets}/notifications/mark-all-read/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/notifications/mark-all-read/http-response.adoc[]
+
+=== Clear Notifications
+
+.HTTP request
+include::{snippets}/notifications/clear-all/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/notifications/clear-all/http-response.adoc[]
+
+== Party API
+
+=== List Parties
+
+.Query parameters
+include::{snippets}/party/list/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/party/list/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/party/list/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/party/list/http-response.adoc[]
+
+=== Party Summary
+
+.Query parameters
+include::{snippets}/party/summary/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/party/summary/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/party/summary/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/party/summary/http-response.adoc[]
+
+=== Get Party
+
+.Path parameters
+include::{snippets}/party/get/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/party/get/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/party/get/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/party/get/http-response.adoc[]
+
+=== Create Party
+
+.Request body
+include::{snippets}/party/create/request-body.adoc[]
+
+.Response body
+include::{snippets}/party/create/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/party/create/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/party/create/http-response.adoc[]
+
+=== Update Party
+
+.Path parameters
+include::{snippets}/party/update/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/party/update/request-body.adoc[]
+
+.Response body
+include::{snippets}/party/update/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/party/update/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/party/update/http-response.adoc[]
+
+=== Delete Party
+
+.Path parameters
+include::{snippets}/party/delete/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/party/delete/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/party/delete/http-response.adoc[]
+
+=== List Party Projects
+
+.Path parameters
+include::{snippets}/party/projects/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/party/projects/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/party/projects/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/party/projects/http-response.adoc[]
+
+== Project Assignment API
+
+=== Create Assignment
+
+.Request body
+include::{snippets}/project-assignment/create/request-body.adoc[]
+
+.Response body
+include::{snippets}/project-assignment/create/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-assignment/create/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-assignment/create/http-response.adoc[]
+
+=== List Assignments
+
+.Query parameters
+include::{snippets}/project-assignment/list/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/project-assignment/list/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-assignment/list/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-assignment/list/http-response.adoc[]
+
+=== Update Assignment
+
+.Path parameters
+include::{snippets}/project-assignment/update/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/project-assignment/update/request-body.adoc[]
+
+.Response body
+include::{snippets}/project-assignment/update/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-assignment/update/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-assignment/update/http-response.adoc[]
+
+=== End Assignment
+
+.Path parameters
+include::{snippets}/project-assignment/end/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/project-assignment/end/request-body.adoc[]
+
+.Response body
+include::{snippets}/project-assignment/end/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-assignment/end/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-assignment/end/http-response.adoc[]
+
+== Project Revenue Plan API
+
+=== List Revenue Plans
+
+.Path parameters
+include::{snippets}/project-revenue-plan/list/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/project-revenue-plan/list/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-revenue-plan/list/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-revenue-plan/list/http-response.adoc[]
+
+=== Create Revenue Plan
+
+.Request body
+include::{snippets}/project-revenue-plan/create/request-body.adoc[]
+
+.Response body
+include::{snippets}/project-revenue-plan/create/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-revenue-plan/create/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-revenue-plan/create/http-response.adoc[]
+
+=== Update Revenue Plan
+
+.Path parameters
+include::{snippets}/project-revenue-plan/update/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/project-revenue-plan/update/request-body.adoc[]
+
+.Response body
+include::{snippets}/project-revenue-plan/update/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-revenue-plan/update/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-revenue-plan/update/http-response.adoc[]
+
+=== Issue Revenue Plan
+
+.Path parameters
+include::{snippets}/project-revenue-plan/issue/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/project-revenue-plan/issue/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-revenue-plan/issue/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-revenue-plan/issue/http-response.adoc[]
+
+=== Cancel Revenue Plan
+
+.Path parameters
+include::{snippets}/project-revenue-plan/cancel/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/project-revenue-plan/cancel/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project-revenue-plan/cancel/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project-revenue-plan/cancel/http-response.adoc[]
+
+== Project API
+
+=== Create Project
+
+.Request body
+include::{snippets}/project/create/request-body.adoc[]
+
+.Response body
+include::{snippets}/project/create/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project/create/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/create/http-response.adoc[]
+
+=== Search Projects
+
+.Query parameters
+include::{snippets}/project/search/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/project/search/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project/search/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/search/http-response.adoc[]
+
+=== Project Summary
+
+.Query parameters
+include::{snippets}/project/summary/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/project/summary/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project/summary/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/summary/http-response.adoc[]
+
+=== Get Project
+
+.Path parameters
+include::{snippets}/project/get/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/project/get/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project/get/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/get/http-response.adoc[]
+
+=== Update Project
+
+.Path parameters
+include::{snippets}/project/update/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/project/update/request-body.adoc[]
+
+.Response body
+include::{snippets}/project/update/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project/update/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/update/http-response.adoc[]
+
+=== Complete Project
+
+.Path parameters
+include::{snippets}/project/complete/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/project/complete/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/complete/http-response.adoc[]
+
+=== Cancel Project
+
+.Path parameters
+include::{snippets}/project/cancel/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/project/cancel/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/cancel/http-response.adoc[]
+
+=== Delete Project
+
+.Path parameters
+include::{snippets}/project/delete/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/project/delete/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/delete/http-response.adoc[]
+
+=== Project Statuses
+
+.Response body
+include::{snippets}/project/statuses/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project/statuses/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/statuses/http-response.adoc[]
+
+=== Download Project Excel
+
+.HTTP request
+include::{snippets}/project/excel-download/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/excel-download/http-response.adoc[]
+
+=== Download Project Excel Sample
+
+.HTTP request
+include::{snippets}/project/excel-sample/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/excel-sample/http-response.adoc[]
+
+=== Upload Project Excel
+
+.Request parts
+include::{snippets}/project/excel-upload/request-parts.adoc[]
+
+.Response body
+include::{snippets}/project/excel-upload/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/project/excel-upload/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/project/excel-upload/http-response.adoc[]
+
+== Chat API
+
+=== Stream Chat
+
+SSE(Server-Sent Events) 방식으로 응답을 스트리밍합니다.
+이 스트림은 먼저 세션 식별 이벤트를 보내고, 이후 도구 호출 이벤트와 텍스트 청크를 순차적으로 전달합니다.
+이벤트 유형은 `session`, `tool_call`, `text` 세 가지입니다.
+
+.Request body
+include::{snippets}/chat/stream/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/chat/stream/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/chat/stream/http-response.adoc[]
+
+=== Send Message
+
+.Request body
+include::{snippets}/chat/message/request-body.adoc[]
+
+.Response body
+include::{snippets}/chat/message/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/chat/message/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/chat/message/http-response.adoc[]
+
+=== Get Recent Sessions
+
+.Query parameters
+include::{snippets}/chat/sessions/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/chat/sessions/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/chat/sessions/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/chat/sessions/http-response.adoc[]
+
+=== Get Favorite Sessions
+
+.Response body
+include::{snippets}/chat/favorites/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/chat/favorites/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/chat/favorites/http-response.adoc[]
+
+=== Get Session Detail
+
+.Path parameters
+include::{snippets}/chat/detail/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/chat/detail/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/chat/detail/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/chat/detail/http-response.adoc[]
+
+=== Toggle Favorite
+
+.Path parameters
+include::{snippets}/chat/toggle-favorite/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/chat/toggle-favorite/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/chat/toggle-favorite/http-response.adoc[]
+
+=== Update Session Title
+
+.Path parameters
+include::{snippets}/chat/update-title/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/chat/update-title/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/chat/update-title/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/chat/update-title/http-response.adoc[]
+
+=== Delete Session
+
+.Path parameters
+include::{snippets}/chat/delete-session/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/chat/delete-session/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/chat/delete-session/http-response.adoc[]
+
+== Admin API
+
+=== List Permission Groups
+
+.Response body
+include::{snippets}/admin/permission-groups/list/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/admin/permission-groups/list/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/permission-groups/list/http-response.adoc[]
+
+=== Get Permission Group
+
+.Path parameters
+include::{snippets}/admin/permission-groups/get/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/admin/permission-groups/get/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/admin/permission-groups/get/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/permission-groups/get/http-response.adoc[]
+
+=== Permission Catalog
+
+.Response body
+include::{snippets}/admin/permission-groups/catalog/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/admin/permission-groups/catalog/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/permission-groups/catalog/http-response.adoc[]
+
+=== Search Accounts
+
+.Query parameters
+include::{snippets}/admin/accounts/search/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/admin/accounts/search/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/admin/accounts/search/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/accounts/search/http-response.adoc[]
+
+=== Create Permission Group
+
+.Request body
+include::{snippets}/admin/permission-groups/create/request-body.adoc[]
+
+.Response body
+include::{snippets}/admin/permission-groups/create/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/admin/permission-groups/create/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/permission-groups/create/http-response.adoc[]
+
+=== Update Permission Group
+
+.Path parameters
+include::{snippets}/admin/permission-groups/update/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/admin/permission-groups/update/request-body.adoc[]
+
+.Response body
+include::{snippets}/admin/permission-groups/update/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/admin/permission-groups/update/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/permission-groups/update/http-response.adoc[]
+
+=== Delete Permission Group
+
+.Path parameters
+include::{snippets}/admin/permission-groups/delete/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/admin/permission-groups/delete/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/permission-groups/delete/http-response.adoc[]
+
+=== Assign Account to Permission Group
+
+.Path parameters
+include::{snippets}/admin/permission-groups/assign-account/path-parameters.adoc[]
+
+.Request body
+include::{snippets}/admin/permission-groups/assign-account/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/admin/permission-groups/assign-account/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/permission-groups/assign-account/http-response.adoc[]
+
+=== Unassign Account from Permission Group
+
+.Path parameters
+include::{snippets}/admin/permission-groups/unassign-account/path-parameters.adoc[]
+
+.HTTP request
+include::{snippets}/admin/permission-groups/unassign-account/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/admin/permission-groups/unassign-account/http-response.adoc[]

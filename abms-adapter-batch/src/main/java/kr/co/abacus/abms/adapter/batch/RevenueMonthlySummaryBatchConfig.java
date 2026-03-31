@@ -60,10 +60,12 @@ public class RevenueMonthlySummaryBatchConfig {
     private final ProjectAssignmentRepository assignmentRepository;
     private final EmployeeMonthlyCostRepository employeeMonthlyCostRepository;
     private final MonthlyRevenueSummaryRepository summaryRepository;
+    private final BatchObservabilityListener batchObservabilityListener;
 
     @Bean
     public Job revenueMonthlySummaryJob() {
         return new JobBuilder("revenueMonthlySummaryJob", jobRepository)
+            .listener(batchObservabilityListener)
             .start(revenueMonthlySummaryStep())
             .build();
     }
@@ -73,6 +75,7 @@ public class RevenueMonthlySummaryBatchConfig {
         return new StepBuilder("revenueMonthlySummaryStep", jobRepository)
             .<Project, MonthlyRevenueSummary>chunk(50)
             .transactionManager(transactionManager)
+            .listener(batchObservabilityListener)
             .reader(projectReader(null))
             .processor(revenueMonthlySummaryProcessor(null))
             .writer(revenueMonthlySummaryWriter())

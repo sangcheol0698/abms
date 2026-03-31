@@ -22,6 +22,8 @@ import kr.co.abacus.abms.application.auth.outbound.DefaultPermissionGroupReposit
 import kr.co.abacus.abms.application.auth.outbound.RegistrationLinkSender;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationTokenRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.observability.ApplicationMetricsRecorder;
+import kr.co.abacus.abms.application.observability.BusinessEventLogger;
 import kr.co.abacus.abms.domain.account.Account;
 import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
 import kr.co.abacus.abms.domain.account.AccountAlreadyExistsException;
@@ -49,6 +51,8 @@ public class AuthCommandService implements AuthManager {
     private final PasswordEncoder passwordEncoder;
     private final DefaultPermissionGroupRepository defaultPermissionGroupRepository;
     private final AccountPermissionGroupRepository accountPermissionGroupRepository;
+    private final BusinessEventLogger businessEventLogger;
+    private final ApplicationMetricsRecorder applicationMetricsRecorder;
 
     @Override
     public void requestRegistration(RegistrationRequestCommand command) {
@@ -72,7 +76,9 @@ public class AuthCommandService implements AuthManager {
 
         try {
             registrationLinkSender.sendRegistrationLink(email, token, expiresAt);
+            businessEventLogger.authEvent("registration_request", email.address(), "success", null);
         } catch (RuntimeException exception) {
+            businessEventLogger.authEvent("registration_request", email.address(), "failure", exception.getClass().getSimpleName());
             throw new RegistrationMailSendException("가입 메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.", exception);
         }
     }
@@ -94,11 +100,20 @@ public class AuthCommandService implements AuthManager {
         ));
         assignDefaultPermissionGroup(account);
         registrationTokenRepository.delete(registrationToken);
+        businessEventLogger.authEvent("registration_confirm", email.address(), "success", null);
     }
 
     @Override
     public void login(LoginCommand command) {
-        credentialAuthenticator.authenticate(command.username(), command.password());
+        try {
+            credentialAuthenticator.authenticate(command.username(), command.password());
+            businessEventLogger.authEvent("login", command.username(), "success", null);
+            applicationMetricsRecorder.incrementAuthLogin("success");
+        } catch (RuntimeException exception) {
+            businessEventLogger.authEvent("login", command.username(), "failure", exception.getClass().getSimpleName());
+            applicationMetricsRecorder.incrementAuthLogin("failure");
+            throw exception;
+        }
     }
 
     @Override
@@ -116,6 +131,7 @@ public class AuthCommandService implements AuthManager {
         }
 
         account.changePassword(Objects.requireNonNull(passwordEncoder.encode(command.newPassword())));
+        businessEventLogger.authEvent("change_password", email.address(), "success", null);
     }
 
     private void validateAlreadyRegistered(Email email) {

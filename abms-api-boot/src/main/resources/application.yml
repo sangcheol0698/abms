@@ -1,6 +1,6 @@
 spring:
   application:
-    name: abms
+    name: abms-api
   profiles:
     default: local
   jpa:
@@ -37,3 +37,48 @@ app:
       from: ${APP_AUTH_REGISTRATION_MAIL_FROM}
       subject: ${APP_AUTH_REGISTRATION_MAIL_SUBJECT}
       confirm-url: ${APP_AUTH_REGISTRATION_MAIL_CONFIRM_URL}
+  observability:
+    environment: ${APP_ENVIRONMENT:${spring.profiles.active:local}}
+    log-file-name: ${APP_LOG_FILE_NAME:logs/abms-api.log}
+    actuator:
+      allowed-ip-ranges: ${APP_ACTUATOR_ALLOWED_IP_RANGES:127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+    http:
+      slow-request-threshold-ms: ${APP_HTTP_SLOW_REQUEST_THRESHOLD_MS:1000}
+    health:
+      mail:
+        enabled: ${APP_HEALTH_MAIL_ENABLED:true}
+      openai:
+        enabled: ${APP_HEALTH_OPENAI_ENABLED:true}
+        timeout-ms: ${APP_HEALTH_OPENAI_TIMEOUT_MS:2000}
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: ${APP_VERSION:local}
+    environment: ${app.observability.environment}
+
+management:
+  health:
+    mail:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        liveness:
+          include: livenessState,ping
+        readiness:
+          include: readinessState,db,mailConnectivity,openAiConnectivity
+  metrics:
+    tags:
+      service: ${spring.application.name}
+      env: ${app.observability.environment}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true

@@ -1,7 +1,11 @@
 package kr.co.abacus.abms.adapter.api.project;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -164,6 +168,13 @@ class ProjectRevenuePlanApiTest extends ApiIntegrationTestBase {
                                 "amount", 45_000_000L,
                                 "memo", "수정 후"
                         ))))
+                .andDo(document("project-revenue-plan/update",
+                        pathParameters(
+                                parameterWithName("projectId").description("프로젝트 ID"),
+                                parameterWithName("sequence").description("수정할 매출 계획 순번")
+                        ),
+                        requestBody(),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -218,6 +229,12 @@ class ProjectRevenuePlanApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(patch("/api/projectRevenuePlans/{projectId}/{sequence}/issue", project.getIdOrThrow(), 1)
                         .session(session))
+                .andDo(document("project-revenue-plan/issue",
+                        pathParameters(
+                                parameterWithName("projectId").description("프로젝트 ID"),
+                                parameterWithName("sequence").description("발행할 매출 계획 순번")
+                        ),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -245,12 +262,70 @@ class ProjectRevenuePlanApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = login();
         MvcResult result = mockMvc.perform(patch("/api/projectRevenuePlans/{projectId}/{sequence}/cancel", project.getIdOrThrow(), 1)
                         .session(session))
+                .andDo(document("project-revenue-plan/cancel",
+                        pathParameters(
+                                parameterWithName("projectId").description("프로젝트 ID"),
+                                parameterWithName("sequence").description("발행 취소할 매출 계획 순번")
+                        ),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
 
         Map<String, Object> response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Map.class);
         assertThat(response.get("status")).isEqualTo("PLANNED");
         assertThat(projectRevenuePlanRepository.findByProjectIdAndSequence(project.getIdOrThrow(), 1).orElseThrow().getIsIssued()).isFalse();
+    }
+
+    @Test
+    @DisplayName("프로젝트 매출 계획을 조회한다")
+    void findByProjectId() throws Exception {
+        Project project = createProject("PRJ-REV-GET-001");
+        projectRevenuePlanRepository.save(ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
+                project.getIdOrThrow(),
+                1,
+                LocalDate.of(2026, 4, 10),
+                RevenueType.INTERMEDIATE_PAYMENT,
+                55_000_000L,
+                "조회용"
+        )));
+        flushAndClear();
+
+        MockHttpSession session = login();
+        mockMvc.perform(get("/api/projectRevenuePlans/{projectId}", project.getIdOrThrow()).session(session))
+                .andDo(document("project-revenue-plan/list",
+                        pathParameters(
+                                parameterWithName("projectId").description("조회할 프로젝트 ID")
+                        ),
+                        responseBody()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("프로젝트 매출 계획을 생성한다")
+    void create() throws Exception {
+        Project project = createProject("PRJ-REV-CREATE-001");
+        flushAndClear();
+
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(post("/api/projectRevenuePlans")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "projectId", project.getIdOrThrow(),
+                                "sequence", 1,
+                                "revenueDate", "2026-05-20",
+                                "type", "DOWN_PAYMENT",
+                                "amount", 25_000_000L,
+                                "memo", "생성"
+                        ))))
+                .andDo(document("project-revenue-plan/create",
+                        requestBody(),
+                        responseBody()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Map<String, Object> response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Map.class);
+        assertThat(response.get("sequence")).isEqualTo(1);
     }
 
     private Project createProject(String code) {

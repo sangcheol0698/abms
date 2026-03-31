@@ -18,6 +18,8 @@ import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
 import kr.co.abacus.abms.application.employee.inbound.EmployeeManager;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
+import kr.co.abacus.abms.application.observability.ApplicationMetricsRecorder;
+import kr.co.abacus.abms.application.observability.BusinessEventLogger;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
@@ -43,6 +45,8 @@ public class EmployeeModifyService implements EmployeeManager {
     private final SessionInvalidator sessionInvalidator;
     private final ApplicationEventPublisher eventPublisher;
     private final EmployeeAuthorizationValidator employeeAuthorizationValidator;
+    private final BusinessEventLogger businessEventLogger;
+    private final ApplicationMetricsRecorder applicationMetricsRecorder;
 
     @Override
     public Long create(CurrentActor actor, EmployeeCreateCommand command) {
@@ -66,6 +70,8 @@ public class EmployeeModifyService implements EmployeeManager {
         positionHistoryRepository.save(positionHistory);
 
         requestOrganizationChartCacheInvalidation();
+        businessEventLogger.employeeEvent("create", actor, employee);
+        applicationMetricsRecorder.incrementEmployeeAction("create");
 
         return id;
     }
@@ -97,6 +103,8 @@ public class EmployeeModifyService implements EmployeeManager {
         if (departmentChanged) {
             invalidateEmployeeSession(updatedEmployeeId);
         }
+        businessEventLogger.employeeEvent("update", actor, employee);
+        applicationMetricsRecorder.incrementEmployeeAction("update");
 
         return updatedEmployeeId;
     }
@@ -111,6 +119,8 @@ public class EmployeeModifyService implements EmployeeManager {
         employeeRepository.save(employee);
 
         requestOrganizationChartCacheInvalidation();
+        businessEventLogger.employeeEvent("resign", actor, employee);
+        applicationMetricsRecorder.incrementEmployeeAction("resign");
     }
 
     @Override
@@ -123,6 +133,8 @@ public class EmployeeModifyService implements EmployeeManager {
         employeeRepository.save(employee);
 
         requestOrganizationChartCacheInvalidation();
+        businessEventLogger.employeeEvent("take_leave", actor, employee);
+        applicationMetricsRecorder.incrementEmployeeAction("take_leave");
     }
 
     @Override
@@ -135,12 +147,16 @@ public class EmployeeModifyService implements EmployeeManager {
         employeeRepository.save(employee);
 
         requestOrganizationChartCacheInvalidation();
+        businessEventLogger.employeeEvent("activate", actor, employee);
+        applicationMetricsRecorder.incrementEmployeeAction("activate");
     }
 
     @Override
     public void promote(CurrentActor actor, Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade) {
         Employee employee = find(id);
         employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        String fromPosition = employee.getPosition().name();
+        String fromGrade = employee.getGrade().name();
 
         employee.promote(newPosition, newGrade);
 
@@ -158,12 +174,23 @@ public class EmployeeModifyService implements EmployeeManager {
         positionHistoryRepository.save(positionHistory);
 
         requestOrganizationChartCacheInvalidation();
+        businessEventLogger.employeePromotion(
+                actor,
+                employee,
+                fromPosition,
+                employee.getPosition().name(),
+                fromGrade,
+                employee.getGrade().name()
+        );
+        applicationMetricsRecorder.incrementEmployeeAction("promote");
     }
 
     @Override
     public void promote(CurrentActor actor, Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade, LocalDate promotedDate) {
         Employee employee = find(id);
         employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        String fromPosition = employee.getPosition().name();
+        String fromGrade = employee.getGrade().name();
 
         employee.promote(newPosition, newGrade);
 
@@ -181,6 +208,15 @@ public class EmployeeModifyService implements EmployeeManager {
         positionHistoryRepository.save(positionHistory);
 
         requestOrganizationChartCacheInvalidation();
+        businessEventLogger.employeePromotion(
+                actor,
+                employee,
+                fromPosition,
+                employee.getPosition().name(),
+                fromGrade,
+                employee.getGrade().name()
+        );
+        applicationMetricsRecorder.incrementEmployeeAction("promote");
     }
 
     @Override
@@ -189,6 +225,7 @@ public class EmployeeModifyService implements EmployeeManager {
         employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
         employeeAuthorizationValidator.validateManageDepartment(actor, departmentId, "직원 배치 권한 범위를 벗어났습니다.");
         validateDepartmentExists(departmentId);
+        Long fromDepartmentId = employee.getDepartmentId();
 
         employee.transferDepartment(departmentId);
 
@@ -196,18 +233,23 @@ public class EmployeeModifyService implements EmployeeManager {
 
         requestOrganizationChartCacheInvalidation();
         invalidateEmployeeSession(employee.getIdOrThrow());
+        businessEventLogger.employeeTransfer(actor, employee, fromDepartmentId, employee.getDepartmentId());
+        applicationMetricsRecorder.incrementEmployeeAction("transfer_department");
     }
 
     @Override
     public void convertEmploymentType(CurrentActor actor, Long id, EmployeeType newType) {
         Employee employee = find(id);
         employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        String fromType = employee.getType().name();
 
         employee.convertEmploymentType(newType);
 
         employeeRepository.save(employee);
 
         requestOrganizationChartCacheInvalidation();
+        businessEventLogger.employeeTypeChange(actor, employee, fromType, employee.getType().name());
+        applicationMetricsRecorder.incrementEmployeeAction("convert_employment_type");
     }
 
     @Override
@@ -221,6 +263,8 @@ public class EmployeeModifyService implements EmployeeManager {
 
         requestOrganizationChartCacheInvalidation();
         invalidateEmployeeSession(employee.getIdOrThrow());
+        businessEventLogger.employeeEvent("delete", actor, employee);
+        applicationMetricsRecorder.incrementEmployeeAction("delete");
     }
 
     @Override
@@ -234,6 +278,8 @@ public class EmployeeModifyService implements EmployeeManager {
 
         requestOrganizationChartCacheInvalidation();
         invalidateEmployeeSession(employee.getIdOrThrow());
+        businessEventLogger.employeeEvent("restore", actor, employee);
+        applicationMetricsRecorder.incrementEmployeeAction("restore");
     }
 
     private void requestOrganizationChartCacheInvalidation() {

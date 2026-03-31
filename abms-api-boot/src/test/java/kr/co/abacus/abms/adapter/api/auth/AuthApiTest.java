@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.adapter.api.auth;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -103,6 +104,11 @@ class AuthApiTest extends ApiIntegrationTestBase {
                                 "username", USERNAME,
                                 "password", PASSWORD
                         ))))
+                .andDo(document("auth/login",
+                        requestFields(
+                                fieldWithPath("username").description("로그인에 사용할 계정 이메일"),
+                                fieldWithPath("password").description("로그인 비밀번호")
+                        )))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -192,6 +198,17 @@ class AuthApiTest extends ApiIntegrationTestBase {
         assertThat(session).isNotNull();
 
         mockMvc.perform(get("/api/auth/me").session(session))
+                .andDo(document("auth/me",
+                        responseFields(
+                                fieldWithPath("name").description("현재 사용자 이름"),
+                                fieldWithPath("email").description("현재 사용자 이메일"),
+                                fieldWithPath("employeeId").description("현재 사용자 직원 ID").optional(),
+                                fieldWithPath("departmentId").description("현재 사용자 부서 ID").optional(),
+                                fieldWithPath("permissions").description("현재 사용자 권한 목록"),
+                                fieldWithPath("permissions[].code").description("권한 코드"),
+                                fieldWithPath("permissions[].scopes").description("권한 범위 목록"),
+                                fieldWithPath("permissions[].scopes[]").description("개별 권한 범위")
+                        )))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(USERNAME))
                 .andExpect(jsonPath("$.name").value("인증사용자"))
@@ -284,6 +301,11 @@ class AuthApiTest extends ApiIntegrationTestBase {
                                 "currentPassword", PASSWORD,
                                 "newPassword", "ChangedPassword123!"
                         ))))
+                .andDo(document("auth/change-password",
+                        requestFields(
+                                fieldWithPath("currentPassword").description("현재 비밀번호"),
+                                fieldWithPath("newPassword").description("새 비밀번호")
+                        )))
                 .andExpect(status().isOk());
 
         flushAndClear();
@@ -383,6 +405,10 @@ class AuthApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(post("/api/auth/registration-requests")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(Map.of("email", email))))
+                .andDo(document("auth/registration-request",
+                        requestFields(
+                                fieldWithPath("email").description("회원가입을 요청할 회사 이메일")
+                        )))
                 .andExpect(status().isOk());
 
         RegistrationToken registrationToken = registrationTokenRepository
@@ -415,6 +441,11 @@ class AuthApiTest extends ApiIntegrationTestBase {
                                 "token", registrationToken.getToken(),
                                 "password", newPassword
                         ))))
+                .andDo(document("auth/registration-confirmation",
+                        requestFields(
+                                fieldWithPath("token").description("회원가입 확정 토큰"),
+                                fieldWithPath("password").description("설정할 비밀번호")
+                        )))
                 .andExpect(status().isOk());
         flushAndClear();
 
@@ -480,8 +511,33 @@ class AuthApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @DisplayName("로그인한 사용자는 로그아웃할 수 있다")
+    void should_logout_whenAuthenticated() throws Exception {
+        MockHttpSession session = login();
+
+        mockMvc.perform(post("/api/auth/logout").session(session))
+                .andDo(document("auth/logout"))
+                .andExpect(status().isNoContent());
+    }
+
     private String toJson(Object value) throws Exception {
         return objectMapper.writeValueAsString(value);
+    }
+
+    private MockHttpSession login() throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", PASSWORD
+                        ))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+        return session;
     }
 
     private Employee createEmployee(String email, String name) {

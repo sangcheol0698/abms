@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 
 import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
+import kr.co.abacus.abms.application.observability.ApplicationMetricsRecorder;
+import kr.co.abacus.abms.application.observability.BusinessEventLogger;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
 import kr.co.abacus.abms.application.project.dto.ProjectCreateCommand;
 import kr.co.abacus.abms.application.project.dto.ProjectUpdateCommand;
@@ -27,6 +29,8 @@ public class ProjectModifyService implements ProjectManager {
     private final PartyRepository partyRepository;
     private final DepartmentRepository departmentRepository;
     private final ProjectAuthorizationValidator projectAuthorizationValidator;
+    private final BusinessEventLogger businessEventLogger;
+    private final ApplicationMetricsRecorder applicationMetricsRecorder;
 
     @Override
     public Long create(CurrentActor actor, ProjectCreateCommand command) {
@@ -47,7 +51,10 @@ public class ProjectModifyService implements ProjectManager {
                 command.startDate(),
                 command.endDate());
 
-        return projectRepository.save(project).getIdOrThrow();
+        Long projectId = projectRepository.save(project).getIdOrThrow();
+        businessEventLogger.projectEvent("create", actor, project);
+        applicationMetricsRecorder.incrementProjectAction("create");
+        return projectId;
     }
 
     private void validateDuplicateProjectCode(ProjectCreateCommand command) {
@@ -72,7 +79,10 @@ public class ProjectModifyService implements ProjectManager {
                 command.startDate(),
                 command.endDate());
 
-        return projectRepository.save(project).getIdOrThrow();
+        Long projectId = projectRepository.save(project).getIdOrThrow();
+        businessEventLogger.projectEvent("update", actor, project);
+        applicationMetricsRecorder.incrementProjectAction("update");
+        return projectId;
     }
 
     @Override
@@ -82,6 +92,8 @@ public class ProjectModifyService implements ProjectManager {
         project.complete();
 
         projectRepository.save(project);
+        businessEventLogger.projectEvent("complete", actor, project);
+        applicationMetricsRecorder.incrementProjectAction("complete");
     }
 
     @Override
@@ -91,6 +103,8 @@ public class ProjectModifyService implements ProjectManager {
         project.cancel();
 
         projectRepository.save(project);
+        businessEventLogger.projectEvent("cancel", actor, project);
+        applicationMetricsRecorder.incrementProjectAction("cancel");
     }
 
     @Override
@@ -100,6 +114,8 @@ public class ProjectModifyService implements ProjectManager {
         project.softDelete(null);
 
         projectRepository.save(project);
+        businessEventLogger.projectEvent("delete", actor, project);
+        applicationMetricsRecorder.incrementProjectAction("delete");
     }
 
     private void validateActivePartyExists(Long partyId) {

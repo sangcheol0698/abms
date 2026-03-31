@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.adapter.api.dashboard;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 
 import java.time.LocalDate;
 
@@ -61,6 +62,15 @@ class DashboardApiTest extends ApiIntegrationTestBase {
         projectRepository.save(createProject("PRJ-DASH-API-001", party.getIdOrThrow(), department.getIdOrThrow(), ProjectStatus.IN_PROGRESS));
         projectRepository.save(createProject("PRJ-DASH-API-002", party.getIdOrThrow(), department.getIdOrThrow(), ProjectStatus.COMPLETED));
         flushAndClear();
+
+        try {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/dashboards/summary")
+                            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("doc-user")))
+                    .andDo(document("dashboard/summary", responseBody()))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
 
         DashboardSummaryResponse response = restTestClient.get()
                 .uri("/api/dashboards/summary")

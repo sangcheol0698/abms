@@ -1,6 +1,8 @@
 package kr.co.abacus.abms.adapter.api.positionhistory;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -45,6 +47,19 @@ class PositionHistoryApiTest extends ApiIntegrationTestBase {
         positionHistoryRepository.save(positionHistory2);
 
         flushAndClear();
+
+        try {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/positionHistory/{employeeId}", 1L)
+                            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("doc-user")))
+                    .andDo(document("position-history/list",
+                            pathParameters(
+                                    parameterWithName("employeeId").description("직급 이력을 조회할 직원 ID")
+                            ),
+                            responseBody()))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
 
         List<PositionHistory> response = restTestClient.get()
                 .uri("/api/positionHistory/{employeeId}", 1L)

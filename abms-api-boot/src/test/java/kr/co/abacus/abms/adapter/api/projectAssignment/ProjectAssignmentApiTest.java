@@ -1,6 +1,8 @@
 package kr.co.abacus.abms.adapter.api.projectAssignment;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -186,6 +188,11 @@ class ProjectAssignmentApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/project-assignments")
                         .session(session)
                         .param("projectId", String.valueOf(projectId)))
+                .andDo(document("project-assignment/list",
+                        queryParameters(
+                                parameterWithName("projectId").description("조회할 프로젝트 ID")
+                        ),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].employeeName").value("배정직원"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].departmentName").value("백엔드팀"))
@@ -206,6 +213,12 @@ class ProjectAssignmentApiTest extends ApiIntegrationTestBase {
                                 "startDate", LocalDate.now().minusDays(5),
                                 "endDate", LocalDate.now().plusDays(5)
                         ))))
+                .andDo(document("project-assignment/update",
+                        pathParameters(
+                                parameterWithName("id").description("수정할 프로젝트 투입 ID")
+                        ),
+                        requestBody(),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         flushAndClear();
@@ -225,11 +238,57 @@ class ProjectAssignmentApiTest extends ApiIntegrationTestBase {
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "endDate", LocalDate.now().minusDays(1)
                         ))))
+                .andDo(document("project-assignment/end",
+                        pathParameters(
+                                parameterWithName("id").description("종료할 프로젝트 투입 ID")
+                        ),
+                        requestBody(),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         flushAndClear();
         ProjectAssignment ended = projectAssignmentRepository.findById(assignmentId).orElseThrow();
         assertThat(ended.getPeriod().endDate()).isEqualTo(LocalDate.now().minusDays(1));
+    }
+
+    @Test
+    @DisplayName("프로젝트에 직원을 투입한다")
+    void assign() throws Exception {
+        Long departmentId = projectRepository.findById(projectId).orElseThrow().getLeadDepartmentId();
+        Employee employee = employeeRepository.save(Employee.create(
+                departmentId,
+                "추가배정직원",
+                "new-assigned@abms.co.kr",
+                LocalDate.of(2024, 2, 1),
+                LocalDate.of(1993, 4, 5),
+                EmployeePosition.ASSOCIATE,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.JUNIOR,
+                EmployeeAvatar.SKY_GLOW,
+                null
+        ));
+        flushAndClear();
+
+        MockHttpSession session = login();
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/project-assignments")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "projectId", projectId,
+                                "employeeId", employee.getIdOrThrow(),
+                                "role", "ETC",
+                                "startDate", LocalDate.now(),
+                                "endDate", LocalDate.now().plusDays(30)
+                        ))))
+                .andDo(document("project-assignment/create",
+                        requestBody(),
+                        responseBody()))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        Map<String, Object> response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Map.class);
+        assertThat(response).containsKey("id");
     }
 
     private void grant(PermissionGroup permissionGroup, String code, String name) {

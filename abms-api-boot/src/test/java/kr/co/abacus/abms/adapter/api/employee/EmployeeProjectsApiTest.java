@@ -1,6 +1,8 @@
 package kr.co.abacus.abms.adapter.api.employee;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -193,6 +195,38 @@ class EmployeeProjectsApiTest extends ApiIntegrationTestBase {
                         .param("name", "프로젝트")
                         .param("assignmentStatuses", "CURRENT,SCHEDULED")
                         .session(session))
+                .andDo(document("employee/projects",
+                        pathParameters(
+                                parameterWithName("id").description("프로젝트를 조회할 직원 ID")
+                        ),
+                        queryParameters(
+                                parameterWithName("page").description("페이지 번호"),
+                                parameterWithName("size").description("페이지 크기"),
+                                parameterWithName("name").description("프로젝트명 검색어").optional(),
+                                parameterWithName("assignmentStatuses").description("배정 상태 목록").optional()
+                        ),
+                        responseFields(
+                                fieldWithPath("content").description("프로젝트 배정 목록"),
+                                fieldWithPath("content[].projectId").description("프로젝트 ID"),
+                                fieldWithPath("content[].projectCode").description("프로젝트 코드"),
+                                fieldWithPath("content[].projectName").description("프로젝트명"),
+                                fieldWithPath("content[].partyId").description("협력사 ID"),
+                                fieldWithPath("content[].role").description("배정 역할").optional(),
+                                fieldWithPath("content[].assignmentStartDate").description("배정 시작일"),
+                                fieldWithPath("content[].assignmentEndDate").description("배정 종료일").optional(),
+                                fieldWithPath("content[].assignmentStatus").description("배정 상태"),
+                                fieldWithPath("content[].projectStatus").description("프로젝트 상태 코드"),
+                                fieldWithPath("content[].projectStatusDescription").description("프로젝트 상태 설명"),
+                                fieldWithPath("content[].leadDepartmentId").description("주관 부서 ID").optional(),
+                                fieldWithPath("content[].leadDepartmentName").description("주관 부서명").optional(),
+                                fieldWithPath("content[].partyName").description("협력사명"),
+                                fieldWithPath("pageNumber").description("현재 페이지 번호"),
+                                fieldWithPath("pageSize").description("페이지 크기"),
+                                fieldWithPath("totalElements").description("전체 데이터 수"),
+                                fieldWithPath("totalPages").description("전체 페이지 수"),
+                                fieldWithPath("first").description("첫 페이지 여부"),
+                                fieldWithPath("last").description("마지막 페이지 여부")
+                        )))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.content[0].projectCode").value("PRJ-NEXT"))

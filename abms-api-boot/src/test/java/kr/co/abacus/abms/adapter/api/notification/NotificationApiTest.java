@@ -1,7 +1,10 @@
 package kr.co.abacus.abms.adapter.api.notification;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -14,9 +17,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MvcResult;
 
+import kr.co.abacus.abms.adapter.api.notification.dto.NotificationCreateApiRequest;
 import kr.co.abacus.abms.adapter.security.CustomUserDetails;
 import kr.co.abacus.abms.adapter.api.notification.dto.NotificationResponse;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
@@ -62,6 +67,7 @@ class NotificationApiTest extends ApiIntegrationTestBase {
 
         MvcResult result = mockMvc.perform(get("/api/notifications")
                         .with(authentication(authenticateAccount())))
+                .andDo(document("notifications/list", responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
         String responseBody = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -90,6 +96,10 @@ class NotificationApiTest extends ApiIntegrationTestBase {
 
         mockMvc.perform(patch("/api/notifications/{id}/read", notification.getId())
                         .with(authentication(authenticateAccount())))
+                .andDo(document("notifications/mark-read",
+                        pathParameters(
+                                parameterWithName("id").description("읽음 처리할 알림 ID")
+                        )))
                 .andExpect(status().isNoContent());
 
         flushAndClear();
@@ -118,6 +128,7 @@ class NotificationApiTest extends ApiIntegrationTestBase {
 
         mockMvc.perform(patch("/api/notifications/read-all")
                         .with(authentication(authenticateAccount())))
+                .andDo(document("notifications/mark-all-read"))
                 .andExpect(status().isNoContent());
 
         flushAndClear();
@@ -147,6 +158,7 @@ class NotificationApiTest extends ApiIntegrationTestBase {
 
         mockMvc.perform(delete("/api/notifications")
                         .with(authentication(authenticateAccount())))
+                .andDo(document("notifications/clear-all"))
                 .andExpect(status().isNoContent());
 
         flushAndClear();
@@ -154,6 +166,32 @@ class NotificationApiTest extends ApiIntegrationTestBase {
         List<Notification> notifications = notificationRepository
                 .findAllByAccountIdAndDeletedFalseOrderByCreatedAtDesc(accountId);
         assertThat(notifications).isEmpty();
+    }
+
+    @Test
+    @DisplayName("알림을 생성한다")
+    void create() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/notifications")
+                        .with(authentication(authenticateAccount()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new NotificationCreateApiRequest(
+                                "생성 알림",
+                                "생성 설명",
+                                NotificationType.SUCCESS,
+                                "/notifications/1"
+                        ))))
+                .andDo(document("notifications/create",
+                        requestBody(),
+                        responseBody()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        NotificationResponse response = objectMapper.readValue(
+                result.getResponse().getContentAsByteArray(),
+                NotificationResponse.class
+        );
+        assertThat(response.title()).isEqualTo("생성 알림");
+        assertThat(response.type()).isEqualTo("SUCCESS");
     }
 
     private UsernamePasswordAuthenticationToken authenticateAccount() {

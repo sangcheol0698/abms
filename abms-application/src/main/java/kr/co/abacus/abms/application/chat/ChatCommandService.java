@@ -3,6 +3,7 @@ package kr.co.abacus.abms.application.chat;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
@@ -24,6 +25,8 @@ import reactor.core.scheduler.Schedulers;
 import kr.co.abacus.abms.application.chat.dto.command.ChatSendCommand;
 import kr.co.abacus.abms.application.chat.dto.query.ChatStreamResult;
 import kr.co.abacus.abms.application.chat.outbound.ChatSessionRepository;
+import kr.co.abacus.abms.application.observability.ApplicationMetricsRecorder;
+import kr.co.abacus.abms.application.observability.BusinessEventLogger;
 import kr.co.abacus.abms.domain.chat.ChatSession;
 
 @Service
@@ -93,6 +96,8 @@ public class ChatCommandService {
     private final ChatSessionRepository chatSessionRepository;
     private final ChatMemoryRepository chatMemoryRepository;
     private final ChatTitleService chatTitleService;
+    private final BusinessEventLogger businessEventLogger;
+    private final ApplicationMetricsRecorder applicationMetricsRecorder;
 
     public ChatCommandService(
             ChatClient.Builder chatClientBuilder,
@@ -102,7 +107,9 @@ public class ChatCommandService {
             ObjectProvider<BusinessQueryTools> businessQueryToolsProvider,
             ChatSessionRepository chatSessionRepository,
             ChatMemoryRepository chatMemoryRepository,
-            ChatTitleService chatTitleService) {
+            ChatTitleService chatTitleService,
+            BusinessEventLogger businessEventLogger,
+            ApplicationMetricsRecorder applicationMetricsRecorder) {
         this.chatClient = chatClientBuilder
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
@@ -113,6 +120,8 @@ public class ChatCommandService {
         this.chatSessionRepository = chatSessionRepository;
         this.chatMemoryRepository = chatMemoryRepository;
         this.chatTitleService = chatTitleService;
+        this.businessEventLogger = businessEventLogger;
+        this.applicationMetricsRecorder = applicationMetricsRecorder;
     }
 
     public Mono<ChatStreamResult> streamMessage(Long accountId, ChatSendCommand command) {
@@ -123,6 +132,8 @@ public class ChatCommandService {
                 .map(sessionInfo -> {
                     boolean isNewSession = sessionInfo.isNewSession();
                     String conversationId = sessionInfo.conversationId();
+                    long startedAt = System.nanoTime();
+                    AtomicReference<String> outcome = new AtomicReference<>("success");
                     EmployeeInfoTools employeeInfoTools = employeeInfoToolsProvider.getObject();
                     OrganizationTools organizationTools = organizationToolsProvider.getObject();
                     BusinessQueryTools businessQueryTools = businessQueryToolsProvider.getObject();
@@ -131,10 +142,20 @@ public class ChatCommandService {
                     Sinks.Many<String> toolCallSink = Sinks.many().multicast().onBackpressureBuffer();
 
                     // Set tool call notifier on tools
-                    employeeInfoTools.setToolCallNotifier(toolCallSink::tryEmitNext);
-                    organizationTools.setToolCallNotifier(toolCallSink::tryEmitNext);
-                    businessQueryTools.setToolCallNotifier(toolCallSink::tryEmitNext);
+                    employeeInfoTools.setToolCallNotifier(toolName -> {
+                        applicationMetricsRecorder.incrementChatToolCall(toolName);
+                        toolCallSink.tryEmitNext(toolName);
+                    });
+                    organizationTools.setToolCallNotifier(toolName -> {
+                        applicationMetricsRecorder.incrementChatToolCall(toolName);
+                        toolCallSink.tryEmitNext(toolName);
+                    });
+                    businessQueryTools.setToolCallNotifier(toolName -> {
+                        applicationMetricsRecorder.incrementChatToolCall(toolName);
+                        toolCallSink.tryEmitNext(toolName);
+                    });
                     StringBuilder partialAssistantResponse = new StringBuilder();
+                    businessEventLogger.chatEvent("stream_start", accountId, conversationId, "started", null);
 
                     Flux<String> contentStream = chatClient.prompt()
                             .user(command.content())
@@ -144,12 +165,23 @@ public class ChatCommandService {
                             .content()
                             .doOnNext(partialAssistantResponse::append)
                             .doOnError(e -> {
+                                outcome.set("failure");
+                                businessEventLogger.chatEvent(
+                                        "stream_finish",
+                                        accountId,
+                                        conversationId,
+                                        "failure",
+                                        e.getClass().getSimpleName()
+                                );
                                 toolCallSink.tryEmitError(e);
                             })
                             .doOnComplete(() -> {
                                 chatTitleService.refineTitleAsync(accountId, conversationId);
                             })
                             .doFinally(signalType -> {
+                                if (signalType == SignalType.CANCEL) {
+                                    outcome.set("cancelled");
+                                }
                                 employeeInfoTools.setToolCallNotifier(null);
                                 organizationTools.setToolCallNotifier(null);
                                 businessQueryTools.setToolCallNotifier(null);
@@ -158,6 +190,11 @@ public class ChatCommandService {
                                 }
                                 if (signalType != SignalType.ON_ERROR) {
                                     toolCallSink.tryEmitComplete();
+                                }
+                                long durationMs = (System.nanoTime() - startedAt) / 1_000_000L;
+                                applicationMetricsRecorder.recordChatRequest("stream", outcome.get(), durationMs);
+                                if (signalType != SignalType.ON_ERROR) {
+                                    businessEventLogger.chatEvent("stream_finish", accountId, conversationId, outcome.get(), null);
                                 }
                             });
 
@@ -173,23 +210,33 @@ public class ChatCommandService {
         SessionInfo sessionInfo = getOrCreateConversation(accountId, command.sessionId());
         boolean isNewSession = sessionInfo.isNewSession();
         String conversationId = sessionInfo.conversationId();
+        long startedAt = System.nanoTime();
         EmployeeInfoTools employeeInfoTools = employeeInfoToolsProvider.getObject();
         OrganizationTools organizationTools = organizationToolsProvider.getObject();
         BusinessQueryTools businessQueryTools = businessQueryToolsProvider.getObject();
+        businessEventLogger.chatEvent("call_start", accountId, conversationId, "started", null);
 
-        String response = chatClient.prompt()
-                .user(command.content())
-                .tools(employeeInfoTools, organizationTools, businessQueryTools)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .call()
-                .content();
+        try {
+            String response = chatClient.prompt()
+                    .user(command.content())
+                    .tools(employeeInfoTools, organizationTools, businessQueryTools)
+                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                    .call()
+                    .content();
 
-        if (isNewSession) {
-            chatTitleService.applyInitialTitle(accountId, conversationId, command.content());
+            if (isNewSession) {
+                chatTitleService.applyInitialTitle(accountId, conversationId, command.content());
+            }
+            chatTitleService.refineTitleAsync(accountId, conversationId);
+            applicationMetricsRecorder.recordChatRequest("call", "success", (System.nanoTime() - startedAt) / 1_000_000L);
+            businessEventLogger.chatEvent("call_finish", accountId, conversationId, "success", null);
+
+            return response != null ? response : "";
+        } catch (RuntimeException exception) {
+            applicationMetricsRecorder.recordChatRequest("call", "failure", (System.nanoTime() - startedAt) / 1_000_000L);
+            businessEventLogger.chatEvent("call_finish", accountId, conversationId, "failure", exception.getClass().getSimpleName());
+            throw exception;
         }
-        chatTitleService.refineTitleAsync(accountId, conversationId);
-
-        return response != null ? response : "";
     }
 
     private SessionInfo getOrCreateConversation(Long accountId, @Nullable String sessionId) {
