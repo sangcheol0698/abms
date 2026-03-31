@@ -1,7 +1,13 @@
 import { inject, singleton } from 'tsyringe';
 import HttpRepository from '@/core/http/HttpRepository';
 import HttpError from '@/core/http/HttpError';
-import type { EmployeeCreatePayload, EmployeeSummary } from '@/features/employee/models/employee';
+import type {
+  EmployeeCreatePayload,
+  EmployeeDepartmentTransferPayload,
+  EmployeeEmploymentTypeConvertPayload,
+  EmployeeSummary,
+  EmployeeUpdatePayload,
+} from '@/features/employee/models/employee';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 import type {
   EmployeeProjectItem,
@@ -276,7 +282,7 @@ export class EmployeeRepository {
     return mapEmployeeSummary(response);
   }
 
-  async update(employeeId: number, payload: EmployeeCreatePayload): Promise<EmployeeSummary> {
+  async update(employeeId: number, payload: EmployeeUpdatePayload): Promise<EmployeeSummary> {
     await this.ensureFilterOptionsLoaded();
     const response = await this.httpRepository.put({
       path: `/api/employees/${employeeId}`,
@@ -320,6 +326,26 @@ export class EmployeeRepository {
     await this.httpRepository.patch({
       path: `/api/employees/${employeeId}/promote`,
       data: { position, grade },
+    });
+  }
+
+  async transferDepartment(
+    employeeId: number,
+    payload: EmployeeDepartmentTransferPayload,
+  ): Promise<void> {
+    await this.httpRepository.patch({
+      path: `/api/employees/${employeeId}/transfer-department`,
+      data: payload,
+    });
+  }
+
+  async convertEmploymentType(
+    employeeId: number,
+    payload: EmployeeEmploymentTypeConvertPayload,
+  ): Promise<void> {
+    await this.httpRepository.patch({
+      path: `/api/employees/${employeeId}/convert-employment-type`,
+      data: payload,
     });
   }
 

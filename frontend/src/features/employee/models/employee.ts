@@ -124,3 +124,13 @@ export interface EmployeeCreatePayload {
   avatar: string;
   memo?: string;
 }
+
+export interface EmployeeUpdatePayload extends EmployeeCreatePayload { }
+
+export interface EmployeeDepartmentTransferPayload {
+  departmentId: number;
+}
+
+export interface EmployeeEmploymentTypeConvertPayload {
+  type: string;
+}

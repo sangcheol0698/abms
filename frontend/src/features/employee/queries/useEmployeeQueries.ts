@@ -3,7 +3,10 @@ import { keepPreviousData, useMutation, useQuery } from '@tanstack/vue-query';
 import { appContainer } from '@/core/di/container';
 import { authKeys, employeeKeys, departmentKeys, dashboardKeys, queryClient } from '@/core/query';
 import { EmployeeRepository } from '@/features/employee/repository/EmployeeRepository';
-import type { EmployeeCreatePayload } from '@/features/employee/models/employee';
+import type {
+  EmployeeCreatePayload,
+  EmployeeUpdatePayload,
+} from '@/features/employee/models/employee';
 import type { EmployeeProjectsSearchParams } from '@/features/employee/models/project';
 import type { ChangeEmployeeSalaryPayload } from '@/features/employee/models/payroll';
 import type { EmployeeSearchParams } from '@/features/employee/models/employeeListItem';
@@ -219,7 +222,7 @@ export function useUpdateEmployeeMutation() {
   const repository = appContainer.resolve(EmployeeRepository);
 
   return useMutation({
-    mutationFn: (variables: { employeeId: number; payload: EmployeeCreatePayload }) =>
+    mutationFn: (variables: { employeeId: number; payload: EmployeeUpdatePayload }) =>
       repository.update(variables.employeeId, variables.payload),
     onSuccess: async (updated) => {
       await invalidateEmployeeSideEffects(updated.employeeId);
@@ -289,6 +292,30 @@ export function usePromoteEmployeeMutation() {
   return useMutation({
     mutationFn: (variables: { employeeId: number; position: string; grade?: string }) =>
       repository.promote(variables.employeeId, variables.position, variables.grade),
+    onSuccess: async (_data, variables) => {
+      await invalidateEmployeeSideEffects(variables.employeeId);
+    },
+  });
+}
+
+export function useTransferDepartmentEmployeeMutation() {
+  const repository = appContainer.resolve(EmployeeRepository);
+
+  return useMutation({
+    mutationFn: (variables: { employeeId: number; departmentId: number }) =>
+      repository.transferDepartment(variables.employeeId, { departmentId: variables.departmentId }),
+    onSuccess: async (_data, variables) => {
+      await invalidateEmployeeSideEffects(variables.employeeId);
+    },
+  });
+}
+
+export function useConvertEmploymentTypeEmployeeMutation() {
+  const repository = appContainer.resolve(EmployeeRepository);
+
+  return useMutation({
+    mutationFn: (variables: { employeeId: number; type: string }) =>
+      repository.convertEmploymentType(variables.employeeId, { type: variables.type }),
     onSuccess: async (_data, variables) => {
       await invalidateEmployeeSideEffects(variables.employeeId);
     },

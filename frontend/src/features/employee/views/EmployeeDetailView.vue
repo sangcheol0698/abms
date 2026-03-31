@@ -31,6 +31,14 @@
                 <TrendingUp class="mr-2 h-4 w-4" />
                 승진
               </DropdownMenuItem>
+              <DropdownMenuItem v-if="canManageCurrentEmployee" @click="openDepartmentTransferDialog">
+                <Building2 class="mr-2 h-4 w-4" />
+                부서 이동
+              </DropdownMenuItem>
+              <DropdownMenuItem v-if="canManageCurrentEmployee" @click="openEmploymentTypeConvertDialog">
+                <BriefcaseBusiness class="mr-2 h-4 w-4" />
+                고용유형 변경
+              </DropdownMenuItem>
               <DropdownMenuItem v-if="canManageCurrentEmployee" @click="openEditDialog">
                 <Pencil class="mr-2 h-4 w-4" />
                 직원 편집
@@ -140,6 +148,22 @@
       @update:open="isPromotionDialogOpen = $event"
       @promoted="handleEmployeePromoted"
     />
+
+    <EmployeeDepartmentTransferDialog
+      :open="isDepartmentTransferDialogOpen"
+      :employee="employee"
+      :department-options="departmentOptions"
+      @update:open="isDepartmentTransferDialogOpen = $event"
+      @transferred="handleEmployeeTransferred"
+    />
+
+    <EmployeeEmploymentTypeConvertDialog
+      :open="isEmploymentTypeConvertDialogOpen"
+      :employee="employee"
+      :type-options="typeOptions"
+      @update:open="isEmploymentTypeConvertDialogOpen = $event"
+      @converted="handleEmploymentTypeConverted"
+    />
   </section>
 </template>
 
@@ -160,7 +184,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Pencil, Trash2, TrendingUp } from 'lucide-vue-next';
+import { BriefcaseBusiness, Building2, MoreHorizontal, Pencil, Trash2, TrendingUp } from 'lucide-vue-next';
 import type { EmployeeFilterOption } from '@/features/employee/models/employeeFilters';
 import {
   getEmployeeGradeOptions,
@@ -175,6 +199,8 @@ import EmployeeSalaryPanel from '@/features/employee/components/EmployeeSalaryPa
 import EmployeeProjectsPanel from '@/features/employee/components/EmployeeProjectsPanel.vue';
 import EmployeeUpdateDialog from '@/features/employee/components/EmployeeUpdateDialog.vue';
 import EmployeePromotionDialog from '@/features/employee/components/EmployeePromotionDialog.vue';
+import EmployeeDepartmentTransferDialog from '@/features/employee/components/EmployeeDepartmentTransferDialog.vue';
+import EmployeeEmploymentTypeConvertDialog from '@/features/employee/components/EmployeeEmploymentTypeConvertDialog.vue';
 import type { DepartmentChartNode } from '@/features/department/models/department';
 import { useDepartmentOrganizationChartQuery } from '@/features/department/queries/useDepartmentQueries';
 import {
@@ -283,6 +309,8 @@ const canViewProjectsTab = computed(() => canReadProjects());
 
 const isEmployeeUpdateDialogOpen = ref(false);
 const isPromotionDialogOpen = ref(false);
+const isDepartmentTransferDialogOpen = ref(false);
+const isEmploymentTypeConvertDialogOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
 
 const departmentOptions = computed<{ label: string; value: number }[]>(() => {
@@ -416,6 +444,14 @@ function openPromotionDialog() {
   isPromotionDialogOpen.value = true;
 }
 
+function openDepartmentTransferDialog() {
+  isDepartmentTransferDialogOpen.value = true;
+}
+
+function openEmploymentTypeConvertDialog() {
+  isEmploymentTypeConvertDialogOpen.value = true;
+}
+
 function openOwnProfileDialog() {
   dispatchOpenProfileDialogEvent({ openSelfProfileEditor: true });
 }
@@ -428,6 +464,26 @@ async function handleEmployeeUpdated() {
 
 async function handleEmployeePromoted() {
   isPromotionDialogOpen.value = false;
+  await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
+  await employeeQuery.refetch();
+}
+
+async function handleEmployeeTransferred() {
+  if (!employee.value?.employeeId) {
+    return;
+  }
+
+  isDepartmentTransferDialogOpen.value = false;
+  await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
+  await employeeQuery.refetch();
+}
+
+async function handleEmploymentTypeConverted() {
+  if (!employee.value?.employeeId) {
+    return;
+  }
+
+  isEmploymentTypeConvertDialogOpen.value = false;
   await queryClient.invalidateQueries({ queryKey: employeeKeys.all });
   await employeeQuery.refetch();
 }

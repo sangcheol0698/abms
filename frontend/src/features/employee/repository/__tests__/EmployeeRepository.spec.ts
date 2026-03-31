@@ -207,6 +207,42 @@ describe('EmployeeRepository.search', () => {
     expect(result.name).toBe('홍길동');
     expect(result.avatarCode).toBe('SKY_GLOW');
   });
+
+  it('직원 부서 이동을 요청한다', async () => {
+    primeFilterOptions();
+    httpGet.mockResolvedValueOnce(null);
+    const httpPatch = vi.fn().mockResolvedValue(undefined);
+
+    const repository = new EmployeeRepository({
+      get: httpGet,
+      patch: httpPatch,
+    } as unknown as HttpRepository);
+
+    await repository.transferDepartment(1, { departmentId: 20 });
+
+    expect(httpPatch).toHaveBeenCalledWith({
+      path: '/api/employees/1/transfer-department',
+      data: { departmentId: 20 },
+    });
+  });
+
+  it('직원 고용유형 변경을 요청한다', async () => {
+    primeFilterOptions();
+    httpGet.mockResolvedValueOnce(null);
+    const httpPatch = vi.fn().mockResolvedValue(undefined);
+
+    const repository = new EmployeeRepository({
+      get: httpGet,
+      patch: httpPatch,
+    } as unknown as HttpRepository);
+
+    await repository.convertEmploymentType(1, { type: 'PART_TIME' });
+
+    expect(httpPatch).toHaveBeenCalledWith({
+      path: '/api/employees/1/convert-employment-type',
+      data: { type: 'PART_TIME' },
+    });
+  });
 });
 
 describe('EmployeeRepository.fetch filter options', () => {

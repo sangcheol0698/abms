@@ -172,6 +172,10 @@ async function mountDetailView(route = '/employees/1') {
         EmployeeProjectsPanel: true,
         EmployeeUpdateDialog: true,
         EmployeePromotionDialog: true,
+        EmployeeDepartmentTransferDialog: true,
+        EmployeeEmploymentTypeConvertDialog: true,
+        BriefcaseBusiness: true,
+        Building2: true,
         MoreHorizontal: true,
         Pencil: true,
         Trash2: true,
@@ -241,6 +245,8 @@ describe('EmployeeDetailView', () => {
     const { wrapper } = await mountDetailView();
 
     expect(wrapper.text()).toContain('승진');
+    expect(wrapper.text()).toContain('부서 이동');
+    expect(wrapper.text()).toContain('고용유형 변경');
     expect(wrapper.text()).toContain('직원 편집');
     expect(wrapper.text()).toContain('직원 삭제');
     expect(wrapper.get('[data-test="employment-manage"]').text()).toBe('true');

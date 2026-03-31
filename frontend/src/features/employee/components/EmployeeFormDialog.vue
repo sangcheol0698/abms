@@ -74,7 +74,11 @@
                 <div class="space-y-1">
                   <h3 class="text-lg font-semibold text-foreground">기본 정보</h3>
                   <p class="text-sm text-muted-foreground">
-                    직원의 기본 인적 사항과 소속을 입력하세요.
+                    {{
+                      isEditMode
+                        ? '직원의 기본 인적 사항을 수정하세요.'
+                        : '직원의 기본 인적 사항과 소속을 입력하세요.'
+                    }}
                   </p>
                 </div>
                 <div class="grid gap-4 md:grid-cols-2">
@@ -97,7 +101,11 @@
                     </FormItem>
                   </FormField>
 
-                  <FormField name="departmentId" v-slot="{ field, handleChange, handleBlur }">
+                  <FormField
+                    v-if="!isEditMode"
+                    name="departmentId"
+                    v-slot="{ field, handleChange, handleBlur }"
+                  >
                     <FormItem>
                       <FormLabel>
                         소속 부서
@@ -166,9 +174,9 @@
                 </div>
               </section>
 
-              <Separator />
+              <Separator v-if="!isEditMode" />
 
-              <section class="space-y-4">
+              <section v-if="!isEditMode" class="space-y-4">
                 <div class="space-y-1">
                   <h3 class="text-lg font-semibold text-foreground">직무 정보</h3>
                   <p class="text-sm text-muted-foreground">역할과 등급, 근무 유형을 선택하세요.</p>
