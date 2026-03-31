@@ -9,6 +9,7 @@ import kr.co.abacus.abms.application.employee.dto.EmployeeCreateCommand;
 import kr.co.abacus.abms.application.employee.dto.EmployeeUpdateCommand;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 
 /**
  * 직원 생성 및 수정
@@ -28,6 +29,10 @@ public interface EmployeeManager {
     void promote(CurrentActor actor, Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade);
 
     void promote(CurrentActor actor, Long id, EmployeePosition newPosition, @Nullable EmployeeGrade newGrade, LocalDate promotedDate);
+
+    void transferDepartment(CurrentActor actor, Long id, Long departmentId);
+
+    void convertEmploymentType(CurrentActor actor, Long id, EmployeeType newType);
 
     void delete(CurrentActor actor, Long id, @Nullable Long deleteBy);
 

@@ -29,7 +29,9 @@ import kr.co.abacus.abms.adapter.api.common.EnumResponse;
 import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDepartmentTransferRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDetailResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeEmploymentTypeConvertRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeSearchResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
@@ -783,6 +785,74 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(patch("/api/employees/{id}/promote", employeeId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
+                        .session(session))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("직원을 다른 부서로 이동시킨다")
+    void transferDepartment() throws Exception {
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "transfer@email.com", "홍길동")).getId();
+        flushAndClear();
+
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/transfer-department", employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new EmployeeDepartmentTransferRequest(divisionId)))
+                        .session(session))
+                .andExpect(status().isNoContent());
+        flushAndClear();
+
+        Employee transferredEmployee = employeeRepository.findById(employeeId).orElseThrow();
+        assertThat(transferredEmployee.getDepartmentId()).isEqualTo(divisionId);
+    }
+
+    @Test
+    @DisplayName("같은 부서로 직원 이동 시 400을 반환한다")
+    void transferDepartment_sameDepartment() throws Exception {
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "transfer-same@email.com", "홍길동")).getId();
+        flushAndClear();
+
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/transfer-department", employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new EmployeeDepartmentTransferRequest(teamId)))
+                        .session(session))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("직원의 고용유형을 변경한다")
+    void convertEmploymentType() throws Exception {
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "convert-type@email.com", "홍길동")).getId();
+        flushAndClear();
+
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/convert-employment-type", employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new EmployeeEmploymentTypeConvertRequest(EmployeeType.PART_TIME)))
+                        .session(session))
+                .andExpect(status().isNoContent());
+        flushAndClear();
+
+        Employee convertedEmployee = employeeRepository.findById(employeeId).orElseThrow();
+        assertThat(convertedEmployee.getType()).isEqualTo(EmployeeType.PART_TIME);
+    }
+
+    @Test
+    @DisplayName("같은 고용유형으로 변경 시 400을 반환한다")
+    void convertEmploymentType_sameType() throws Exception {
+        Long employeeId = employeeRepository.save(createEmployee(teamId, "convert-same@email.com", "홍길동")).getId();
+        flushAndClear();
+
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/convert-employment-type", employeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new EmployeeEmploymentTypeConvertRequest(EmployeeType.FULL_TIME)))
                         .session(session))
                 .andExpect(status().isBadRequest());
     }

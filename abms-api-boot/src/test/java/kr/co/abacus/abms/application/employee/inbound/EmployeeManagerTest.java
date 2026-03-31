@@ -20,6 +20,7 @@ import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.positionhistory.inbound.PositionHistoryManager;
 import kr.co.abacus.abms.application.positionhistory.outbound.PositionHistoryRepository;
 import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.department.DepartmentType;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -318,6 +319,62 @@ class EmployeeManagerTest extends IntegrationTestBase {
 
         PositionHistory foundPositionHistory = positionHistoryRepository.findByEmployeeId(employee.getId()).getLast();
         assertThat(employee.getPosition()).isEqualTo(foundPositionHistory.getPosition());
+    }
+
+    @Test
+    @DisplayName("직원 부서를 이동한다")
+    void transferDepartment() {
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "transfer@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+
+        employeeManager.transferDepartment(employeeWriteActor(), employee.getId(), divisionId);
+        flushAndClear();
+
+        Employee transferredEmployee = employeeFinder.find(employee.getId());
+        assertThat(transferredEmployee.getDepartmentId()).isEqualTo(divisionId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 부서로는 직원을 이동할 수 없다")
+    void transferDepartment_notFoundDepartment() {
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "transfer-notfound@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+
+        assertThatThrownBy(() -> employeeManager.transferDepartment(employeeWriteActor(), employee.getId(), 999999L))
+                .isInstanceOf(DepartmentNotFoundException.class)
+                .hasMessage("존재하지 않는 부서입니다: 999999");
+    }
+
+    @Test
+    @DisplayName("직원 고용유형을 변경한다")
+    void convertEmploymentType() {
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "convert-type@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+
+        employeeManager.convertEmploymentType(employeeWriteActor(), employee.getId(), EmployeeType.PART_TIME);
+        flushAndClear();
+
+        Employee convertedEmployee = employeeFinder.find(employee.getId());
+        assertThat(convertedEmployee.getType()).isEqualTo(EmployeeType.PART_TIME);
+    }
+
+    @Test
+    @DisplayName("같은 고용유형으로는 변경할 수 없다")
+    void convertEmploymentType_sameType() {
+        Long employeeId = employeeManager.create(employeeWriteActor(), createEmployeeCreateCommand(companyId, "convert-same@email.com", "홍길동"));
+        flushAndClear();
+
+        Employee employee = employeeFinder.find(employeeId);
+
+        assertThatThrownBy(() -> employeeManager.convertEmploymentType(employeeWriteActor(), employee.getId(), EmployeeType.FULL_TIME))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 같은 고용유형의 직원입니다.");
     }
 
     @Test

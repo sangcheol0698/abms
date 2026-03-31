@@ -23,6 +23,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateRequest;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDepartmentTransferRequest;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeEmploymentTypeConvertRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeUpdateRequest;
 import kr.co.abacus.abms.application.auth.CurrentActor;
@@ -156,6 +158,18 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(put("/api/employees/{id}", selfEmployeeId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(updateRequest(selfEmployeeId, ownDivisionId)))
+                        .session(session))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(patch("/api/employees/{id}/transfer-department", selfEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(new EmployeeDepartmentTransferRequest(outsideDivisionId)))
+                        .session(session))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(patch("/api/employees/{id}/convert-employment-type", selfEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(new EmployeeEmploymentTypeConvertRequest(EmployeeType.PART_TIME)))
                         .session(session))
                 .andExpect(status().isForbidden());
 
@@ -348,8 +362,8 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("상태 변경과 승진은 범위 안이면 허용하고 범위 밖이면 403을 반환한다")
-    void should_controlStatusChangesAndPromotionByScope() throws Exception {
+    @DisplayName("상태 변경, 승진, 인사 변경은 범위 안이면 허용하고 범위 밖이면 403을 반환한다")
+    void should_controlStatusChangesPromotionAndBusinessActionsByScope() throws Exception {
         grantEmployeeWritePermission(PermissionScope.OWN_DEPARTMENT_TREE);
         MockHttpSession session = login();
 
@@ -384,6 +398,59 @@ class EmployeeWriteAuthorizationApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(patch("/api/employees/{id}/promote", outsideDepartmentEmployeeId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(new EmployeePositionUpdateRequest(EmployeePosition.SENIOR_ASSOCIATE, null)))
+                        .session(session))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(patch("/api/employees/{id}/transfer-department", childDepartmentEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(new EmployeeDepartmentTransferRequest(ownDivisionId)))
+                        .session(session))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(patch("/api/employees/{id}/transfer-department", outsideDepartmentEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(new EmployeeDepartmentTransferRequest(ownDivisionId)))
+                        .session(session))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(patch("/api/employees/{id}/convert-employment-type", childDepartmentEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(new EmployeeEmploymentTypeConvertRequest(EmployeeType.PART_TIME)))
+                        .session(session))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(patch("/api/employees/{id}/convert-employment-type", outsideDepartmentEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(new EmployeeEmploymentTypeConvertRequest(EmployeeType.PART_TIME)))
+                        .session(session))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("부서 이동이 발생하면 대상 계정의 기존 세션은 만료된다")
+    void should_expireSessionAfterDepartmentTransfer() throws Exception {
+        grantEmployeeWritePermission(PermissionScope.ALL);
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/transfer-department", selfEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(new EmployeeDepartmentTransferRequest(outsideDivisionId)))
+                        .session(session))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/auth/me").session(session))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("OWN_DEPARTMENT 범위는 범위 밖 부서로의 이동을 막는다")
+    void should_forbidTransferOutsideAllowedDepartment_whenGrantedOwnDepartmentScope() throws Exception {
+        grantEmployeeWritePermission(PermissionScope.OWN_DEPARTMENT);
+        MockHttpSession session = login();
+
+        mockMvc.perform(patch("/api/employees/{id}/transfer-department", sameDepartmentEmployeeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(new EmployeeDepartmentTransferRequest(outsideDivisionId)))
                         .session(session))
                 .andExpect(status().isForbidden());
     }

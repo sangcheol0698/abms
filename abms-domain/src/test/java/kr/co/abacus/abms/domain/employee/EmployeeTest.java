@@ -196,6 +196,16 @@ class EmployeeTest {
     }
 
     @Test
+    @DisplayName("동일한 직급과 등급으로는 승진할 수 없다")
+    void promoteSamePositionAndGrade() {
+        Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
+
+        assertThatThrownBy(() -> employee.promote(EmployeePosition.TEAM_LEADER, EmployeeGrade.SENIOR))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("동일한 직급과 등급으로는 승진할 수 없습니다.");
+    }
+
+    @Test
     @DisplayName("현재 직급보다 낮은 직급으로 승진할 수 없다")
     void promoteFail() {
         Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
@@ -218,6 +228,68 @@ class EmployeeTest {
         assertThatThrownBy(() -> employee.promote(EmployeePosition.DIRECTOR, null))
                 .isInstanceOf(InvalidEmployeeStatusException.class)
                 .hasMessage("퇴사한 직원은 승진할 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("직원 부서를 이동한다")
+    void transferDepartment() {
+        Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
+
+        employee.transferDepartment(2L);
+
+        assertThat(employee.getDepartmentId()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("같은 부서로는 이동할 수 없다")
+    void transferDepartment_sameDepartment() {
+        Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
+
+        assertThatThrownBy(() -> employee.transferDepartment(1L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 같은 부서에 소속된 직원입니다.");
+    }
+
+    @Test
+    @DisplayName("퇴사한 직원은 부서를 이동할 수 없다")
+    void transferDepartment_resignedEmployee() {
+        Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
+        employee.resign(LocalDate.of(2025, 12, 31));
+
+        assertThatThrownBy(() -> employee.transferDepartment(2L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("퇴사한 직원은 부서를 이동할 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("직원 고용유형을 변경한다")
+    void convertEmploymentType() {
+        Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
+
+        employee.convertEmploymentType(EmployeeType.PART_TIME);
+
+        assertThat(employee.getType()).isEqualTo(EmployeeType.PART_TIME);
+    }
+
+    @Test
+    @DisplayName("같은 고용유형으로는 변경할 수 없다")
+    void convertEmploymentType_sameType() {
+        Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
+
+        assertThatThrownBy(() -> employee.convertEmploymentType(EmployeeType.FULL_TIME))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 같은 고용유형의 직원입니다.");
+    }
+
+    @Test
+    @DisplayName("퇴사한 직원은 고용유형을 변경할 수 없다")
+    void convertEmploymentType_resignedEmployee() {
+        Employee employee = createEmployee(LocalDate.of(2025, 1, 1));
+        employee.resign(LocalDate.of(2025, 12, 31));
+
+        assertThatThrownBy(() -> employee.convertEmploymentType(EmployeeType.PART_TIME))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("퇴사한 직원은 고용유형을 변경할 수 없습니다.");
     }
 
     @Test

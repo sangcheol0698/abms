@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,7 +38,9 @@ import kr.co.abacus.abms.adapter.api.common.PageResponse;
 import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeCreateResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDepartmentTransferRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeDetailResponse;
+import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeEmploymentTypeConvertRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeExcelUploadResponse;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeePositionUpdateRequest;
 import kr.co.abacus.abms.adapter.api.employee.dto.EmployeeProjectResponse;
@@ -189,10 +190,32 @@ public class EmployeeApi {
     @PatchMapping("/api/employees/{id}/promote")
     public void promote(
             @PathVariable Long id,
-            @RequestBody EmployeePositionUpdateRequest request,
+            @RequestBody @Valid EmployeePositionUpdateRequest request,
             Authentication authentication
     ) {
         employeeManager.promote(currentActorResolver.resolve(authentication), id, request.position(), request.grade());
+    }
+
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/api/employees/{id}/transfer-department")
+    public void transferDepartment(
+            @PathVariable Long id,
+            @RequestBody @Valid EmployeeDepartmentTransferRequest request,
+            Authentication authentication
+    ) {
+        employeeManager.transferDepartment(currentActorResolver.resolve(authentication), id, request.departmentId());
+    }
+
+    @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'employee.write')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PatchMapping("/api/employees/{id}/convert-employment-type")
+    public void convertEmploymentType(
+            @PathVariable Long id,
+            @RequestBody @Valid EmployeeEmploymentTypeConvertRequest request,
+            Authentication authentication
+    ) {
+        employeeManager.convertEmploymentType(currentActorResolver.resolve(authentication), id, request.type());
     }
 
     @GetMapping("/api/employees/positions")

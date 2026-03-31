@@ -25,6 +25,7 @@ import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.positionhistory.PositionHistoryCreateRequest;
 import kr.co.abacus.abms.domain.shared.Email;
@@ -178,6 +179,33 @@ public class EmployeeModifyService implements EmployeeManager {
                 employee.getPosition()
         ));
         positionHistoryRepository.save(positionHistory);
+
+        requestOrganizationChartCacheInvalidation();
+    }
+
+    @Override
+    public void transferDepartment(CurrentActor actor, Long id, Long departmentId) {
+        Employee employee = find(id);
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+        employeeAuthorizationValidator.validateManageDepartment(actor, departmentId, "직원 배치 권한 범위를 벗어났습니다.");
+        validateDepartmentExists(departmentId);
+
+        employee.transferDepartment(departmentId);
+
+        employeeRepository.save(employee);
+
+        requestOrganizationChartCacheInvalidation();
+        invalidateEmployeeSession(employee.getIdOrThrow());
+    }
+
+    @Override
+    public void convertEmploymentType(CurrentActor actor, Long id, EmployeeType newType) {
+        Employee employee = find(id);
+        employeeAuthorizationValidator.validateManageEmployee(actor, employee, "직원 변경 권한 범위를 벗어났습니다.");
+
+        employee.convertEmploymentType(newType);
+
+        employeeRepository.save(employee);
 
         requestOrganizationChartCacheInvalidation();
     }

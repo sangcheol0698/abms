@@ -158,16 +158,43 @@ public class Employee extends AbstractEntity {
         this.memo = memo;
     }
 
+    public void transferDepartment(Long newDepartmentId) {
+        state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 부서를 이동할 수 없습니다.");
+
+        Long targetDepartmentId = requireNonNull(newDepartmentId);
+        if (departmentId.equals(targetDepartmentId)) {
+            throw new IllegalArgumentException("이미 같은 부서에 소속된 직원입니다.");
+        }
+
+        this.departmentId = targetDepartmentId;
+    }
+
+    public void convertEmploymentType(EmployeeType newType) {
+        state(status != EmployeeStatus.RESIGNED, "퇴사한 직원은 고용유형을 변경할 수 없습니다.");
+
+        EmployeeType targetType = requireNonNull(newType);
+        if (type == targetType) {
+            throw new IllegalArgumentException("이미 같은 고용유형의 직원입니다.");
+        }
+
+        this.type = targetType;
+    }
+
     public void promote(EmployeePosition newPosition, @Nullable EmployeeGrade newGrade) {
         if (status == EmployeeStatus.RESIGNED) {
             throw new InvalidEmployeeStatusException("퇴사한 직원은 승진할 수 없습니다.");
         }
 
-        if (newPosition.getLevel() < this.position.getLevel()) {
+        EmployeePosition targetPosition = requireNonNull(newPosition);
+        if (targetPosition.getLevel() < this.position.getLevel()) {
             throw new InvalidEmployeeStatusException("현재 직급보다 낮은 직급으로 변경할 수 없습니다.");
         }
+        EmployeeGrade targetGrade = newGrade != null ? newGrade : this.grade;
+        if (this.position == targetPosition && this.grade == targetGrade) {
+            throw new IllegalArgumentException("동일한 직급과 등급으로는 승진할 수 없습니다.");
+        }
 
-        this.position = requireNonNull(newPosition);
+        this.position = targetPosition;
         if (newGrade != null) {
             this.grade = newGrade;
         }
