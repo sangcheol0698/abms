@@ -42,6 +42,7 @@ out/
 
 # Logs
 spy.log
+**/logs/
 /AGENTS.md
 /frontend/docs/
 /frontend/AGENTS.md

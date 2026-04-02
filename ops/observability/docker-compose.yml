@@ -1,0 +1,52 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.3.1
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - sed "s|__ABMS_API_TARGET__|$${ABMS_API_TARGET}|g" /etc/prometheus/prometheus.yml.tmpl > /tmp/prometheus.yml && exec /bin/prometheus --config.file=/tmp/prometheus.yml
+    environment:
+      ABMS_API_TARGET: ${ABMS_API_TARGET:-host.docker.internal:8080}
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml.tmpl:ro
+      - ./prometheus/alerts:/etc/prometheus/alerts:ro
+      - prometheus-data:/prometheus
+
+  loki:
+    image: grafana/loki:3.4.1
+    command: ["-config.file=/etc/loki/config.yml"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+
+  promtail:
+    image: grafana/promtail:3.4.1
+    command: ["-config.file=/etc/promtail/config.yml"]
+    volumes:
+      - ./promtail/config.yml:/etc/promtail/config.yml:ro
+      - ${ABMS_LOG_DIR:-/var/log/abms}:/var/log/abms:ro
+      - promtail-data:/var/lib/promtail
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  prometheus-data:
+  loki-data:
+  promtail-data:
+  grafana-data:

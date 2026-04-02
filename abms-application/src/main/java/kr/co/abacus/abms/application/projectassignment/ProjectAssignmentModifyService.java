@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.application.auth.CurrentActor;
+import kr.co.abacus.abms.application.observability.ApplicationMetricsRecorder;
+import kr.co.abacus.abms.application.observability.BusinessEventLogger;
 import kr.co.abacus.abms.application.project.ProjectAuthorizationValidator;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentManager;
@@ -27,6 +29,8 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
     private final ProjectRepository projectRepository;
     private final ProjectAssignmentRepository projectAssignmentRepository;
     private final ProjectAuthorizationValidator projectAuthorizationValidator;
+    private final BusinessEventLogger businessEventLogger;
+    private final ApplicationMetricsRecorder applicationMetricsRecorder;
 
     @Override
     public ProjectAssignment create(ProjectAssignmentCreateRequest createRequest) {
@@ -45,8 +49,10 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
         validateNoOverlap(null, createRequest.projectId(), createRequest.employeeId(), createRequest.startDate(), createRequest.endDate());
 
         ProjectAssignment projectAssignment = ProjectAssignment.assign(project, createRequest);
-
-        return projectAssignmentRepository.save(projectAssignment);
+        ProjectAssignment saved = projectAssignmentRepository.save(projectAssignment);
+        businessEventLogger.projectAssignmentEvent("create", null, saved);
+        applicationMetricsRecorder.incrementProjectAssignmentAction("create");
+        return saved;
     }
 
     @Override
@@ -73,7 +79,10 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
         );
 
         assignment.update(project, updateRequest);
-        return projectAssignmentRepository.save(assignment);
+        ProjectAssignment saved = projectAssignmentRepository.save(assignment);
+        businessEventLogger.projectAssignmentEvent("update", null, saved);
+        applicationMetricsRecorder.incrementProjectAssignmentAction("update");
+        return saved;
     }
 
     @Override
@@ -100,7 +109,10 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
         );
 
         assignment.end(project, endRequest);
-        return projectAssignmentRepository.save(assignment);
+        ProjectAssignment saved = projectAssignmentRepository.save(assignment);
+        businessEventLogger.projectAssignmentEvent("end", null, saved);
+        applicationMetricsRecorder.incrementProjectAssignmentAction("end");
+        return saved;
     }
 
     private ProjectAssignment loadAssignment(Long assignmentId) {

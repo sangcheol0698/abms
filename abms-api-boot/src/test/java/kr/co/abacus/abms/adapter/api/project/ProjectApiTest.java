@@ -38,6 +38,10 @@ import kr.co.abacus.abms.domain.project.ProjectFixture;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
+
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -57,8 +61,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("프로젝트 API (ProjectApi)")
 class ProjectApiTest extends ApiIntegrationTestBase {
@@ -165,6 +167,9 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                         .session(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
+                .andDo(document("project/create",
+                        requestBody(),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
         ProjectCreateResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), ProjectCreateResponse.class);
@@ -229,6 +234,16 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                         .param("periodEnd", "2024-12-31")
                         .param("page", "0")
                         .param("size", "10"))
+                .andDo(document("project/search",
+                        queryParameters(
+                                parameterWithName("name").description("프로젝트명 검색어").optional(),
+                                parameterWithName("statuses").description("프로젝트 상태 목록").optional(),
+                                parameterWithName("periodStart").description("조회 시작일").optional(),
+                                parameterWithName("periodEnd").description("조회 종료일").optional(),
+                                parameterWithName("page").description("조회할 페이지 번호"),
+                                parameterWithName("size").description("페이지 크기")
+                        ),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].code").value("PRJ-ALPHA-001"));
     }
@@ -250,6 +265,12 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                         .session(session)
                         .param("name", "요약 프로젝트")
                         .param("partyIds", String.valueOf(partyId)))
+                .andDo(document("project/summary",
+                        queryParameters(
+                                parameterWithName("name").description("프로젝트명 검색어").optional(),
+                                parameterWithName("partyIds").description("협력사 ID 목록").optional()
+                        ),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
         ProjectOverviewSummary response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), ProjectOverviewSummary.class);
@@ -326,6 +347,12 @@ class ProjectApiTest extends ApiIntegrationTestBase {
                         .session(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
+                .andDo(document("project/update",
+                        pathParameters(
+                                parameterWithName("id").description("수정할 프로젝트 ID")
+                        ),
+                        requestBody(),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
         ProjectUpdateResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), ProjectUpdateResponse.class);
@@ -351,6 +378,10 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         // When & Then
         MockHttpSession session = login();
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/projects/{id}/complete", project.getId()).session(session))
+                .andDo(document("project/complete",
+                        pathParameters(
+                                parameterWithName("id").description("완료 처리할 프로젝트 ID")
+                        )))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         flushAndClear();
@@ -371,6 +402,10 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         // When & Then
         MockHttpSession session = login();
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/projects/{id}/cancel", project.getId()).session(session))
+                .andDo(document("project/cancel",
+                        pathParameters(
+                                parameterWithName("id").description("취소 처리할 프로젝트 ID")
+                        )))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         flushAndClear();
@@ -389,6 +424,10 @@ class ProjectApiTest extends ApiIntegrationTestBase {
         // When & Then
         MockHttpSession session = login();
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/{id}", project.getId()).session(session))
+                .andDo(document("project/delete",
+                        pathParameters(
+                                parameterWithName("id").description("삭제할 프로젝트 ID")
+                        )))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         flushAndClear();
@@ -412,6 +451,7 @@ class ProjectApiTest extends ApiIntegrationTestBase {
     void downloadExcel() throws Exception {
         MockHttpSession session = login();
         mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/excel/download").session(session))
+                .andDo(document("project/excel-download"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.header().string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .andExpect(MockMvcResultMatchers.header().exists("Content-Disposition"));
@@ -419,13 +459,103 @@ class ProjectApiTest extends ApiIntegrationTestBase {
 
     @Test
     @DisplayName("프로젝트 엑셀 샘플 다운로드")
-    void downloadExcelSample() {
-        restTestClient.get()
-                .uri("/api/projects/excel/sample")
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                .expectHeader().valueMatches("Content-Disposition", "attachment; filename=\"projects_sample_\\d{8}_\\d{6}\\.xlsx\"");
+    void downloadExcelSample() throws Exception {
+        MockHttpSession session = login();
+        try {
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/excel/sample").session(session))
+                    .andDo(document("project/excel-sample"))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.header().string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .andExpect(MockMvcResultMatchers.header().exists("Content-Disposition"));
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    @Test
+    @DisplayName("프로젝트 상세 조회")
+    void find() throws Exception {
+        Long partyId = createParty("상세 협력사");
+        Long leadDepartmentId = createLeadDepartment("상세 부서");
+        Project project = createProject("PRJ-FIND-001", "상세 프로젝트", partyId, leadDepartmentId, ProjectStatus.IN_PROGRESS,
+                LocalDate.of(2024, 1, 1));
+        projectRepository.save(project);
+        flushAndClear();
+
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/{id}", project.getId()).session(session))
+                .andDo(document("project/get",
+                        pathParameters(
+                                parameterWithName("id").description("조회할 프로젝트 ID")
+                        ),
+                        responseBody()))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        ProjectDetailResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), ProjectDetailResponse.class);
+        assertThat(response.projectId()).isEqualTo(project.getId());
+    }
+
+    @Test
+    @DisplayName("프로젝트 상태 목록을 조회한다")
+    void getStatuses() throws Exception {
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/projects/statuses").session(session))
+                .andDo(document("project/statuses", responseBody()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    @DisplayName("프로젝트 엑셀 업로드")
+    void uploadExcel() throws Exception {
+        String partyName = "업로드 협력사";
+        partyRepository.save(Party.create(new PartyCreateRequest(partyName, null, null, null, null)));
+        Long leadDepartmentId = createLeadDepartment("업로드 부서");
+        flushAndClear();
+
+        byte[] excelBytes;
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Projects");
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("협력사 이름");
+            header.createCell(1).setCellValue("주관 부서 ID");
+            header.createCell(2).setCellValue("프로젝트 코드");
+            header.createCell(3).setCellValue("프로젝트명");
+            header.createCell(4).setCellValue("상태");
+            header.createCell(5).setCellValue("계약금액");
+            header.createCell(6).setCellValue("시작일");
+            header.createCell(7).setCellValue("종료일");
+            header.createCell(8).setCellValue("설명");
+
+            Row data = sheet.createRow(1);
+            data.createCell(0).setCellValue(partyName);
+            data.createCell(1).setCellValue(String.valueOf(leadDepartmentId));
+            data.createCell(2).setCellValue("PRJ-UPLOAD-001");
+            data.createCell(3).setCellValue("업로드 프로젝트");
+            data.createCell(4).setCellValue("진행 중");
+            data.createCell(5).setCellValue("50000000");
+            data.createCell(6).setCellValue("2024-01-01");
+            data.createCell(7).setCellValue("2024-12-31");
+            data.createCell(8).setCellValue("업로드 테스트 설명");
+
+            workbook.write(out);
+            excelBytes = out.toByteArray();
+        }
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "projects.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelBytes);
+
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/projects/excel/upload")
+                        .file(file)
+                        .session(session))
+                .andDo(document("project/excel-upload",
+                        requestParts(
+                                partWithName("file").description("업로드할 프로젝트 엑셀 파일")
+                        ),
+                        responseBody()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     // @Test

@@ -2,6 +2,8 @@ package kr.co.abacus.abms.adapter.api.department;
 
 import static org.assertj.core.api.Assertions.*;
 import static java.util.Objects.requireNonNull;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -97,6 +99,15 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         departmentRepository.saveAll(List.of(company, division, team1, team2));
         flushAndClear();
 
+        try {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/departments/organization-chart")
+                            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("doc-user")))
+                    .andDo(document("department/organization-chart", responseBody()))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+
         List<OrganizationChartResponse> responses = restTestClient.get()
                 .uri("/api/departments/organization-chart")
                 .exchange()
@@ -128,6 +139,19 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
         Department team1 = createDepartment("TEAM001", "ABC Corp3", DepartmentType.TEAM, null, division);
         departmentRepository.saveAll(List.of(company, division, team1));
 
+        try {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/departments/{departmentId}", team1.getId())
+                            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("doc-user")))
+                    .andDo(document("department/get",
+                            pathParameters(
+                                    parameterWithName("departmentId").description("조회할 부서 ID")
+                            ),
+                            responseBody()))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+
         DepartmentDetailResponse response = restTestClient.get().uri("/api/departments/{id}", team1.getId())
                 .exchange()
                 .expectStatus().isOk()
@@ -157,6 +181,25 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
             employeeRepository.save(employee);
         }
         flushAndClear();
+
+        try {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/departments/{departmentId}/employees", team1.getId())
+                            .param("page", "0")
+                            .param("size", "10")
+                            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("doc-user")))
+                    .andDo(document("department/employees",
+                            pathParameters(
+                                    parameterWithName("departmentId").description("직원 목록을 조회할 부서 ID")
+                            ),
+                            queryParameters(
+                                    parameterWithName("page").description("조회할 페이지 번호"),
+                                    parameterWithName("size").description("페이지 크기")
+                            ),
+                            responseBody()))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
 
         // When: 첫 번째 페이지 조회 (size=10)
         PageResponse<EmployeeSearchResponse> response = restTestClient.get()
@@ -216,6 +259,12 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                             .session(session)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(toJson(new EmployeeAssignLeaderRequest(employee1.getId()))))
+                    .andDo(document("department/assign-team-leader",
+                            pathParameters(
+                                    parameterWithName("departmentId").description("리더를 지정할 부서 ID")
+                            ),
+                            requestBody(),
+                            responseBody()))
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
         } catch (Exception exception) {
             throw new AssertionError(exception);
@@ -251,6 +300,24 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                         LocalDate.of(2026, 3, 15), 999_000_000L, 111_000_000L, 888_000_000L)
         ));
         flushAndClear();
+
+        try {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                            .get("/api/departments/{departmentId}/revenue/sixMonthTrend", team.getId())
+                            .param("yearMonth", "202603")
+                            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("doc-user")))
+                    .andDo(document("department/revenue-trend",
+                            pathParameters(
+                                    parameterWithName("departmentId").description("매출 추이를 조회할 부서 ID")
+                            ),
+                            queryParameters(
+                                    parameterWithName("yearMonth").description("기준 연월")
+                            ),
+                            responseBody()))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
 
         List<MonthlyRevenueSummaryResponse> response = restTestClient.get()
                 .uri(uriBuilder -> uriBuilder

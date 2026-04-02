@@ -1,6 +1,8 @@
 package kr.co.abacus.abms.adapter.api.party;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -151,6 +153,12 @@ class PartyApiTest extends ApiIntegrationTestBase {
                         .session(session)
                         .param("page", "0")
                         .param("size", "10"))
+                .andDo(document("party/list",
+                        queryParameters(
+                                parameterWithName("page").description("조회할 페이지 번호"),
+                                parameterWithName("size").description("페이지 크기")
+                        ),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(10))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(15))
@@ -211,6 +219,11 @@ class PartyApiTest extends ApiIntegrationTestBase {
 
         MockHttpSession session = login();
         mockMvc.perform(MockMvcRequestBuilders.get("/api/parties/{id}/projects", party.getId()).session(session))
+                .andDo(document("party/projects",
+                        pathParameters(
+                                parameterWithName("id").description("협력사 ID")
+                        ),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].partyId").value(party.getId()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[*].code").isArray());
@@ -246,6 +259,11 @@ class PartyApiTest extends ApiIntegrationTestBase {
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/parties/summary")
                         .session(session)
                         .param("name", "요약 협력사"))
+                .andDo(document("party/summary",
+                        queryParameters(
+                                parameterWithName("name").description("협력사명 검색어").optional()
+                        ),
+                        responseBody()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
         PartyOverviewSummary response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), PartyOverviewSummary.class);
@@ -256,6 +274,114 @@ class PartyApiTest extends ApiIntegrationTestBase {
         assertThat(response.withInProgressProjectsCount()).isEqualTo(1);
         assertThat(response.withoutProjectsCount()).isEqualTo(1);
         assertThat(response.totalContractAmount()).isEqualTo(300_000_000L);
+    }
+
+    @Test
+    @DisplayName("협력사 상세를 조회한다")
+    void get() throws Exception {
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest(
+                "상세 협력사",
+                "대표자",
+                "담당자",
+                "010-1111-2222",
+                "detail@test.com"
+        )));
+        flushAndClear();
+
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/parties/{id}", party.getId()).session(session))
+                .andDo(document("party/get",
+                        pathParameters(
+                                parameterWithName("id").description("조회할 협력사 ID")
+                        ),
+                        responseBody()))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        PartyResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), PartyResponse.class);
+        assertThat(response.partyId()).isEqualTo(party.getId());
+        assertThat(response.name()).isEqualTo("상세 협력사");
+    }
+
+    @Test
+    @DisplayName("협력사를 생성한다")
+    void create() throws Exception {
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/parties")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "name", "생성 협력사",
+                                "ceoName", "생성 대표",
+                                "salesRepName", "생성 담당",
+                                "salesRepPhone", "010-3333-4444",
+                                "salesRepEmail", "create@test.com"
+                        ))))
+                .andDo(document("party/create",
+                        requestBody(),
+                        responseBody()))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andReturn();
+
+        PartyResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), PartyResponse.class);
+        assertThat(response.name()).isEqualTo("생성 협력사");
+    }
+
+    @Test
+    @DisplayName("협력사를 수정한다")
+    void update() throws Exception {
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest(
+                "수정 전 협력사",
+                "수정 전 대표",
+                "수정 전 담당",
+                "010-5555-6666",
+                "before@test.com"
+        )));
+        flushAndClear();
+
+        MockHttpSession session = login();
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.put("/api/parties/{id}", party.getId())
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "name", "수정 후 협력사",
+                                "ceoName", "수정 후 대표",
+                                "salesRepName", "수정 후 담당",
+                                "salesRepPhone", "010-7777-8888",
+                                "salesRepEmail", "after@test.com"
+                        ))))
+                .andDo(document("party/update",
+                        pathParameters(
+                                parameterWithName("id").description("수정할 협력사 ID")
+                        ),
+                        requestBody(),
+                        responseBody()))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        PartyResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), PartyResponse.class);
+        assertThat(response.name()).isEqualTo("수정 후 협력사");
+    }
+
+    @Test
+    @DisplayName("협력사를 삭제한다")
+    void delete() throws Exception {
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest(
+                "삭제 협력사",
+                null,
+                null,
+                null,
+                null
+        )));
+        flushAndClear();
+
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/parties/{id}", party.getId()).session(session))
+                .andDo(document("party/delete",
+                        pathParameters(
+                                parameterWithName("id").description("삭제할 협력사 ID")
+                        )))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
     private Project createProject(String code, Long partyId, ProjectStatus status, long contractAmount) {

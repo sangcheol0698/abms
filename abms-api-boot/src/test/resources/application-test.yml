@@ -26,3 +26,9 @@ app:
       from: no-reply@iabacus.co.kr
       subject: "[ABMS] 회원가입 링크 안내"
       confirm-url: http://localhost:5173/auths/registration-confirm
+  observability:
+    health:
+      mail:
+        enabled: false
+      openai:
+        enabled: false

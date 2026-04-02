@@ -2,6 +2,8 @@ package kr.co.abacus.abms.adapter.api.admin;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.Matchers.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -220,11 +222,21 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
         mockMvc.perform(get("/api/admin/permission-groups")
                         .param("name", "그룹")
                         .session(session))
+                .andDo(document("admin/permission-groups/list",
+                        queryParameters(
+                                parameterWithName("name").description("권한 그룹명 검색어").optional()
+                        ),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].name", hasItems("읽기 전용 시스템 그룹", "운영 커스텀 그룹")))
                 .andExpect(jsonPath("$[?(@.name=='운영 커스텀 그룹')].assignedAccountCount").value(hasItem(1)));
 
         mockMvc.perform(get("/api/admin/permission-groups/{id}", customGroupId).session(session))
+                .andDo(document("admin/permission-groups/get",
+                        pathParameters(
+                                parameterWithName("id").description("조회할 권한 그룹 ID")
+                        ),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(customGroupId))
                 .andExpect(jsonPath("$.groupType").value("CUSTOM"))
@@ -238,6 +250,7 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
         MockHttpSession session = login(ADMIN_USERNAME);
 
         mockMvc.perform(get("/api/admin/permission-groups/catalog").session(session))
+                .andDo(document("admin/permission-groups/catalog", responseBody()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.permissions[*].code", hasItems(
                         "permission.group.manage",
@@ -262,6 +275,12 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                         .param("permissionGroupId", String.valueOf(customGroupId))
                         .param("keyword", "관리자")
                         .session(session))
+                .andDo(document("admin/accounts/search",
+                        queryParameters(
+                                parameterWithName("permissionGroupId").description("권한 그룹 ID"),
+                                parameterWithName("keyword").description("계정 검색어").optional()
+                        ),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].email", contains(ADMIN_USERNAME)));
     }
@@ -282,6 +301,9 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                                         Map.of("permissionCode", "employee.write", "scopes", List.of("SELF"))
                                 )
                         ))))
+                .andDo(document("admin/permission-groups/create",
+                        requestBody(),
+                        responseBody()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -297,6 +319,11 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                                         Map.of("permissionCode", "employee.read", "scopes", List.of("ALL"))
                                 )
                         ))))
+                .andDo(document("admin/permission-groups/update",
+                        pathParameters(
+                                parameterWithName("id").description("수정할 권한 그룹 ID")
+                        ),
+                        requestBody()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/admin/permission-groups/{id}", createdGroupId).session(session))
@@ -343,6 +370,10 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(delete("/api/admin/permission-groups/{id}", systemGroupId).session(session))
+                .andDo(document("admin/permission-groups/delete",
+                        pathParameters(
+                                parameterWithName("id").description("삭제할 권한 그룹 ID")
+                        )))
                 .andExpect(status().isForbidden());
     }
 
@@ -355,6 +386,11 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
                         .session(session)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(Map.of("accountId", adminAccountId))))
+                .andDo(document("admin/permission-groups/assign-account",
+                        pathParameters(
+                                parameterWithName("id").description("계정을 할당할 권한 그룹 ID")
+                        ),
+                        requestBody()))
                 .andExpect(status().isOk());
 
         MockHttpSession assignedAdminSession = login(ADMIN_USERNAME);
@@ -365,6 +401,11 @@ class PermissionGroupAdminApiTest extends ApiIntegrationTestBase {
 
         mockMvc.perform(delete("/api/admin/permission-groups/{id}/accounts/{accountId}", systemGroupId, adminAccountId)
                         .session(assignedAdminSession))
+                .andDo(document("admin/permission-groups/unassign-account",
+                        pathParameters(
+                                parameterWithName("id").description("권한 그룹 ID"),
+                                parameterWithName("accountId").description("해제할 계정 ID")
+                        )))
                 .andExpect(status().isOk());
 
         MockHttpSession refreshedAdminSession = login(ADMIN_USERNAME);

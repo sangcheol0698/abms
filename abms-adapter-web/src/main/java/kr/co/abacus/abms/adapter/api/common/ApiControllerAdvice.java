@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import lombok.extern.slf4j.Slf4j;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import kr.co.abacus.abms.domain.account.AccountAlreadyExistsException;
 import kr.co.abacus.abms.domain.account.InvalidCurrentPasswordException;
 import kr.co.abacus.abms.domain.account.AccountNotFoundException;
@@ -36,6 +37,12 @@ import kr.co.abacus.abms.domain.permissiongroup.SystemPermissionGroupModificatio
 @Slf4j
 @RestControllerAdvice
 public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
+
+    private final MeterRegistry meterRegistry;
+
+    public ApiControllerAdvice(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleException(Exception exception) {
@@ -99,6 +106,11 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 
         problemDetail.setProperty("timestamp", LocalDateTime.now(ZoneId.systemDefault()));
         problemDetail.setProperty("exception", exception.getClass().getSimpleName());
+        meterRegistry.counter(
+                "abms.api.exceptions.total",
+                "status", String.valueOf(httpStatus.value()),
+                "exception", exception.getClass().getSimpleName()
+        ).increment();
 
         log.error("Exception occurred: {}", problemDetail, exception);
 

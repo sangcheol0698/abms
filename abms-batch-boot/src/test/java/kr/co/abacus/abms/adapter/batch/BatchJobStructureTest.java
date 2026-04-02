@@ -22,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import kr.co.abacus.abms.AbmsBatchApplication;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationLinkSender;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -116,6 +117,9 @@ class BatchJobStructureTest {
     @Autowired
     private kr.co.abacus.abms.adapter.infrastructure.summary.MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
 
+    @Autowired
+    private MeterRegistry meterRegistry;
+
     @Test
     @DisplayName("employeeCostJob는 활성 직원의 월 비용을 계산해 저장한다")
     void employeeCostJob_calculatesMonthlyCost() throws Exception {
@@ -138,6 +142,12 @@ class BatchJobStructureTest {
         assertThat(monthlyCost.getOverHeadCost().amount().longValue()).isEqualTo(1_000_000L);
         assertThat(monthlyCost.getSgaCost().amount().longValue()).isEqualTo(2_000_000L);
         assertThat(monthlyCost.getTotalCost().amount().longValue()).isEqualTo(13_000_000L);
+        assertThat(meterRegistry.find("abms.batch.job.executions.total")
+                .tags("job", "employeeCostJob", "status", "COMPLETED")
+                .counter()).isNotNull();
+        assertThat(meterRegistry.find("abms.batch.step.duration")
+                .tags("job", "employeeCostJob", "step", "employeeCostStep", "status", "COMPLETED")
+                .timer()).isNotNull();
     }
 
     @Test
@@ -211,6 +221,12 @@ class BatchJobStructureTest {
         assertThat(summary.getRevenueAmount().amount().longValue()).isEqualTo(30_000_000L);
         assertThat(summary.getCostAmount().amount().longValue()).isEqualTo(13_000_000L);
         assertThat(summary.getProfitAmount().amount().longValue()).isEqualTo(17_000_000L);
+        assertThat(meterRegistry.find("abms.batch.job.executions.total")
+                .tags("job", "revenueMonthlySummaryJob", "status", "COMPLETED")
+                .counter()).isNotNull();
+        assertThat(meterRegistry.find("abms.batch.step.read.count")
+                .tags("job", "revenueMonthlySummaryJob", "step", "revenueMonthlySummaryStep")
+                .summary()).isNotNull();
     }
 
     @Test

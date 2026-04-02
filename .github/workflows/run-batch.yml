@@ -1,0 +1,198 @@
+name: Run Batch
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 실행할 브랜치 또는 커밋 SHA
+        required: true
+        default: main
+      job_mode:
+        description: 실행할 배치 모드
+        required: true
+        default: monthly_chain
+        type: choice
+        options:
+          - monthly_chain
+          - employee_cost_only
+          - revenue_summary_only
+      target_date:
+        description: targetDate (YYYY-MM-DD, 비우면 자동 계산)
+        required: false
+      create_tag:
+        description: 배치 성공 후 git 태그 생성 여부
+        required: true
+        default: true
+        type: boolean
+  schedule:
+    - cron: '0 18 28-31 * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: run-batch
+  cancel-in-progress: false
+
+jobs:
+  run-batch:
+    name: Run Batch On Dev Server
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      DEV_SERVER_HOST: ${{ vars.DEV_SERVER_HOST }}
+      DEV_SERVER_USER: ${{ vars.DEV_SERVER_USER }}
+      DEV_SERVER_LOG_DIR: ${{ vars.DEV_SERVER_LOG_DIR }}
+      DEV_SERVER_APP_DIR: ${{ vars.DEV_SERVER_APP_DIR }}
+      DEV_SERVER_ENV_FILE: ${{ vars.DEV_SERVER_ENV_FILE }}
+      INPUT_REF: ${{ inputs.ref }}
+      INPUT_JOB_MODE: ${{ inputs.job_mode }}
+      INPUT_TARGET_DATE: ${{ inputs.target_date }}
+      INPUT_CREATE_TAG: ${{ inputs.create_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || 'main' }}
+          fetch-depth: 0
+
+      - name: Resolve execution parameters
+        id: params
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          previous_month_last_day() {
+            python3 -c 'from datetime import datetime, timedelta; from zoneinfo import ZoneInfo; now = datetime.now(ZoneInfo("Asia/Seoul")); first_day = now.replace(day=1); print((first_day - timedelta(days=1)).date().isoformat())'
+          }
+
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            if [ "$(TZ=Asia/Seoul date +%d)" != "01" ]; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "KST 기준 매월 1일이 아니므로 실행을 건너뜁니다."
+              exit 0
+            fi
+
+            checkout_ref="main"
+            job_mode="monthly_chain"
+            target_date="$(previous_month_last_day)"
+            create_tag="true"
+          else
+            checkout_ref="${INPUT_REF:-main}"
+            job_mode="${INPUT_JOB_MODE:-monthly_chain}"
+            create_tag="${INPUT_CREATE_TAG:-true}"
+
+            if [ -n "${INPUT_TARGET_DATE:-}" ]; then
+              target_date="${INPUT_TARGET_DATE}"
+            else
+              target_date="$(previous_month_last_day)"
+            fi
+          fi
+
+          if ! python3 -c 'import datetime, sys; datetime.date.fromisoformat(sys.argv[1])' "$target_date"; then
+            echo "target_date must be YYYY-MM-DD" >&2
+            exit 1
+          fi
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "checkout_ref=$checkout_ref" >> "$GITHUB_OUTPUT"
+          echo "job_mode=$job_mode" >> "$GITHUB_OUTPUT"
+          echo "target_date=$target_date" >> "$GITHUB_OUTPUT"
+          echo "create_tag=$create_tag" >> "$GITHUB_OUTPUT"
+          echo "tag_suffix=$(TZ=Asia/Seoul date +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Start SSH agent
+        if: steps.params.outputs.skip != 'true'
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+
+      - name: Add server to known_hosts
+        if: steps.params.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${DEV_SERVER_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Run batch jobs
+        if: steps.params.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SERVER_USER="${DEV_SERVER_USER:-ubuntu}"
+          LOG_DIR="${DEV_SERVER_LOG_DIR:-\$HOME/logs/abms}"
+          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-\$HOME}"
+          ENV_FILE="${DEV_SERVER_ENV_FILE:-\$HOME/.env}"
+          JOB_MODE="${{ steps.params.outputs.job_mode }}"
+          TARGET_DATE="${{ steps.params.outputs.target_date }}"
+          RUN_PREFIX="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          ssh "${SERVER_USER}@${DEV_SERVER_HOST}" <<EOF
+          set -euo pipefail
+          LOG_DIR="${LOG_DIR}"
+          REMOTE_APP_DIR="${REMOTE_APP_DIR}"
+          ENV_FILE="${ENV_FILE}"
+          JOB_MODE="${JOB_MODE}"
+          TARGET_DATE="${TARGET_DATE}"
+          RUN_PREFIX="${RUN_PREFIX}"
+
+          run_batch_job() {
+            job_name="\$1"
+            run_suffix="\$2"
+            run_id="\${RUN_PREFIX}-\${run_suffix}"
+            run_log_file="\$LOG_DIR/abms-batch-\${job_name}-\${TARGET_DATE}-\${run_id}.log"
+
+            echo "Running \${job_name} with targetDate=\${TARGET_DATE}, run.id=\${run_id}"
+            env APP_ENVIRONMENT=dev APP_LOG_FILE_NAME="\$LOG_DIR/abms-batch.log" \
+              java -jar abms-batch.jar \
+                --spring.profiles.active=dev \
+                --spring.batch.job.name="\${job_name}" \
+                "targetDate=\${TARGET_DATE}" \
+                "run.id=\${run_id}" \
+              2>&1 | tee "\$run_log_file"
+          }
+
+          mkdir -p "\$LOG_DIR"
+          set -a
+          source "\$ENV_FILE"
+          set +a
+
+          cd "\$REMOTE_APP_DIR"
+          if [ ! -f "abms-batch.jar" ]; then
+            echo "abms-batch.jar not found in \${REMOTE_APP_DIR}" >&2
+            exit 1
+          fi
+
+          case "\$JOB_MODE" in
+            monthly_chain)
+              run_batch_job "employeeCostJob" "employee-cost"
+              run_batch_job "revenueMonthlySummaryJob" "revenue-summary"
+              ;;
+            employee_cost_only)
+              run_batch_job "employeeCostJob" "employee-cost"
+              ;;
+            revenue_summary_only)
+              run_batch_job "revenueMonthlySummaryJob" "revenue-summary"
+              ;;
+            *)
+              echo "Unsupported job mode: \$JOB_MODE" >&2
+              exit 1
+              ;;
+          esac
+          EOF
+
+      - name: Create batch tag
+        if: steps.params.outputs.skip != 'true' && steps.params.outputs.create_tag == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG_NAME="batch-dev-${{ steps.params.outputs.tag_suffix }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG_NAME" -m "개발 배치 실행: mode=${{ steps.params.outputs.job_mode }}, targetDate=${{ steps.params.outputs.target_date }}"
+          git push origin "$TAG_NAME"

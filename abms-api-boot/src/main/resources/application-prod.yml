@@ -15,3 +15,7 @@ spring:
   ai:
     openai:
       api-key: ${AI_OPENAI_API_KEY}
+
+logging:
+  level:
+    p6spy: warn

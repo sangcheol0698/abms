@@ -11,6 +11,7 @@ dependencies {
     implementation("org.springframework.data:spring-data-commons")
     implementation("org.springframework.security:spring-security-core")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("io.micrometer:micrometer-core")
 
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
     implementation("io.projectreactor:reactor-core")

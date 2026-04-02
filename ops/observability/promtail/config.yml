@@ -1,0 +1,37 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/lib/promtail/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: abms-json-logs
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            logger_name: logger_name
+            traceId: traceId
+            requestId: requestId
+            event_category: event.category
+            event_action: event.action
+            http_path: http.path
+            http_status: http.status
+      - labels:
+          level:
+          logger_name:
+          traceId:
+          requestId:
+          event_category:
+          event_action:
+          http_path:
+          http_status:
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: abms
+          __path__: /var/log/abms/*.log

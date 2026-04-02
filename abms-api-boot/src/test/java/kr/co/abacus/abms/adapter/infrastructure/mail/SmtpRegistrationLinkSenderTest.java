@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import kr.co.abacus.abms.domain.shared.Email;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +46,8 @@ class SmtpRegistrationLinkSenderTest {
                 "[ABMS] 회원가입 링크 안내",
                 "http://localhost:5173/auths/registration-confirm",
                 "mail/main_logo.png",
-                ""
+                "",
+                new SimpleMeterRegistry()
         );
 
         sender.sendRegistrationLink(
@@ -79,7 +81,8 @@ class SmtpRegistrationLinkSenderTest {
                 "[ABMS] 회원가입 링크 안내",
                 "http://localhost:5173/auths/registration-confirm?source=email",
                 "mail/main_logo.png",
-                ""
+                "",
+                new SimpleMeterRegistry()
         );
 
         sender.sendRegistrationLink(

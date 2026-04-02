@@ -1,0 +1,45 @@
+groups:
+  - name: abms-api
+    rules:
+      - alert: AbmsApiDown
+        expr: up{job="abms-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ABMS API is down"
+      - alert: AbmsApiHigh5xxRate
+        expr: sum(rate(http_server_requests_seconds_count{job="abms-api",status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{job="abms-api"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ABMS API 5xx rate is above 5%"
+      - alert: AbmsSlowP95
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job="abms-api"}[5m])) by (le)) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ABMS API P95 latency is above 1s"
+      - alert: AbmsDbPendingConnections
+        expr: hikaricp_connections_pending{job="abms-api"} > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ABMS DB pending connections are high"
+      - alert: AbmsAuthFailuresSpike
+        expr: increase(abms_security_authentication_failures_total[10m]) > 20
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ABMS authentication failures spiked"
+      - alert: AbmsOpenAiFailureRate
+        expr: sum(rate(abms_chat_requests_total{outcome="failure"}[10m])) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ABMS AI chat requests are failing"
