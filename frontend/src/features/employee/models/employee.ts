@@ -125,7 +125,7 @@ export interface EmployeeCreatePayload {
   memo?: string;
 }
 
-export interface EmployeeUpdatePayload extends EmployeeCreatePayload { }
+export type EmployeeUpdatePayload = EmployeeCreatePayload;
 
 export interface EmployeeDepartmentTransferPayload {
   departmentId: number;
