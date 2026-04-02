@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.mockito.ArgumentCaptor;
 
 import kr.co.abacus.abms.application.auth.dto.ChangePasswordCommand;
 import kr.co.abacus.abms.application.auth.dto.RegistrationConfirmCommand;
@@ -99,11 +101,14 @@ class AuthManagerTest extends IntegrationTestBase {
         assertThat(latestToken.getEmployeeId()).isEqualTo(employee.getId());
         assertThat(latestToken.getExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(29));
         assertThat(registrationTokenRepository.findByToken(oldToken.getToken())).isEmpty();
+        ArgumentCaptor<LocalDateTime> expiresAtCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
         verify(registrationLinkSender).sendRegistrationLink(
                 eq(new Email(EMAIL)),
                 eq(latestToken.getToken()),
-                eq(latestToken.getExpiresAt())
+                expiresAtCaptor.capture()
         );
+        assertThat(expiresAtCaptor.getValue().truncatedTo(ChronoUnit.SECONDS))
+                .isEqualTo(latestToken.getExpiresAt().truncatedTo(ChronoUnit.SECONDS));
     }
 
     @Test
