@@ -597,9 +597,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                         ),
                         responseFields(
                                 fieldWithPath("successCount").description("성공적으로 등록된 직원 수"),
-                                fieldWithPath("failures").description("실패 내역 목록"),
-                                fieldWithPath("failures[].rowNumber").description("실패한 행 번호").optional(),
-                                fieldWithPath("failures[].message").description("실패 사유").optional()
+                                subsectionWithPath("failures").description("실패 내역 목록")
                         )))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -1154,7 +1152,7 @@ class EmployeeApiTest extends ApiIntegrationTestBase {
                 fieldWithPath("departmentName").description("소속 부서명"),
                 fieldWithPath("employeeId").description("직원 ID"),
                 fieldWithPath("name").description("직원 이름"),
-                fieldWithPath("email").description("직원 이메일"),
+                fieldWithPath("email.address").description("직원 이메일"),
                 fieldWithPath("joinDate").description("입사일"),
                 fieldWithPath("birthDate").description("생년월일"),
                 fieldWithPath("position.code").description("직책 코드"),

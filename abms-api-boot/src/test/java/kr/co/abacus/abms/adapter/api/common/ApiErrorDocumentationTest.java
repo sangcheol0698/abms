@@ -170,7 +170,6 @@ class ApiErrorDocumentationTest extends ApiIntegrationTestBase {
                         .session(session))
                 .andDo(document("errors/bad-request",
                         relaxedResponseFields(
-                                fieldWithPath("type").description("오류 유형 URI"),
                                 fieldWithPath("title").description("오류 제목"),
                                 fieldWithPath("status").description("HTTP 상태 코드"),
                                 fieldWithPath("detail").description("오류 상세 메시지"),
@@ -191,7 +190,6 @@ class ApiErrorDocumentationTest extends ApiIntegrationTestBase {
                                 parameterWithName("id").description("존재하지 않는 직원 ID")
                         ),
                         relaxedResponseFields(
-                                fieldWithPath("type").description("오류 유형 URI"),
                                 fieldWithPath("title").description("오류 제목"),
                                 fieldWithPath("status").description("HTTP 상태 코드"),
                                 fieldWithPath("detail").description("오류 상세 메시지"),

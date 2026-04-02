@@ -6,6 +6,7 @@ SERVER_IP="${SERVER_IP:-YOUR_SERVER_IP}"
 LOG_DIR="${LOG_DIR:-\$HOME/logs/abms}"
 REMOTE_APP_DIR="${REMOTE_APP_DIR:-\$HOME}"
 REMOTE_OBSERVABILITY_DIR="${REMOTE_OBSERVABILITY_DIR:-\$HOME/ops}"
+REMOTE_OBSERVABILITY_SCP_DIR="${REMOTE_OBSERVABILITY_SCP_DIR:-~/ops}"
 
 npm run build --prefix ./frontend
 
@@ -30,7 +31,7 @@ scp -i "$KEY_FILE" \
 ssh -i "$KEY_FILE" ubuntu@"$SERVER_IP" "mkdir -p $REMOTE_OBSERVABILITY_DIR"
 scp -i "$KEY_FILE" -r \
     ./ops/observability \
-    ubuntu@"$SERVER_IP":"$REMOTE_OBSERVABILITY_DIR"/
+    ubuntu@"$SERVER_IP":"$REMOTE_OBSERVABILITY_SCP_DIR"/
 
 ssh -i "$KEY_FILE" ubuntu@"$SERVER_IP" <<EOF
 set -e

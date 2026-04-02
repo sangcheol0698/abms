@@ -1,0 +1,1 @@
+import{d as t,B as o,o as r,V as n,W as c,e as l,X as p}from"./index-CIideSKp.js";const i=t({__name:"CardDescription",props:{class:{}},setup(s){const e=s;return(a,d)=>(r(),o("p",{"data-slot":"card-description",class:c(l(p)("text-muted-foreground text-sm",e.class))},[n(a.$slots,"default")],2))}});export{i as _};
