@@ -39,8 +39,40 @@ LOG_DIR="$LOG_DIR"
 REMOTE_APP_DIR="$REMOTE_APP_DIR"
 REMOTE_OBSERVABILITY_DIR="$REMOTE_OBSERVABILITY_DIR"
 
+stop_api() {
+  PID_FILE="\$LOG_DIR/abms-api.pid"
+
+  if [ -f "\$PID_FILE" ]; then
+    PID=\$(cat "\$PID_FILE")
+    if [ -n "\$PID" ] && kill -0 "\$PID" 2>/dev/null; then
+      kill "\$PID" || true
+      for _ in \$(seq 1 10); do
+        if ! kill -0 "\$PID" 2>/dev/null; then
+          rm -f "\$PID_FILE"
+          return 0
+        fi
+        sleep 1
+      done
+      kill -9 "\$PID" || true
+      rm -f "\$PID_FILE"
+      return 0
+    fi
+    rm -f "\$PID_FILE"
+  fi
+
+  pkill -f "java -jar abms-api.jar" || true
+  for _ in \$(seq 1 10); do
+    if ! pgrep -f "java -jar abms-api.jar" > /dev/null; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  pkill -9 -f "java -jar abms-api.jar" || true
+}
+
 mkdir -p "\$LOG_DIR"
-pkill -f "abms-api.jar" || true
+stop_api
 set -a
 source .env
 set +a
