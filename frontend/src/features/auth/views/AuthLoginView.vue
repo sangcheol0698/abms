@@ -69,8 +69,11 @@ const router = useRouter();
 const loginMutation = useLoginMutation();
 const authMeQuery = useAuthMeQuery(false);
 
-const username = ref('');
-const password = ref('');
+const DEFAULT_USERNAME = 'test@iabacus.co.kr';
+const DEFAULT_PASSWORD = 'test123!';
+
+const username = ref(DEFAULT_USERNAME);
+const password = ref(DEFAULT_PASSWORD);
 const errorMessage = ref<string | null>(null);
 const isSubmitting = ref(false);
 

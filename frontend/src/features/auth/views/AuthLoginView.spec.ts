@@ -80,6 +80,7 @@ describe('AuthLoginView', () => {
   it('이메일이 비어 있으면 검증 메시지를 보여준다', async () => {
     const { wrapper } = await mountLoginView();
 
+    await wrapper.find('#username').setValue('');
     await wrapper.find('#password').setValue('password123!');
     await wrapper.find('form').trigger('submit.prevent');
 
@@ -91,6 +92,7 @@ describe('AuthLoginView', () => {
     const { wrapper } = await mountLoginView();
 
     await wrapper.find('#username').setValue('user@abms.co.kr');
+    await wrapper.find('#password').setValue('');
     await wrapper.find('form').trigger('submit.prevent');
 
     expect(wrapper.text()).toContain('비밀번호를 입력해 주세요.');
