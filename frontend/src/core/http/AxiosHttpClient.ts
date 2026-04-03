@@ -24,8 +24,12 @@ export default class AxiosHttpClient {
   private readonly client: AxiosInstance;
 
   constructor() {
+    const baseURL = import.meta.env.PROD
+      ? ''
+      : (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080');
+
     this.client = axios.create({
-      baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080',
+      baseURL,
       timeout: Number(import.meta.env.VITE_API_BASE_TIMEOUT ?? 10000),
       xsrfCookieName: 'XSRF-TOKEN',
       xsrfHeaderName: 'X-XSRF-TOKEN',
