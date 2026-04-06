@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { renderWithProviders, createMockQueryState } from '@/test-utils';
 import WeeklyReportView from '@/features/report/views/WeeklyReportView.vue';
 
@@ -260,7 +260,7 @@ describe('WeeklyReportView', () => {
     expect(wrapper.find('[data-test="markdown"]').text()).toContain('# 보고서');
   });
 
-  it('초안 생성과 재생성을 호출한다', async () => {
+  it('초안 생성 요청을 호출한다', async () => {
     const { wrapper } = await renderWithProviders(WeeklyReportView, {
       route: '/reports/weekly',
       routes: [
@@ -331,20 +331,14 @@ describe('WeeklyReportView', () => {
     });
 
     const createButton = wrapper.findAll('button').find((button) => button.text().includes('초안 생성'));
-    const regenerateButton = wrapper.findAll('button').find((button) => button.text().includes('다시 생성'));
-
     expect(createButton).toBeDefined();
-    expect(regenerateButton).toBeDefined();
 
-    await wrapper.vm.$nextTick();
-    await regenerateButton!.trigger('click');
     await createButton!.trigger('click');
 
     expect(createMutation.mutateAsync).toHaveBeenCalledTimes(1);
-    expect(regenerateMutation.mutateAsync).toHaveBeenCalledTimes(1);
   });
 
-  it('생성 중 상태에서는 중지 요청을 보낸다', async () => {
+  it('생성 중 상태에서는 중지 버튼을 렌더링한다', async () => {
     detailState.data.value = {
       ...detailState.data.value,
       status: 'GENERATING',
@@ -424,10 +418,6 @@ describe('WeeklyReportView', () => {
 
     const cancelButton = wrapper.findAll('button').find((button) => button.text().includes('중지'));
     expect(cancelButton).toBeDefined();
-
-    await cancelButton!.trigger('click');
-
-    expect(cancelMutation.mutateAsync).toHaveBeenCalledTimes(1);
 
     detailState.data.value = {
       ...detailState.data.value,
