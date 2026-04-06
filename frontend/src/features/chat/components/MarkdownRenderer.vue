@@ -187,7 +187,10 @@ const handleContentClick = async (event: MouseEvent) => {
     if (!code) return;
 
     try {
-      await copyTextToClipboard(code);
+      const result = await copyTextToClipboard(code);
+      if (result !== 'copied') {
+        return;
+      }
 
       copyButton.classList.add('복사성공');
       const originalHtml = copyButton.innerHTML;

@@ -889,8 +889,12 @@ async function confirmUnassign() {
 
 async function handleCopyAccountEmail(email: string) {
   try {
-    await copyTextToClipboard(email);
-    toast.success('이메일을 복사했습니다.');
+    const result = await copyTextToClipboard(email);
+    if (result === 'copied') {
+      toast.success('이메일을 복사했습니다.');
+      return;
+    }
+    toast.info('자동 복사가 지원되지 않아 복사 창을 열었습니다.');
   } catch {
     toast.error('이메일 복사에 실패했습니다.');
   }

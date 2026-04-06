@@ -627,8 +627,12 @@ async function handleCopy() {
   }
 
   try {
-    await copyTextToClipboard(selectedDraftDetail.value.reportMarkdown);
-    toast.success('보고서 본문을 복사했습니다.');
+    const result = await copyTextToClipboard(selectedDraftDetail.value.reportMarkdown);
+    if (result === 'copied') {
+      toast.success('보고서 본문을 복사했습니다.');
+      return;
+    }
+    toast.info('자동 복사가 지원되지 않아 복사 창을 열었습니다.');
   } catch (error) {
     console.error('Failed to copy weekly report:', error);
     toast.error('보고서 복사에 실패했습니다.');

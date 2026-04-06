@@ -696,8 +696,14 @@ function handleExcelUploadSuccess() {
 
 async function handleCopyCode(project: ProjectListItem) {
   try {
-    await copyTextToClipboard(project.code);
-    toast.success('프로젝트 코드를 복사했습니다.', {
+    const result = await copyTextToClipboard(project.code);
+    if (result === 'copied') {
+      toast.success('프로젝트 코드를 복사했습니다.', {
+        description: project.code,
+      });
+      return;
+    }
+    toast.info('자동 복사가 지원되지 않아 복사 창을 열었습니다.', {
       description: project.code,
     });
   } catch {

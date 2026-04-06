@@ -615,8 +615,14 @@ async function handleEditEmployee(row: EmployeeListItem) {
 
 async function handleCopyEmail(row: EmployeeListItem) {
   try {
-    await copyTextToClipboard(row.email);
-    toast.success('이메일을 복사했어요.', {
+    const result = await copyTextToClipboard(row.email);
+    if (result === 'copied') {
+      toast.success('이메일을 복사했어요.', {
+        description: row.email,
+      });
+      return;
+    }
+    toast.info('자동 복사가 지원되지 않아 복사 창을 열었습니다.', {
       description: row.email,
     });
   } catch {

@@ -24,7 +24,7 @@
       >
         <span class="text-xs text-muted-foreground tabular-nums">{{ formattedTimeOnly }}</span>
         <button class="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          :title="isCopied ? '복사됨' : '복사'" @click="copyToClipboard(message.content)">
+          :title="isCopied ? '복사됨' : '복사'" @click="handleCopyToClipboard(message.content)">
           <Check v-if="isCopied" class="w-3.5 h-3.5" />
           <Copy v-else class="w-3.5 h-3.5" />
         </button>
@@ -52,9 +52,13 @@ const formattedTimeOnly = computed(() => {
 
 const isCopied = ref(false);
 
-const copyToClipboard = async (text: string) => {
+const handleCopyToClipboard = async (text: string) => {
   try {
-    await copyTextToClipboard(text);
+    const result = await copyTextToClipboard(text);
+    if (result !== 'copied') {
+      toast.info('자동 복사가 지원되지 않아 복사 창을 열었습니다.');
+      return;
+    }
     isCopied.value = true;
     setTimeout(() => {
       isCopied.value = false;

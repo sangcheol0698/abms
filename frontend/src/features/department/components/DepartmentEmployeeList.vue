@@ -360,8 +360,12 @@ async function handleCopyEmail(employee: EmployeeListItem) {
     return;
   }
   try {
-    await copyTextToClipboard(employee.email);
-    toast.success('이메일을 클립보드에 복사했습니다.');
+    const result = await copyTextToClipboard(employee.email);
+    if (result === 'copied') {
+      toast.success('이메일을 클립보드에 복사했습니다.');
+      return;
+    }
+    toast.info('자동 복사가 지원되지 않아 복사 창을 열었습니다.');
   } catch {
     toast.error('이메일 복사에 실패했습니다.');
   }
