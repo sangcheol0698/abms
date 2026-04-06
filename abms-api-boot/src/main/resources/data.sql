@@ -608,7 +608,8 @@ VALUES (1, 'employee.read', '직원 상세 조회', '직원 상세 정보 조회
        (11, 'party.read', '협력사 목록 및 상세 조회', '협력사 목록, 상세 정보, 관련 조회 화면 접근을 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (12, 'party.write', '협력사 생성 및 변경 관리', '협력사 생성, 수정, 삭제를 허용하는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (3, 'dashboard.read', '대시보드 지표 조회', '대시보드의 핵심 지표와 요약 정보를 조회할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
-       (5, 'permission.group.manage', '권한 그룹 관리', '권한 그룹과 그룹별 계정 할당을 조회하고 관리할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL);
+       (5, 'permission.group.manage', '권한 그룹 관리', '권한 그룹과 그룹별 계정 할당을 조회하고 관리할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (13, 'report.read', '주간 보고서 조회', '주간 운영 보고서 초안 화면과 API를 조회할 수 있는 권한', NOW(), NOW(), 1, 1, 0, NULL, NULL);
 
 
 -- ---------------------------------------------------------
@@ -649,4 +650,5 @@ VALUES (1, 1, 1, 'SELF', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (14, 2, 9, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (15, 2, 10, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
        (16, 2, 11, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
-       (17, 2, 12, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL);
+       (17, 2, 12, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL),
+       (18, 2, 13, 'ALL', NOW(), NOW(), 1, 1, 0, NULL, NULL);

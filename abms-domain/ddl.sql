@@ -184,6 +184,35 @@ CREATE TABLE IF NOT EXISTS `tb_permission_group` (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `tb_weekly_report_draft` (
+    `id`                    BIGINT       NOT NULL AUTO_INCREMENT,
+    `title`                 VARCHAR(200) NOT NULL,
+    `week_start`            DATE         NOT NULL,
+    `week_end`              DATE         NOT NULL,
+    `scope_type`            VARCHAR(20)  NOT NULL,
+    `status`                VARCHAR(20)  NOT NULL,
+    `report_markdown`       TEXT         NOT NULL,
+    `snapshot_json`         TEXT         NOT NULL,
+    `model_name`            VARCHAR(100) NOT NULL,
+    `prompt_version`        VARCHAR(30)  NOT NULL,
+    `created_by_account_id` BIGINT       NOT NULL,
+    `failure_reason`        VARCHAR(500) NULL,
+
+    `created_at`            DATETIME(6)  NOT NULL,
+    `updated_at`            DATETIME(6)  NOT NULL,
+    `created_by`            BIGINT       NULL,
+    `updated_by`            BIGINT       NULL,
+    `deleted`               TINYINT(1)   NOT NULL,
+    `deleted_at`            DATETIME(6)  NULL,
+    `deleted_by`            BIGINT       NULL,
+
+    PRIMARY KEY (`id`),
+    INDEX `IDX_WEEKLY_REPORT_DRAFT_ACCOUNT_ID` (`created_by_account_id`),
+    INDEX `IDX_WEEKLY_REPORT_DRAFT_WEEK_RANGE` (`week_start`, `week_end`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `tb_account_group_assignment` (
     `id`                  BIGINT       NOT NULL AUTO_INCREMENT,
     `account_id`          BIGINT       NOT NULL,

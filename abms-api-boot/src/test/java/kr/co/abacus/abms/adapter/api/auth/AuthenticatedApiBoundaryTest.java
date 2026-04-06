@@ -139,6 +139,9 @@ class AuthenticatedApiBoundaryTest extends ApiIntegrationTestBase {
 
         mockMvc.perform(get("/api/v1/chat/sessions"))
                 .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/reports/weekly/drafts"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -178,6 +181,15 @@ class AuthenticatedApiBoundaryTest extends ApiIntegrationTestBase {
         mockMvc.perform(get("/api/v1/chat/sessions").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("권한이 없으면 주간 보고서 API는 403을 반환한다")
+    void should_forbidWeeklyReportApi_withoutPermission() throws Exception {
+        MockHttpSession session = login();
+
+        mockMvc.perform(get("/api/reports/weekly/drafts").session(session))
+                .andExpect(status().isForbidden());
     }
 
     private MockHttpSession login() throws Exception {

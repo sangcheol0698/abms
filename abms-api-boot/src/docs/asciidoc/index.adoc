@@ -1131,6 +1131,75 @@ include::{snippets}/chat/delete-session/http-request.adoc[]
 .HTTP response
 include::{snippets}/chat/delete-session/http-response.adoc[]
 
+== Weekly Report API
+
+=== Create Weekly Report Draft
+
+.Request body
+include::{snippets}/weekly-report/create/request-body.adoc[]
+
+.Response body
+include::{snippets}/weekly-report/create/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/weekly-report/create/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/weekly-report/create/http-response.adoc[]
+
+=== List Weekly Report Drafts
+
+.Response body
+include::{snippets}/weekly-report/list/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/weekly-report/list/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/weekly-report/list/http-response.adoc[]
+
+=== Get Weekly Report Draft Detail
+
+.Path parameters
+include::{snippets}/weekly-report/detail/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/weekly-report/detail/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/weekly-report/detail/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/weekly-report/detail/http-response.adoc[]
+
+=== Regenerate Weekly Report Draft
+
+.Path parameters
+include::{snippets}/weekly-report/regenerate/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/weekly-report/regenerate/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/weekly-report/regenerate/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/weekly-report/regenerate/http-response.adoc[]
+
+=== Cancel Weekly Report Draft
+
+.Path parameters
+include::{snippets}/weekly-report/cancel/path-parameters.adoc[]
+
+.Response body
+include::{snippets}/weekly-report/cancel/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/weekly-report/cancel/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/weekly-report/cancel/http-response.adoc[]
+
 == Admin API
 
 === List Permission Groups

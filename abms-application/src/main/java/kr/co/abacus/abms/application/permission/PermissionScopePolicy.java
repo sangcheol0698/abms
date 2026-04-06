@@ -35,6 +35,7 @@ final class PermissionScopePolicy {
                     PermissionScope.OWN_DEPARTMENT,
                     PermissionScope.OWN_DEPARTMENT_TREE
             ),
+            "report.read", EnumSet.of(PermissionScope.ALL),
             "party.read", EnumSet.of(PermissionScope.ALL),
             "party.write", EnumSet.of(PermissionScope.ALL)
     );
