@@ -285,6 +285,31 @@ const routes = [
         },
       },
       {
+        path: 'reports/weekly/:draftId',
+        name: 'weekly-report-detail',
+        component: () => import('@/features/report/views/WeeklyReportView.vue'),
+        meta: {
+          title: '주간 보고서',
+          layout: SidebarLayout,
+          padding: 'flush',
+          requiredPermission: 'report.read',
+          breadcrumbs: [
+            {
+              title: '대시보드',
+              to: '/',
+            },
+            {
+              title: '주간 보고서',
+              to: '/reports/weekly',
+            },
+            {
+              title: '리포트',
+              disabled: true,
+            },
+          ],
+        },
+      },
+      {
         path: 'assistant',
         name: 'assistant',
         component: () => import('@/features/chat/views/ChatView.vue'),

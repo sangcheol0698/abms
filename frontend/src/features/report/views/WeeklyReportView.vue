@@ -6,38 +6,40 @@
     :content-min-size="56"
     :use-viewport-height="false"
   >
-    <template #sidebar>
+    <template #sidebar="{ pane }">
       <div class="flex h-full min-h-0 flex-col border-r border-border/60 bg-background">
-        <div class="border-b border-border/60 px-4 py-4">
-          <div class="space-y-1">
-            <h2 class="text-base font-semibold text-foreground">주간 운영 보고서</h2>
-            <p class="text-sm text-muted-foreground">지난주 월-일 기준 초안을 생성합니다.</p>
-          </div>
-        </div>
-
-        <div class="space-y-4 px-4 py-4">
-          <div class="grid gap-3">
-            <div class="grid gap-1.5">
-              <Label for="weekly-report-start">시작일</Label>
-              <Input id="weekly-report-start" v-model="weekStart" type="date" />
-            </div>
-            <div class="grid gap-1.5">
-              <Label for="weekly-report-end">종료일</Label>
-              <Input id="weekly-report-end" v-model="weekEnd" type="date" />
-            </div>
-          </div>
-
-          <Button class="w-full gap-2" :disabled="isGenerating" @click="handleGenerate">
+        <div class="px-4 py-4">
+          <Button class="w-full gap-2" :disabled="isGenerating" @click="handleGenerate(pane)">
             <Sparkles class="h-4 w-4" />
             {{ isGenerating ? '요청 중...' : '초안 생성' }}
           </Button>
-
-          <p v-if="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
         </div>
 
-        <div class="flex-1 overflow-y-auto border-t border-border/60 px-4 py-4">
-          <div class="flex items-center justify-between pb-2">
-            <h3 class="text-sm font-medium text-foreground">최근 초안</h3>
+        <div class="border-y border-border/60 px-4 py-4">
+          <div class="grid gap-3">
+            <div class="grid gap-1.5">
+              <Label for="weekly-report-anchor">주차 선택</Label>
+              <DatePicker
+                id="weekly-report-anchor"
+                :model-value="weekAnchorDate"
+                placeholder="주차를 선택하세요"
+                @update:modelValue="handleWeekSelect"
+              />
+            </div>
+            <div class="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-sm">
+              <p class="font-medium text-foreground">선택한 주차</p>
+              <p class="mt-1 text-muted-foreground">
+                {{ selectedWeekLabel }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-4 py-4">
+          <div class="flex items-center justify-between pb-3">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              최근 초안
+            </h3>
             <Loader2 v-if="isListPending" class="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
 
@@ -50,25 +52,27 @@
               v-for="draft in drafts"
               :key="draft.id"
               type="button"
-              class="w-full rounded-xl border p-3 text-left transition-colors"
+              class="w-full rounded-xl border px-3 py-2.5 text-left transition-colors"
               :class="selectedDraftId === draft.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/40'"
-              @click="selectedDraftId = draft.id"
+              @click="handleDraftSelect(draft.id, pane)"
             >
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <p class="truncate font-medium text-foreground">{{ draft.title }}</p>
-                  <p class="text-xs text-muted-foreground">{{ draft.weekStart }} ~ {{ draft.weekEnd }}</p>
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0 space-y-1">
+                  <p class="truncate text-sm font-medium text-foreground">{{ draft.title }}</p>
+                  <p class="truncate text-[11px] text-muted-foreground">
+                    {{ draft.weekStart }} ~ {{ draft.weekEnd }}
+                  </p>
                 </div>
                 <Badge variant="outline" class="shrink-0 text-[11px]">{{ draft.statusDescription }}</Badge>
               </div>
-              <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                <div>직원 {{ draft.snapshotSummary.totalEmployees }}명</div>
-                <div>진행 프로젝트 {{ draft.snapshotSummary.inProgressProjects }}건</div>
-                <div>신규 시작 {{ draft.snapshotSummary.startedProjects }}건</div>
-                <div>종료 {{ draft.snapshotSummary.endedProjects }}건</div>
+              <div class="mt-2 flex gap-3 text-[11px] text-muted-foreground">
+                <span>직원 {{ draft.snapshotSummary.totalEmployees }}</span>
+                <span>프로젝트 {{ draft.snapshotSummary.inProgressProjects }}</span>
               </div>
             </button>
           </div>
+
+          <p v-if="errorMessage" class="mt-4 text-sm text-destructive">{{ errorMessage }}</p>
         </div>
       </div>
     </template>
@@ -83,25 +87,36 @@
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            class="gap-2"
-            :disabled="!selectedDraft || isRegenerating || isSelectedDraftRunning"
-            @click="handleRegenerate"
-          >
-            <RefreshCcw class="h-4 w-4" />
-            {{ isRegenerating ? '요청 중...' : '다시 생성' }}
-          </Button>
-          <Button
-            v-if="selectedDraftDetail && isSelectedDraftRunning"
-            variant="destructive"
-            class="ml-2 gap-2"
-            :disabled="isCancelling"
-            @click="handleCancel"
-          >
-            <Loader2 v-if="isCancelling" class="h-4 w-4 animate-spin" />
-            <span>{{ isCancelling ? '중지 요청 중...' : '중지' }}</span>
-          </Button>
+          <div class="flex items-center gap-2">
+            <Button
+              variant="outline"
+              class="gap-2"
+              :disabled="!selectedDraft || isRegenerating || isSelectedDraftRunning"
+              @click="handleRegenerate"
+            >
+              <RefreshCcw class="h-4 w-4" />
+              {{ isRegenerating ? '요청 중...' : '다시 생성' }}
+            </Button>
+            <Button
+              v-if="selectedDraftDetail && canDeleteSelectedDraft"
+              variant="destructive"
+              class="gap-2"
+              @click="isDeleteDialogOpen = true"
+            >
+              <Trash2 class="h-4 w-4" />
+              삭제
+            </Button>
+            <Button
+              v-if="selectedDraftDetail && isSelectedDraftRunning"
+              variant="destructive"
+              class="gap-2"
+              :disabled="isCancelling"
+              @click="handleCancel"
+            >
+              <Loader2 v-if="isCancelling" class="h-4 w-4 animate-spin" />
+              <span>{{ isCancelling ? '중지 요청 중...' : '중지' }}</span>
+            </Button>
+          </div>
         </div>
 
         <div v-if="isDetailPending" class="flex flex-1 items-center justify-center">
@@ -197,13 +212,30 @@
             </Card>
           </div>
 
-          <Card class="min-h-[320px]">
-            <CardHeader>
-              <CardTitle>AI 초안</CardTitle>
-              <CardDescription>Markdown 기반 읽기 전용 초안입니다.</CardDescription>
+          <Card class="min-h-[320px] overflow-hidden">
+            <CardHeader class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div class="space-y-1">
+                <CardTitle>AI 초안</CardTitle>
+                <CardDescription>Markdown 기반 읽기 전용 초안입니다.</CardDescription>
+              </div>
+              <div
+                v-if="selectedDraftDetail && canEditSelectedDraft"
+                class="flex flex-wrap items-center gap-2"
+              >
+                <Button variant="outline" size="sm" @click="openEditDialog">
+                  <Pencil class="mr-1 h-4 w-4" />
+                  수정
+                </Button>
+                <Button variant="outline" size="sm" @click="handleCopy">
+                  <Clipboard class="mr-1 h-4 w-4" />
+                  복사
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent>
-              <MarkdownRenderer :content="selectedDraftDetail.reportMarkdown" />
+            <CardContent class="min-w-0 overflow-hidden">
+              <div class="min-w-0 max-w-full overflow-x-auto">
+                <MarkdownRenderer :content="selectedDraftDetail.reportMarkdown" />
+              </div>
             </CardContent>
           </Card>
 
@@ -224,37 +256,115 @@
       </div>
     </template>
   </FeatureSplitLayout>
+
+  <Dialog :open="isEditDialogOpen" @update:open="isEditDialogOpen = $event">
+    <DialogContent class="sm:max-w-3xl">
+      <DialogHeader>
+        <DialogTitle>주간 보고서 수정</DialogTitle>
+        <DialogDescription>제목과 Markdown 초안을 직접 수정할 수 있습니다.</DialogDescription>
+      </DialogHeader>
+
+      <div class="grid gap-4">
+        <div class="grid gap-1.5">
+          <Label for="weekly-report-edit-title">제목</Label>
+          <Input id="weekly-report-edit-title" v-model="editTitle" />
+        </div>
+        <div class="grid gap-1.5">
+          <Label for="weekly-report-edit-markdown">Markdown 본문</Label>
+          <Textarea
+            id="weekly-report-edit-markdown"
+            v-model="editMarkdown"
+            class="min-h-[360px] font-mono text-sm"
+          />
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button variant="outline" @click="isEditDialogOpen = false">취소</Button>
+        <Button :disabled="isUpdating" @click="handleUpdate">
+          {{ isUpdating ? '저장 중...' : '저장' }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <AlertDialog :open="isDeleteDialogOpen" @update:open="isDeleteDialogOpen = $event">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>보고서를 삭제할까요?</AlertDialogTitle>
+        <AlertDialogDescription>
+          삭제한 보고서는 목록에서 사라집니다.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel>취소</AlertDialogCancel>
+        <AlertDialogAction
+          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          :disabled="isDeleting"
+          @click="handleDelete"
+        >
+          {{ isDeleting ? '삭제 중...' : '삭제' }}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { Loader2, RefreshCcw, Sparkles } from 'lucide-vue-next';
+import { Clipboard, Loader2, Pencil, RefreshCcw, Sparkles, Trash2 } from 'lucide-vue-next';
+import { useRoute, useRouter } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import FeatureSplitLayout from '@/core/layouts/FeatureSplitLayout.vue';
 import MarkdownRenderer from '@/features/chat/components/MarkdownRenderer.vue';
 import { isWeeklyReportTerminalStatus } from '@/features/report/models/weeklyReport';
+import { copyTextToClipboard } from '@/core/utils/clipboard';
 import {
   useCreateWeeklyReportDraftMutation,
   useCancelWeeklyReportDraftMutation,
+  useDeleteWeeklyReportDraftMutation,
   useRegenerateWeeklyReportDraftMutation,
+  useUpdateWeeklyReportDraftMutation,
   useWeeklyReportDraftDetailQuery,
   useWeeklyReportDraftListQuery,
 } from '@/features/report/queries/useWeeklyReportQueries';
+import { toast } from 'vue-sonner';
+import type { FeatureSplitPaneContext } from '@/core/composables/useFeatureSplitPane';
 
+const route = useRoute();
+const router = useRouter();
 const draftListQuery = useWeeklyReportDraftListQuery();
 const createDraftMutation = useCreateWeeklyReportDraftMutation();
 const regenerateDraftMutation = useRegenerateWeeklyReportDraftMutation();
 const cancelDraftMutation = useCancelWeeklyReportDraftMutation();
+const updateDraftMutation = useUpdateWeeklyReportDraftMutation();
+const deleteDraftMutation = useDeleteWeeklyReportDraftMutation();
 
-const weekStart = ref('');
-const weekEnd = ref('');
+const weekAnchorDate = ref<Date | null>(null);
 const selectedDraftId = ref<number | null>(null);
 const errorMessage = ref('');
+const isEditDialogOpen = ref(false);
+const isDeleteDialogOpen = ref(false);
+const editTitle = ref('');
+const editMarkdown = ref('');
 
 const detailQuery = useWeeklyReportDraftDetailQuery(selectedDraftId);
 
@@ -266,8 +376,16 @@ const isDetailPending = computed(() => detailQuery.isLoading.value && selectedDr
 const isGenerating = computed(() => createDraftMutation.isPending.value);
 const isRegenerating = computed(() => regenerateDraftMutation.isPending.value);
 const isCancelling = computed(() => cancelDraftMutation.isPending.value);
+const isUpdating = computed(() => updateDraftMutation.isPending.value);
+const isDeleting = computed(() => deleteDraftMutation.isPending.value);
 const isSelectedDraftRunning = computed(() =>
   selectedDraftDetail.value != null && !isWeeklyReportTerminalStatus(selectedDraftDetail.value.status),
+);
+const canEditSelectedDraft = computed(() =>
+  selectedDraftDetail.value != null && selectedDraftDetail.value.status === 'DRAFT',
+);
+const canDeleteSelectedDraft = computed(() =>
+  selectedDraftDetail.value != null && isWeeklyReportTerminalStatus(selectedDraftDetail.value.status),
 );
 const progressValue = computed(() => {
   switch (selectedDraftDetail.value?.status) {
@@ -305,6 +423,15 @@ watch(
   (items) => {
     if (items.length === 0) {
       selectedDraftId.value = null;
+      if (route.name === 'weekly-report-detail') {
+        void router.replace({ name: 'weekly-report' });
+      }
+      return;
+    }
+
+    const routeDraftId = Number(route.params.draftId ?? 0);
+    if (routeDraftId > 0 && items.some((item) => item.id === routeDraftId)) {
+      selectedDraftId.value = routeDraftId;
       return;
     }
 
@@ -316,7 +443,24 @@ watch(
 
     if (selectedDraftId.value == null || !items.some((item) => item.id === selectedDraftId.value)) {
       selectedDraftId.value = firstDraft.id;
+      void router.replace({ name: 'weekly-report-detail', params: { draftId: firstDraft.id } });
     }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => route.params.draftId,
+  (draftId) => {
+    if (typeof draftId !== 'string') {
+      if (route.name === 'weekly-report') {
+        selectedDraftId.value = null;
+      }
+      return;
+    }
+
+    const parsedDraftId = Number(draftId);
+    selectedDraftId.value = Number.isNaN(parsedDraftId) ? null : parsedDraftId;
   },
   { immediate: true },
 );
@@ -328,34 +472,87 @@ function toIsoDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function initializeDefaultWeekRange() {
+function startOfWeek(date: Date): Date {
+  const base = new Date(date);
+  const day = base.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  base.setDate(base.getDate() + mondayOffset);
+  base.setHours(0, 0, 0, 0);
+  return base;
+}
+
+function endOfWeek(date: Date): Date {
+  const monday = startOfWeek(date);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(0, 0, 0, 0);
+  return sunday;
+}
+
+function formatDisplayDate(date: Date): string {
+  return toIsoDate(date);
+}
+
+function initializeDefaultWeek() {
   const today = new Date();
   const lastWeekReference = new Date(today);
   lastWeekReference.setDate(today.getDate() - 7);
-
-  const day = lastWeekReference.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  const monday = new Date(lastWeekReference);
-  monday.setDate(lastWeekReference.getDate() + mondayOffset);
-
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-
-  weekStart.value = toIsoDate(monday);
-  weekEnd.value = toIsoDate(sunday);
+  weekAnchorDate.value = startOfWeek(lastWeekReference);
 }
 
-initializeDefaultWeekRange();
+const selectedWeekStart = computed(() => (weekAnchorDate.value ? startOfWeek(weekAnchorDate.value) : null));
+const selectedWeekEnd = computed(() => (weekAnchorDate.value ? endOfWeek(weekAnchorDate.value) : null));
+const selectedWeekLabel = computed(() => {
+  if (!selectedWeekStart.value || !selectedWeekEnd.value) {
+    return '주차를 선택하면 월요일부터 일요일까지 자동 계산됩니다.';
+  }
+  return `${formatDisplayDate(selectedWeekStart.value)} ~ ${formatDisplayDate(selectedWeekEnd.value)}`;
+});
 
-async function handleGenerate() {
+initializeDefaultWeek();
+
+function handleWeekSelect(value: Date | null) {
+  weekAnchorDate.value = value;
+}
+
+function openEditDialog() {
+  if (!selectedDraftDetail.value) {
+    return;
+  }
+  editTitle.value = selectedDraftDetail.value.title;
+  editMarkdown.value = selectedDraftDetail.value.reportMarkdown;
+  isEditDialogOpen.value = true;
+}
+
+function handleDraftSelect(draftId: number, pane?: FeatureSplitPaneContext) {
+  if (selectedDraftId.value === draftId) {
+    if (pane && !pane.isLargeScreen.value) {
+      pane.closeSidebar();
+    }
+    return;
+  }
+
+  selectedDraftId.value = draftId;
+  void router.push({ name: 'weekly-report-detail', params: { draftId } });
+
+  if (pane && !pane.isLargeScreen.value) {
+    pane.closeSidebar();
+  }
+}
+
+async function handleGenerate(pane?: FeatureSplitPaneContext) {
   errorMessage.value = '';
   try {
     const detail = await createDraftMutation.mutateAsync({
-      weekStart: weekStart.value || undefined,
-      weekEnd: weekEnd.value || undefined,
+      weekStart: selectedWeekStart.value ? toIsoDate(selectedWeekStart.value) : undefined,
+      weekEnd: selectedWeekEnd.value ? toIsoDate(selectedWeekEnd.value) : undefined,
     });
     selectedDraftId.value = detail.id;
+    await router.replace({ name: 'weekly-report-detail', params: { draftId: detail.id } });
     await draftListQuery.refetch();
+    if (pane && !pane.isLargeScreen.value) {
+      pane.closeSidebar();
+    }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '주간 보고서 초안 생성에 실패했습니다.';
   }
@@ -386,8 +583,64 @@ async function handleCancel() {
     const detail = await cancelDraftMutation.mutateAsync(selectedDraftId.value);
     selectedDraftId.value = detail.id;
     await draftListQuery.refetch();
+    await router.replace({ name: 'weekly-report-detail', params: { draftId: detail.id } });
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '주간 보고서 생성 중지에 실패했습니다.';
+  }
+}
+
+async function handleUpdate() {
+  if (!selectedDraftId.value) {
+    return;
+  }
+
+  errorMessage.value = '';
+  try {
+    const detail = await updateDraftMutation.mutateAsync({
+      draftId: selectedDraftId.value,
+      title: editTitle.value,
+      reportMarkdown: editMarkdown.value,
+    });
+    selectedDraftId.value = detail.id;
+    isEditDialogOpen.value = false;
+    await draftListQuery.refetch();
+    await router.replace({ name: 'weekly-report-detail', params: { draftId: detail.id } });
+    toast.success('주간 보고서를 저장했습니다.');
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '주간 보고서 수정에 실패했습니다.';
+  }
+}
+
+async function handleDelete() {
+  if (!selectedDraftId.value) {
+    return;
+  }
+
+  const targetDraftId = selectedDraftId.value;
+  errorMessage.value = '';
+  try {
+    await deleteDraftMutation.mutateAsync(targetDraftId);
+    isDeleteDialogOpen.value = false;
+    selectedDraftId.value = null;
+    await router.push({ name: 'weekly-report' });
+    await draftListQuery.refetch();
+    toast.success('주간 보고서를 삭제했습니다.');
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '주간 보고서 삭제에 실패했습니다.';
+  }
+}
+
+async function handleCopy() {
+  if (!selectedDraftDetail.value) {
+    return;
+  }
+
+  try {
+    await copyTextToClipboard(selectedDraftDetail.value.reportMarkdown);
+    toast.success('보고서 본문을 복사했습니다.');
+  } catch (error) {
+    console.error('Failed to copy weekly report:', error);
+    toast.error('보고서 복사에 실패했습니다.');
   }
 }
 </script>

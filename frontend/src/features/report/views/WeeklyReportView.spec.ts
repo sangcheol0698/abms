@@ -127,6 +127,36 @@ const cancelMutation = {
   })),
 };
 
+const updateMutation = {
+  isPending: ref(false),
+  mutateAsync: vi.fn(async () => ({
+    id: 1,
+    title: '수정된 주간 운영 보고서',
+    weekStart: '2026-03-23',
+    weekEnd: '2026-03-29',
+    status: 'DRAFT',
+    statusDescription: '초안',
+    reportMarkdown: '# 수정된 보고서',
+    snapshotSummary: {
+      totalEmployees: 30,
+      onLeaveEmployees: 2,
+      inProgressProjects: 8,
+      startedProjects: 1,
+      endedProjects: 1,
+      monthlyRevenueAvailable: true,
+    },
+    snapshotJson: '{ "employees": { "totalEmployees": 30 } }',
+    failureReason: null,
+    createdAt: new Date('2026-03-30T09:00:00'),
+    updatedAt: new Date('2026-03-30T10:00:00'),
+  })),
+};
+
+const deleteMutation = {
+  isPending: ref(false),
+  mutateAsync: vi.fn(async () => undefined),
+};
+
 vi.mock('@/features/report/queries/useWeeklyReportQueries', () => ({
   useWeeklyReportDraftListQuery: () => ({
     ...listState,
@@ -135,7 +165,16 @@ vi.mock('@/features/report/queries/useWeeklyReportQueries', () => ({
   useWeeklyReportDraftDetailQuery: () => detailState,
   useCreateWeeklyReportDraftMutation: () => createMutation,
   useCancelWeeklyReportDraftMutation: () => cancelMutation,
+  useUpdateWeeklyReportDraftMutation: () => updateMutation,
+  useDeleteWeeklyReportDraftMutation: () => deleteMutation,
   useRegenerateWeeklyReportDraftMutation: () => regenerateMutation,
+}));
+
+vi.mock('vue-sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 describe('WeeklyReportView', () => {
@@ -150,6 +189,11 @@ describe('WeeklyReportView', () => {
         {
           path: '/reports/weekly',
           name: 'weekly-report',
+          component: WeeklyReportView,
+        },
+        {
+          path: '/reports/weekly/:draftId',
+          name: 'weekly-report-detail',
           component: WeeklyReportView,
         },
       ],
@@ -167,10 +211,10 @@ describe('WeeklyReportView', () => {
             emits: ['click'],
             template: '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
           },
-          Input: {
+          DatePicker: {
             props: ['modelValue', 'type', 'id'],
             emits: ['update:modelValue'],
-            template: '<input :value="modelValue" :type="type" :id="id" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template: '<div data-test="date-picker" :data-id="id" @click="$emit(\'update:modelValue\', new Date(\'2026-03-31\'))"></div>',
           },
           Label: true,
           Badge: true,
@@ -179,6 +223,30 @@ describe('WeeklyReportView', () => {
           CardContent: { template: '<div><slot /></div>' },
           CardTitle: { template: '<div><slot /></div>' },
           CardDescription: { template: '<div><slot /></div>' },
+          Input: {
+            props: ['modelValue', 'id'],
+            emits: ['update:modelValue'],
+            template: '<input :id="id" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+          },
+          Textarea: {
+            props: ['modelValue', 'id'],
+            emits: ['update:modelValue'],
+            template: '<textarea :id="id" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)"></textarea>',
+          },
+          Dialog: { template: '<div><slot /></div>' },
+          DialogContent: { template: '<div><slot /></div>' },
+          DialogHeader: { template: '<div><slot /></div>' },
+          DialogTitle: { template: '<div><slot /></div>' },
+          DialogDescription: { template: '<div><slot /></div>' },
+          DialogFooter: { template: '<div><slot /></div>' },
+          AlertDialog: { template: '<div><slot /></div>' },
+          AlertDialogContent: { template: '<div><slot /></div>' },
+          AlertDialogHeader: { template: '<div><slot /></div>' },
+          AlertDialogTitle: { template: '<div><slot /></div>' },
+          AlertDialogDescription: { template: '<div><slot /></div>' },
+          AlertDialogFooter: { template: '<div><slot /></div>' },
+          AlertDialogCancel: { template: '<button><slot /></button>' },
+          AlertDialogAction: { template: '<button @click="$emit(\'click\')"><slot /></button>', emits: ['click'] },
           Progress: true,
           Loader2: true,
           RefreshCcw: true,
@@ -201,6 +269,11 @@ describe('WeeklyReportView', () => {
           name: 'weekly-report',
           component: WeeklyReportView,
         },
+        {
+          path: '/reports/weekly/:draftId',
+          name: 'weekly-report-detail',
+          component: WeeklyReportView,
+        },
       ],
       global: {
         stubs: {
@@ -213,10 +286,10 @@ describe('WeeklyReportView', () => {
             emits: ['click'],
             template: '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
           },
-          Input: {
+          DatePicker: {
             props: ['modelValue', 'type', 'id'],
             emits: ['update:modelValue'],
-            template: '<input :value="modelValue" :type="type" :id="id" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template: '<div data-test="date-picker" :data-id="id" @click="$emit(\'update:modelValue\', new Date(\'2026-03-31\'))"></div>',
           },
           Label: true,
           Badge: true,
@@ -225,6 +298,30 @@ describe('WeeklyReportView', () => {
           CardContent: { template: '<div><slot /></div>' },
           CardTitle: { template: '<div><slot /></div>' },
           CardDescription: { template: '<div><slot /></div>' },
+          Input: {
+            props: ['modelValue', 'id'],
+            emits: ['update:modelValue'],
+            template: '<input :id="id" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+          },
+          Textarea: {
+            props: ['modelValue', 'id'],
+            emits: ['update:modelValue'],
+            template: '<textarea :id="id" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)"></textarea>',
+          },
+          Dialog: { template: '<div><slot /></div>' },
+          DialogContent: { template: '<div><slot /></div>' },
+          DialogHeader: { template: '<div><slot /></div>' },
+          DialogTitle: { template: '<div><slot /></div>' },
+          DialogDescription: { template: '<div><slot /></div>' },
+          DialogFooter: { template: '<div><slot /></div>' },
+          AlertDialog: { template: '<div><slot /></div>' },
+          AlertDialogContent: { template: '<div><slot /></div>' },
+          AlertDialogHeader: { template: '<div><slot /></div>' },
+          AlertDialogTitle: { template: '<div><slot /></div>' },
+          AlertDialogDescription: { template: '<div><slot /></div>' },
+          AlertDialogFooter: { template: '<div><slot /></div>' },
+          AlertDialogCancel: { template: '<button><slot /></button>' },
+          AlertDialogAction: { template: '<button @click="$emit(\'click\')"><slot /></button>', emits: ['click'] },
           Progress: true,
           Loader2: true,
           RefreshCcw: true,
@@ -264,6 +361,11 @@ describe('WeeklyReportView', () => {
           name: 'weekly-report',
           component: WeeklyReportView,
         },
+        {
+          path: '/reports/weekly/:draftId',
+          name: 'weekly-report-detail',
+          component: WeeklyReportView,
+        },
       ],
       global: {
         stubs: {
@@ -276,10 +378,10 @@ describe('WeeklyReportView', () => {
             emits: ['click'],
             template: '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
           },
-          Input: {
+          DatePicker: {
             props: ['modelValue', 'type', 'id'],
             emits: ['update:modelValue'],
-            template: '<input :value="modelValue" :type="type" :id="id" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template: '<div data-test="date-picker" :data-id="id" @click="$emit(\'update:modelValue\', new Date(\'2026-03-31\'))"></div>',
           },
           Label: true,
           Badge: true,
@@ -288,6 +390,30 @@ describe('WeeklyReportView', () => {
           CardContent: { template: '<div><slot /></div>' },
           CardTitle: { template: '<div><slot /></div>' },
           CardDescription: { template: '<div><slot /></div>' },
+          Input: {
+            props: ['modelValue', 'id'],
+            emits: ['update:modelValue'],
+            template: '<input :id="id" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+          },
+          Textarea: {
+            props: ['modelValue', 'id'],
+            emits: ['update:modelValue'],
+            template: '<textarea :id="id" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)"></textarea>',
+          },
+          Dialog: { template: '<div><slot /></div>' },
+          DialogContent: { template: '<div><slot /></div>' },
+          DialogHeader: { template: '<div><slot /></div>' },
+          DialogTitle: { template: '<div><slot /></div>' },
+          DialogDescription: { template: '<div><slot /></div>' },
+          DialogFooter: { template: '<div><slot /></div>' },
+          AlertDialog: { template: '<div><slot /></div>' },
+          AlertDialogContent: { template: '<div><slot /></div>' },
+          AlertDialogHeader: { template: '<div><slot /></div>' },
+          AlertDialogTitle: { template: '<div><slot /></div>' },
+          AlertDialogDescription: { template: '<div><slot /></div>' },
+          AlertDialogFooter: { template: '<div><slot /></div>' },
+          AlertDialogCancel: { template: '<button><slot /></button>' },
+          AlertDialogAction: { template: '<button @click="$emit(\'click\')"><slot /></button>', emits: ['click'] },
           Progress: true,
           Loader2: true,
           RefreshCcw: true,

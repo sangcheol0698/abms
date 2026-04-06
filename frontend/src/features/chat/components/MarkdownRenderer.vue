@@ -226,6 +226,10 @@ const handleContentClick = async (event: MouseEvent) => {
   color: var(--foreground);
   line-height: 1.7;
   font-size: 0.9rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* 제목 스타일 - 그라데이션과 마진 최적화 */

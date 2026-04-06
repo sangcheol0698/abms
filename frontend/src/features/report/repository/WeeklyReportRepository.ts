@@ -50,4 +50,21 @@ export default class WeeklyReportRepository {
     });
     return normalizeWeeklyReportDraftDetail(response);
   }
+
+  async updateDraft(
+    draftId: number,
+    payload: { title: string; reportMarkdown: string },
+  ): Promise<WeeklyReportDraftDetail> {
+    const response = await this.httpRepository.patch<WeeklyReportDraftResponse>({
+      path: `/api/reports/weekly/drafts/${draftId}`,
+      data: payload,
+    });
+    return normalizeWeeklyReportDraftDetail(response);
+  }
+
+  async deleteDraft(draftId: number): Promise<void> {
+    await this.httpRepository.delete({
+      path: `/api/reports/weekly/drafts/${draftId}`,
+    });
+  }
 }

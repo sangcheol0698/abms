@@ -75,3 +75,33 @@ export function useCancelWeeklyReportDraftMutation() {
     },
   });
 }
+
+export function useUpdateWeeklyReportDraftMutation() {
+  const queryClient = useQueryClient();
+  const repository = appContainer.resolve(WeeklyReportRepository);
+
+  return useMutation({
+    mutationFn: (variables: { draftId: number; title: string; reportMarkdown: string }) =>
+      repository.updateDraft(variables.draftId, {
+        title: variables.title,
+        reportMarkdown: variables.reportMarkdown,
+      }),
+    onSuccess: async (detail) => {
+      await queryClient.invalidateQueries({ queryKey: reportKeys.weeklyDrafts() });
+      queryClient.setQueryData(reportKeys.weeklyDraftDetail(detail.id), detail);
+    },
+  });
+}
+
+export function useDeleteWeeklyReportDraftMutation() {
+  const queryClient = useQueryClient();
+  const repository = appContainer.resolve(WeeklyReportRepository);
+
+  return useMutation({
+    mutationFn: (draftId: number) => repository.deleteDraft(draftId),
+    onSuccess: async (_data, draftId) => {
+      await queryClient.invalidateQueries({ queryKey: reportKeys.weeklyDrafts() });
+      queryClient.removeQueries({ queryKey: reportKeys.weeklyDraftDetail(draftId) });
+    },
+  });
+}
