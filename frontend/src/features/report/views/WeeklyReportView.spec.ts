@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ref } from 'vue';
+import { defineComponent, h, ref } from 'vue';
 import { renderWithProviders, createMockQueryState } from '@/test-utils';
 import WeeklyReportView from '@/features/report/views/WeeklyReportView.vue';
 
@@ -174,8 +174,26 @@ vi.mock('vue-sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
+    info: vi.fn(),
   },
 }));
+
+const FeatureSplitLayoutStub = defineComponent({
+  setup(_, { slots }) {
+    const pane = {
+      isLargeScreen: { value: true },
+      isSidebarCollapsed: { value: false },
+      toggleSidebar: vi.fn(),
+      closeSidebar: vi.fn(),
+    };
+
+    return () =>
+      h('div', [
+        h('div', { 'data-slot': 'sidebar' }, slots.sidebar?.({ pane })),
+        h('div', { 'data-slot': 'content' }, slots.default?.({ pane })),
+      ]);
+  },
+});
 
 describe('WeeklyReportView', () => {
   beforeEach(() => {
@@ -199,9 +217,7 @@ describe('WeeklyReportView', () => {
       ],
       global: {
         stubs: {
-          FeatureSplitLayout: {
-            template: '<div><slot name="sidebar" /><slot /></div>',
-          },
+          FeatureSplitLayout: FeatureSplitLayoutStub,
           MarkdownRenderer: {
             props: ['content'],
             template: '<div data-test="markdown">{{ content }}</div>',
@@ -277,9 +293,7 @@ describe('WeeklyReportView', () => {
       ],
       global: {
         stubs: {
-          FeatureSplitLayout: {
-            template: '<div><slot name="sidebar" /><slot /></div>',
-          },
+          FeatureSplitLayout: FeatureSplitLayoutStub,
           MarkdownRenderer: true,
           Button: {
             props: ['disabled'],
@@ -363,9 +377,7 @@ describe('WeeklyReportView', () => {
       ],
       global: {
         stubs: {
-          FeatureSplitLayout: {
-            template: '<div><slot name="sidebar" /><slot /></div>',
-          },
+          FeatureSplitLayout: FeatureSplitLayoutStub,
           MarkdownRenderer: true,
           Button: {
             props: ['disabled'],
