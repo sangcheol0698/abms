@@ -232,22 +232,13 @@
                 </Button>
               </div>
             </CardHeader>
-            <CardContent class="min-w-0 overflow-hidden">
-              <div class="min-w-0 max-w-full overflow-x-auto">
+            <CardContent class="min-h-0 min-w-0 overflow-hidden">
+              <div class="max-h-[50vh] min-w-0 max-w-full overflow-auto pr-1">
                 <MarkdownRenderer :content="selectedDraftDetail.reportMarkdown" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>스냅샷 JSON</CardTitle>
-              <CardDescription>AI 생성에 사용된 구조화 원본 데이터입니다.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <pre class="overflow-x-auto rounded-lg bg-muted/50 p-4 text-xs leading-5 text-foreground">{{ selectedDraftDetail.snapshotJson }}</pre>
-            </CardContent>
-          </Card>
         </div>
 
         <div v-else class="flex flex-1 items-center justify-center px-6 text-sm text-muted-foreground">
@@ -258,23 +249,23 @@
   </FeatureSplitLayout>
 
   <Dialog :open="isEditDialogOpen" @update:open="isEditDialogOpen = $event">
-    <DialogContent class="sm:max-w-3xl">
+    <DialogContent class="max-h-[85vh] sm:max-w-3xl">
       <DialogHeader>
         <DialogTitle>주간 보고서 수정</DialogTitle>
         <DialogDescription>제목과 Markdown 초안을 직접 수정할 수 있습니다.</DialogDescription>
       </DialogHeader>
 
-      <div class="grid gap-4">
+      <div class="grid max-h-[calc(85vh-11rem)] gap-4 overflow-hidden">
         <div class="grid gap-1.5">
           <Label for="weekly-report-edit-title">제목</Label>
           <Input id="weekly-report-edit-title" v-model="editTitle" />
         </div>
-        <div class="grid gap-1.5">
+        <div class="grid min-h-0 gap-1.5 overflow-hidden">
           <Label for="weekly-report-edit-markdown">Markdown 본문</Label>
           <Textarea
             id="weekly-report-edit-markdown"
             v-model="editMarkdown"
-            class="min-h-[360px] font-mono text-sm"
+            class="min-h-[360px] max-h-full overflow-y-auto font-mono text-sm"
           />
         </div>
       </div>
