@@ -35,8 +35,8 @@
           </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto px-4 py-4">
-          <div class="flex items-center justify-between pb-3">
+        <nav class="flex-1 overflow-y-auto px-4 pb-5 text-sm">
+          <div class="flex items-center justify-between py-4">
             <h3 class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               최근 초안
             </h3>
@@ -73,18 +73,32 @@
           </div>
 
           <p v-if="errorMessage" class="mt-4 text-sm text-destructive">{{ errorMessage }}</p>
-        </div>
+        </nav>
       </div>
     </template>
 
-    <template #default>
+    <template #default="{ pane }">
       <div class="flex h-full min-h-0 flex-col bg-background">
         <div class="flex items-center justify-between border-b border-border/60 px-5 py-4">
-          <div>
-            <h1 class="text-lg font-semibold text-foreground">{{ selectedDraft?.title ?? '주간 운영 보고서' }}</h1>
-            <p class="text-sm text-muted-foreground">
-              {{ selectedDraft ? `${selectedDraft.weekStart} ~ ${selectedDraft.weekEnd}` : '초안을 선택하거나 새로 생성하세요.' }}
-            </p>
+          <div class="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="-ml-1 h-8 w-8 text-muted-foreground transition hover:text-foreground"
+              aria-label="주간 보고서 사이드바 토글"
+              @click="pane.toggleSidebar()"
+            >
+              <Menu
+                class="h-4 w-4 transition"
+                :class="pane.isSidebarCollapsed.value ? 'rotate-180' : ''"
+              />
+            </Button>
+            <div>
+              <h1 class="text-lg font-semibold text-foreground">{{ selectedDraft?.title ?? '주간 운영 보고서' }}</h1>
+              <p class="text-sm text-muted-foreground">
+                {{ selectedDraft ? `${selectedDraft.weekStart} ~ ${selectedDraft.weekEnd}` : '초안을 선택하거나 새로 생성하세요.' }}
+              </p>
+            </div>
           </div>
 
           <div class="flex items-center gap-2">
@@ -235,6 +249,7 @@
             <CardContent class="min-h-0 min-w-0 overflow-hidden">
               <div class="max-h-[50vh] min-w-0 max-w-full overflow-auto pr-1">
                 <MarkdownRenderer :content="selectedDraftDetail.reportMarkdown" />
+                <div class="h-8" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
@@ -303,7 +318,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { Clipboard, Loader2, Pencil, RefreshCcw, Sparkles, Trash2 } from 'lucide-vue-next';
+import { Clipboard, Loader2, Menu, Pencil, RefreshCcw, Sparkles, Trash2 } from 'lucide-vue-next';
 import { useRoute, useRouter } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
