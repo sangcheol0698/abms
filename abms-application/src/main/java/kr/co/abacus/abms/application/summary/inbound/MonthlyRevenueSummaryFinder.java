@@ -8,6 +8,8 @@ import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
 
 public interface MonthlyRevenueSummaryFinder {
 
+    Optional<MonthlyRevenueSummary> findOptionalByTargetMonth(String yearMonthStr);
+
     MonthlyRevenueSummary findByTargetMonth(String yearMonthStr);
 
     List<MonthlyRevenueSummary> findRecentSixMonths(String yearMonthStr);

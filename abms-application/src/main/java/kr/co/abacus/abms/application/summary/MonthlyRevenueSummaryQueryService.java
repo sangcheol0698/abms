@@ -23,7 +23,7 @@ public class MonthlyRevenueSummaryQueryService implements MonthlyRevenueSummaryF
     private final MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
 
     @Override
-    public MonthlyRevenueSummary findByTargetMonth(String yearMonthStr) {
+    public Optional<MonthlyRevenueSummary> findOptionalByTargetMonth(String yearMonthStr) {
         // 1. 문자열 파싱 ("202602" -> 2026년 2월)
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
         YearMonth yearMonth = YearMonth.parse(yearMonthStr, formatter);
@@ -32,10 +32,13 @@ public class MonthlyRevenueSummaryQueryService implements MonthlyRevenueSummaryF
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate endOfMonth = yearMonth.atEndOfMonth();
 
-        MonthlyRevenueSummary summary = monthlyRevenueSummaryRepository.findFirstBySummaryDateBetweenOrderBySummaryDateDesc(startOfMonth, endOfMonth)
-            .orElseThrow(() -> new IllegalArgumentException("계산되지 않은 월별 집계: " + yearMonthStr));
+        return monthlyRevenueSummaryRepository.findFirstBySummaryDateBetweenOrderBySummaryDateDesc(startOfMonth, endOfMonth);
+    }
 
-        return summary;
+    @Override
+    public MonthlyRevenueSummary findByTargetMonth(String yearMonthStr) {
+        return findOptionalByTargetMonth(yearMonthStr)
+                .orElseThrow(() -> new IllegalArgumentException("계산되지 않은 월별 집계: " + yearMonthStr));
     }
 
     @Transactional(readOnly = true)

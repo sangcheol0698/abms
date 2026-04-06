@@ -206,18 +206,15 @@ class WeeklyReportSnapshotService {
 
     private WeeklyReportSnapshot.RevenueSection createRevenueSection(LocalDate weekEnd) {
         String targetMonth = YEAR_MONTH_FORMATTER.format(weekEnd);
-        try {
-            MonthlyRevenueSummary summary = monthlyRevenueSummaryFinder.findByTargetMonth(targetMonth);
-            return new WeeklyReportSnapshot.RevenueSection(
-                    true,
-                    targetMonth,
-                    summary.getRevenueAmount().amount().longValue(),
-                    summary.getCostAmount().amount().longValue(),
-                    summary.getProfitAmount().amount().longValue()
-            );
-        } catch (IllegalArgumentException exception) {
-            return new WeeklyReportSnapshot.RevenueSection(false, targetMonth, null, null, null);
-        }
+        return monthlyRevenueSummaryFinder.findOptionalByTargetMonth(targetMonth)
+                .map(summary -> new WeeklyReportSnapshot.RevenueSection(
+                        true,
+                        targetMonth,
+                        summary.getRevenueAmount().amount().longValue(),
+                        summary.getCostAmount().amount().longValue(),
+                        summary.getProfitAmount().amount().longValue()
+                ))
+                .orElseGet(() -> new WeeklyReportSnapshot.RevenueSection(false, targetMonth, null, null, null));
     }
 
     private WeeklyReportSnapshot.RiskSection createRiskSection(

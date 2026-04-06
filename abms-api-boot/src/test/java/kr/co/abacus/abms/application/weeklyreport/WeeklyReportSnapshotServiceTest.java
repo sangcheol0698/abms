@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -170,7 +171,7 @@ class WeeklyReportSnapshotServiceTest {
                 .willReturn(List.of(endedAssignment));
         given(projectAssignmentRepository.findOverlappingAssignments(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq(LocalDate.of(2026, 3, 29)), org.mockito.ArgumentMatchers.eq(LocalDate.of(2026, 3, 29))))
                 .willReturn(List.of());
-        given(monthlyRevenueSummaryFinder.findByTargetMonth("202603")).willReturn(monthlyRevenueSummary);
+        given(monthlyRevenueSummaryFinder.findOptionalByTargetMonth("202603")).willReturn(Optional.of(monthlyRevenueSummary));
 
         WeeklyReportSnapshotService snapshotService = new WeeklyReportSnapshotService(
                 employeeRepository,
@@ -193,5 +194,39 @@ class WeeklyReportSnapshotServiceTest {
         assertThat(snapshot.projects().assignmentChangeProjectCount()).isEqualTo(1);
         assertThat(snapshot.revenue().monthlySummaryAvailable()).isTrue();
         assertThat(snapshot.risks().endingSoonProjectNames()).contains("종료 임박 프로젝트");
+    }
+
+    @Test
+    @DisplayName("월 매출 집계가 없어도 스냅샷 생성에 실패하지 않는다")
+    void createSnapshotWithoutMonthlyRevenueSummary() {
+        EmployeeRepository employeeRepository = mock(EmployeeRepository.class);
+        DepartmentRepository departmentRepository = mock(DepartmentRepository.class);
+        ProjectRepository projectRepository = mock(ProjectRepository.class);
+        ProjectAssignmentRepository projectAssignmentRepository = mock(ProjectAssignmentRepository.class);
+        MonthlyRevenueSummaryFinder monthlyRevenueSummaryFinder = mock(MonthlyRevenueSummaryFinder.class);
+
+        given(employeeRepository.search(org.mockito.ArgumentMatchers.any())).willReturn(List.of());
+        given(departmentRepository.findAllByDeletedFalse()).willReturn(List.of());
+        given(projectRepository.findAllByDeletedFalse()).willReturn(List.of());
+        given(projectAssignmentRepository.findActiveAssignments(LocalDate.of(2026, 3, 30), LocalDate.of(2026, 4, 5)))
+                .willReturn(List.of());
+        given(monthlyRevenueSummaryFinder.findOptionalByTargetMonth("202604")).willReturn(Optional.empty());
+
+        WeeklyReportSnapshotService snapshotService = new WeeklyReportSnapshotService(
+                employeeRepository,
+                departmentRepository,
+                projectRepository,
+                projectAssignmentRepository,
+                monthlyRevenueSummaryFinder
+        );
+
+        WeeklyReportSnapshot snapshot = snapshotService.createSnapshot(
+                LocalDate.of(2026, 3, 30),
+                LocalDate.of(2026, 4, 5)
+        );
+
+        assertThat(snapshot.revenue().monthlySummaryAvailable()).isFalse();
+        assertThat(snapshot.revenue().targetMonth()).isEqualTo("202604");
+        assertThat(snapshot.revenue().revenueAmount()).isNull();
     }
 }
