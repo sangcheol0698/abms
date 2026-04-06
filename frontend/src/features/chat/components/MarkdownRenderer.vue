@@ -9,6 +9,7 @@ import { marked } from 'marked';
 import { codeToHtml } from 'shiki';
 import he from 'he';
 import { useMutationObserver } from '@vueuse/core';
+import { copyTextToClipboard } from '@/core/utils/clipboard';
 
 const props = defineProps<{
   content: string;
@@ -186,7 +187,7 @@ const handleContentClick = async (event: MouseEvent) => {
     if (!code) return;
 
     try {
-      await navigator.clipboard.writeText(code);
+      await copyTextToClipboard(code);
 
       copyButton.classList.add('복사성공');
       const originalHtml = copyButton.innerHTML;

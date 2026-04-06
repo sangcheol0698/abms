@@ -38,6 +38,7 @@ import { computed, ref } from 'vue';
 import type { ChatMessage } from '@/features/chat/entity/ChatMessage';
 import MarkdownRenderer from '@/features/chat/components/MarkdownRenderer.vue';
 import { Copy, Check } from 'lucide-vue-next';
+import { copyTextToClipboard } from '@/core/utils/clipboard';
 import { toast } from 'vue-sonner';
 
 const props = defineProps<{ message: ChatMessage }>();
@@ -53,7 +54,7 @@ const isCopied = ref(false);
 
 const copyToClipboard = async (text: string) => {
   try {
-    await navigator.clipboard.writeText(text);
+    await copyTextToClipboard(text);
     isCopied.value = true;
     setTimeout(() => {
       isCopied.value = false;
