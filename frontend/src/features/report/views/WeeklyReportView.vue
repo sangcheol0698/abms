@@ -308,8 +308,14 @@ watch(
       return;
     }
 
+    const firstDraft = items[0];
+    if (!firstDraft) {
+      selectedDraftId.value = null;
+      return;
+    }
+
     if (selectedDraftId.value == null || !items.some((item) => item.id === selectedDraftId.value)) {
-      selectedDraftId.value = items[0].id;
+      selectedDraftId.value = firstDraft.id;
     }
   },
   { immediate: true },
