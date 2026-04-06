@@ -148,6 +148,24 @@ public class WeeklyReportDraft extends AbstractEntity {
         this.failureReason = null;
     }
 
+    public void update(String title, String reportMarkdown) {
+        if (isRunning()) {
+            throw new IllegalStateException("생성 중인 주간 보고서는 수정할 수 없습니다.");
+        }
+
+        String normalizedTitle = requireNonNull(title).trim();
+        if (normalizedTitle.isEmpty()) {
+            throw new IllegalArgumentException("보고서 제목은 비어 있을 수 없습니다.");
+        }
+        if (normalizedTitle.length() > 200) {
+            throw new IllegalArgumentException("보고서 제목은 200자를 초과할 수 없습니다.");
+        }
+
+        this.title = normalizedTitle;
+        this.reportMarkdown = requireNonNull(reportMarkdown);
+        this.failureReason = null;
+    }
+
     public boolean isRunning() {
         return status == WeeklyReportStatus.PENDING
                 || status == WeeklyReportStatus.COLLECTING

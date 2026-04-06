@@ -10,6 +10,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import kr.co.abacus.abms.application.weeklyreport.dto.command.WeeklyReportGenerateCommand;
+import kr.co.abacus.abms.application.weeklyreport.dto.command.WeeklyReportUpdateCommand;
 import kr.co.abacus.abms.application.weeklyreport.dto.query.WeeklyReportDraftDetail;
 import kr.co.abacus.abms.application.weeklyreport.dto.query.WeeklyReportInsightData;
 import kr.co.abacus.abms.application.weeklyreport.dto.query.WeeklyReportSnapshot;
@@ -65,6 +66,26 @@ public class WeeklyReportDraftCommandService implements WeeklyReportDraftManager
             asyncGenerationService.cancelDraft(draftId);
         }
         return toDetail(draft, null);
+    }
+
+    @Override
+    public WeeklyReportDraftDetail updateDraft(Long accountId, Long draftId, WeeklyReportUpdateCommand command) {
+        WeeklyReportDraft draft = weeklyReportDraftRepository.findByIdAndCreatedByAccountIdAndDeletedFalse(draftId, accountId)
+                .orElseThrow(() -> new IllegalArgumentException("주간 보고서 초안을 찾을 수 없습니다: " + draftId));
+        draft.update(command.title(), command.reportMarkdown());
+        WeeklyReportDraft savedDraft = weeklyReportDraftRepository.save(draft);
+        return toDetail(savedDraft, null);
+    }
+
+    @Override
+    public void deleteDraft(Long accountId, Long draftId) {
+        WeeklyReportDraft draft = weeklyReportDraftRepository.findByIdAndCreatedByAccountIdAndDeletedFalse(draftId, accountId)
+                .orElseThrow(() -> new IllegalArgumentException("주간 보고서 초안을 찾을 수 없습니다: " + draftId));
+        if (draft.isRunning()) {
+            throw new IllegalStateException("생성 중인 주간 보고서는 삭제할 수 없습니다.");
+        }
+        draft.softDelete(accountId);
+        weeklyReportDraftRepository.save(draft);
     }
 
     private WeeklyReportDraftDetail createPendingDraft(Long accountId, LocalDate weekStart, LocalDate weekEnd) {
