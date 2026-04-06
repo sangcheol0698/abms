@@ -23,6 +23,7 @@ const PROJECT_KEY = ['project'] as const;
 const DASHBOARD_KEY = ['dashboard'] as const;
 const NOTIFICATION_KEY = ['notification'] as const;
 const CHAT_KEY = ['chat'] as const;
+const REPORT_KEY = ['report'] as const;
 const ADMIN_KEY = ['admin'] as const;
 
 export const authKeys = {
@@ -118,6 +119,13 @@ export const chatKeys = {
   favorites: () => [...CHAT_KEY, 'sessions', 'favorites'] as const,
   sessionDetail: (sessionId: string | null | undefined) =>
     [...CHAT_KEY, 'session-detail', sessionId ?? ''] as const,
+};
+
+export const reportKeys = {
+  all: REPORT_KEY,
+  weeklyDrafts: () => [...REPORT_KEY, 'weekly-drafts'] as const,
+  weeklyDraftDetail: (draftId: number | null | undefined) =>
+    [...REPORT_KEY, 'weekly-draft-detail', draftId ?? 0] as const,
 };
 
 export const adminKeys = {

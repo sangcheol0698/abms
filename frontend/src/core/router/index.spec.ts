@@ -59,6 +59,10 @@ vi.mock('@/features/dashboard/views/DashboardView.vue', () => ({
   default: { template: '<div>dashboard</div>' },
 }));
 
+vi.mock('@/features/report/views/WeeklyReportView.vue', () => ({
+  default: { template: '<div>weekly report</div>' },
+}));
+
 vi.mock('@/features/admin/views/PermissionGroupManagementView.vue', () => ({
   default: { template: '<div>permission groups</div>' },
 }));
@@ -112,6 +116,23 @@ describe('router permission guard', () => {
 
     expect(router.currentRoute.value.name).toBe('auth-forbidden');
     expect(router.currentRoute.value.path).toBe('/auths/forbidden');
+  }, 15000);
+
+  it('report.read 권한이 없으면 주간 보고서 화면을 금지 페이지로 보낸다', async () => {
+    const router = await loadRouter();
+
+    await router.push('/reports/weekly');
+    await router.isReady();
+
+    expect(router.currentRoute.value.name).toBe('auth-login');
+    expect(router.currentRoute.value.query.redirect).toBe('/reports/weekly');
+
+    authState.hasStoredUser = true;
+    authState.ensureServerSessionValid = true;
+
+    await router.push('/reports/weekly');
+
+    expect(router.currentRoute.value.name).toBe('auth-forbidden');
   }, 15000);
 
   it('빠른 라우트 이동에서는 nprogress를 표시하지 않는다', async () => {

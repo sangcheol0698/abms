@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import type { SidebarProps } from '@/components/ui/sidebar';
-import { Bot, Briefcase, LayoutDashboard, Handshake, Network, ShieldCheck, UserCircle } from 'lucide-vue-next';
+import { Bot, Briefcase, FileText, LayoutDashboard, Handshake, Network, ShieldCheck, UserCircle } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import NavMain from './NavMain.vue';
@@ -70,6 +70,7 @@ import { hasStoredPermission } from '@/features/auth/session';
 import { canReadEmployeeDetail } from '@/features/employee/permissions';
 import { canReadProjects } from '@/features/project/permissions';
 import { canReadParties } from '@/features/party/permissions';
+import { canReadWeeklyReports } from '@/features/report/permissions';
 
 const props = withDefaults(
   defineProps<
@@ -93,6 +94,7 @@ const canManagePermissionGroups = ref(false);
 const canReadEmployees = ref(false);
 const canReadProjectMenu = ref(false);
 const canReadPartyMenu = ref(false);
+const canReadReportMenu = ref(false);
 
 function loadUserFromStorage() {
   try {
@@ -102,6 +104,7 @@ function loadUserFromStorage() {
       canReadEmployees.value = false;
       canReadProjectMenu.value = false;
       canReadPartyMenu.value = false;
+      canReadReportMenu.value = false;
       return;
     }
 
@@ -119,12 +122,14 @@ function loadUserFromStorage() {
     canReadEmployees.value = canReadEmployeeDetail();
     canReadProjectMenu.value = canReadProjects();
     canReadPartyMenu.value = canReadParties();
+    canReadReportMenu.value = canReadWeeklyReports();
   } catch (error) {
     console.warn('Failed to parse user from localStorage', error);
     canManagePermissionGroups.value = false;
     canReadEmployees.value = false;
     canReadProjectMenu.value = false;
     canReadPartyMenu.value = false;
+    canReadReportMenu.value = false;
   }
 }
 
@@ -184,13 +189,25 @@ const mainNavItems = computed(() =>
   }),
 );
 
-const toolNavItems = computed(() => [
-  {
-    title: 'AI Assistant',
-    url: '/assistant',
-    icon: Bot,
-  },
-]);
+const toolNavItems = computed(() =>
+  [
+    {
+      title: 'AI Assistant',
+      url: '/assistant',
+      icon: Bot,
+    },
+    {
+      title: '주간 보고서',
+      url: '/reports/weekly',
+      icon: FileText,
+    },
+  ].filter((item) => {
+    if (item.url === '/reports/weekly') {
+      return canReadReportMenu.value;
+    }
+    return true;
+  }),
+);
 
 const permissionNavItems = computed(() =>
   [
