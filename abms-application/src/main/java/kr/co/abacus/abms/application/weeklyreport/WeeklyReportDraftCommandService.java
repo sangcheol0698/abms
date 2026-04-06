@@ -6,6 +6,8 @@ import java.time.ZoneId;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import kr.co.abacus.abms.application.weeklyreport.dto.command.WeeklyReportGenerateCommand;
 import kr.co.abacus.abms.application.weeklyreport.dto.query.WeeklyReportDraftDetail;
@@ -22,25 +24,16 @@ public class WeeklyReportDraftCommandService implements WeeklyReportDraftManager
 
     private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
 
-    private final WeeklyReportSnapshotService snapshotService;
-    private final WeeklyReportInsightService insightService;
     private final WeeklyReportAiWriter aiWriter;
-    private final WeeklyReportSnapshotJsonMapper snapshotJsonMapper;
     private final WeeklyReportDraftRepository weeklyReportDraftRepository;
     private final WeeklyReportDraftAsyncGenerationService asyncGenerationService;
 
     public WeeklyReportDraftCommandService(
-            WeeklyReportSnapshotService snapshotService,
-            WeeklyReportInsightService insightService,
             WeeklyReportAiWriter aiWriter,
-            WeeklyReportSnapshotJsonMapper snapshotJsonMapper,
             WeeklyReportDraftRepository weeklyReportDraftRepository,
             WeeklyReportDraftAsyncGenerationService asyncGenerationService
     ) {
-        this.snapshotService = snapshotService;
-        this.insightService = insightService;
         this.aiWriter = aiWriter;
-        this.snapshotJsonMapper = snapshotJsonMapper;
         this.weeklyReportDraftRepository = weeklyReportDraftRepository;
         this.asyncGenerationService = asyncGenerationService;
     }
@@ -84,7 +77,13 @@ public class WeeklyReportDraftCommandService implements WeeklyReportDraftManager
                 accountId
         );
         WeeklyReportDraft savedDraft = weeklyReportDraftRepository.save(draft);
-        asyncGenerationService.generateDraft(savedDraft.getIdOrThrow());
+        Long draftId = savedDraft.getIdOrThrow();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                asyncGenerationService.generateDraft(draftId);
+            }
+        });
         return toDetail(savedDraft, null);
     }
 
