@@ -5,8 +5,9 @@
         v-model="inputValue"
         type="text"
         :placeholder="placeholder"
-        maxlength="23"
+        inputmode="numeric"
         :class="cn('w-full pr-8 font-normal', !formattedDateRange && 'text-muted-foreground', dense ? 'h-6 text-xs' : 'h-8 text-sm')"
+        @beforeinput="handleBeforeInput"
         @input="handleInput"
         @blur="handleInputBlur"
         @keydown.enter.prevent="handleInputBlur"
@@ -299,23 +300,83 @@ watch(
   { immediate: true },
 );
 
+function extractDigits(value: string) {
+  return value.replace(/[^0-9]/g, '').slice(0, 16);
+}
+
+function formatDigits(value: string) {
+  let formatted = value;
+  if (formatted.length > 4) formatted = `${formatted.slice(0, 4)}-${formatted.slice(4)}`;
+  if (formatted.length > 7) formatted = `${formatted.slice(0, 7)}-${formatted.slice(7)}`;
+  if (formatted.length > 10) formatted = `${formatted.slice(0, 10)} ~ ${formatted.slice(10)}`;
+  if (formatted.length > 17) formatted = `${formatted.slice(0, 17)}-${formatted.slice(17)}`;
+  if (formatted.length > 20) formatted = `${formatted.slice(0, 20)}-${formatted.slice(20, 22)}`;
+  return formatted;
+}
+
+function countDigitsBeforeCaret(value: string, caret: number) {
+  return value.slice(0, caret).replace(/[^0-9]/g, '').length;
+}
+
+function findCaretFromDigitIndex(value: string, digitIndex: number) {
+  if (digitIndex <= 0) {
+    return 0;
+  }
+
+  let seenDigits = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    if (/\d/.test(value[i] ?? '')) {
+      seenDigits += 1;
+      if (seenDigits === digitIndex) {
+        return i + 1;
+      }
+    }
+  }
+
+  return value.length;
+}
+
+function handleBeforeInput(event: InputEvent) {
+  const target = event.target as HTMLInputElement | null;
+  if (!target || event.inputType !== 'insertText' || !/^\d$/.test(event.data ?? '')) {
+    return;
+  }
+
+  const currentDigits = extractDigits(inputValue.value);
+  const selectionStart = target.selectionStart ?? 0;
+  const selectionEnd = target.selectionEnd ?? selectionStart;
+
+  if (currentDigits.length === 16 && selectionStart === selectionEnd) {
+    const digitIndex = countDigitsBeforeCaret(inputValue.value, selectionStart);
+    if (digitIndex >= currentDigits.length) {
+      return;
+    }
+
+    const nextDigits = `${currentDigits.slice(0, digitIndex)}${event.data}${currentDigits.slice(digitIndex + 1)}`;
+    const nextValue = formatDigits(nextDigits);
+    const nextCaret = findCaretFromDigitIndex(nextValue, digitIndex + 1);
+
+    event.preventDefault();
+    inputValue.value = nextValue;
+
+    queueMicrotask(() => {
+      target.setSelectionRange(nextCaret, nextCaret);
+    });
+  }
+}
+
 function handleInput(event: Event) {
   const target = event.target as HTMLInputElement;
-  let val = target.value.replace(/[^0-9~ -]/g, '');
-  
-  // if user is typing numbers, auto format to YYYY-MM-DD ~ YYYY-MM-DD
-  const justNumbers = val.replace(/[^0-9]/g, '');
-  if (justNumbers.length > 0) {
-    let formatted = justNumbers;
-    if (formatted.length > 4) formatted = formatted.slice(0, 4) + '-' + formatted.slice(4);
-    if (formatted.length > 7) formatted = formatted.slice(0, 7) + '-' + formatted.slice(7);
-    if (formatted.length > 10) formatted = formatted.slice(0, 10) + ' ~ ' + formatted.slice(10);
-    if (formatted.length > 17) formatted = formatted.slice(0, 17) + '-' + formatted.slice(17);
-    if (formatted.length > 20) formatted = formatted.slice(0, 20) + '-' + formatted.slice(20, 22);
-    val = formatted;
-  }
-  
-  inputValue.value = val;
+  const selectionStart = target.selectionStart ?? target.value.length;
+  const digitIndex = countDigitsBeforeCaret(target.value, selectionStart);
+  const nextValue = formatDigits(extractDigits(target.value));
+
+  inputValue.value = nextValue;
+
+  queueMicrotask(() => {
+    const nextCaret = findCaretFromDigitIndex(nextValue, digitIndex);
+    target.setSelectionRange(nextCaret, nextCaret);
+  });
 }
 
 function handleInputBlur() {
