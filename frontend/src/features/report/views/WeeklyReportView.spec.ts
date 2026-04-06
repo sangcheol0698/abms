@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { nextTick, ref } from 'vue';
+import { ref } from 'vue';
 import { renderWithProviders, createMockQueryState } from '@/test-utils';
 import WeeklyReportView from '@/features/report/views/WeeklyReportView.vue';
 
