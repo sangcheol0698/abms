@@ -3,8 +3,10 @@ package kr.co.abacus.abms.application.dashboard.dto;
 public record DashboardSummaryResponse(
         int totalEmployeesCount,
         int activeProjectsCount,
+        int completedProjectsCount,
         int newEmployeesCount,
-        int onLeaveEmployeesCount
+        long yearRevenue,
+        long yearProfit
 ) {
 
 }

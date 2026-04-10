@@ -164,7 +164,7 @@ public class BusinessQueryTools {
                 detail.leadDepartmentId() != null ? "/departments/" + detail.leadDepartmentId() : null);
     }
 
-    @Tool(description = "대시보드 요약 지표를 조회하는 도구입니다. 총 직원 수, 진행 중 프로젝트 수, 당월 신규 입사자 수, 휴직자 수를 반환합니다.")
+    @Tool(description = "대시보드 요약 지표를 조회하는 도구입니다. 현재 직원 수, 진행 중 프로젝트 수, 올해 완료 프로젝트 수, 올해 신규 입사자 수, 올해 누적 매출을 반환합니다.")
     public DashboardSummaryInfo getDashboardSummary() {
         notifyToolCall("getDashboardSummary");
 
@@ -172,8 +172,9 @@ public class BusinessQueryTools {
         return new DashboardSummaryInfo(
                 summary.totalEmployeesCount(),
                 summary.activeProjectsCount(),
+                summary.completedProjectsCount(),
                 summary.newEmployeesCount(),
-                summary.onLeaveEmployeesCount());
+                summary.yearRevenue());
     }
 
     @Tool(description = "협력사 목록을 검색하는 도구입니다. 이름으로 검색하고 최대 20건을 반환합니다.")
@@ -507,8 +508,9 @@ public class BusinessQueryTools {
     public record DashboardSummaryInfo(
             int totalEmployeesCount,
             int activeProjectsCount,
+            int completedProjectsCount,
             int newEmployeesCount,
-            int onLeaveEmployeesCount) {
+            long yearRevenue) {
 
     }
 

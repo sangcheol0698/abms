@@ -77,12 +77,15 @@ class DashboardFinderTest extends IntegrationTestBase {
         deletedProject.softDelete(null);
         flushAndClear();
 
-        DashboardSummaryResponse summary = dashboardFinder.getDashboardSummary();
+        DashboardSummaryResponse summary = dashboardFinder.getDashboardSummary(today.getYear());
 
         assertThat(summary.totalEmployeesCount()).isEqualTo(3);
         assertThat(summary.activeProjectsCount()).isEqualTo(1);
-        assertThat(summary.newEmployeesCount()).isEqualTo(2);
-        assertThat(summary.onLeaveEmployeesCount()).isEqualTo(1);
+        assertThat(summary.completedProjectsCount()).isEqualTo(0);
+        int expectedNewEmployeesCount = previousMonth.getYear() == today.getYear() ? 3 : 2;
+        assertThat(summary.newEmployeesCount()).isEqualTo(expectedNewEmployeesCount);
+        assertThat(summary.yearRevenue()).isEqualTo(0L);
+        assertThat(summary.yearProfit()).isEqualTo(0L);
     }
 
     private Employee createEmployee(Long departmentId, String email, LocalDate joinDate) {

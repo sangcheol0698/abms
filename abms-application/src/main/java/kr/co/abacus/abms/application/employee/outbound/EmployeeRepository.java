@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 
 import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeStatus;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.shared.Email;
 
 public interface EmployeeRepository extends CustomEmployeeRepository {
@@ -38,6 +39,10 @@ public interface EmployeeRepository extends CustomEmployeeRepository {
     int countByJoinDateBetween(LocalDate startDate, LocalDate endDate);
 
     int countByJoinDateBetweenAndDeletedFalse(LocalDate startDate, LocalDate endDate);
+
+    int countEmployedAsOf(LocalDate targetDate);
+
+    int countEmployedAsOfByType(LocalDate targetDate, EmployeeType type);
 
     int countByStatus(EmployeeStatus status);
 
