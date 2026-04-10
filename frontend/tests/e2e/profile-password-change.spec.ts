@@ -56,14 +56,16 @@ test.describe('내 계정 비밀번호 변경', () => {
           body: JSON.stringify({
             totalEmployeesCount: 10,
             activeProjectsCount: 2,
+            completedProjectsCount: 1,
             newEmployeesCount: 1,
-            onLeaveEmployeesCount: 0,
+            yearRevenue: 100000000,
+            yearProfit: 30000000,
           }),
         });
         return;
       }
 
-      if (path === '/api/monthlyRevenueSummary/sixMonthTrend') {
+      if (path === '/api/dashboards/monthly-financials') {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',

@@ -152,7 +152,7 @@ describe('useProjectQueries', () => {
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: projectKeys.all });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: partyKeys.all });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-      queryKey: dashboardKeys.summary(),
+      queryKey: dashboardKeys.all,
     });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
       queryKey: projectKeys.detail(7),

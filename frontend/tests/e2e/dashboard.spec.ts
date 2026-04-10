@@ -42,14 +42,16 @@ async function mockDashboardApis(page: Page) {
         body: JSON.stringify({
           totalEmployeesCount: 42,
           activeProjectsCount: 9,
+          completedProjectsCount: 5,
           newEmployeesCount: 3,
-          onLeaveEmployeesCount: 2,
+          yearRevenue: 430000000,
+          yearProfit: 120000000,
         }),
       });
       return;
     }
 
-    if (path === '/api/monthlyRevenueSummary/sixMonthTrend') {
+    if (path === '/api/dashboards/monthly-financials') {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -108,7 +110,7 @@ test.describe('대시보드 화면', () => {
     await expect(page.getByRole('heading', { name: '최근 알림' })).toBeVisible();
     await expect(page.getByText('최근 알림이 없습니다.')).toBeVisible();
     await expect(page.getByRole('heading', { name: '직원 구성 현황' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '근무 상태 현황' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '프로젝트 상태 현황' })).toBeVisible();
   });
 
   test('사이드바 메뉴로 부서 화면으로 이동한다', async ({ page }) => {

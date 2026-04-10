@@ -23,7 +23,7 @@ async function invalidateProjectSideEffects(projectId?: number) {
   const tasks: Promise<unknown>[] = [
     queryClient.invalidateQueries({ queryKey: projectKeys.all }),
     queryClient.invalidateQueries({ queryKey: partyKeys.all }),
-    queryClient.invalidateQueries({ queryKey: dashboardKeys.summary() }),
+    queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
   ];
 
   if (projectId && projectId > 0) {

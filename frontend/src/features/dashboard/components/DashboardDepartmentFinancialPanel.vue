@@ -2,10 +2,22 @@
   <Card>
     <CardHeader>
       <CardTitle>부서별 재무 현황</CardTitle>
-      <CardDescription>이번 달 기준 부서별 실적입니다.</CardDescription>
+      <CardDescription>{{ selectedYear }}년 누적 부서별 실적입니다.</CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="space-y-6">
+      <div
+        v-if="isLoading && departments.length === 0"
+        class="flex h-[240px] items-center justify-center text-sm text-muted-foreground"
+      >
+        데이터를 불러오는 중입니다...
+      </div>
+      <div
+        v-else-if="departments.length === 0"
+        class="flex h-[240px] items-center justify-center text-sm text-muted-foreground"
+      >
+        표시할 부서별 재무 데이터가 없습니다.
+      </div>
+      <div v-else class="space-y-6">
         <div
           v-for="(dept, index) in departments"
           :key="index"
@@ -14,7 +26,7 @@
           <div class="space-y-1">
             <p class="text-sm font-medium leading-none">{{ dept.name }}</p>
             <p class="text-xs text-muted-foreground">
-              이익률 {{ ((dept.profit / dept.revenue) * 100).toFixed(1) }}%
+              이익률 {{ dept.profitMargin.toFixed(1) }}%
             </p>
           </div>
           <div class="text-right">
@@ -28,18 +40,32 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useDashboardDepartmentFinancialQuery } from '@/features/dashboard/queries/useDashboardQueries';
+import { formatCurrencyAmount } from '@/features/dashboard/utils/format';
 
-const departments = [
-  { name: '솔루션사업본부', revenue: 450000000, cost: 300000000, profit: 150000000 },
-  { name: '플랫폼개발팀', revenue: 320000000, cost: 240000000, profit: 80000000 },
-  { name: 'DX사업팀', revenue: 210000000, cost: 150000000, profit: 60000000 },
-  { name: '전략기획팀', revenue: 120000000, cost: 90000000, profit: 30000000 },
-];
+const props = withDefaults(
+  defineProps<{
+    selectedYear?: number;
+  }>(),
+  {
+    selectedYear: new Date().getFullYear(),
+  },
+);
+
+const departmentFinancialQuery = useDashboardDepartmentFinancialQuery(computed(() => props.selectedYear));
+const isLoading = computed(() => departmentFinancialQuery.isLoading.value);
+const departments = computed(() =>
+  (departmentFinancialQuery.data.value ?? []).map((item) => ({
+    name: item.departmentName,
+    revenue: item.revenue,
+    profit: item.profit,
+    profitMargin: item.profitMargin,
+  })),
+);
 
 function formatAmount(value: number) {
-  if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
-  if (value >= 1000000) return `${(value / 1000000).toFixed(0)}백만`;
-  return value.toLocaleString();
+  return formatCurrencyAmount(value);
 }
 </script>

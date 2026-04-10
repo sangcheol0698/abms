@@ -18,7 +18,7 @@ async function invalidateEmployeeSideEffects(employeeId?: number) {
   const tasks: Promise<unknown>[] = [
     queryClient.invalidateQueries({ queryKey: employeeKeys.all }),
     queryClient.invalidateQueries({ queryKey: departmentKeys.all }),
-    queryClient.invalidateQueries({ queryKey: dashboardKeys.summary() }),
+    queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
   ];
 
   const currentUser = getStoredUser();

@@ -29,6 +29,7 @@ const props = withDefaults(defineProps<BaseChartProps<T> & {
   margin: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   filterOpacity: 0.2,
   roundedCorners: 0,
+  xTickTextHideOverlapping: false,
   showXAxis: true,
   showYAxis: true,
   showTooltip: true,
@@ -91,6 +92,9 @@ const selectorsBar = computed(() => props.type === "grouped" ? GroupedBar.select
         v-if="showXAxis"
         type="x"
         :tick-format="xFormatter ?? ((v: number) => data[v]?.[index])"
+        :tick-values="xTickValues"
+        :num-ticks="xNumTicks"
+        :tick-text-hide-overlapping="xTickTextHideOverlapping"
         :grid-line="false"
         :tick-line="false"
         tick-text-color="var(--muted-foreground)"
@@ -98,6 +102,7 @@ const selectorsBar = computed(() => props.type === "grouped" ? GroupedBar.select
       <VisAxis
         v-if="showYAxis"
         type="y"
+        :num-ticks="yNumTicks"
         :tick-line="false"
         :tick-format="yFormatter"
         :domain-line="false"

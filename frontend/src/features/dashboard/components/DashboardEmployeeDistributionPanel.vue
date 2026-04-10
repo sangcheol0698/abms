@@ -2,10 +2,22 @@
   <Card>
     <CardHeader>
       <CardTitle>직원 구성 현황</CardTitle>
-      <CardDescription>전체 직원의 고용 형태별 분포입니다.</CardDescription>
+      <CardDescription>{{ selectedYear }}년 말 기준 고용 형태별 분포입니다.</CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="flex flex-col items-center gap-4">
+      <div
+        v-if="isLoading && totalCount === 0"
+        class="flex h-[240px] items-center justify-center text-sm text-muted-foreground"
+      >
+        데이터를 불러오는 중입니다...
+      </div>
+      <div
+        v-else-if="totalCount === 0"
+        class="flex h-[240px] items-center justify-center text-sm text-muted-foreground"
+      >
+        표시할 직원 구성 데이터가 없습니다.
+      </div>
+      <div v-else class="flex flex-col items-center gap-4">
         <!-- 도넛 차트 -->
         <div class="relative flex h-48 w-48 items-center justify-center">
           <svg viewBox="0 0 40 40" class="h-full w-full -rotate-90 transform">
@@ -59,10 +71,16 @@
 import { computed, ref } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getChartColor } from '@/core/theme/theme';
+import { useDashboardEmployeeOverviewQuery } from '@/features/dashboard/queries/useDashboardQueries';
 
-const props = defineProps<{
-  totalCount?: number;
-}>();
+const props = withDefaults(
+  defineProps<{
+    selectedYear?: number;
+  }>(),
+  {
+    selectedYear: new Date().getFullYear(),
+  },
+);
 
 // SVG 원의 반지름 (둘레가 100이 되도록 설정: 2 * PI * r = 100)
 const radius = 15.9155;
@@ -76,41 +94,51 @@ interface DistributionItem {
 }
 
 const hoveredItem = ref<DistributionItem | null>(null);
+const employeeOverviewQuery = useDashboardEmployeeOverviewQuery(computed(() => props.selectedYear));
+const isLoading = computed(() => employeeOverviewQuery.isLoading.value);
+const summary = computed(() => employeeOverviewQuery.data.value ?? null);
+const totalCount = computed(
+  () =>
+    (summary.value?.fullTimeCount ?? 0) +
+    (summary.value?.freelancerCount ?? 0) +
+    (summary.value?.outsourcingCount ?? 0) +
+    (summary.value?.partTimeCount ?? 0),
+);
 
 const distribution = computed(() => {
-  const total = props.totalCount || 0;
-
-  // 실제 데이터가 없으므로 총원을 기준으로 임의의 비율로 계산하여 보여줍니다.
-  // 추후 API에서 상세 데이터를 받아오도록 수정할 수 있습니다.
-  const fullTime = Math.round(total * 0.75); // 75%
-  const freelance = Math.round(total * 0.15); // 15%
-  const outsource = total - fullTime - freelance; // 나머지
+  const total = totalCount.value;
 
   const items = [
     {
       label: '정직원',
-      count: fullTime,
-      percentage: 75,
+      count: summary.value?.fullTimeCount ?? 0,
+      percentage: total > 0 ? ((summary.value?.fullTimeCount ?? 0) / total) * 100 : 0,
       color: getChartColor(0),
       offset: 0,
     },
     {
       label: '프리랜서',
-      count: freelance,
-      percentage: 15,
+      count: summary.value?.freelancerCount ?? 0,
+      percentage: total > 0 ? ((summary.value?.freelancerCount ?? 0) / total) * 100 : 0,
       color: getChartColor(1),
       offset: 0,
     },
     {
-      label: '외주(협력사)',
-      count: outsource,
-      percentage: 10,
+      label: '외주',
+      count: summary.value?.outsourcingCount ?? 0,
+      percentage: total > 0 ? ((summary.value?.outsourcingCount ?? 0) / total) * 100 : 0,
       color: getChartColor(2),
+      offset: 0,
+    },
+    {
+      label: '파트타임',
+      count: summary.value?.partTimeCount ?? 0,
+      percentage: total > 0 ? ((summary.value?.partTimeCount ?? 0) / total) * 100 : 0,
+      color: getChartColor(3),
       offset: 0,
     },
   ];
 
-  // 오프셋 계산 (누적 퍼센티지)
   let currentOffset = 0;
   return items.map((item) => {
     const offset = -currentOffset;

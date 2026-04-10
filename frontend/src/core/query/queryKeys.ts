@@ -102,8 +102,15 @@ export const projectKeys = {
 
 export const dashboardKeys = {
   all: DASHBOARD_KEY,
-  summary: () => [...DASHBOARD_KEY, 'summary'] as const,
-  monthlyRevenueSummary: () => [...DASHBOARD_KEY, 'monthly-revenue-summary'] as const,
+  summary: (year: number | null | undefined = 0) => [...DASHBOARD_KEY, 'summary', year ?? 0] as const,
+  monthlyRevenueSummary: (year: number | null | undefined = 0) =>
+    [...DASHBOARD_KEY, 'monthly-revenue-summary', year ?? 0] as const,
+  employeeOverview: (year: number | null | undefined = 0) => [...DASHBOARD_KEY, 'employee-overview', year ?? 0] as const,
+  projectOverview: (year: number | null | undefined = 0) => [...DASHBOARD_KEY, 'project-overview', year ?? 0] as const,
+  upcomingDeadlines: (limit: number | null | undefined = 5) =>
+    [...DASHBOARD_KEY, 'upcoming-deadlines', limit ?? 5] as const,
+  departmentFinancials: (year: number | null | undefined = 0, limit: number | null | undefined = 5) =>
+    [...DASHBOARD_KEY, 'department-financials', year ?? 0, limit ?? 5] as const,
 };
 
 export const notificationKeys = {
