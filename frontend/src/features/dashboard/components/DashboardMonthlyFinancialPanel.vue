@@ -110,11 +110,19 @@ const monthGridStyle = computed(() => ({
   gridTemplateColumns: `repeat(${Math.max(chartData.value.length, 1)}, minmax(0, 1fr))`,
 }));
 
-function formatMonthTick(value: number) {
+function formatMonthTick(value: number | Date) {
+  if (typeof value !== 'number') {
+    return '';
+  }
+
   return chartData.value[value]?.month ?? '';
 }
 
-function formatAxisTick(value: number) {
+function formatAxisTick(value: number | Date) {
+  if (typeof value !== 'number') {
+    return '';
+  }
+
   return formatAxisAmount(value);
 }
 </script>

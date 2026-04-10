@@ -35,9 +35,26 @@ export interface BaseChartProps<T extends Record<string, any>> {
    */
   xFormatter?: (tick: number | Date, i: number, ticks: number[] | Date[]) => string
   /**
+   * Explicit X axis tick values.
+   */
+  xTickValues?: number[]
+  /**
+   * Explicit X axis tick count hint.
+   */
+  xNumTicks?: number
+  /**
+   * Hide overlapping X axis tick labels.
+   * @default false
+   */
+  xTickTextHideOverlapping?: boolean
+  /**
    * Function to format Y label
    */
   yFormatter?: (tick: number | Date, i: number, ticks: number[] | Date[]) => string
+  /**
+   * Explicit Y axis tick count hint.
+   */
+  yNumTicks?: number
   /**
    * Controls the visibility of the X axis.
    * @default true

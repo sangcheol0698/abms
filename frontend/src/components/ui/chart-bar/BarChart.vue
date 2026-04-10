@@ -9,7 +9,7 @@ import { computed, ref } from "vue"
 import { cn } from "@/lib/utils"
 import { ChartCrosshair, ChartLegend, defaultColors } from '@/components/ui/chart'
 
-const props = withDefaults(defineProps<BaseChartProps<T> & {
+type BarChartProps = BaseChartProps<T> & {
   /**
    * Render custom tooltip component.
    */
@@ -24,7 +24,9 @@ const props = withDefaults(defineProps<BaseChartProps<T> & {
    * @default 0
    */
   roundedCorners?: number
-}>(), {
+}
+
+const props = withDefaults(defineProps<BarChartProps>(), {
   type: "grouped",
   margin: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   filterOpacity: 0.2,
@@ -59,6 +61,16 @@ function handleLegendItemClick(d: BulletLegendItemInterface, i: number) {
 
 const VisBarComponent = computed(() => props.type === "grouped" ? VisGroupedBar : VisStackedBar)
 const selectorsBar = computed(() => props.type === "grouped" ? GroupedBar.selectors.bar : StackedBar.selectors.bar)
+const axisProps = computed(() => {
+  const chartProps = props as BarChartProps
+
+  return {
+    xTickValues: chartProps.xTickValues,
+    xNumTicks: chartProps.xNumTicks,
+    xTickTextHideOverlapping: chartProps.xTickTextHideOverlapping,
+    yNumTicks: chartProps.yNumTicks,
+  }
+})
 </script>
 
 <template>
@@ -73,14 +85,14 @@ const selectorsBar = computed(() => props.type === "grouped" ? GroupedBar.select
       <ChartCrosshair v-if="showTooltip" :colors="colors" :items="legendItems" :custom-tooltip="customTooltip" :index="index" />
 
       <VisBarComponent
-        :x="(d: Data, i: number) => i"
+        :x="(_d: Data, i: number) => i"
         :y="categories.map(category => (d: Data) => d[category]) "
         :color="colors"
         :rounded-corners="roundedCorners"
         :bar-padding="0.05"
         :attributes="{
           [selectorsBar]: {
-            opacity: (d: Data, i:number) => {
+            opacity: (_d: Data, i:number) => {
               const pos = i % categories.length
               return legendItems[pos]?.inactive ? filterOpacity : 1
             },
@@ -92,9 +104,9 @@ const selectorsBar = computed(() => props.type === "grouped" ? GroupedBar.select
         v-if="showXAxis"
         type="x"
         :tick-format="xFormatter ?? ((v: number) => data[v]?.[index])"
-        :tick-values="xTickValues"
-        :num-ticks="xNumTicks"
-        :tick-text-hide-overlapping="xTickTextHideOverlapping"
+        :tick-values="axisProps.xTickValues"
+        :num-ticks="axisProps.xNumTicks"
+        :tick-text-hide-overlapping="axisProps.xTickTextHideOverlapping"
         :grid-line="false"
         :tick-line="false"
         tick-text-color="var(--muted-foreground)"
@@ -102,7 +114,7 @@ const selectorsBar = computed(() => props.type === "grouped" ? GroupedBar.select
       <VisAxis
         v-if="showYAxis"
         type="y"
-        :num-ticks="yNumTicks"
+        :num-ticks="axisProps.yNumTicks"
         :tick-line="false"
         :tick-format="yFormatter"
         :domain-line="false"
