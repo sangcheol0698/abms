@@ -1,0 +1,87 @@
+name: Deploy Batch Dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 배포할 브랜치 또는 커밋 SHA
+        required: true
+        default: main
+      create_tag:
+        description: 배포 성공 후 git 태그 생성 여부
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-batch-dev
+  cancel-in-progress: true
+
+jobs:
+  deploy-batch:
+    name: Deploy Batch To Dev Server
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      DEV_SERVER_HOST: ${{ vars.DEV_SERVER_HOST }}
+      DEV_SERVER_USER: ${{ vars.DEV_SERVER_USER }}
+      DEV_SERVER_APP_DIR: ${{ vars.DEV_SERVER_APP_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build batch artifact
+        run: ./gradlew :abms-batch-boot:bootJar
+
+      - name: Normalize batch jar name
+        run: |
+          rm -f ./abms-batch-boot/build/libs/abms-batch.jar
+          mv ./abms-batch-boot/build/libs/*.jar ./abms-batch-boot/build/libs/abms-batch.jar
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${DEV_SERVER_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Upload batch jar
+        run: |
+          set -euo pipefail
+
+          SERVER_USER="${DEV_SERVER_USER:-ubuntu}"
+          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-\$HOME}"
+
+          ssh "${SERVER_USER}@${DEV_SERVER_HOST}" "mkdir -p ${REMOTE_APP_DIR}"
+          scp ./abms-batch-boot/build/libs/abms-batch.jar "${SERVER_USER}@${DEV_SERVER_HOST}:${REMOTE_APP_DIR}/abms-batch.jar"
+
+      - name: Create batch deploy tag
+        if: ${{ inputs.create_tag }}
+        run: |
+          set -euo pipefail
+
+          TAG_NAME="deploy-batch-dev-$(TZ=Asia/Seoul date +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG_NAME" -m "개발 Batch 배포: $TAG_NAME"
+          git push origin "$TAG_NAME"

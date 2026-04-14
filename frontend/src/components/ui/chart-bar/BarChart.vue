@@ -92,7 +92,7 @@ const axisProps = computed(() => {
         :bar-padding="0.05"
         :attributes="{
           [selectorsBar]: {
-            opacity: (_d: Data, i:number) => {
+            opacity: (_d: Data, i: number) => {
               const pos = i % categories.length
               return legendItems[pos]?.inactive ? filterOpacity : 1
             },

@@ -1,4 +1,4 @@
-name: Deploy Dev
+name: Deploy API Dev
 
 on:
   workflow_dispatch:
@@ -17,12 +17,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: deploy-dev
+  group: deploy-api-dev
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Deploy To Dev Server
+  deploy-api:
+    name: Deploy API To Dev Server
     runs-on: ubuntu-latest
     environment: dev
     env:
@@ -70,13 +70,13 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build backend artifacts
-        run: ./gradlew clean build
+      - name: Build API artifact
+        run: ./gradlew :abms-api-boot:bootJar
 
-      - name: Normalize jar names
+      - name: Normalize API jar name
         run: |
+          rm -f ./abms-api-boot/build/libs/abms-api.jar
           mv ./abms-api-boot/build/libs/*.jar ./abms-api-boot/build/libs/abms-api.jar
-          mv ./abms-batch-boot/build/libs/*.jar ./abms-batch-boot/build/libs/abms-batch.jar
 
       - name: Start SSH agent
         uses: webfactory/ssh-agent@v0.9.0
@@ -88,20 +88,20 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "${DEV_SERVER_HOST}" >> ~/.ssh/known_hosts
 
-      - name: Upload deployment files
+      - name: Upload API and observability files
         run: |
           set -euo pipefail
 
           SERVER_USER="${DEV_SERVER_USER:-ubuntu}"
+          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-\$HOME}"
           REMOTE_OBSERVABILITY_DIR="${DEV_SERVER_OBSERVABILITY_DIR:-\$HOME/ops}"
           REMOTE_OBSERVABILITY_SCP_DIR="${DEV_SERVER_OBSERVABILITY_SCP_DIR:-~/ops}"
 
-          scp ./abms-api-boot/build/libs/abms-api.jar "${SERVER_USER}@${DEV_SERVER_HOST}:~/"
-          scp ./abms-batch-boot/build/libs/abms-batch.jar "${SERVER_USER}@${DEV_SERVER_HOST}:~/"
-          ssh "${SERVER_USER}@${DEV_SERVER_HOST}" "mkdir -p ${REMOTE_OBSERVABILITY_DIR}"
+          ssh "${SERVER_USER}@${DEV_SERVER_HOST}" "mkdir -p ${REMOTE_APP_DIR} ${REMOTE_OBSERVABILITY_DIR}"
+          scp ./abms-api-boot/build/libs/abms-api.jar "${SERVER_USER}@${DEV_SERVER_HOST}:${REMOTE_APP_DIR}/abms-api.jar"
           scp -r ./ops/observability "${SERVER_USER}@${DEV_SERVER_HOST}:${REMOTE_OBSERVABILITY_SCP_DIR}/"
 
-      - name: Restart app and observability stack
+      - name: Restart API and observability stack
         run: |
           set -euo pipefail
 
@@ -189,14 +189,14 @@ jobs:
           done
           EOF
 
-      - name: Create deploy tag
+      - name: Create API deploy tag
         if: ${{ inputs.create_tag }}
         run: |
           set -euo pipefail
 
-          TAG_NAME="deploy-dev-$(TZ=Asia/Seoul date +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)"
+          TAG_NAME="deploy-api-dev-$(TZ=Asia/Seoul date +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG_NAME" -m "개발 서버 배포: $TAG_NAME"
+          git tag -a "$TAG_NAME" -m "개발 API 배포: $TAG_NAME"
           git push origin "$TAG_NAME"
