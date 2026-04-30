@@ -93,27 +93,34 @@ jobs:
           set -euo pipefail
 
           SERVER_USER="${DEV_SERVER_USER:-ubuntu}"
-          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-\$HOME}"
-          REMOTE_OBSERVABILITY_DIR="${DEV_SERVER_OBSERVABILITY_DIR:-\$HOME/ops}"
-          REMOTE_OBSERVABILITY_SCP_DIR="${DEV_SERVER_OBSERVABILITY_SCP_DIR:-~/ops}"
+          REMOTE_HOME="/home/${SERVER_USER}"
+          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-${REMOTE_HOME}}"
+          REMOTE_OBSERVABILITY_DIR="${DEV_SERVER_OBSERVABILITY_DIR:-${REMOTE_HOME}/ops}"
+          REMOTE_OBSERVABILITY_SCP_DIR="${DEV_SERVER_OBSERVABILITY_SCP_DIR:-${REMOTE_HOME}/ops}"
 
-          ssh "${SERVER_USER}@${DEV_SERVER_HOST}" "mkdir -p ${REMOTE_APP_DIR} ${REMOTE_OBSERVABILITY_DIR}"
-          scp ./abms-api-boot/build/libs/abms-api.jar "${SERVER_USER}@${DEV_SERVER_HOST}:${REMOTE_APP_DIR}/abms-api.jar"
-          scp -r ./ops/observability "${SERVER_USER}@${DEV_SERVER_HOST}:${REMOTE_OBSERVABILITY_SCP_DIR}/"
+          ssh "${SERVER_USER}@${DEV_SERVER_HOST}" "mkdir -p '${REMOTE_APP_DIR}' '${REMOTE_OBSERVABILITY_DIR}'"
+
+          scp ./abms-api-boot/build/libs/abms-api.jar \
+            "${SERVER_USER}@${DEV_SERVER_HOST}:${REMOTE_APP_DIR}/abms-api.jar"
+
+          scp -r ./ops/observability \
+            "${SERVER_USER}@${DEV_SERVER_HOST}:${REMOTE_OBSERVABILITY_SCP_DIR}/"
 
       - name: Restart API and observability stack
         run: |
           set -euo pipefail
 
           SERVER_USER="${DEV_SERVER_USER:-ubuntu}"
-          LOG_DIR="${DEV_SERVER_LOG_DIR:-\$HOME/logs/abms}"
-          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-\$HOME}"
-          REMOTE_OBSERVABILITY_DIR="${DEV_SERVER_OBSERVABILITY_DIR:-\$HOME/ops}"
-          ENV_FILE="${DEV_SERVER_ENV_FILE:-\$HOME/.env}"
+          REMOTE_HOME="/home/${SERVER_USER}"
+          LOG_DIR="${DEV_SERVER_LOG_DIR:-${REMOTE_HOME}/logs/abms}"
+          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-${REMOTE_HOME}}"
+          REMOTE_OBSERVABILITY_DIR="${DEV_SERVER_OBSERVABILITY_DIR:-${REMOTE_HOME}/ops}"
+          ENV_FILE="${DEV_SERVER_ENV_FILE:-${REMOTE_HOME}/.env}"
           DOCKER_COMPOSE_CMD="${DEV_SERVER_DOCKER_COMPOSE_CMD:-sudo docker compose}"
 
           ssh "${SERVER_USER}@${DEV_SERVER_HOST}" <<EOF
           set -euo pipefail
+
           LOG_DIR="${LOG_DIR}"
           REMOTE_APP_DIR="${REMOTE_APP_DIR}"
           REMOTE_OBSERVABILITY_DIR="${REMOTE_OBSERVABILITY_DIR}"
@@ -154,37 +161,55 @@ jobs:
 
           mkdir -p "\$LOG_DIR"
           stop_api
+
+          if [ ! -f "\$ENV_FILE" ]; then
+            echo "Environment file not found: \$ENV_FILE" >&2
+            exit 1
+          fi
+
           set -a
           source "\$ENV_FILE"
           set +a
 
           cd "\$REMOTE_APP_DIR"
-          nohup env APP_ENVIRONMENT=dev APP_LOG_FILE_NAME="\$LOG_DIR/abms-api.log" java -jar abms-api.jar --spring.profiles.active=dev > /dev/null 2>&1 &
+
+          nohup env \
+            APP_ENVIRONMENT=dev \
+            APP_LOG_FILE_NAME="\$LOG_DIR/abms-api.log" \
+            java -jar abms-api.jar --spring.profiles.active=dev \
+            > /dev/null 2>&1 &
+
           echo \$! > "\$LOG_DIR/abms-api.pid"
 
           for i in \$(seq 1 30); do
             if curl -sf http://127.0.0.1:8080/actuator/health > /dev/null; then
               break
             fi
+
             if [ "\$i" -eq 30 ]; then
               echo "Application health check failed" >&2
               exit 1
             fi
+
             sleep 2
           done
 
           cd "\$REMOTE_OBSERVABILITY_DIR/observability"
+
           ABMS_LOG_DIR="\$LOG_DIR" \$DOCKER_COMPOSE_CMD up -d
 
           for i in \$(seq 1 30); do
             TARGETS=\$(curl -sf http://127.0.0.1:9090/api/v1/targets || true)
+
             if echo "\$TARGETS" | grep -q '"job":"abms-api"' && echo "\$TARGETS" | grep -q '"health":"up"'; then
               break
             fi
+
             if [ "\$i" -eq 30 ]; then
               echo "Prometheus target check failed" >&2
               exit 1
             fi
+
             sleep 2
           done
           EOF
