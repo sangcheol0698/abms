@@ -61,3 +61,20 @@ export function useConfirmRegistrationMutation() {
       repository.confirmRegistration(payload),
   });
 }
+
+export function useRequestPasswordResetMutation() {
+  const repository = appContainer.resolve(AuthRepository);
+
+  return useMutation({
+    mutationFn: (payload: { email: string }) => repository.requestPasswordReset(payload),
+  });
+}
+
+export function useConfirmPasswordResetMutation() {
+  const repository = appContainer.resolve(AuthRepository);
+
+  return useMutation({
+    mutationFn: (payload: { token: string; password: string }) =>
+      repository.confirmPasswordReset(payload),
+  });
+}

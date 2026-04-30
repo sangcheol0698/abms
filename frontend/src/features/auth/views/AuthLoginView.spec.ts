@@ -47,6 +47,11 @@ const routes: RouteRecordRaw[] = [
     name: 'auth-register',
     component: { template: '<div>register</div>' },
   },
+  {
+    path: '/auths/password-reset',
+    name: 'auth-password-reset',
+    component: { template: '<div>password reset</div>' },
+  },
 ];
 
 async function mountLoginView(path = '/auths/login') {
@@ -97,6 +102,15 @@ describe('AuthLoginView', () => {
 
     expect(wrapper.text()).toContain('비밀번호를 입력해 주세요.');
     expect(mutateAsyncMock).not.toHaveBeenCalled();
+  });
+
+  it('비밀번호 찾기 링크를 제공한다', async () => {
+    const { wrapper } = await mountLoginView();
+
+    const link = wrapper.find('a[href="/auths/password-reset"]');
+
+    expect(link.exists()).toBe(true);
+    expect(link.text()).toContain('비밀번호를 잊으셨나요?');
   });
 
   it('이메일을 trim/lowercase 처리해서 로그인 요청을 보낸다', async () => {

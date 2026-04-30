@@ -52,6 +52,24 @@ const routes = [
         },
       },
       {
+        path: 'password-reset',
+        name: 'auth-password-reset',
+        component: () => import('@/features/auth/views/AuthPasswordResetRequestView.vue'),
+        meta: {
+          title: '비밀번호 찾기',
+          layout: AuthLayout,
+        },
+      },
+      {
+        path: 'password-reset-confirm',
+        name: 'auth-password-reset-confirm',
+        component: () => import('@/features/auth/views/AuthPasswordResetConfirmView.vue'),
+        meta: {
+          title: '비밀번호 재설정',
+          layout: AuthLayout,
+        },
+      },
+      {
         path: 'session-expired',
         name: 'auth-session-expired',
         component: () => import('@/features/auth/views/AuthSessionExpiredView.vue'),
