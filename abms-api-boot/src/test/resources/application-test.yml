@@ -16,6 +16,11 @@ spring:
       chat:
         options:
           model: gpt-4o-mini
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
   sql:
     init:
       mode: never

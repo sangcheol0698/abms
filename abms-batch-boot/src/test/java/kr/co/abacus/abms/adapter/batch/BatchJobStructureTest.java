@@ -64,6 +64,7 @@ import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
         properties = {
                 "spring.batch.job.enabled=false",
                 "spring.sql.init.mode=never",
+                "spring.flyway.enabled=false",
                 "spring.jpa.hibernate.ddl-auto=create",
                 "spring.ai.openai.api-key=test"
         }

@@ -9,9 +9,11 @@ spring:
     username: ${DB_USERNAME:myuser}
     password: ${DB_PASSWORD:secret}
   jpa:
-    defer-datasource-initialization: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
   sql:
     init:
       mode: never

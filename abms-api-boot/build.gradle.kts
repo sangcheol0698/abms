@@ -10,6 +10,7 @@ val snippetsDir = file("build/generated-snippets")
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
 
     implementation(project(":abms-adapter-web"))
     implementation(project(":abms-adapter-persistence"))
@@ -17,6 +18,7 @@ dependencies {
 
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.flywaydb:flyway-mysql")
     runtimeOnly("com.mysql:mysql-connector-j")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
