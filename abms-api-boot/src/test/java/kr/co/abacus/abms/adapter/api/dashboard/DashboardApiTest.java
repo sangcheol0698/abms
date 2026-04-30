@@ -94,7 +94,6 @@ class DashboardApiTest extends ApiIntegrationTestBase {
         Department department = departmentRepository.save(Department.create("TEAM-DASHBOARD-MONTHLY", "대시보드 월별팀", DepartmentType.TEAM, null, null));
 
         monthlyRevenueSummaryRepository.saveAll(List.of(
-                createMonthlyRevenueSummary(department, 101L, "MONTH-01", "1월 프로젝트", LocalDate.of(2026, 1, 5), 120_000_000L, 80_000_000L, 40_000_000L),
                 createMonthlyRevenueSummary(department, 101L, "MONTH-01", "1월 프로젝트", LocalDate.of(2026, 1, 31), 140_000_000L, 90_000_000L, 50_000_000L),
                 createMonthlyRevenueSummary(department, 102L, "MONTH-02", "2월 프로젝트", LocalDate.of(2026, 2, 28), 90_000_000L, 60_000_000L, 30_000_000L)
         ));
@@ -184,7 +183,6 @@ class DashboardApiTest extends ApiIntegrationTestBase {
         Department beta = departmentRepository.save(Department.create("TEAM-DASH-BETA", "베타팀", DepartmentType.TEAM, null, null));
 
         monthlyRevenueSummaryRepository.saveAll(List.of(
-                createMonthlyRevenueSummary(alpha, 101L, "ALPHA-01", "알파 프로젝트 1", LocalDate.of(2026, 1, 10), 120_000_000L, 80_000_000L, 40_000_000L),
                 createMonthlyRevenueSummary(alpha, 101L, "ALPHA-01", "알파 프로젝트 1", LocalDate.of(2026, 1, 31), 140_000_000L, 90_000_000L, 50_000_000L),
                 createMonthlyRevenueSummary(alpha, 102L, "ALPHA-02", "알파 프로젝트 2", LocalDate.of(2026, 2, 25), 80_000_000L, 55_000_000L, 25_000_000L),
                 createMonthlyRevenueSummary(beta, 201L, "BETA-01", "베타 프로젝트 1", LocalDate.of(2026, 3, 28), 90_000_000L, 60_000_000L, 30_000_000L),

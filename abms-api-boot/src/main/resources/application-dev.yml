@@ -24,6 +24,10 @@ app:
       from: ${APP_AUTH_REGISTRATION_MAIL_FROM:no-reply@iabacus.co.kr}
       subject: ${APP_AUTH_REGISTRATION_MAIL_SUBJECT:[ABMS] 회원가입 링크 안내}
       confirm-url: ${APP_AUTH_REGISTRATION_MAIL_CONFIRM_URL:http://localhost:5173/auths/registration-confirm}
+    password-reset-mail:
+      from: ${APP_AUTH_PASSWORD_RESET_MAIL_FROM:no-reply@iabacus.co.kr}
+      subject: ${APP_AUTH_PASSWORD_RESET_MAIL_SUBJECT:[ABMS] 비밀번호 재설정 안내}
+      confirm-url: ${APP_AUTH_PASSWORD_RESET_MAIL_CONFIRM_URL:http://localhost:5173/auths/password-reset-confirm}
 
 logging:
   level:

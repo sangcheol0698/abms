@@ -85,6 +85,34 @@ include::{snippets}/auth/change-password/http-request.adoc[]
 .HTTP response
 include::{snippets}/auth/change-password/http-response.adoc[]
 
+=== Request Password Reset
+
+사내 이메일로 비밀번호 재설정 요청을 시작합니다.
+계정 존재 여부가 노출되지 않도록 요청 결과는 동일하게 성공 응답을 반환합니다.
+
+.Request body
+include::{snippets}/auth/password-reset-request/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/auth/password-reset-request/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/password-reset-request/http-response.adoc[]
+
+=== Confirm Password Reset
+
+재설정 토큰과 새 비밀번호로 계정 비밀번호를 재설정합니다.
+새 비밀번호는 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.
+
+.Request body
+include::{snippets}/auth/password-reset-confirmation/request-body.adoc[]
+
+.HTTP request
+include::{snippets}/auth/password-reset-confirmation/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/auth/password-reset-confirmation/http-response.adoc[]
+
 === Logout
 
 현재 세션을 종료합니다.

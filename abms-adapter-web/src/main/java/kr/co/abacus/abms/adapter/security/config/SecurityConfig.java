@@ -90,6 +90,8 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/registration-requests",
                                 "/api/auth/registration-confirmations",
+                                "/api/auth/password-reset-requests",
+                                "/api/auth/password-reset-confirmations",
                                 "/api/auth/logout",
                                 "/actuator/health",
                                 "/actuator/info",

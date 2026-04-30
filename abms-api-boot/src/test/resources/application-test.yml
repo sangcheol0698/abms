@@ -26,6 +26,10 @@ app:
       from: no-reply@iabacus.co.kr
       subject: "[ABMS] 회원가입 링크 안내"
       confirm-url: http://localhost:5173/auths/registration-confirm
+    password-reset-mail:
+      from: no-reply@iabacus.co.kr
+      subject: "[ABMS] 비밀번호 재설정 안내"
+      confirm-url: http://localhost:5173/auths/password-reset-confirm
   observability:
     health:
       mail:
