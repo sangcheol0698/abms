@@ -86,6 +86,34 @@ describe('AuthRepository', () => {
     });
   });
 
+  it('비밀번호 재설정 요청 API를 호출한다', async () => {
+    await repository.requestPasswordReset({
+      email: 'user@iabacus.co.kr',
+    });
+
+    expect(httpPost).toHaveBeenCalledWith({
+      path: '/api/auth/password-reset-requests',
+      data: {
+        email: 'user@iabacus.co.kr',
+      },
+    });
+  });
+
+  it('비밀번호 재설정 확정 API를 호출한다', async () => {
+    await repository.confirmPasswordReset({
+      token: 'reset-token',
+      password: 'Password123!',
+    });
+
+    expect(httpPost).toHaveBeenCalledWith({
+      path: '/api/auth/password-reset-confirmations',
+      data: {
+        token: 'reset-token',
+        password: 'Password123!',
+      },
+    });
+  });
+
   it('현재 사용자 정보를 조회한다', async () => {
     httpGet.mockResolvedValueOnce({
       name: '인증사용자',

@@ -21,5 +21,7 @@ public interface MonthlyRevenueSummaryRepository {
         LocalDate end
     );
 
+    void deleteBySummaryDateBetween(LocalDate start, LocalDate end);
+
     <S extends MonthlyRevenueSummary> List<S> saveAll(Iterable<S> summaries);
 }

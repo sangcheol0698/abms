@@ -18,6 +18,7 @@ import kr.co.abacus.abms.domain.account.AccountAlreadyExistsException;
 import kr.co.abacus.abms.domain.account.InvalidCurrentPasswordException;
 import kr.co.abacus.abms.domain.account.AccountNotFoundException;
 import kr.co.abacus.abms.domain.account.SamePasswordException;
+import kr.co.abacus.abms.domain.auth.InvalidPasswordResetTokenException;
 import kr.co.abacus.abms.domain.auth.InvalidRegistrationTokenException;
 import kr.co.abacus.abms.domain.department.DepartmentNotFoundException;
 import kr.co.abacus.abms.domain.employee.DuplicateEmailException;
@@ -55,6 +56,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
             InvalidEmployeeStatusException.class,
             AccountAlreadyExistsException.class,
             InvalidRegistrationTokenException.class,
+            InvalidPasswordResetTokenException.class,
             InvalidCurrentPasswordException.class,
             SamePasswordException.class,
             DuplicatePermissionGroupNameException.class,

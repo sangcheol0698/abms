@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+import kr.co.abacus.abms.application.auth.outbound.PasswordResetLinkSender;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationLinkSender;
 
 @Profile("test")
@@ -15,6 +16,11 @@ public class TestMailMockConfig {
     @Bean
     RegistrationLinkSender registrationLinkSender() {
         return mock(RegistrationLinkSender.class);
+    }
+
+    @Bean
+    PasswordResetLinkSender passwordResetLinkSender() {
+        return mock(PasswordResetLinkSender.class);
     }
 
 }

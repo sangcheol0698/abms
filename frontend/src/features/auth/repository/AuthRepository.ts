@@ -20,6 +20,15 @@ interface ChangePasswordPayload {
   newPassword: string;
 }
 
+interface PasswordResetRequestPayload {
+  email: string;
+}
+
+interface PasswordResetConfirmPayload {
+  token: string;
+  password: string;
+}
+
 export interface AuthMeResponse {
   name: string;
   email: string;
@@ -67,6 +76,20 @@ export default class AuthRepository {
   async changePassword(payload: ChangePasswordPayload): Promise<void> {
     await this.httpRepository.patch<void>({
       path: '/api/auth/password',
+      data: payload,
+    });
+  }
+
+  async requestPasswordReset(payload: PasswordResetRequestPayload): Promise<void> {
+    await this.httpRepository.post<void>({
+      path: '/api/auth/password-reset-requests',
+      data: payload,
+    });
+  }
+
+  async confirmPasswordReset(payload: PasswordResetConfirmPayload): Promise<void> {
+    await this.httpRepository.post<void>({
+      path: '/api/auth/password-reset-confirmations',
       data: payload,
     });
   }

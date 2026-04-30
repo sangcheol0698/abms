@@ -20,6 +20,8 @@ import kr.co.abacus.abms.adapter.api.auth.dto.AuthMeResponse;
 import kr.co.abacus.abms.adapter.security.CurrentActorResolver;
 import kr.co.abacus.abms.adapter.api.auth.dto.ChangePasswordRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.LoginRequest;
+import kr.co.abacus.abms.adapter.api.auth.dto.PasswordResetConfirmRequest;
+import kr.co.abacus.abms.adapter.api.auth.dto.PasswordResetRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationConfirmRequest;
 import kr.co.abacus.abms.adapter.api.auth.dto.RegistrationRequest;
 import kr.co.abacus.abms.application.auth.inbound.AuthFinder;
@@ -64,6 +66,16 @@ public class AuthApi {
     @PostMapping("/api/auth/registration-confirmations")
     public void confirmRegistration(@RequestBody @Valid RegistrationConfirmRequest request) {
         authManager.confirmRegistration(request.toCommand());
+    }
+
+    @PostMapping("/api/auth/password-reset-requests")
+    public void requestPasswordReset(@RequestBody @Valid PasswordResetRequest request) {
+        authManager.requestPasswordReset(request.toCommand());
+    }
+
+    @PostMapping("/api/auth/password-reset-confirmations")
+    public void confirmPasswordReset(@RequestBody @Valid PasswordResetConfirmRequest request) {
+        authManager.confirmPasswordReset(request.toCommand());
     }
 
     @GetMapping("/api/auth/me")

@@ -20,7 +20,15 @@
         </div>
 
         <div class="space-y-2">
-          <Label for="password">비밀번호</Label>
+          <div class="flex items-center justify-between gap-3">
+            <Label for="password">비밀번호</Label>
+            <RouterLink
+              class="text-xs font-medium text-primary underline-offset-4 hover:underline"
+              to="/auths/password-reset"
+            >
+              비밀번호를 잊으셨나요?
+            </RouterLink>
+          </div>
           <Input
             id="password"
             v-model="password"

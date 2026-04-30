@@ -23,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import kr.co.abacus.abms.application.auth.outbound.PasswordResetLinkSender;
 import kr.co.abacus.abms.AbmsBatchApplication;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationLinkSender;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
@@ -72,6 +73,9 @@ class BatchJobStructureTest {
 
     @MockitoBean
     private RegistrationLinkSender registrationLinkSender;
+
+    @MockitoBean
+    private PasswordResetLinkSender passwordResetLinkSender;
 
     @Autowired
     private JobLauncher jobLauncher;
@@ -230,8 +234,8 @@ class BatchJobStructureTest {
     }
 
     @Test
-    @DisplayName("revenueMonthlySummaryJob는 같은 월 재실행 시 요약을 추가 적재한다")
-    void revenueMonthlySummaryJob_appendsSummaryOnRerun() throws Exception {
+    @DisplayName("revenueMonthlySummaryJob는 같은 월 재실행 시 기존 요약을 삭제하고 다시 적재하여 멱등성을 보장한다")
+    void revenueMonthlySummaryJob_isIdempotentOnRerun() throws Exception {
         LocalDate targetDate = LocalDate.of(2026, 2, 15);
         Department leadDepartment = createDepartment("집계팀B");
         Employee employee = createEmployee(leadDepartment, "집계직원B", "batch-summary-b@abms.co.kr");
@@ -285,7 +289,7 @@ class BatchJobStructureTest {
                 .filter(summary -> summary.getSummaryDate().isEqual(targetDate))
                 .toList();
 
-        assertThat(summaries).hasSize(2);
+        assertThat(summaries).hasSize(1);
     }
 
     private JobParameters jobParameters(LocalDate targetDate, long runId) {

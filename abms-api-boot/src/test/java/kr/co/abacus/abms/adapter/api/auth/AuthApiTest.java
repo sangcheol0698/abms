@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import kr.co.abacus.abms.adapter.security.CustomUserDetails;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.auth.outbound.DefaultPermissionGroupRepository;
+import kr.co.abacus.abms.application.auth.outbound.PasswordResetTokenRepository;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationTokenRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.permission.outbound.AccountGroupAssignmentRepository;
@@ -33,6 +34,7 @@ import kr.co.abacus.abms.application.permission.outbound.GroupPermissionGrantRep
 import kr.co.abacus.abms.application.permission.outbound.PermissionGroupRepository;
 import kr.co.abacus.abms.application.permission.outbound.PermissionRepository;
 import kr.co.abacus.abms.domain.account.Account;
+import kr.co.abacus.abms.domain.auth.PasswordResetToken;
 import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
 import kr.co.abacus.abms.domain.auth.RegistrationToken;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -65,6 +67,9 @@ class AuthApiTest extends ApiIntegrationTestBase {
 
     @Autowired
     private RegistrationTokenRepository registrationTokenRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Autowired
     private DefaultPermissionGroupRepository defaultPermissionGroupRepository;
@@ -498,6 +503,94 @@ class AuthApiTest extends ApiIntegrationTestBase {
                         .content(toJson(Map.of(
                                 "token", registrationToken.getToken(),
                                 "password", "password1234"
+                        ))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 요청 시 항상 성공 응답을 반환하고 가입 계정이면 토큰을 생성한다")
+    void should_requestPasswordReset() throws Exception {
+        String resetEmail = "reset-user@iabacus.co.kr";
+        Employee employee = employeeRepository.save(createEmployee(resetEmail, "재설정요청직원"));
+        accountRepository.save(Account.create(employee.getIdOrThrow(), resetEmail, passwordEncoder.encode(PASSWORD)));
+        flushAndClear();
+
+        mockMvc.perform(post("/api/auth/password-reset-requests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("email", resetEmail))))
+                .andDo(document("auth/password-reset-request",
+                        requestFields(
+                                fieldWithPath("email").description("비밀번호 재설정을 요청할 회사 이메일")
+                        )))
+                .andExpect(status().isOk());
+
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository
+                .findFirstByEmailOrderByCreatedAtDesc(new Email(resetEmail))
+                .orElseThrow();
+
+        assertThat(passwordResetToken.getToken()).isNotBlank();
+
+        mockMvc.perform(post("/api/auth/password-reset-requests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("email", "missing@iabacus.co.kr"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 토큰으로 새 비밀번호를 설정할 수 있다")
+    void should_confirmPasswordReset() throws Exception {
+        Account account = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
+        passwordResetTokenRepository.save(PasswordResetToken.create(
+                account.getIdOrThrow(),
+                USERNAME,
+                "api-reset-token",
+                LocalDateTime.now().plusMinutes(30)
+        ));
+        flushAndClear();
+
+        mockMvc.perform(post("/api/auth/password-reset-confirmations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "token", "api-reset-token",
+                                "password", "ResetPassword123!"
+                        ))))
+                .andDo(document("auth/password-reset-confirmation",
+                        requestFields(
+                                fieldWithPath("token").description("비밀번호 재설정 토큰"),
+                                fieldWithPath("password").description("새 비밀번호")
+                        )))
+                .andExpect(status().isOk());
+        flushAndClear();
+
+        Account changed = accountRepository.findByUsername(new Email(USERNAME)).orElseThrow();
+        assertThat(passwordEncoder.matches("ResetPassword123!", changed.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches(PASSWORD, changed.getPassword())).isFalse();
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", "ResetPassword123!"
+                        ))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "username", USERNAME,
+                                "password", PASSWORD
+                        ))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 비밀번호 재설정 토큰이면 400을 반환한다")
+    void should_returnBadRequest_whenPasswordResetTokenIsInvalid() throws Exception {
+        mockMvc.perform(post("/api/auth/password-reset-confirmations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(
+                                "token", "invalid-reset-token",
+                                "password", "ResetPassword123!"
                         ))))
                 .andExpect(status().isBadRequest());
     }

@@ -16,6 +16,8 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.batch.infrastructure.item.database.JpaPagingItemReader;
@@ -66,8 +68,31 @@ public class RevenueMonthlySummaryBatchConfig {
     public Job revenueMonthlySummaryJob() {
         return new JobBuilder("revenueMonthlySummaryJob", jobRepository)
             .listener(batchObservabilityListener)
-            .start(revenueMonthlySummaryStep())
+            .start(deleteMonthlyRevenueSummaryStep())
+            .next(revenueMonthlySummaryStep())
             .build();
+    }
+
+    @Bean
+    public Step deleteMonthlyRevenueSummaryStep() {
+        return new StepBuilder("deleteMonthlyRevenueSummaryStep", jobRepository)
+            .tasklet(deleteMonthlyRevenueSummaryTasklet(null), transactionManager)
+            .build();
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet deleteMonthlyRevenueSummaryTasklet(
+        @Value("#{jobParameters['targetDate'] ?: null}") LocalDate targetDate
+    ) {
+        return (contribution, chunkContext) -> {
+            LocalDate executeDate = (targetDate != null) ? targetDate : LocalDate.now().minusDays(1);
+            YearMonth yearMonth = YearMonth.from(executeDate);
+
+            log.info("매출 요약 데이터 삭제 시작: {}", yearMonth);
+            summaryRepository.deleteBySummaryDateBetween(yearMonth.atDay(1), yearMonth.atEndOfMonth());
+            return RepeatStatus.FINISHED;
+        };
     }
 
     @Bean
@@ -162,7 +187,7 @@ public class RevenueMonthlySummaryBatchConfig {
                    leadDepartment.getId(),
                    leadDepartment.getCode(),
                    leadDepartment.getName(),
-                   executeDate,
+                   executeDate, // monthStart 대신 다시 executeDate 사용
                    totalRevenue,
                    totalCost,
                    totalProfit

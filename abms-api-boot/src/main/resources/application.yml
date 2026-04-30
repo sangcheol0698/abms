@@ -37,6 +37,10 @@ app:
       from: ${APP_AUTH_REGISTRATION_MAIL_FROM}
       subject: ${APP_AUTH_REGISTRATION_MAIL_SUBJECT}
       confirm-url: ${APP_AUTH_REGISTRATION_MAIL_CONFIRM_URL}
+    password-reset-mail:
+      from: ${APP_AUTH_PASSWORD_RESET_MAIL_FROM}
+      subject: ${APP_AUTH_PASSWORD_RESET_MAIL_SUBJECT}
+      confirm-url: ${APP_AUTH_PASSWORD_RESET_MAIL_CONFIRM_URL}
   observability:
     environment: ${APP_ENVIRONMENT:${spring.profiles.active:local}}
     log-file-name: ${APP_LOG_FILE_NAME:logs/abms-api.log}

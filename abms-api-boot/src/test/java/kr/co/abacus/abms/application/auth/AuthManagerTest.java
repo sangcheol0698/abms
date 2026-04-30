@@ -17,11 +17,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.mockito.ArgumentCaptor;
 
 import kr.co.abacus.abms.application.auth.dto.ChangePasswordCommand;
+import kr.co.abacus.abms.application.auth.dto.PasswordResetConfirmCommand;
+import kr.co.abacus.abms.application.auth.dto.PasswordResetRequestCommand;
 import kr.co.abacus.abms.application.auth.dto.RegistrationConfirmCommand;
 import kr.co.abacus.abms.application.auth.dto.RegistrationRequestCommand;
 import kr.co.abacus.abms.application.auth.inbound.AuthManager;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.auth.outbound.DefaultPermissionGroupRepository;
+import kr.co.abacus.abms.application.auth.outbound.PasswordResetLinkSender;
+import kr.co.abacus.abms.application.auth.outbound.PasswordResetTokenRepository;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationLinkSender;
 import kr.co.abacus.abms.application.auth.outbound.RegistrationTokenRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
@@ -31,6 +35,8 @@ import kr.co.abacus.abms.domain.account.AccountAlreadyExistsException;
 import kr.co.abacus.abms.domain.account.InvalidCurrentPasswordException;
 import kr.co.abacus.abms.domain.account.SamePasswordException;
 import kr.co.abacus.abms.domain.accountgroupassignment.AccountGroupAssignment;
+import kr.co.abacus.abms.domain.auth.InvalidPasswordResetTokenException;
+import kr.co.abacus.abms.domain.auth.PasswordResetToken;
 import kr.co.abacus.abms.domain.auth.InvalidRegistrationTokenException;
 import kr.co.abacus.abms.domain.auth.RegistrationToken;
 import kr.co.abacus.abms.domain.employee.Employee;
@@ -63,7 +69,13 @@ class AuthManagerTest extends IntegrationTestBase {
     private RegistrationTokenRepository registrationTokenRepository;
 
     @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Autowired
     private RegistrationLinkSender registrationLinkSender;
+
+    @Autowired
+    private PasswordResetLinkSender passwordResetLinkSender;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -77,6 +89,7 @@ class AuthManagerTest extends IntegrationTestBase {
     @BeforeEach
     void resetRegistrationSender() {
         reset(registrationLinkSender);
+        reset(passwordResetLinkSender);
     }
 
     @Test
@@ -239,6 +252,107 @@ class AuthManagerTest extends IntegrationTestBase {
 
         assertThatThrownBy(() -> authManager.changePassword(
                 new ChangePasswordCommand(EMAIL, PASSWORD, PASSWORD)))
+                .isInstanceOf(SamePasswordException.class)
+                .hasMessage("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 요청 시 토큰을 발급하고 메일을 발송한다")
+    void requestPasswordReset() {
+        Employee employee = employeeRepository.save(createEmployee(EMAIL, "비밀번호찾기직원"));
+        Account account = accountRepository.save(Account.create(employee.getIdOrThrow(), EMAIL, passwordEncoder.encode(PASSWORD)));
+        PasswordResetToken oldToken = passwordResetTokenRepository.save(PasswordResetToken.create(
+                account.getIdOrThrow(),
+                EMAIL,
+                "old-reset-token",
+                LocalDateTime.now().plusMinutes(10)
+        ));
+        flushAndClear();
+
+        authManager.requestPasswordReset(new PasswordResetRequestCommand(EMAIL));
+        flushAndClear();
+
+        PasswordResetToken latestToken = passwordResetTokenRepository.findFirstByEmailOrderByCreatedAtDesc(new Email(EMAIL))
+                .orElseThrow();
+
+        assertThat(latestToken.getToken()).isNotEqualTo("old-reset-token");
+        assertThat(latestToken.getAccountId()).isEqualTo(account.getId());
+        assertThat(latestToken.getExpiresAt()).isAfter(LocalDateTime.now().plusMinutes(29));
+        assertThat(passwordResetTokenRepository.findByToken(oldToken.getToken())).isEmpty();
+        verify(passwordResetLinkSender).sendPasswordResetLink(
+                eq(new Email(EMAIL)),
+                eq(latestToken.getToken()),
+                any(LocalDateTime.class)
+        );
+    }
+
+    @Test
+    @DisplayName("가입되지 않은 이메일로 비밀번호 재설정을 요청해도 성공 처리하고 토큰을 만들지 않는다")
+    void requestPasswordReset_unknownEmail() {
+        authManager.requestPasswordReset(new PasswordResetRequestCommand("missing@iabacus.co.kr"));
+        flushAndClear();
+
+        assertThat(passwordResetTokenRepository.findFirstByEmailOrderByCreatedAtDesc(new Email("missing@iabacus.co.kr")))
+                .isEmpty();
+        verifyNoInteractions(passwordResetLinkSender);
+    }
+
+    @Test
+    @DisplayName("유효한 토큰으로 비밀번호를 재설정한다")
+    void confirmPasswordReset() {
+        Employee employee = employeeRepository.save(createEmployee(EMAIL, "비밀번호재설정직원"));
+        Account account = accountRepository.save(Account.create(employee.getIdOrThrow(), EMAIL, passwordEncoder.encode(PASSWORD)));
+        passwordResetTokenRepository.save(PasswordResetToken.create(
+                account.getIdOrThrow(),
+                EMAIL,
+                "reset-token",
+                LocalDateTime.now().plusMinutes(30)
+        ));
+        flushAndClear();
+
+        authManager.confirmPasswordReset(new PasswordResetConfirmCommand("reset-token", "ResetPassword123!"));
+        flushAndClear();
+
+        Account changed = accountRepository.findByUsername(new Email(EMAIL)).orElseThrow();
+        assertThat(passwordEncoder.matches("ResetPassword123!", changed.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches(PASSWORD, changed.getPassword())).isFalse();
+        assertThat(passwordResetTokenRepository.findByToken("reset-token")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("만료된 토큰으로 비밀번호 재설정하면 예외가 발생한다")
+    void confirmPasswordReset_expiredToken() {
+        Employee employee = employeeRepository.save(createEmployee(EMAIL, "만료재설정직원"));
+        Account account = accountRepository.save(Account.create(employee.getIdOrThrow(), EMAIL, passwordEncoder.encode(PASSWORD)));
+        passwordResetTokenRepository.save(PasswordResetToken.create(
+                account.getIdOrThrow(),
+                EMAIL,
+                "expired-reset-token",
+                LocalDateTime.now().minusMinutes(1)
+        ));
+        flushAndClear();
+
+        assertThatThrownBy(() -> authManager.confirmPasswordReset(
+                new PasswordResetConfirmCommand("expired-reset-token", "ResetPassword123!")))
+                .isInstanceOf(InvalidPasswordResetTokenException.class)
+                .hasMessage("만료된 비밀번호 재설정 토큰입니다.");
+    }
+
+    @Test
+    @DisplayName("현재 비밀번호와 같은 비밀번호로 재설정하면 실패한다")
+    void confirmPasswordReset_samePassword() {
+        Employee employee = employeeRepository.save(createEmployee(EMAIL, "동일재설정직원"));
+        Account account = accountRepository.save(Account.create(employee.getIdOrThrow(), EMAIL, passwordEncoder.encode(PASSWORD)));
+        passwordResetTokenRepository.save(PasswordResetToken.create(
+                account.getIdOrThrow(),
+                EMAIL,
+                "same-password-reset-token",
+                LocalDateTime.now().plusMinutes(30)
+        ));
+        flushAndClear();
+
+        assertThatThrownBy(() -> authManager.confirmPasswordReset(
+                new PasswordResetConfirmCommand("same-password-reset-token", PASSWORD)))
                 .isInstanceOf(SamePasswordException.class)
                 .hasMessage("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
     }

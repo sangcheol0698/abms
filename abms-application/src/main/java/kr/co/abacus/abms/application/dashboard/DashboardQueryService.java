@@ -230,18 +230,8 @@ public class DashboardQueryService implements DashboardFinder {
     private List<MonthlyRevenueSummary> getLatestProjectSnapshotsByMonth(int year) {
         LocalDate startDate = LocalDate.of(year, Month.JANUARY, 1);
         LocalDate endDate = LocalDate.of(year, Month.DECEMBER, 31);
-        List<MonthlyRevenueSummary> summaries = monthlyRevenueSummaryRepository
+        return monthlyRevenueSummaryRepository
                 .findAllBySummaryDateBetweenAndDeletedFalseOrderBySummaryDateAscIdAsc(startDate, endDate);
-
-        Map<ProjectMonthKey, MonthlyRevenueSummary> latestProjectSnapshots = new LinkedHashMap<>();
-        for (MonthlyRevenueSummary summary : summaries) {
-            latestProjectSnapshots.put(
-                    new ProjectMonthKey(YearMonth.from(summary.getSummaryDate()), summary.getProjectId()),
-                    summary
-            );
-        }
-
-        return latestProjectSnapshots.values().stream().toList();
     }
 
     private boolean hasVisibleAmounts(DepartmentFinancialAccumulator accumulator) {
@@ -304,9 +294,6 @@ public class DashboardQueryService implements DashboardFinder {
         private long profit() {
             return profit.amount().longValue();
         }
-    }
-
-    private record ProjectMonthKey(YearMonth month, Long projectId) {
     }
 
 }

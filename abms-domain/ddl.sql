@@ -284,6 +284,31 @@ CREATE TABLE IF NOT EXISTS `tb_registration_token` (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `tb_password_reset_token` (
+    `id`         BIGINT       NOT NULL AUTO_INCREMENT,
+    `account_id` BIGINT      NOT NULL,
+    `email`      VARCHAR(100) NOT NULL,
+    `token`      VARCHAR(100) NOT NULL,
+    `expires_at` DATETIME(6)  NOT NULL,
+    `used`       TINYINT(1)   NOT NULL,
+    `used_at`    DATETIME(6)  NULL,
+    `created_at` DATETIME(6)  NOT NULL,
+    `updated_at` DATETIME(6)  NOT NULL,
+    `created_by` BIGINT       NULL,
+    `updated_by` BIGINT       NULL,
+    `deleted`    TINYINT(1)   NOT NULL,
+    `deleted_at` DATETIME(6)  NULL,
+    `deleted_by` BIGINT       NULL,
+
+    PRIMARY KEY (`id`),
+    CONSTRAINT `UK_PASSWORD_RESET_TOKEN` UNIQUE (`token`),
+    INDEX `IDX_PASSWORD_RESET_TOKEN_ACCOUNT_ID` (`account_id`),
+    INDEX `IDX_PASSWORD_RESET_TOKEN_EMAIL` (`email`),
+    CONSTRAINT `FK_PASSWORD_RESET_TOKEN_ACCOUNT_ID` FOREIGN KEY (`account_id`) REFERENCES `tb_account` (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `tb_chat_message` (
     `id`              BIGINT       NOT NULL AUTO_INCREMENT,
     `role`            INT          NOT NULL,
