@@ -97,6 +97,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         inPartyIds(condition.partyIds()),
                         inAccessibleScope(actor, PROJECT_READ_PERMISSION_CODE),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
+                        party.deleted.isFalse(),
                         project.deleted.isFalse())
                 .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
@@ -114,6 +115,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         inPartyIds(condition.partyIds()),
                         inAccessibleScope(actor, PROJECT_READ_PERMISSION_CODE),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
+                        party.deleted.isFalse(),
                         project.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
@@ -147,13 +149,16 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
     }
 
     private List<Project> searchInternal(ProjectSearchCondition condition, @Nullable CurrentActor actor) {
-        return queryFactory.selectFrom(project)
+        return queryFactory.select(project)
+                .from(project)
+                .join(party).on(project.partyId.eq(party.id))
                 .where(
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
                         inAccessibleScope(actor, PROJECT_EXCEL_DOWNLOAD_PERMISSION_CODE),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
+                        party.deleted.isFalse(),
                         project.deleted.isFalse())
                 .orderBy(defaultSort())
                 .fetch();
@@ -234,6 +239,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
         Long value = queryFactory
                 .select(project.count())
                 .from(project)
+                .join(party).on(project.partyId.eq(party.id))
                 .where(
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
@@ -241,6 +247,7 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
                         inAccessibleScope(actor, permissionCode),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
                         extraCondition,
+                        party.deleted.isFalse(),
                         project.deleted.isFalse())
                 .fetchOne();
         return value != null ? value : 0L;
@@ -254,12 +261,14 @@ public class ProjectRepositoryImpl implements CustomProjectRepository {
         Long value = queryFactory
                 .select(Expressions.numberTemplate(Long.class, "coalesce(sum({0}), 0)", project.contractAmount.amount))
                 .from(project)
+                .join(party).on(project.partyId.eq(party.id))
                 .where(
                         containsNameOrCode(condition.name()),
                         inStatuses(condition.statuses()),
                         inPartyIds(condition.partyIds()),
                         inAccessibleScope(actor, permissionCode),
                         overlapsPeriod(condition.periodStart(), condition.periodEnd()),
+                        party.deleted.isFalse(),
                         project.deleted.isFalse())
                 .fetchOne();
         return value != null ? value : 0L;

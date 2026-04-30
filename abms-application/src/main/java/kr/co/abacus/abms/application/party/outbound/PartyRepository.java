@@ -15,6 +15,8 @@ public interface PartyRepository extends CustomPartyRepository {
 
     Optional<Party> findByNameAndDeletedFalse(String name);
 
+    boolean existsByNameAndDeletedFalse(String name);
+
     List<Party> findAllByDeletedFalse();
 
 }

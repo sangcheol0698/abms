@@ -89,6 +89,7 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
                         inProjectStatuses(condition.projectStatuses()),
                         inAccessibleScope(actor),
                         projectAssignment.deleted.isFalse(),
+                        party.deleted.isFalse(),
                         project.deleted.isFalse())
                 .orderBy(projectAssignment.period.startDate.desc(), projectAssignment.id.desc())
                 .offset(pageable.getOffset())
@@ -99,6 +100,7 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
                 .select(projectAssignment.count())
                 .from(projectAssignment)
                 .join(project).on(projectAssignment.projectId.eq(project.id))
+                .join(party).on(project.partyId.eq(party.id))
                 .where(
                         projectAssignment.employeeId.eq(condition.employeeId()),
                         containsProjectNameOrCode(condition.name()),
@@ -106,6 +108,7 @@ public class ProjectAssignmentRepositoryImpl implements CustomProjectAssignmentR
                         inProjectStatuses(condition.projectStatuses()),
                         inAccessibleScope(actor),
                         projectAssignment.deleted.isFalse(),
+                        party.deleted.isFalse(),
                         project.deleted.isFalse());
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);

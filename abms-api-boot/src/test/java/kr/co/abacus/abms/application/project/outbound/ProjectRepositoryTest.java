@@ -196,6 +196,38 @@ class ProjectRepositoryTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("삭제된 협력사의 프로젝트는 검색과 요약에서 제외된다")
+    void search_excludesDeletedPartyProjects() {
+        Long activePartyId = createParty("활성 협력사");
+        Party deletedParty = partyRepository.save(Party.create(new PartyCreateRequest("삭제 협력사", null, null, null, null)));
+        Long deletedPartyId = deletedParty.getIdOrThrow();
+        deletedParty.softDelete(1L);
+
+        projectRepository.save(createProjectForSearch("PRJ-ACTIVE-PARTY", "활성 프로젝트", activePartyId, 1L,
+                ProjectStatus.IN_PROGRESS, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31)));
+        projectRepository.save(createProjectForSearch("PRJ-DELETED-PARTY", "삭제 협력사 프로젝트", deletedPartyId, 1L,
+                ProjectStatus.IN_PROGRESS, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31)));
+        flushAndClear();
+
+        ProjectSearchCondition condition = new ProjectSearchCondition(
+                "프로젝트",
+                null,
+                null,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 12, 31)
+        );
+
+        Page<ProjectSummary> projects = projectRepository.search(condition, PageRequest.of(0, 10));
+        ProjectOverviewSummary summary = projectRepository.summarize(condition);
+
+        assertThat(projects.getContent())
+                .extracting(ProjectSummary::code)
+                .containsExactly("PRJ-ACTIVE-PARTY");
+        assertThat(summary.totalCount()).isEqualTo(1);
+        assertThat(summary.totalContractAmount()).isEqualTo(100_000_000L);
+    }
+
+    @Test
     @DisplayName("프로젝트 요약 정보를 집계한다")
     void summarize() {
         Long summaryPartyId = createParty("요약 협력사");

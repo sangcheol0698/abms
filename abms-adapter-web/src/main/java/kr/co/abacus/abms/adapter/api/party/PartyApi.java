@@ -1,5 +1,7 @@
 package kr.co.abacus.abms.adapter.api.party;
 
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -65,7 +67,7 @@ public class PartyApi {
     @PreAuthorize("@permissionAuthorizationChecker.hasPermission(authentication, 'party.write')")
     @PostMapping("/api/parties")
     @ResponseStatus(HttpStatus.CREATED)
-    public PartyResponse create(@RequestBody PartyCreateApiRequest request, Authentication authentication) {
+    public PartyResponse create(@RequestBody @Valid PartyCreateApiRequest request, Authentication authentication) {
         Party party = partyManager.create(currentActorResolver.resolve(authentication), request.toDomainRequest());
         return PartyResponse.from(party);
     }
@@ -74,7 +76,7 @@ public class PartyApi {
     @PutMapping("/api/parties/{id}")
     public PartyResponse update(
             @PathVariable Long id,
-            @RequestBody PartyUpdateApiRequest request,
+            @RequestBody @Valid PartyUpdateApiRequest request,
             Authentication authentication
     ) {
         Party party = partyManager.update(currentActorResolver.resolve(authentication), id, request.toDomainRequest());

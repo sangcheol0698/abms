@@ -11,11 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.party.outbound.PartyRepository;
+import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
+import kr.co.abacus.abms.domain.party.DuplicatePartyNameException;
 import kr.co.abacus.abms.domain.grouppermissiongrant.PermissionScope;
 import kr.co.abacus.abms.domain.party.Party;
 import kr.co.abacus.abms.domain.party.PartyCreateRequest;
+import kr.co.abacus.abms.domain.party.PartyDeletionDeniedException;
 import kr.co.abacus.abms.domain.party.PartyNotFoundException;
 import kr.co.abacus.abms.domain.party.PartyUpdateRequest;
+import kr.co.abacus.abms.domain.project.ProjectFixture;
 import kr.co.abacus.abms.support.IntegrationTestBase;
 
 @DisplayName("협력사 관리 (PartyManager)")
@@ -26,6 +30,9 @@ class PartyManagerTest extends IntegrationTestBase {
 
     @Autowired
     private PartyRepository partyRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
 
     @Test
     @DisplayName("신규 협력사를 등록한다")
@@ -65,6 +72,33 @@ class PartyManagerTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("이미 사용 중인 협력사명으로 등록할 수 없다")
+    void create_duplicateName() {
+        partyRepository.save(createParty("중복 협력사"));
+        flushAndClear();
+
+        assertThatThrownBy(() -> partyManager.create(partyWriteActor(), createRequest("중복 협력사", null, null, null, null)))
+                .isInstanceOf(DuplicatePartyNameException.class)
+                .hasMessage("이미 존재하는 협력사명입니다: 중복 협력사");
+    }
+
+    @Test
+    @DisplayName("이미 사용 중인 협력사명으로 수정할 수 없다")
+    void update_duplicateName() {
+        partyRepository.save(createParty("기존 협력사"));
+        Party target = partyRepository.save(createParty("수정 대상 협력사"));
+        flushAndClear();
+
+        assertThatThrownBy(() -> partyManager.update(
+                partyWriteActor(),
+                target.getId(),
+                updateRequest("기존 협력사", null, null, null, null)
+        ))
+                .isInstanceOf(DuplicatePartyNameException.class)
+                .hasMessage("이미 존재하는 협력사명입니다: 기존 협력사");
+    }
+
+    @Test
     @DisplayName("협력사를 삭제하면 재조회할 수 없다")
     void delete() {
         Party saved = partyRepository.save(createParty("삭제 대상 협력사"));
@@ -75,9 +109,38 @@ class PartyManagerTest extends IntegrationTestBase {
 
         Party deleted = partyRepository.findById(saved.getId()).orElseThrow();
         assertThat(deleted.isDeleted()).isTrue();
+        assertThat(deleted.getDeletedBy()).isEqualTo(partyWriteActor().accountId());
         assertThatThrownBy(() -> partyManager.findById(saved.getId()))
                 .isInstanceOf(PartyNotFoundException.class)
                 .hasMessage("협력사를 찾을 수 없습니다: " + saved.getId());
+    }
+
+    @Test
+    @DisplayName("삭제된 협력사명은 다시 등록할 수 있다")
+    void create_afterDeleteWithSameName() {
+        Party saved = partyRepository.save(createParty("재등록 협력사"));
+        flushAndClear();
+
+        partyManager.delete(partyWriteActor(), saved.getId());
+        flushAndClear();
+
+        Party created = partyManager.create(partyWriteActor(), createRequest("재등록 협력사", null, null, null, null));
+        flushAndClear();
+
+        assertThat(created.getId()).isNotEqualTo(saved.getId());
+        assertThat(partyRepository.findByIdAndDeletedFalse(created.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("프로젝트가 연결된 협력사는 삭제할 수 없다")
+    void delete_hasProjects() {
+        Party saved = partyRepository.save(createParty("프로젝트 보유 협력사"));
+        projectRepository.save(ProjectFixture.createProject(saved.getId()));
+        flushAndClear();
+
+        assertThatThrownBy(() -> partyManager.delete(partyWriteActor(), saved.getId()))
+                .isInstanceOf(PartyDeletionDeniedException.class)
+                .hasMessage("프로젝트가 연결된 협력사는 삭제할 수 없습니다: " + saved.getId());
     }
 
     @Test

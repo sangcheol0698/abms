@@ -304,6 +304,15 @@ class PartyApiTest extends ApiIntegrationTestBase {
     }
 
     @Test
+    @DisplayName("존재하지 않는 협력사 상세 조회는 404를 반환한다")
+    void get_notFound() throws Exception {
+        MockHttpSession session = login();
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/parties/{id}", 9999L).session(session))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
     @DisplayName("협력사를 생성한다")
     void create() throws Exception {
         MockHttpSession session = login();
@@ -325,6 +334,37 @@ class PartyApiTest extends ApiIntegrationTestBase {
 
         PartyResponse response = objectMapper.readValue(result.getResponse().getContentAsByteArray(), PartyResponse.class);
         assertThat(response.name()).isEqualTo("생성 협력사");
+    }
+
+    @Test
+    @DisplayName("협력사 생성 요청 검증 실패 시 400을 반환한다")
+    void create_invalidRequest() throws Exception {
+        MockHttpSession session = login();
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/parties")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "name", " ",
+                                "salesRepEmail", "invalid-email"
+                        ))))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("중복 협력사명으로 생성하면 400을 반환한다")
+    void create_duplicateName() throws Exception {
+        partyRepository.save(Party.create(new PartyCreateRequest("중복 API 협력사", null, null, null, null)));
+        flushAndClear();
+
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/parties")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "name", "중복 API 협력사"
+                        ))))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
@@ -382,6 +422,25 @@ class PartyApiTest extends ApiIntegrationTestBase {
                                 parameterWithName("id").description("삭제할 협력사 ID")
                         )))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("프로젝트가 연결된 협력사 삭제는 400을 반환한다")
+    void delete_hasProjects() throws Exception {
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest(
+                "프로젝트 보유 API 협력사",
+                null,
+                null,
+                null,
+                null
+        )));
+        projectRepository.save(ProjectFixture.createProject(
+                "PRJ-PARTY-DELETE-001", "삭제 차단 프로젝트", party.getId(), 1L));
+        flushAndClear();
+
+        MockHttpSession session = login();
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/parties/{id}", party.getId()).session(session))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     private Project createProject(String code, Long partyId, ProjectStatus status, long contractAmount) {

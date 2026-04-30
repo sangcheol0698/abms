@@ -27,6 +27,9 @@ import kr.co.abacus.abms.domain.employee.EmployeeNotFoundException;
 import kr.co.abacus.abms.domain.employee.InvalidEmployeeStatusException;
 import kr.co.abacus.abms.domain.notification.NotificationNotFoundException;
 import kr.co.abacus.abms.domain.payroll.PayrollNotFoundException;
+import kr.co.abacus.abms.domain.party.DuplicatePartyNameException;
+import kr.co.abacus.abms.domain.party.PartyDeletionDeniedException;
+import kr.co.abacus.abms.domain.party.PartyNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectCodeDuplicateException;
 import kr.co.abacus.abms.domain.project.ProjectNotFoundException;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlanNotFoundException;
@@ -59,6 +62,8 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
             InvalidPasswordResetTokenException.class,
             InvalidCurrentPasswordException.class,
             SamePasswordException.class,
+            DuplicatePartyNameException.class,
+            PartyDeletionDeniedException.class,
             DuplicatePermissionGroupNameException.class,
             PermissionNotFoundException.class,
             IllegalArgumentException.class
@@ -72,6 +77,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
             DepartmentNotFoundException.class,
             ProjectNotFoundException.class,
             ProjectRevenuePlanNotFoundException.class,
+            PartyNotFoundException.class,
             AccountNotFoundException.class,
             NotificationNotFoundException.class,
             PermissionGroupNotFoundException.class,

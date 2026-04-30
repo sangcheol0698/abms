@@ -110,6 +110,18 @@ class PartyFinderTest extends IntegrationTestBase {
                 .hasMessage("존재하지 않는 협력사입니다: 9999");
     }
 
+    @Test
+    @DisplayName("삭제된 협력사의 이름 조회 시 예외가 발생한다")
+    void getPartyName_deleted() {
+        Party saved = partyRepository.save(createParty("삭제된 이름 조회 협력사"));
+        saved.softDelete(1L);
+        flushAndClear();
+
+        assertThatThrownBy(() -> partyQueryService.getPartyName(saved.getId()))
+                .isInstanceOf(PartyNotFoundException.class)
+                .hasMessage("존재하지 않는 협력사입니다: " + saved.getId());
+    }
+
     private Party createParty(String name) {
         return Party.create(new PartyCreateRequest(
                 name,

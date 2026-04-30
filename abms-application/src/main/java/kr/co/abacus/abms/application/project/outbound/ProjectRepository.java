@@ -26,6 +26,8 @@ public interface ProjectRepository extends CustomProjectRepository {
 
     List<Project> findAllByPartyIdAndDeletedFalse(Long partyId);
 
+    boolean existsByPartyIdAndDeletedFalse(Long partyId);
+
     List<Project> findAllByStatusAndDeletedFalse(ProjectStatus status);
 
     int countByStatus(ProjectStatus status);

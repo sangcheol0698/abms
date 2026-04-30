@@ -33,7 +33,7 @@ public class PartyQueryService implements PartyFinder {
     }
 
     public String getPartyName(Long partyId) {
-        return partyRepository.findById(partyId)
+        return partyRepository.findByIdAndDeletedFalse(partyId)
                 .map(Party::getName)
                 .orElseThrow(() -> new PartyNotFoundException("존재하지 않는 협력사입니다: " + partyId));
     }

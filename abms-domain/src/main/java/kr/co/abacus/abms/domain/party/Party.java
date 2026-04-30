@@ -5,7 +5,6 @@ import static java.util.Objects.*;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 import org.jspecify.annotations.Nullable;
 
@@ -18,9 +17,7 @@ import kr.co.abacus.abms.domain.AbstractEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "tb_party", uniqueConstraints = {
-        @UniqueConstraint(name = "UK_PARTY_NAME", columnNames = {"party_name"})
-})
+@Table(name = "tb_party")
 public class Party extends AbstractEntity {
 
     @Column(name = "party_name", nullable = false, length = 50)
@@ -45,21 +42,37 @@ public class Party extends AbstractEntity {
     public static Party create(PartyCreateRequest request) {
         Party party = new Party();
 
-        party.name = requireNonNull(request.name());
-        party.ceoName = request.ceoName();
-        party.salesRepName = request.salesRepName();
-        party.salesRepPhone = request.salesRepPhone();
-        party.salesRepEmail = request.salesRepEmail();
+        party.name = normalizeRequired(request.name());
+        party.ceoName = normalizeOptional(request.ceoName());
+        party.salesRepName = normalizeOptional(request.salesRepName());
+        party.salesRepPhone = normalizeOptional(request.salesRepPhone());
+        party.salesRepEmail = normalizeOptional(request.salesRepEmail());
 
         return party;
     }
 
     public void update(PartyUpdateRequest request) {
-        this.name = requireNonNull(request.name());
-        this.ceoName = request.ceoName();
-        this.salesRepName = request.salesRepName();
-        this.salesRepPhone = request.salesRepPhone();
-        this.salesRepEmail = request.salesRepEmail();
+        this.name = normalizeRequired(request.name());
+        this.ceoName = normalizeOptional(request.ceoName());
+        this.salesRepName = normalizeOptional(request.salesRepName());
+        this.salesRepPhone = normalizeOptional(request.salesRepPhone());
+        this.salesRepEmail = normalizeOptional(request.salesRepEmail());
+    }
+
+    private static String normalizeRequired(String value) {
+        String normalized = requireNonNull(value).trim();
+        if (normalized.isEmpty()) {
+            throw new IllegalArgumentException("협력사명은 필수입니다.");
+        }
+        return normalized;
+    }
+
+    private static @Nullable String normalizeOptional(@Nullable String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
 }
