@@ -87,10 +87,15 @@ import PartyDetailHeader from '@/features/party/components/PartyDetailHeader.vue
 import PartyOverviewPanel from '@/features/party/components/PartyOverviewPanel.vue';
 import PartyProjectsPanel from '@/features/party/components/PartyProjectsPanel.vue';
 import PartyFormDialog from '@/features/party/components/PartyFormDialog.vue';
-import { useDeletePartyMutation, usePartyDetailQuery } from '@/features/party/queries/usePartyQueries';
+import {
+  useDeletePartyMutation,
+  usePartyDetailQuery,
+} from '@/features/party/queries/usePartyQueries';
+import { getPartyErrorMessage } from '@/features/party/utils/partyErrorMessage';
 import { partyKeys, queryClient } from '@/core/query';
 import { canManageParties, canReadParties } from '@/features/party/permissions';
 import { canReadProjects } from '@/features/project/permissions';
+import { toast } from 'vue-sonner';
 
 defineOptions({ name: 'PartyDetailView' });
 
@@ -169,8 +174,9 @@ async function handleDelete() {
   try {
     await deletePartyMutation.mutateAsync(party.value.partyId);
     router.push('/parties');
-  } catch {
-    // Error state is surfaced by query/mutation error handling and toast in caller scope.
+  } catch (error) {
+    const message = getPartyErrorMessage(error, '협력사 삭제 중 오류가 발생했습니다.');
+    toast.error('협력사 삭제에 실패했습니다.', { description: message });
   }
 }
 </script>

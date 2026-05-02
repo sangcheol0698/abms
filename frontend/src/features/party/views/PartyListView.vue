@@ -134,6 +134,7 @@ import {
   usePartyListQuery,
   usePartyOverviewSummaryQuery,
 } from '@/features/party/queries/usePartyQueries';
+import { getPartyErrorMessage } from '@/features/party/utils/partyErrorMessage';
 import { partyKeys, queryClient } from '@/core/query';
 import { canManageParties, canReadParties } from '@/features/party/permissions';
 
@@ -401,8 +402,9 @@ async function handleEditParty(party: PartyListItem) {
     formDialogMode.value = 'edit';
     editingParty.value = detail;
     isFormDialogOpen.value = true;
-  } catch {
-    toast.error('협력사 정보를 불러오지 못했습니다.');
+  } catch (error) {
+    const message = getPartyErrorMessage(error, '협력사 정보를 불러오는 중 오류가 발생했습니다.');
+    toast.error('협력사 정보를 불러오지 못했습니다.', { description: message });
   }
 }
 
@@ -437,8 +439,9 @@ async function confirmDelete() {
     toast.success('협력사가 삭제되었습니다.');
     isDeleteDialogOpen.value = false;
     deletingParty.value = null;
-  } catch {
-    toast.error('협력사 삭제에 실패했습니다.');
+  } catch (error) {
+    const message = getPartyErrorMessage(error, '협력사 삭제 중 오류가 발생했습니다.');
+    toast.error('협력사 삭제에 실패했습니다.', { description: message });
   }
 }
 </script>

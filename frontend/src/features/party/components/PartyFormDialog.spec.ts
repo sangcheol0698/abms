@@ -2,6 +2,7 @@ import { defineComponent, h } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { renderWithProviders } from '@/test-utils';
+import HttpError from '@/core/http/HttpError';
 import PartyFormDialog from '@/features/party/components/PartyFormDialog.vue';
 import { toast } from 'vue-sonner';
 
@@ -181,14 +182,18 @@ describe('PartyFormDialog', () => {
     expect(wrapper.emitted('updated')).toHaveLength(1);
   });
 
-  it('mutation 실패 시 기존 에러 토스트를 유지한다', async () => {
-    createMutateAsyncMock.mockRejectedValueOnce(new Error('boom'));
+  it('mutation 실패 시 서버 에러 메시지를 토스트 설명으로 표시한다', async () => {
+    createMutateAsyncMock.mockRejectedValueOnce(
+      new HttpError({ code: '400', message: '이미 등록된 협력사명입니다.' }),
+    );
     const { wrapper } = await mountPartyFormDialog();
 
     await wrapper.get('#name').setValue('실패 협력사');
     await wrapper.get('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(toast.error).toHaveBeenCalledWith('협력사 등록에 실패했습니다.');
+    expect(toast.error).toHaveBeenCalledWith('협력사 등록에 실패했습니다.', {
+      description: '이미 등록된 협력사명입니다.',
+    });
   });
 });

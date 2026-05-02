@@ -35,13 +35,18 @@
 
         <div class="space-y-2">
           <Label for="salesRepEmail">이메일</Label>
-          <Input id="salesRepEmail" v-model="form.salesRepEmail" type="email" placeholder="email@example.com" />
+          <Input
+            id="salesRepEmail"
+            v-model="form.salesRepEmail"
+            type="email"
+            placeholder="email@example.com"
+          />
         </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" @click="emit('update:open', false)">취소</Button>
           <Button type="submit" :disabled="isSubmitting">
-            {{ isSubmitting ? '저장 중...' : (mode === 'create' ? '등록' : '저장') }}
+            {{ isSubmitting ? '저장 중...' : mode === 'create' ? '등록' : '저장' }}
           </Button>
         </DialogFooter>
       </form>
@@ -68,6 +73,7 @@ import {
   useCreatePartyMutation,
   useUpdatePartyMutation,
 } from '@/features/party/queries/usePartyQueries';
+import { getPartyErrorMessage } from '@/features/party/utils/partyErrorMessage';
 import { toast } from 'vue-sonner';
 
 interface Props {
@@ -141,8 +147,16 @@ async function handleSubmit() {
       await updatePartyMutation.mutateAsync({ partyId: props.party.partyId, data });
       emit('updated');
     }
-  } catch {
-    toast.error(props.mode === 'create' ? '협력사 등록에 실패했습니다.' : '협력사 수정에 실패했습니다.');
+  } catch (error) {
+    const title =
+      props.mode === 'create' ? '협력사 등록에 실패했습니다.' : '협력사 수정에 실패했습니다.';
+    const message = getPartyErrorMessage(
+      error,
+      props.mode === 'create'
+        ? '협력사 등록 중 오류가 발생했습니다.'
+        : '협력사 수정 중 오류가 발생했습니다.',
+    );
+    toast.error(title, { description: message });
   } finally {
     isSubmitting.value = false;
   }
