@@ -57,6 +57,8 @@ import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentCreateRequest;
 import kr.co.abacus.abms.domain.shared.Money;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryCreateRequest;
+import kr.co.abacus.abms.domain.summary.RevenueMonthClosing;
 
 @ActiveProfiles("test")
 @SpringBootTest(
@@ -121,6 +123,9 @@ class BatchJobStructureTest {
 
     @Autowired
     private kr.co.abacus.abms.adapter.infrastructure.summary.MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
+
+    @Autowired
+    private kr.co.abacus.abms.adapter.infrastructure.summary.RevenueMonthClosingRepository revenueMonthClosingRepository;
 
     @Autowired
     private MeterRegistry meterRegistry;
@@ -218,7 +223,7 @@ class BatchJobStructureTest {
 
         List<MonthlyRevenueSummary> summaries = monthlyRevenueSummaryRepository.findAll().stream()
                 .filter(summary -> summary.getProjectId().equals(project.getIdOrThrow()))
-                .filter(summary -> summary.getSummaryDate().isEqual(targetDate))
+                .filter(summary -> summary.getTargetMonth().isEqual(LocalDate.of(2026, 2, 1)))
                 .toList();
 
         assertThat(summaries).hasSize(1);
@@ -229,13 +234,13 @@ class BatchJobStructureTest {
         assertThat(meterRegistry.find("abms.batch.job.executions.total")
                 .tags("job", "revenueMonthlySummaryJob", "status", "COMPLETED")
                 .counter()).isNotNull();
-        assertThat(meterRegistry.find("abms.batch.step.read.count")
-                .tags("job", "revenueMonthlySummaryJob", "step", "revenueMonthlySummaryStep")
-                .summary()).isNotNull();
+        assertThat(meterRegistry.find("abms.batch.step.duration")
+                .tags("job", "revenueMonthlySummaryJob", "step", "revenueMonthlySummaryStep", "status", "COMPLETED")
+                .timer()).isNotNull();
     }
 
     @Test
-    @DisplayName("revenueMonthlySummaryJob는 같은 월 재실행 시 기존 요약을 삭제하고 다시 적재하여 멱등성을 보장한다")
+    @DisplayName("revenueMonthlySummaryJob는 같은 월 재실행 시 기존 요약을 갱신하여 멱등성을 보장한다")
     void revenueMonthlySummaryJob_isIdempotentOnRerun() throws Exception {
         LocalDate targetDate = LocalDate.of(2026, 2, 15);
         Department leadDepartment = createDepartment("집계팀B");
@@ -283,14 +288,213 @@ class BatchJobStructureTest {
         flushAndClear();
 
         jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 3L));
+        MonthlyRevenueSummary firstSummary = findSummary(project, LocalDate.of(2026, 2, 1));
+        Long firstSummaryId = firstSummary.getIdOrThrow();
+        assertThat(firstSummary.getRevenueAmount().amount().longValue()).isEqualTo(20_000_000L);
+        assertThat(firstSummary.getCostAmount().amount().longValue()).isEqualTo(10_400_000L);
+
+        issuedPlan.cancel();
+        projectRevenuePlanRepository.save(issuedPlan);
+        flushAndClear();
+
         jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 4L));
 
-        List<MonthlyRevenueSummary> summaries = monthlyRevenueSummaryRepository.findAll().stream()
-                .filter(summary -> summary.getProjectId().equals(project.getIdOrThrow()))
-                .filter(summary -> summary.getSummaryDate().isEqual(targetDate))
-                .toList();
-
+        List<MonthlyRevenueSummary> summaries = findSummaries(project, LocalDate.of(2026, 2, 1));
         assertThat(summaries).hasSize(1);
+        MonthlyRevenueSummary updatedSummary = summaries.getFirst();
+        assertThat(updatedSummary.getIdOrThrow()).isEqualTo(firstSummaryId);
+        assertThat(updatedSummary.getRevenueAmount().amount().longValue()).isZero();
+        assertThat(updatedSummary.getCostAmount().amount().longValue()).isEqualTo(10_400_000L);
+        assertThat(updatedSummary.getProfitAmount().amount().longValue()).isEqualTo(-10_400_000L);
+    }
+
+    @Test
+    @DisplayName("revenueMonthlySummaryJob는 targetMonth 파라미터 월을 우선 집계한다")
+    void revenueMonthlySummaryJob_usesTargetMonthParameter() throws Exception {
+        LocalDate targetDate = LocalDate.of(2026, 2, 15);
+        Department leadDepartment = createDepartment("집계팀D");
+        Employee employee = createEmployee(leadDepartment, "집계직원D", "batch-summary-d@abms.co.kr");
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest("집계협력사D", null, null, null, null)));
+        Project project = projectRepository.save(Project.create(
+                party.getIdOrThrow(),
+                leadDepartment.getIdOrThrow(),
+                "BATCH-SUM-004",
+                "배치 집계 프로젝트 D",
+                null,
+                ProjectStatus.IN_PROGRESS,
+                100_000_000L,
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 3, 31)
+        ));
+
+        ProjectRevenuePlan issuedPlan = ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
+                project.getIdOrThrow(),
+                1,
+                LocalDate.of(2026, 3, 10),
+                RevenueType.DOWN_PAYMENT,
+                40_000_000L,
+                "targetMonth 집계"
+        ));
+        issuedPlan.issue();
+        projectRevenuePlanRepository.save(issuedPlan);
+
+        projectAssignmentRepository.save(ProjectAssignment.assign(project, new ProjectAssignmentCreateRequest(
+                project.getIdOrThrow(),
+                employee.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 3, 31)
+        )));
+
+        employeeMonthlyCostRepository.save(EmployeeMonthlyCost.create(
+                employee.getIdOrThrow(),
+                "202603",
+                Money.wons(9_000_000L),
+                Money.wons(900_000L),
+                Money.wons(1_800_000L),
+                Money.wons(11_700_000L)
+        ));
+        flushAndClear();
+
+        JobExecution execution = jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, "202603", 6L));
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(findSummaries(project, LocalDate.of(2026, 2, 1))).isEmpty();
+        MonthlyRevenueSummary summary = findSummary(project, LocalDate.of(2026, 3, 1));
+        assertThat(summary.getRevenueAmount().amount().longValue()).isEqualTo(40_000_000L);
+        assertThat(summary.getCostAmount().amount().longValue()).isEqualTo(11_700_000L);
+        assertThat(summary.getProfitAmount().amount().longValue()).isEqualTo(28_300_000L);
+    }
+
+    @Test
+    @DisplayName("revenueMonthlySummaryJob는 프로젝트 종료 후 발행 매출도 해당 월에 집계한다")
+    void revenueMonthlySummaryJob_includesIssuedRevenueAfterProjectEnd() throws Exception {
+        LocalDate targetDate = LocalDate.of(2026, 5, 15);
+        Department leadDepartment = createDepartment("집계팀E");
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest("집계협력사E", null, null, null, null)));
+        Project project = projectRepository.save(Project.create(
+                party.getIdOrThrow(),
+                leadDepartment.getIdOrThrow(),
+                "BATCH-SUM-005",
+                "배치 집계 프로젝트 E",
+                null,
+                ProjectStatus.COMPLETED,
+                100_000_000L,
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 3, 31)
+        ));
+
+        ProjectRevenuePlan issuedPlan = ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
+                project.getIdOrThrow(),
+                1,
+                LocalDate.of(2026, 5, 20),
+                RevenueType.BALANCE_PAYMENT,
+                60_000_000L,
+                "프로젝트 종료 후 잔금"
+        ));
+        issuedPlan.issue();
+        projectRevenuePlanRepository.save(issuedPlan);
+        flushAndClear();
+
+        JobExecution execution = jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 7L));
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        MonthlyRevenueSummary summary = findSummary(project, LocalDate.of(2026, 5, 1));
+        assertThat(summary.getRevenueAmount().amount().longValue()).isEqualTo(60_000_000L);
+        assertThat(summary.getCostAmount().amount().longValue()).isZero();
+        assertThat(summary.getProfitAmount().amount().longValue()).isEqualTo(60_000_000L);
+    }
+
+    @Test
+    @DisplayName("revenueMonthlySummaryJob는 영향 없는 기존 월 요약을 삭제한다")
+    void revenueMonthlySummaryJob_deletesObsoleteSummary() throws Exception {
+        LocalDate targetDate = LocalDate.of(2026, 6, 15);
+        Department leadDepartment = createDepartment("집계팀F");
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest("집계협력사F", null, null, null, null)));
+        Project project = projectRepository.save(Project.create(
+                party.getIdOrThrow(),
+                leadDepartment.getIdOrThrow(),
+                "BATCH-SUM-006",
+                "배치 집계 프로젝트 F",
+                null,
+                ProjectStatus.COMPLETED,
+                100_000_000L,
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 3, 31)
+        ));
+        monthlyRevenueSummaryRepository.save(MonthlyRevenueSummary.create(new MonthlyRevenueSummaryCreateRequest(
+                project.getIdOrThrow(),
+                project.getCode(),
+                project.getName(),
+                leadDepartment.getIdOrThrow(),
+                leadDepartment.getCode(),
+                leadDepartment.getName(),
+                LocalDate.of(2026, 6, 1),
+                Money.wons(10_000_000L),
+                Money.wons(1_000_000L),
+                Money.wons(9_000_000L)
+        )));
+        flushAndClear();
+
+        JobExecution execution = jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 8L));
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(monthlyRevenueSummaryRepository.findByProjectIdAndTargetMonthAndDeletedFalse(
+                project.getIdOrThrow(),
+                LocalDate.of(2026, 6, 1)
+        )).isEmpty();
+    }
+
+    @Test
+    @DisplayName("revenueMonthlySummaryJob는 마감 월을 자동 재계산하지 않는다")
+    void revenueMonthlySummaryJob_skipsClosedMonth() throws Exception {
+        LocalDate targetDate = LocalDate.of(2026, 4, 15);
+        Department leadDepartment = createDepartment("집계팀C");
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest("집계협력사C", null, null, null, null)));
+        Project project = projectRepository.save(Project.create(
+                party.getIdOrThrow(),
+                leadDepartment.getIdOrThrow(),
+                "BATCH-SUM-003",
+                "배치 집계 프로젝트 C",
+                null,
+                ProjectStatus.IN_PROGRESS,
+                100_000_000L,
+                LocalDate.of(2026, 4, 1),
+                LocalDate.of(2026, 4, 30)
+        ));
+        monthlyRevenueSummaryRepository.save(MonthlyRevenueSummary.create(new MonthlyRevenueSummaryCreateRequest(
+                project.getIdOrThrow(),
+                project.getCode(),
+                project.getName(),
+                leadDepartment.getIdOrThrow(),
+                leadDepartment.getCode(),
+                leadDepartment.getName(),
+                LocalDate.of(2026, 4, 1),
+                Money.wons(10_000_000L),
+                Money.wons(1_000_000L),
+                Money.wons(9_000_000L)
+        )));
+        revenueMonthClosingRepository.save(RevenueMonthClosing.close(LocalDate.of(2026, 4, 1), null));
+
+        ProjectRevenuePlan issuedPlan = ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
+                project.getIdOrThrow(),
+                1,
+                LocalDate.of(2026, 4, 20),
+                RevenueType.INTERMEDIATE_PAYMENT,
+                30_000_000L,
+                "마감 월 변경 시도"
+        ));
+        issuedPlan.issue();
+        projectRevenuePlanRepository.save(issuedPlan);
+        flushAndClear();
+
+        JobExecution execution = jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 5L));
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        MonthlyRevenueSummary summary = monthlyRevenueSummaryRepository
+                .findByProjectIdAndTargetMonthAndDeletedFalse(project.getIdOrThrow(), LocalDate.of(2026, 4, 1))
+                .orElseThrow();
+        assertThat(summary.getRevenueAmount().amount().longValue()).isEqualTo(10_000_000L);
     }
 
     private JobParameters jobParameters(LocalDate targetDate, long runId) {
@@ -298,6 +502,27 @@ class BatchJobStructureTest {
                 .addString("targetDate", targetDate.toString())
                 .addLong("run.id", runId)
                 .toJobParameters();
+    }
+
+    private JobParameters jobParameters(LocalDate targetDate, String targetMonth, long runId) {
+        return new JobParametersBuilder()
+                .addString("targetDate", targetDate.toString())
+                .addString("targetMonth", targetMonth)
+                .addLong("run.id", runId)
+                .toJobParameters();
+    }
+
+    private MonthlyRevenueSummary findSummary(Project project, LocalDate targetMonth) {
+        return monthlyRevenueSummaryRepository
+                .findByProjectIdAndTargetMonthAndDeletedFalse(project.getIdOrThrow(), targetMonth)
+                .orElseThrow();
+    }
+
+    private List<MonthlyRevenueSummary> findSummaries(Project project, LocalDate targetMonth) {
+        return monthlyRevenueSummaryRepository.findAll().stream()
+                .filter(summary -> summary.getProjectId().equals(project.getIdOrThrow()))
+                .filter(summary -> summary.getTargetMonth().isEqual(targetMonth))
+                .toList();
     }
 
     private Department createDepartment(String name) {
