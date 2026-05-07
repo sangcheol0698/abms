@@ -69,9 +69,16 @@ jobs:
           set -euo pipefail
 
           SERVER_USER="${DEV_SERVER_USER:-ubuntu}"
-          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-\$HOME}"
+          REMOTE_HOME="/home/${SERVER_USER}"
+          REMOTE_APP_DIR="${DEV_SERVER_APP_DIR:-${REMOTE_HOME}}"
+          case "${REMOTE_APP_DIR}" in
+            '$HOME') REMOTE_APP_DIR="${REMOTE_HOME}" ;;
+            '$HOME'/*) REMOTE_APP_DIR="${REMOTE_HOME}/${REMOTE_APP_DIR#'$HOME'/}" ;;
+            '~') REMOTE_APP_DIR="${REMOTE_HOME}" ;;
+            '~'/*) REMOTE_APP_DIR="${REMOTE_HOME}/${REMOTE_APP_DIR#'~'/}" ;;
+          esac
 
-          ssh "${SERVER_USER}@${DEV_SERVER_HOST}" "mkdir -p ${REMOTE_APP_DIR}"
+          ssh "${SERVER_USER}@${DEV_SERVER_HOST}" "mkdir -p '${REMOTE_APP_DIR}'"
           scp ./abms-batch-boot/build/libs/abms-batch.jar "${SERVER_USER}@${DEV_SERVER_HOST}:${REMOTE_APP_DIR}/abms-batch.jar"
 
       - name: Create batch deploy tag
