@@ -4,7 +4,7 @@
 - CI: GitHub Actions에서 백엔드 테스트와 프런트 검증을 수행합니다.
 - CD: Actions 탭에서 `Deploy API Dev`, `Deploy Batch Dev` 워크플로우를 각각 수동 실행해 개발 서버에 배포합니다.
 - 배포 성공 시 선택적으로 개발 배포 태그를 생성합니다.
-- 배치 실행은 Actions 탭에서 `Run Batch` 워크플로우로 수동 실행하거나, 매월 1일 03:00 KST 자동 실행합니다.
+- 배치 실행은 Actions 탭에서 `Run Batch` 워크플로우로 수동 실행하거나, 매일 03:00 KST 자동 실행합니다.
 
 ## 워크플로우
 - `.github/workflows/ci.yml`
@@ -34,16 +34,18 @@
   - 수동 실행 입력값
     - `ref`: 실행 기준 브랜치/커밋
     - `job_mode`: `monthly_chain`, `employee_cost_only`, `revenue_summary_only`
-    - `target_date`: `YYYY-MM-DD`, 비우면 자동 계산
+    - `target_date`: `YYYY-MM-DD`, 비우면 KST 기준 어제
+    - `target_month`: `YYYYMM`, `revenueMonthlySummaryJob` 재처리 대상 월
     - `create_tag`: 성공 후 태그 생성 여부
   - 자동 실행
-    - GitHub cron 한계 때문에 UTC 기준 `28-31일 18:00` 에 트리거
-    - 내부에서 KST 기준 매월 1일인지 확인하고, 맞을 때만 실행
-    - 실행 시 `job_mode=monthly_chain`, `targetDate=전월 말일`
+    - UTC 기준 매일 `18:00` 에 트리거되어 KST 기준 매일 `03:00` 에 실행
+    - 실행 시 `job_mode=revenue_summary_only`, `targetDate=KST 기준 어제`
+    - 자동 일배치는 실행 태그를 만들지 않고 GitHub Actions 로그와 배치 관측성 지표로 추적
   - 실행 방식
     - GitHub Actions가 개발 서버에 SSH로 접속
     - 서버의 `.env` 를 로드한 뒤 `abms-batch.jar` 를 직접 실행
     - `monthly_chain` 은 `employeeCostJob` 후 `revenueMonthlySummaryJob` 순차 실행
+    - `target_month` 입력 시 `revenueMonthlySummaryJob` 에 `targetMonth=YYYYMM` 파라미터를 함께 전달
     - 성공 시 `batch-dev-YYYYMMDD-HHMMSS-<shortsha>` 형식의 git 태그 생성
 
 ## GitHub Secrets
@@ -81,4 +83,4 @@
 - 배치 코드 변경은 `Deploy Batch Dev` 로 최신 `abms-batch.jar` 를 서버에 반영한 뒤 `Run Batch` 를 실행합니다.
 - `Run Batch` 는 배포를 겸하지 않으므로, 배치 코드가 바뀌었으면 반드시 먼저 `Deploy Batch Dev` 를 실행합니다.
 - 배포 실패 시 GitHub Actions 로그와 개발 서버의 `abms-api.log` 및 `docker compose ps` 를 먼저 확인합니다.
-- 배치 실패 시 GitHub Actions 로그와 개발 서버의 `abms-batch.log`, 실행별 `abms-batch-<job>-<targetDate>-<runId>.log` 를 먼저 확인합니다.
+- 배치 실패 시 GitHub Actions 로그와 개발 서버의 `abms-batch.log`, 실행별 `abms-batch-<job>-<targetDate 또는 targetMonth>-<runId>.log` 를 먼저 확인합니다.
