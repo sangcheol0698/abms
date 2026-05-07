@@ -4,13 +4,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryTotal;
 
 public interface MonthlyRevenueSummaryFinder {
 
-    Optional<MonthlyRevenueSummary> findOptionalByTargetMonth(String yearMonthStr);
+    Optional<MonthlyRevenueSummaryTotal> findOptionalByTargetMonth(String yearMonthStr);
 
-    MonthlyRevenueSummary findByTargetMonth(String yearMonthStr);
+    MonthlyRevenueSummaryTotal findByTargetMonth(String yearMonthStr);
 
-    List<MonthlyRevenueSummary> findRecentSixMonths(String yearMonthStr);
+    List<MonthlyRevenueSummaryTotal> findRecentSixMonths(String yearMonthStr);
 }

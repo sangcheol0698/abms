@@ -43,7 +43,7 @@ import kr.co.abacus.abms.domain.positionhistory.PositionHistory;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
-import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryTotal;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -234,13 +234,13 @@ public class BusinessQueryTools {
 
         String targetYearMonth = normalizeYearMonth(yearMonth);
         try {
-            MonthlyRevenueSummary summary = monthlyRevenueSummaryFinder.findByTargetMonth(targetYearMonth);
+            MonthlyRevenueSummaryTotal summary = monthlyRevenueSummaryFinder.findByTargetMonth(targetYearMonth);
             return new MonthlyRevenueSummaryInfo(
                     targetYearMonth,
-                    summary.getSummaryDate().toString(),
-                    summary.getRevenueAmount().amount().longValue(),
-                    summary.getCostAmount().amount().longValue(),
-                    summary.getProfitAmount().amount().longValue());
+                    summary.targetMonth().toString(),
+                    summary.revenueAmount().amount().longValue(),
+                    summary.costAmount().amount().longValue(),
+                    summary.profitAmount().amount().longValue());
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -557,7 +557,7 @@ public class BusinessQueryTools {
 
     public record MonthlyRevenueSummaryInfo(
             String yearMonth,
-            String summaryDate,
+            String targetMonth,
             long revenue,
             long cost,
             long profit) {

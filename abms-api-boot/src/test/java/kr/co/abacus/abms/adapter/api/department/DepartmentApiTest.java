@@ -289,10 +289,6 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 createMonthlyRevenueSummary(team, 100L, "PRJ-100", "개발 프로젝트 A",
                         LocalDate.of(2026, 1, 31), 100_000_000L, 60_000_000L, 40_000_000L),
                 createMonthlyRevenueSummary(team, 200L, "PRJ-200", "개발 프로젝트 B",
-                        LocalDate.of(2026, 2, 10), 50_000_000L, 20_000_000L, 30_000_000L),
-                createMonthlyRevenueSummary(team, 200L, "PRJ-200", "개발 프로젝트 B",
-                        LocalDate.of(2026, 2, 20), 70_000_000L, 30_000_000L, 40_000_000L),
-                createMonthlyRevenueSummary(team, 200L, "PRJ-200", "개발 프로젝트 B",
                         LocalDate.of(2026, 2, 20), 75_000_000L, 35_000_000L, 40_000_000L),
                 createMonthlyRevenueSummary(team, 300L, "PRJ-300", "개발 프로젝트 C",
                         LocalDate.of(2026, 3, 15), 90_000_000L, 55_000_000L, 35_000_000L),
@@ -408,7 +404,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
             Long projectId,
             String projectCode,
             String projectName,
-            LocalDate summaryDate,
+            LocalDate targetMonth,
             long revenue,
             long cost,
             long profit) {
@@ -419,7 +415,7 @@ class DepartmentApiTest extends ApiIntegrationTestBase {
                 department.getIdOrThrow(),
                 department.getCode(),
                 department.getName(),
-                summaryDate,
+                targetMonth,
                 Money.wons(revenue),
                 Money.wons(cost),
                 Money.wons(profit)

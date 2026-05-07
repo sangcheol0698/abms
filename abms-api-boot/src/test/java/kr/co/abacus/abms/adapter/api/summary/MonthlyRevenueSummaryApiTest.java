@@ -91,12 +91,13 @@ class MonthlyRevenueSummaryApiTest extends ApiIntegrationTestBase {
                 passwordEncoder.encode(PASSWORD)
         ));
 
-        monthlyRevenueSummaryRepository.save(createSummary("2025-08-31", 80_000_000L, 40_000_000L));
-        monthlyRevenueSummaryRepository.save(createSummary("2025-09-30", 82_000_000L, 41_000_000L));
-        monthlyRevenueSummaryRepository.save(createSummary("2025-10-31", 84_000_000L, 42_000_000L));
-        monthlyRevenueSummaryRepository.save(createSummary("2025-11-30", 86_000_000L, 43_000_000L));
-        monthlyRevenueSummaryRepository.save(createSummary("2025-12-31", 88_000_000L, 44_000_000L));
-        monthlyRevenueSummaryRepository.save(createSummary("2026-01-31", 90_000_000L, 45_000_000L));
+        monthlyRevenueSummaryRepository.save(createSummary(1L, "SUMMARY-PRJ-01", "2025-08-31", 80_000_000L, 40_000_000L));
+        monthlyRevenueSummaryRepository.save(createSummary(1L, "SUMMARY-PRJ-01", "2025-09-30", 82_000_000L, 41_000_000L));
+        monthlyRevenueSummaryRepository.save(createSummary(1L, "SUMMARY-PRJ-01", "2025-10-31", 84_000_000L, 42_000_000L));
+        monthlyRevenueSummaryRepository.save(createSummary(1L, "SUMMARY-PRJ-01", "2025-11-30", 86_000_000L, 43_000_000L));
+        monthlyRevenueSummaryRepository.save(createSummary(1L, "SUMMARY-PRJ-01", "2025-12-31", 88_000_000L, 44_000_000L));
+        monthlyRevenueSummaryRepository.save(createSummary(1L, "SUMMARY-PRJ-01", "2026-01-31", 90_000_000L, 45_000_000L));
+        monthlyRevenueSummaryRepository.save(createSummary(2L, "SUMMARY-PRJ-02", "2026-01-20", 10_000_000L, 5_000_000L));
         flushAndClear();
     }
 
@@ -119,10 +120,10 @@ class MonthlyRevenueSummaryApiTest extends ApiIntegrationTestBase {
                                 fieldWithPath("profit").description("이익 금액")
                         )))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.targetMonth").value("2026-01-31"))
-                .andExpect(jsonPath("$.revenue").value(90_000_000))
-                .andExpect(jsonPath("$.cost").value(45_000_000))
-                .andExpect(jsonPath("$.profit").value(45_000_000));
+                .andExpect(jsonPath("$.targetMonth").value("2026-01-01"))
+                .andExpect(jsonPath("$.revenue").value(100_000_000))
+                .andExpect(jsonPath("$.cost").value(50_000_000))
+                .andExpect(jsonPath("$.profit").value(50_000_000));
     }
 
     @Test
@@ -144,8 +145,9 @@ class MonthlyRevenueSummaryApiTest extends ApiIntegrationTestBase {
                                 fieldWithPath("[].profit").description("이익 금액")
                         )))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].targetMonth").value("2025-08-31"))
-                .andExpect(jsonPath("$[5].targetMonth").value("2026-01-31"));
+                .andExpect(jsonPath("$[0].targetMonth").value("2025-08-01"))
+                .andExpect(jsonPath("$[5].targetMonth").value("2026-01-01"))
+                .andExpect(jsonPath("$[5].revenue").value(100_000_000));
     }
 
     private MockHttpSession login() throws Exception {
@@ -163,10 +165,10 @@ class MonthlyRevenueSummaryApiTest extends ApiIntegrationTestBase {
         return session;
     }
 
-    private MonthlyRevenueSummary createSummary(String targetDate, long revenue, long cost) {
+    private MonthlyRevenueSummary createSummary(Long projectId, String projectCode, String targetDate, long revenue, long cost) {
         return MonthlyRevenueSummary.create(new MonthlyRevenueSummaryCreateRequest(
-                1L,
-                "SUMMARY-PRJ",
+                projectId,
+                projectCode,
                 "월별 집계 프로젝트",
                 departmentId,
                 "SUMMARY-TEAM",

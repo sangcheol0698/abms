@@ -30,8 +30,8 @@ import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.domain.projectassignment.AssignmentRole;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentCreateRequest;
-import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
-import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryCreateRequest;
+import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryTotal;
 
 @DisplayName("주간 보고서 스냅샷 서비스")
 class WeeklyReportSnapshotServiceTest {
@@ -149,19 +149,11 @@ class WeeklyReportSnapshotServiceTest {
                 )
         );
 
-        MonthlyRevenueSummary monthlyRevenueSummary = MonthlyRevenueSummary.create(
-                new MonthlyRevenueSummaryCreateRequest(
-                        1L,
-                        "PRJ-MONTH",
-                        "월간집계",
-                        1L,
-                        "TEAM-PLATFORM",
-                        "플랫폼팀",
-                        LocalDate.of(2026, 3, 31),
-                        kr.co.abacus.abms.domain.shared.Money.wons(1_000_000L),
-                        kr.co.abacus.abms.domain.shared.Money.wons(600_000L),
-                        kr.co.abacus.abms.domain.shared.Money.wons(400_000L)
-                )
+        MonthlyRevenueSummaryTotal monthlyRevenueSummary = new MonthlyRevenueSummaryTotal(
+                LocalDate.of(2026, 3, 1),
+                Money.wons(1_000_000L),
+                Money.wons(600_000L),
+                Money.wons(400_000L)
         );
 
         given(employeeRepository.search(org.mockito.ArgumentMatchers.any())).willReturn(List.of(joinedThisWeek, onLeave, resigned));

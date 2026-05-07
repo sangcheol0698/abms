@@ -565,7 +565,8 @@ CREATE TABLE IF NOT EXISTS `tb_monthly_revenue_summary` (
     `lead_department_id` BIGINT     NOT NULL,
     `lead_department_code` VARCHAR(255) NOT NULL,
     `lead_department_name` VARCHAR(255) NOT NULL,
-    `summary_date`   DATE           NOT NULL,
+    `target_month`   DATE           NOT NULL,
+    `calculated_at`  DATETIME(6)    NOT NULL,
     `revenue_amount` DECIMAL(19, 0) NOT NULL,
     `cost_amount`    DECIMAL(19, 0) NOT NULL,
     `profit_amount`  DECIMAL(19, 0) NOT NULL,
@@ -581,8 +582,33 @@ CREATE TABLE IF NOT EXISTS `tb_monthly_revenue_summary` (
     PRIMARY KEY (`id`),
     INDEX `IDX_MONTHLY_REVENUE_SUMMARY_PROJECT_ID` (`project_id`),
     INDEX `IDX_MONTHLY_REVENUE_SUMMARY_LEAD_DEPARTMENT_ID` (`lead_department_id`),
+    INDEX `IDX_MONTHLY_REVENUE_SUMMARY_TARGET_MONTH` (`target_month`),
+    INDEX `IDX_MONTHLY_REVENUE_SUMMARY_DEPT_MONTH` (`lead_department_id`, `target_month`),
+    CONSTRAINT `UK_MONTHLY_REVENUE_SUMMARY_PROJECT_MONTH` UNIQUE (`project_id`, `target_month`),
     CONSTRAINT `FK_MONTHLY_REVENUE_SUMMARY_PROJECT_ID` FOREIGN KEY (`project_id`) REFERENCES `tb_project` (`id`),
     CONSTRAINT `FK_MONTHLY_REVENUE_SUMMARY_LEAD_DEPARTMENT_ID` FOREIGN KEY (`lead_department_id`) REFERENCES `tb_department` (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tb_revenue_month_closing` (
+    `id`             BIGINT       NOT NULL AUTO_INCREMENT,
+    `target_month`   DATE         NOT NULL,
+    `closing_status` VARCHAR(20)  NOT NULL,
+    `closed_at`      DATETIME(6)  NULL,
+    `closed_by`      BIGINT       NULL,
+
+    `created_at`     DATETIME(6)  NOT NULL,
+    `updated_at`     DATETIME(6)  NOT NULL,
+    `created_by`     BIGINT       NULL,
+    `updated_by`     BIGINT       NULL,
+    `deleted`        TINYINT(1)   NOT NULL,
+    `deleted_at`     DATETIME(6)  NULL,
+    `deleted_by`     BIGINT       NULL,
+
+    PRIMARY KEY (`id`),
+    CONSTRAINT `UK_REVENUE_MONTH_CLOSING_TARGET_MONTH` UNIQUE (`target_month`),
+    INDEX `IDX_REVENUE_MONTH_CLOSING_STATUS` (`closing_status`, `target_month`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;

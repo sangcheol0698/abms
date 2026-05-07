@@ -298,7 +298,7 @@ class DashboardApiTest extends ApiIntegrationTestBase {
             Long projectId,
             String projectCode,
             String projectName,
-            LocalDate summaryDate,
+            LocalDate targetMonth,
             long revenue,
             long cost,
             long profit
@@ -310,7 +310,7 @@ class DashboardApiTest extends ApiIntegrationTestBase {
                 department.getIdOrThrow(),
                 department.getCode(),
                 department.getName(),
-                summaryDate,
+                targetMonth,
                 Money.wons(revenue),
                 Money.wons(cost),
                 Money.wons(profit)

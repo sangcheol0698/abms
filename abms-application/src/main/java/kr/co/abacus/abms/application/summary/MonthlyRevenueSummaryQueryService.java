@@ -12,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.application.summary.inbound.MonthlyRevenueSummaryFinder;
 import kr.co.abacus.abms.application.summary.outbound.MonthlyRevenueSummaryRepository;
+import kr.co.abacus.abms.domain.shared.Money;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryTotal;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -23,50 +25,65 @@ public class MonthlyRevenueSummaryQueryService implements MonthlyRevenueSummaryF
     private final MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
 
     @Override
-    public Optional<MonthlyRevenueSummary> findOptionalByTargetMonth(String yearMonthStr) {
-        // 1. 문자열 파싱 ("202602" -> 2026년 2월)
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
-        YearMonth yearMonth = YearMonth.parse(yearMonthStr, formatter);
+    public Optional<MonthlyRevenueSummaryTotal> findOptionalByTargetMonth(String yearMonthStr) {
+        YearMonth yearMonth = parseYearMonth(yearMonthStr);
+        LocalDate targetMonth = yearMonth.atDay(1);
+        List<MonthlyRevenueSummary> summaries = monthlyRevenueSummaryRepository
+                .findAllByTargetMonthAndDeletedFalseOrderByProjectIdAsc(targetMonth);
 
-        // 2. 검색 기간 설정 (2월 1일 ~ 2월 28일)
-        LocalDate startOfMonth = yearMonth.atDay(1);
-        LocalDate endOfMonth = yearMonth.atEndOfMonth();
+        if (summaries.isEmpty()) {
+            return Optional.empty();
+        }
 
-        return monthlyRevenueSummaryRepository.findFirstBySummaryDateBetweenOrderBySummaryDateDesc(startOfMonth, endOfMonth);
+        return Optional.of(toTotal(targetMonth, summaries));
     }
 
     @Override
-    public MonthlyRevenueSummary findByTargetMonth(String yearMonthStr) {
+    public MonthlyRevenueSummaryTotal findByTargetMonth(String yearMonthStr) {
         return findOptionalByTargetMonth(yearMonthStr)
                 .orElseThrow(() -> new IllegalArgumentException("계산되지 않은 월별 집계: " + yearMonthStr));
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<MonthlyRevenueSummary> findRecentSixMonths(String yearMonthStr) {
-        List<MonthlyRevenueSummary> resultList = new ArrayList<>();
+    public List<MonthlyRevenueSummaryTotal> findRecentSixMonths(String yearMonthStr) {
+        YearMonth targetMonth = parseYearMonth(yearMonthStr);
+        LocalDate startMonth = targetMonth.minusMonths(5).atDay(1);
+        LocalDate endMonth = targetMonth.atDay(1);
+        List<MonthlyRevenueSummary> summaries = monthlyRevenueSummaryRepository
+                .findAllByTargetMonthBetweenAndDeletedFalseOrderByTargetMonthAscProjectIdAsc(startMonth, endMonth);
 
-        // 1. 기준달 파싱 (예: "202602")
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
-        YearMonth targetMonth = YearMonth.parse(yearMonthStr, formatter);
-
-        // 2. 5개월 전부터 ~ 이번 달까지 (총 6회 반복)
-        // todo: one-query 로 수정 필요
-        // todo: summary_date 인덱스 필요
+        List<MonthlyRevenueSummaryTotal> totals = new ArrayList<>();
         for (int i = 5; i >= 0; i--) {
-            YearMonth currentMonth = targetMonth.minusMonths(i);
-
-            // 3. 해당 월의 1일 ~ 말일 구하기
-            LocalDate startOfMonth = currentMonth.atDay(1);
-            LocalDate endOfMonth = currentMonth.atEndOfMonth();
-
-            // 4. 해당 월의 최신 집계 데이터 1건 조회
-            // 데이터가 있으면 리스트에 추가, 없으면(Optional.empty) 넘어감
-            monthlyRevenueSummaryRepository.findFirstBySummaryDateBetweenOrderBySummaryDateDesc(startOfMonth, endOfMonth)
-                .ifPresent(summary -> resultList.add(summary));
+            LocalDate currentMonth = targetMonth.minusMonths(i).atDay(1);
+            List<MonthlyRevenueSummary> monthlySummaries = summaries.stream()
+                    .filter(summary -> summary.getTargetMonth().isEqual(currentMonth))
+                    .toList();
+            if (!monthlySummaries.isEmpty()) {
+                totals.add(toTotal(currentMonth, monthlySummaries));
+            }
         }
 
-        return resultList;
+        return totals;
+    }
+
+    private YearMonth parseYearMonth(String yearMonthStr) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
+        return YearMonth.parse(yearMonthStr, formatter);
+    }
+
+    private MonthlyRevenueSummaryTotal toTotal(LocalDate targetMonth, List<MonthlyRevenueSummary> summaries) {
+        Money revenue = summaries.stream()
+                .map(MonthlyRevenueSummary::getRevenueAmount)
+                .reduce(Money.zero(), Money::add);
+        Money cost = summaries.stream()
+                .map(MonthlyRevenueSummary::getCostAmount)
+                .reduce(Money.zero(), Money::add);
+        Money profit = summaries.stream()
+                .map(MonthlyRevenueSummary::getProfitAmount)
+                .reduce(Money.zero(), Money::add);
+
+        return new MonthlyRevenueSummaryTotal(targetMonth, revenue, cost, profit);
     }
 
 }

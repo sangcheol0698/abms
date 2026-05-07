@@ -11,7 +11,7 @@ public record MonthlyRevenueSummaryCreateRequest(
     Long leadDepartmentId,
     String leadDepartmentCode,
     String leadDepartmentName,
-    LocalDate summaryDate,
+    LocalDate targetMonth,
     Money revenueAmount,
     Money costAmount,
     Money profitAmount

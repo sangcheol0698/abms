@@ -88,23 +88,23 @@ public class DepartmentQueryService implements DepartmentFinder {
         LocalDate endOfRange = targetMonth.atEndOfMonth();
 
         List<MonthlyRevenueSummary> summaries = monthlyRevenueSummaryRepository
-                .findAllByLeadDepartmentIdAndSummaryDateBetweenAndDeletedFalseOrderBySummaryDateAscIdAsc(
+                .findAllByLeadDepartmentIdAndTargetMonthBetweenAndDeletedFalseOrderByTargetMonthAscProjectIdAsc(
                         departmentId,
                         startOfRange,
-                        endOfRange
+                        endOfRange.withDayOfMonth(1)
                 );
 
         Map<ProjectMonthKey, MonthlyRevenueSummary> latestProjectSnapshots = new LinkedHashMap<>();
         for (MonthlyRevenueSummary summary : summaries) {
             latestProjectSnapshots.put(
-                    new ProjectMonthKey(YearMonth.from(summary.getSummaryDate()), summary.getProjectId()),
+                    new ProjectMonthKey(YearMonth.from(summary.getTargetMonth()), summary.getProjectId()),
                     summary
             );
         }
 
         Map<YearMonth, List<MonthlyRevenueSummary>> summariesByMonth = latestProjectSnapshots.values().stream()
                 .collect(Collectors.groupingBy(
-                        summary -> YearMonth.from(summary.getSummaryDate()),
+                        summary -> YearMonth.from(summary.getTargetMonth()),
                         LinkedHashMap::new,
                         Collectors.toList()
                 ));
