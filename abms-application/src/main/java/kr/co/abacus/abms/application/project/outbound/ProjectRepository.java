@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.application.project.outbound;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,8 @@ public interface ProjectRepository extends CustomProjectRepository {
     Optional<Project> findByIdAndDeletedFalse(Long id);
 
     List<Project> findAllByDeletedFalse();
+
+    List<Project> findAllByIdIn(Collection<Long> ids);
 
     Page<Project> findAllByDeletedFalse(Pageable pageable);
 

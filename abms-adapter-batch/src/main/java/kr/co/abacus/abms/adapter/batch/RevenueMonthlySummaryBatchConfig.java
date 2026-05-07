@@ -135,7 +135,7 @@ public class RevenueMonthlySummaryBatchConfig {
                 .map(MonthlyRevenueSummary::getProjectId)
                 .forEach(projectIds::add);
 
-        Map<Long, Project> projectsById = projectRepository.findAllByDeletedFalse().stream()
+        Map<Long, Project> projectsById = projectRepository.findAllByIdIn(projectIds).stream()
                 .collect(Collectors.toMap(Project::getIdOrThrow, Function.identity(), (left, right) -> left, LinkedHashMap::new));
 
         return projectIds.stream()
@@ -146,13 +146,18 @@ public class RevenueMonthlySummaryBatchConfig {
 
     private void reconcileProjectSummary(Project project, LocalDate monthStart, LocalDate monthEnd, String costMonth) {
         Long projectId = project.getIdOrThrow();
+        java.util.Optional<MonthlyRevenueSummary> existingSummary = summaryRepository
+                .findByProjectIdAndTargetMonthAndDeletedFalse(projectId, monthStart);
+        if (project.isDeleted()) {
+            existingSummary.ifPresent(summaryRepository::delete);
+            return;
+        }
+
         List<ProjectRevenuePlan> issuedPlans = revenuePlanRepository
                 .findByProjectIdAndRevenueDateBetweenAndIsIssuedTrue(projectId, monthStart, monthEnd);
         List<ProjectAssignment> assignments = assignmentRepository.findOverlappingAssignments(projectId, monthStart, monthEnd);
         boolean overlapsProjectPeriod = overlaps(project.getPeriod().startDate(), project.getPeriod().endDate(), monthStart, monthEnd);
 
-        java.util.Optional<MonthlyRevenueSummary> existingSummary = summaryRepository
-                .findByProjectIdAndTargetMonthAndDeletedFalse(projectId, monthStart);
         if (!overlapsProjectPeriod && issuedPlans.isEmpty() && assignments.isEmpty()) {
             existingSummary.ifPresent(summaryRepository::delete);
             return;

@@ -446,6 +446,48 @@ class BatchJobStructureTest {
     }
 
     @Test
+    @DisplayName("revenueMonthlySummaryJob는 삭제된 프로젝트의 기존 월 요약을 삭제한다")
+    void revenueMonthlySummaryJob_deletesSummaryForSoftDeletedProject() throws Exception {
+        LocalDate targetDate = LocalDate.of(2026, 7, 15);
+        Department leadDepartment = createDepartment("집계팀G");
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest("집계협력사G", null, null, null, null)));
+        Project project = projectRepository.save(Project.create(
+                party.getIdOrThrow(),
+                leadDepartment.getIdOrThrow(),
+                "BATCH-SUM-007",
+                "배치 집계 프로젝트 G",
+                null,
+                ProjectStatus.IN_PROGRESS,
+                100_000_000L,
+                LocalDate.of(2026, 7, 1),
+                LocalDate.of(2026, 7, 31)
+        ));
+        monthlyRevenueSummaryRepository.save(MonthlyRevenueSummary.create(new MonthlyRevenueSummaryCreateRequest(
+                project.getIdOrThrow(),
+                project.getCode(),
+                project.getName(),
+                leadDepartment.getIdOrThrow(),
+                leadDepartment.getCode(),
+                leadDepartment.getName(),
+                LocalDate.of(2026, 7, 1),
+                Money.wons(10_000_000L),
+                Money.wons(1_000_000L),
+                Money.wons(9_000_000L)
+        )));
+        project.softDelete(null);
+        projectRepository.save(project);
+        flushAndClear();
+
+        JobExecution execution = jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 9L));
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(monthlyRevenueSummaryRepository.findByProjectIdAndTargetMonthAndDeletedFalse(
+                project.getIdOrThrow(),
+                LocalDate.of(2026, 7, 1)
+        )).isEmpty();
+    }
+
+    @Test
     @DisplayName("revenueMonthlySummaryJob는 마감 월을 자동 재계산하지 않는다")
     void revenueMonthlySummaryJob_skipsClosedMonth() throws Exception {
         LocalDate targetDate = LocalDate.of(2026, 4, 15);
