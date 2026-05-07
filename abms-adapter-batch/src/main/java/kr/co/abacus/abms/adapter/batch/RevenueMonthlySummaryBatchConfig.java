@@ -125,7 +125,7 @@ public class RevenueMonthlySummaryBatchConfig {
         projectRepository.findActiveProjects(monthStart, monthEnd).stream()
                 .map(Project::getIdOrThrow)
                 .forEach(projectIds::add);
-        revenuePlanRepository.findByRevenueDateBetweenAndIsIssuedTrue(monthStart, monthEnd).stream()
+        revenuePlanRepository.findByRevenueDateBetweenAndIsIssuedTrueAndDeletedFalse(monthStart, monthEnd).stream()
                 .map(ProjectRevenuePlan::getProjectId)
                 .forEach(projectIds::add);
         assignmentRepository.findActiveAssignments(monthStart, monthEnd).stream()
@@ -154,7 +154,7 @@ public class RevenueMonthlySummaryBatchConfig {
         }
 
         List<ProjectRevenuePlan> issuedPlans = revenuePlanRepository
-                .findByProjectIdAndRevenueDateBetweenAndIsIssuedTrue(projectId, monthStart, monthEnd);
+                .findByProjectIdAndRevenueDateBetweenAndIsIssuedTrueAndDeletedFalse(projectId, monthStart, monthEnd);
         List<ProjectAssignment> assignments = assignmentRepository.findOverlappingAssignments(projectId, monthStart, monthEnd);
         boolean overlapsProjectPeriod = overlaps(project.getPeriod().startDate(), project.getPeriod().endDate(), monthStart, monthEnd);
 

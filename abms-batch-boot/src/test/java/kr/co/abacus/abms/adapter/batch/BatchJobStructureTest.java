@@ -199,6 +199,18 @@ class BatchJobStructureTest {
                 "미발행 제외"
         )));
 
+        ProjectRevenuePlan deletedIssuedPlan = ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
+                project.getIdOrThrow(),
+                3,
+                LocalDate.of(2026, 2, 26),
+                RevenueType.BALANCE_PAYMENT,
+                70_000_000L,
+                "삭제된 발행 매출 제외"
+        ));
+        deletedIssuedPlan.issue();
+        deletedIssuedPlan.softDelete(null);
+        projectRevenuePlanRepository.save(deletedIssuedPlan);
+
         projectAssignmentRepository.save(ProjectAssignment.assign(project, new ProjectAssignmentCreateRequest(
                 project.getIdOrThrow(),
                 employee.getIdOrThrow(),

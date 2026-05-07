@@ -50,7 +50,7 @@ public class MonthlyRevenueSummaryModifyService implements MonthlyRevenueSummary
         LocalDate endOfMonth = targetMonth.withDayOfMonth(targetMonth.lengthOfMonth());
 
         List<ProjectRevenuePlan> revenuePlans = projectRevenuePlanRepository
-            .findByRevenueDateBetweenAndIsIssuedTrue(startOfMonth, endOfMonth);
+            .findByRevenueDateBetweenAndIsIssuedTrueAndDeletedFalse(startOfMonth, endOfMonth);
 
         return revenuePlans.stream()
             .map(ProjectRevenuePlan::getAmount)
