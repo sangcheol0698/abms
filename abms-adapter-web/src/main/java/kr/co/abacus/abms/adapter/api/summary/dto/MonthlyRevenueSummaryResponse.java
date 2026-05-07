@@ -3,7 +3,7 @@ package kr.co.abacus.abms.adapter.api.summary.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryTotal;
 
 public record MonthlyRevenueSummaryResponse(
     LocalDate targetMonth,
@@ -11,12 +11,12 @@ public record MonthlyRevenueSummaryResponse(
     BigDecimal cost,
     BigDecimal profit
 ) {
-    public static MonthlyRevenueSummaryResponse of(MonthlyRevenueSummary summary) {
+    public static MonthlyRevenueSummaryResponse of(MonthlyRevenueSummaryTotal summary) {
         return new MonthlyRevenueSummaryResponse(
-            summary.getSummaryDate(),
-            summary.getRevenueAmount().amount(),
-            summary.getCostAmount().amount(),
-            summary.getProfitAmount().amount()
+            summary.targetMonth(),
+            summary.revenueAmount().amount(),
+            summary.costAmount().amount(),
+            summary.profitAmount().amount()
         );
     }
 }

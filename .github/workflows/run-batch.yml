@@ -10,14 +10,17 @@ on:
       job_mode:
         description: 실행할 배치 모드
         required: true
-        default: monthly_chain
+        default: revenue_summary_only
         type: choice
         options:
           - monthly_chain
           - employee_cost_only
           - revenue_summary_only
       target_date:
-        description: targetDate (YYYY-MM-DD, 비우면 자동 계산)
+        description: targetDate (YYYY-MM-DD, 비우면 KST 기준 어제)
+        required: false
+      target_month:
+        description: revenueMonthlySummaryJob 재처리 대상 월 (YYYYMM, 선택)
         required: false
       create_tag:
         description: 배치 성공 후 git 태그 생성 여부
@@ -25,7 +28,7 @@ on:
         default: true
         type: boolean
   schedule:
-    - cron: '0 18 28-31 * *'
+    - cron: '0 18 * * *'
 
 permissions:
   contents: write
@@ -48,6 +51,7 @@ jobs:
       INPUT_REF: ${{ inputs.ref }}
       INPUT_JOB_MODE: ${{ inputs.job_mode }}
       INPUT_TARGET_DATE: ${{ inputs.target_date }}
+      INPUT_TARGET_MONTH: ${{ inputs.target_month }}
       INPUT_CREATE_TAG: ${{ inputs.create_tag }}
 
     steps:
@@ -63,30 +67,26 @@ jobs:
         run: |
           set -euo pipefail
 
-          previous_month_last_day() {
-            python3 -c 'from datetime import datetime, timedelta; from zoneinfo import ZoneInfo; now = datetime.now(ZoneInfo("Asia/Seoul")); first_day = now.replace(day=1); print((first_day - timedelta(days=1)).date().isoformat())'
+          kst_yesterday() {
+            python3 -c 'from datetime import datetime, timedelta; from zoneinfo import ZoneInfo; print((datetime.now(ZoneInfo("Asia/Seoul")).date() - timedelta(days=1)).isoformat())'
           }
 
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
-            if [ "$(TZ=Asia/Seoul date +%d)" != "01" ]; then
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              echo "KST 기준 매월 1일이 아니므로 실행을 건너뜁니다."
-              exit 0
-            fi
-
             checkout_ref="main"
-            job_mode="monthly_chain"
-            target_date="$(previous_month_last_day)"
-            create_tag="true"
+            job_mode="revenue_summary_only"
+            target_date="$(kst_yesterday)"
+            target_month=""
+            create_tag="false"
           else
             checkout_ref="${INPUT_REF:-main}"
-            job_mode="${INPUT_JOB_MODE:-monthly_chain}"
+            job_mode="${INPUT_JOB_MODE:-revenue_summary_only}"
             create_tag="${INPUT_CREATE_TAG:-true}"
+            target_month="${INPUT_TARGET_MONTH:-}"
 
             if [ -n "${INPUT_TARGET_DATE:-}" ]; then
               target_date="${INPUT_TARGET_DATE}"
             else
-              target_date="$(previous_month_last_day)"
+              target_date="$(kst_yesterday)"
             fi
           fi
 
@@ -94,11 +94,22 @@ jobs:
             echo "target_date must be YYYY-MM-DD" >&2
             exit 1
           fi
+          if [ -n "${target_month:-}" ]; then
+            if ! python3 -c 'import datetime, sys; datetime.datetime.strptime(sys.argv[1], "%Y%m")' "$target_month"; then
+              echo "target_month must be YYYYMM" >&2
+              exit 1
+            fi
+            if [ "$job_mode" = "employee_cost_only" ]; then
+              echo "target_month is only supported when revenueMonthlySummaryJob runs" >&2
+              exit 1
+            fi
+          fi
 
           echo "skip=false" >> "$GITHUB_OUTPUT"
           echo "checkout_ref=$checkout_ref" >> "$GITHUB_OUTPUT"
           echo "job_mode=$job_mode" >> "$GITHUB_OUTPUT"
           echo "target_date=$target_date" >> "$GITHUB_OUTPUT"
+          echo "target_month=$target_month" >> "$GITHUB_OUTPUT"
           echo "create_tag=$create_tag" >> "$GITHUB_OUTPUT"
           echo "tag_suffix=$(TZ=Asia/Seoul date +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
@@ -128,6 +139,7 @@ jobs:
           ENV_FILE="${DEV_SERVER_ENV_FILE:-\$HOME/.env}"
           JOB_MODE="${{ steps.params.outputs.job_mode }}"
           TARGET_DATE="${{ steps.params.outputs.target_date }}"
+          TARGET_MONTH="${{ steps.params.outputs.target_month }}"
           RUN_PREFIX="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
           ssh "${SERVER_USER}@${DEV_SERVER_HOST}" <<EOF
@@ -137,21 +149,27 @@ jobs:
           ENV_FILE="${ENV_FILE}"
           JOB_MODE="${JOB_MODE}"
           TARGET_DATE="${TARGET_DATE}"
+          TARGET_MONTH="${TARGET_MONTH}"
           RUN_PREFIX="${RUN_PREFIX}"
 
           run_batch_job() {
             job_name="\$1"
             run_suffix="\$2"
             run_id="\${RUN_PREFIX}-\${run_suffix}"
-            run_log_file="\$LOG_DIR/abms-batch-\${job_name}-\${TARGET_DATE}-\${run_id}.log"
+            target_label="\${TARGET_DATE}"
+            job_parameters=("targetDate=\${TARGET_DATE}" "run.id=\${run_id}")
+            if [ "\${job_name}" = "revenueMonthlySummaryJob" ] && [ -n "\${TARGET_MONTH}" ]; then
+              target_label="\${TARGET_MONTH}"
+              job_parameters=("targetMonth=\${TARGET_MONTH}" "targetDate=\${TARGET_DATE}" "run.id=\${run_id}")
+            fi
+            run_log_file="\$LOG_DIR/abms-batch-\${job_name}-\${target_label}-\${run_id}.log"
 
-            echo "Running \${job_name} with targetDate=\${TARGET_DATE}, run.id=\${run_id}"
+            echo "Running \${job_name} with targetDate=\${TARGET_DATE}, targetMonth=\${TARGET_MONTH:-}, run.id=\${run_id}"
             env APP_ENVIRONMENT=dev APP_LOG_FILE_NAME="\$LOG_DIR/abms-batch.log" \
               java -jar abms-batch.jar \
                 --spring.profiles.active=dev \
                 --spring.batch.job.name="\${job_name}" \
-                "targetDate=\${TARGET_DATE}" \
-                "run.id=\${run_id}" \
+                "\${job_parameters[@]}" \
               2>&1 | tee "\$run_log_file"
           }
 
@@ -194,5 +212,5 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG_NAME" -m "개발 배치 실행: mode=${{ steps.params.outputs.job_mode }}, targetDate=${{ steps.params.outputs.target_date }}"
+          git tag -a "$TAG_NAME" -m "개발 배치 실행: mode=${{ steps.params.outputs.job_mode }}, targetDate=${{ steps.params.outputs.target_date }}, targetMonth=${{ steps.params.outputs.target_month }}"
           git push origin "$TAG_NAME"

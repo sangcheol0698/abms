@@ -1,13 +1,17 @@
 package kr.co.abacus.abms.domain.summary;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.Objects;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import kr.co.abacus.abms.domain.AbstractEntity;
 import kr.co.abacus.abms.domain.shared.Money;
@@ -18,7 +22,17 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "tb_monthly_revenue_summary")
+@Table(
+        name = "tb_monthly_revenue_summary",
+        uniqueConstraints = @UniqueConstraint(
+                name = "UK_MONTHLY_REVENUE_SUMMARY_PROJECT_MONTH",
+                columnNames = {"project_id", "target_month"}
+        ),
+        indexes = {
+                @Index(name = "IDX_MONTHLY_REVENUE_SUMMARY_TARGET_MONTH", columnList = "target_month"),
+                @Index(name = "IDX_MONTHLY_REVENUE_SUMMARY_DEPT_MONTH", columnList = "lead_department_id,target_month")
+        }
+)
 public class MonthlyRevenueSummary extends AbstractEntity {
 
     @Column(name = "project_id", nullable = false, comment = "프로젝트ID")
@@ -39,8 +53,11 @@ public class MonthlyRevenueSummary extends AbstractEntity {
     @Column(name = "lead_department_name", nullable = false, comment = "주관부서명")
     private String leadDepartmentName;
 
-    @Column(name = "summary_date", nullable = false, comment = "집계대상일자")
-    private LocalDate summaryDate;
+    @Column(name = "target_month", nullable = false, comment = "집계대상월")
+    private LocalDate targetMonth;
+
+    @Column(name = "calculated_at", nullable = false, comment = "집계계산일시")
+    private LocalDateTime calculatedAt;
 
     @Embedded
     @AttributeOverride(name = "amount", column = @Column(name = "revenue_amount", nullable = false, comment = "매출금액"))
@@ -63,11 +80,29 @@ public class MonthlyRevenueSummary extends AbstractEntity {
         summary.leadDepartmentId = Objects.requireNonNull(createRequest.leadDepartmentId());
         summary.leadDepartmentCode = Objects.requireNonNull(createRequest.leadDepartmentCode());
         summary.leadDepartmentName = Objects.requireNonNull(createRequest.leadDepartmentName());
-        summary.summaryDate = Objects.requireNonNull(createRequest.summaryDate());
+        summary.targetMonth = normalizeTargetMonth(createRequest.targetMonth());
         summary.revenueAmount = Objects.requireNonNull(createRequest.revenueAmount());
         summary.costAmount = Objects.requireNonNull(createRequest.costAmount());
         summary.profitAmount = Objects.requireNonNull(createRequest.profitAmount());
+        summary.calculatedAt = LocalDateTime.now();
 
         return summary;
+    }
+
+    public void update(MonthlyRevenueSummaryCreateRequest updateRequest) {
+        this.projectCode = Objects.requireNonNull(updateRequest.projectCode());
+        this.projectName = Objects.requireNonNull(updateRequest.projectName());
+        this.leadDepartmentId = Objects.requireNonNull(updateRequest.leadDepartmentId());
+        this.leadDepartmentCode = Objects.requireNonNull(updateRequest.leadDepartmentCode());
+        this.leadDepartmentName = Objects.requireNonNull(updateRequest.leadDepartmentName());
+        this.targetMonth = normalizeTargetMonth(updateRequest.targetMonth());
+        this.revenueAmount = Objects.requireNonNull(updateRequest.revenueAmount());
+        this.costAmount = Objects.requireNonNull(updateRequest.costAmount());
+        this.profitAmount = Objects.requireNonNull(updateRequest.profitAmount());
+        this.calculatedAt = LocalDateTime.now();
+    }
+
+    private static LocalDate normalizeTargetMonth(LocalDate targetMonth) {
+        return YearMonth.from(Objects.requireNonNull(targetMonth)).atDay(1);
     }
 }

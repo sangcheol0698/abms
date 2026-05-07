@@ -157,7 +157,7 @@ class AuthenticatedApiBoundaryTest extends ApiIntegrationTestBase {
                         .param("yearMonth", "202601")
                         .session(session))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.targetMonth").value("2026-01-31"))
+                .andExpect(jsonPath("$.targetMonth").value("2026-01-01"))
                 .andExpect(jsonPath("$.revenue").value(100000000))
                 .andExpect(jsonPath("$.cost").value(60000000))
                 .andExpect(jsonPath("$.profit").value(40000000));

@@ -9,10 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.co.abacus.abms.application.auth.CurrentActor;
 import kr.co.abacus.abms.application.observability.ApplicationMetricsRecorder;
 import kr.co.abacus.abms.application.observability.BusinessEventLogger;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.project.ProjectAuthorizationValidator;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.projectassignment.inbound.ProjectAssignmentManager;
 import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository;
+import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentCreateRequest;
@@ -27,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class ProjectAssignmentModifyService implements ProjectAssignmentManager {
 
     private final ProjectRepository projectRepository;
+    private final EmployeeRepository employeeRepository;
     private final ProjectAssignmentRepository projectAssignmentRepository;
     private final ProjectAuthorizationValidator projectAuthorizationValidator;
     private final BusinessEventLogger businessEventLogger;
@@ -46,6 +49,7 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
     private ProjectAssignment doCreate(ProjectAssignmentCreateRequest createRequest) {
         Project project = projectRepository.findById(createRequest.projectId())
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프로젝트입니다."));
+        validateEmployeeAssignmentPeriod(createRequest.employeeId(), createRequest.startDate(), createRequest.endDate());
         validateNoOverlap(null, createRequest.projectId(), createRequest.employeeId(), createRequest.startDate(), createRequest.endDate());
 
         ProjectAssignment projectAssignment = ProjectAssignment.assign(project, createRequest);
@@ -70,6 +74,7 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
         ProjectAssignment assignment = loadAssignment(assignmentId);
         Project project = loadProject(assignment.getProjectId());
 
+        validateEmployeeAssignmentPeriod(updateRequest.employeeId(), updateRequest.startDate(), updateRequest.endDate());
         validateNoOverlap(
                 assignmentId,
                 assignment.getProjectId(),
@@ -100,6 +105,7 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
         ProjectAssignment assignment = loadAssignment(assignmentId);
         Project project = loadProject(assignment.getProjectId());
 
+        validateEmployeeAssignmentPeriod(assignment.getEmployeeId(), assignment.getPeriod().startDate(), endRequest.endDate());
         validateNoOverlap(
                 assignmentId,
                 assignment.getProjectId(),
@@ -113,6 +119,22 @@ public class ProjectAssignmentModifyService implements ProjectAssignmentManager 
         businessEventLogger.projectAssignmentEvent("end", null, saved);
         applicationMetricsRecorder.incrementProjectAssignmentAction("end");
         return saved;
+    }
+
+    private void validateEmployeeAssignmentPeriod(
+            Long employeeId,
+            LocalDate startDate,
+            @Nullable LocalDate endDate
+    ) {
+        Employee employee = employeeRepository.findByIdAndDeletedFalse(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 직원입니다."));
+        LocalDate resignationDate = employee.getResignationDate();
+        if (resignationDate == null) {
+            return;
+        }
+        if (startDate.isAfter(resignationDate) || endDate == null || endDate.isAfter(resignationDate)) {
+            throw new IllegalArgumentException("퇴사일 이후에는 프로젝트 투입을 수립할 수 없습니다.");
+        }
     }
 
     private ProjectAssignment loadAssignment(Long assignmentId) {

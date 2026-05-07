@@ -16,7 +16,14 @@ public interface ProjectRevenuePlanRepository {
 
     List<ProjectRevenuePlan> findByProjectId(Long projectId);
 
-    List<ProjectRevenuePlan> findByRevenueDateBetweenAndIsIssuedTrue(LocalDate startOfMonth, LocalDate endOfMonth);
+    List<ProjectRevenuePlan> findByRevenueDateBetweenAndIsIssuedTrueAndDeletedFalse(
+            LocalDate startOfMonth,
+            LocalDate endOfMonth
+    );
 
-    List<ProjectRevenuePlan> findByProjectIdAndRevenueDateBetweenAndIsIssuedTrue(Long projectId, LocalDate start, LocalDate end);
+    List<ProjectRevenuePlan> findByProjectIdAndRevenueDateBetweenAndIsIssuedTrueAndDeletedFalse(
+            Long projectId,
+            LocalDate start,
+            LocalDate end
+    );
 }

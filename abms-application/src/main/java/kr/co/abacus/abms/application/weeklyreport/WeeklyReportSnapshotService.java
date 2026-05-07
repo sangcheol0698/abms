@@ -24,7 +24,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeStatus;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
-import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
+import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryTotal;
 
 @Service
 @Transactional(readOnly = true)
@@ -210,9 +210,9 @@ class WeeklyReportSnapshotService {
                 .map(summary -> new WeeklyReportSnapshot.RevenueSection(
                         true,
                         targetMonth,
-                        summary.getRevenueAmount().amount().longValue(),
-                        summary.getCostAmount().amount().longValue(),
-                        summary.getProfitAmount().amount().longValue()
+                        summary.revenueAmount().amount().longValue(),
+                        summary.costAmount().amount().longValue(),
+                        summary.profitAmount().amount().longValue()
                 ))
                 .orElseGet(() -> new WeeklyReportSnapshot.RevenueSection(false, targetMonth, null, null, null));
     }

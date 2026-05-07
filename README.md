@@ -195,6 +195,7 @@ npm run dev
 # 배치 전용 로컬 프로필로 실행 (기존 DB/데이터 유지)
 ./gradlew :abms-batch-boot:bootRun --args='--spring.profiles.active=local-batch --spring.batch.job.name=employeeCostJob targetDate=2026-02-15'
 ./gradlew :abms-batch-boot:bootRun --args='--spring.profiles.active=local-batch --spring.batch.job.name=revenueMonthlySummaryJob targetDate=2026-02-15'
+./gradlew :abms-batch-boot:bootRun --args='--spring.profiles.active=local-batch --spring.batch.job.name=revenueMonthlySummaryJob targetMonth=202602 run.id=manual-202602'
 
 # 테스트 실행
 ./gradlew test

@@ -1,7 +1,13 @@
 package kr.co.abacus.abms.application.projectassignment.inbound;
 
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository;
+import kr.co.abacus.abms.domain.employee.Employee;
+import kr.co.abacus.abms.domain.employee.EmployeeAvatar;
+import kr.co.abacus.abms.domain.employee.EmployeeGrade;
+import kr.co.abacus.abms.domain.employee.EmployeePosition;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.projectassignment.AssignmentRole;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
@@ -33,17 +39,21 @@ class ProjectAssignmentManagerTest extends IntegrationTestBase  {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     @Test
     @DisplayName("프로젝트 투입 정보를 생성하고 저장한다")
     void create() {
         // given
         Project project = createProject();
         projectRepository.save(project);
+        Employee employee = createEmployee("assignment-create@abms.co.kr");
         flushAndClear();
 
         ProjectAssignmentCreateRequest request = new ProjectAssignmentCreateRequest(
             project.getId(),
-            100L,
+            employee.getIdOrThrow(),
             AssignmentRole.DEV,
             LocalDate.of(2024, 1, 1),
             LocalDate.of(2024, 12, 31)
@@ -62,9 +72,12 @@ class ProjectAssignmentManagerTest extends IntegrationTestBase  {
     void create_projectNotFound() {
         // given
         Long nonExistentProjectId = 9999L;
+        Employee employee = createEmployee("assignment-project-not-found@abms.co.kr");
+        flushAndClear();
+
         ProjectAssignmentCreateRequest request = new ProjectAssignmentCreateRequest(
             nonExistentProjectId,
-            100L,
+            employee.getIdOrThrow(),
             AssignmentRole.DEV,
             LocalDate.of(2024, 1, 1),
             LocalDate.of(2024, 12, 31)
@@ -81,9 +94,11 @@ class ProjectAssignmentManagerTest extends IntegrationTestBase  {
     void update() {
         Project project = createProject();
         projectRepository.save(project);
+        Employee beforeEmployee = createEmployee("assignment-update-before@abms.co.kr");
+        Employee afterEmployee = createEmployee("assignment-update-after@abms.co.kr");
         ProjectAssignment assignment = projectAssignmentRepository.save(ProjectAssignment.assign(project, new ProjectAssignmentCreateRequest(
                 project.getId(),
-                100L,
+                beforeEmployee.getIdOrThrow(),
                 AssignmentRole.DEV,
                 LocalDate.of(2024, 1, 1),
                 LocalDate.of(2024, 6, 30)
@@ -91,13 +106,13 @@ class ProjectAssignmentManagerTest extends IntegrationTestBase  {
         flushAndClear();
 
         ProjectAssignment result = projectAssignmentManager.update(assignment.getId(), new ProjectAssignmentUpdateRequest(
-                101L,
+                afterEmployee.getIdOrThrow(),
                 AssignmentRole.PM,
                 LocalDate.of(2024, 2, 1),
                 LocalDate.of(2024, 5, 31)
         ));
 
-        assertThat(result.getEmployeeId()).isEqualTo(101L);
+        assertThat(result.getEmployeeId()).isEqualTo(afterEmployee.getIdOrThrow());
         assertThat(result.getRole()).isEqualTo(AssignmentRole.PM);
         assertThat(result.getPeriod().startDate()).isEqualTo(LocalDate.of(2024, 2, 1));
         assertThat(result.getPeriod().endDate()).isEqualTo(LocalDate.of(2024, 5, 31));
@@ -108,9 +123,10 @@ class ProjectAssignmentManagerTest extends IntegrationTestBase  {
     void end() {
         Project project = createProject();
         projectRepository.save(project);
+        Employee employee = createEmployee("assignment-end@abms.co.kr");
         ProjectAssignment assignment = projectAssignmentRepository.save(ProjectAssignment.assign(project, new ProjectAssignmentCreateRequest(
                 project.getId(),
-                100L,
+                employee.getIdOrThrow(),
                 AssignmentRole.DEV,
                 LocalDate.of(2024, 1, 1),
                 LocalDate.of(2024, 12, 31)
@@ -130,9 +146,10 @@ class ProjectAssignmentManagerTest extends IntegrationTestBase  {
     void create_overlap() {
         Project project = createProject();
         projectRepository.save(project);
+        Employee employee = createEmployee("assignment-overlap@abms.co.kr");
         projectAssignmentRepository.save(ProjectAssignment.assign(project, new ProjectAssignmentCreateRequest(
                 project.getId(),
-                100L,
+                employee.getIdOrThrow(),
                 AssignmentRole.DEV,
                 LocalDate.of(2024, 1, 1),
                 LocalDate.of(2024, 6, 30)
@@ -141,12 +158,113 @@ class ProjectAssignmentManagerTest extends IntegrationTestBase  {
 
         assertThatThrownBy(() -> projectAssignmentManager.create(new ProjectAssignmentCreateRequest(
                 project.getId(),
-                100L,
+                employee.getIdOrThrow(),
                 AssignmentRole.PM,
                 LocalDate.of(2024, 6, 1),
                 LocalDate.of(2024, 8, 31)
         )))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("동일 프로젝트에 중복되는 투입 기간이 존재합니다.");
+    }
+
+    @Test
+    @DisplayName("퇴사일 이후 종료되는 프로젝트 투입 생성은 예외가 발생한다")
+    void create_afterResignationDate() {
+        Project project = createProject();
+        projectRepository.save(project);
+        Employee employee = createEmployee("assignment-resigned-create@abms.co.kr");
+        employee.resign(LocalDate.of(2024, 6, 30));
+        flushAndClear();
+
+        assertThatThrownBy(() -> projectAssignmentManager.create(new ProjectAssignmentCreateRequest(
+                project.getId(),
+                employee.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2024, 6, 1),
+                LocalDate.of(2024, 7, 31)
+        )))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("퇴사일 이후에는 프로젝트 투입을 수립할 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("퇴사자의 종료일 없는 프로젝트 투입 생성은 예외가 발생한다")
+    void create_openEndedAfterResignationDate() {
+        Project project = createProject();
+        projectRepository.save(project);
+        Employee employee = createEmployee("assignment-resigned-open@abms.co.kr");
+        employee.resign(LocalDate.of(2024, 6, 30));
+        flushAndClear();
+
+        assertThatThrownBy(() -> projectAssignmentManager.create(new ProjectAssignmentCreateRequest(
+                project.getId(),
+                employee.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2024, 6, 1),
+                null
+        )))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("퇴사일 이후에는 프로젝트 투입을 수립할 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("퇴사일 이후 종료되도록 프로젝트 투입을 수정하면 예외가 발생한다")
+    void update_afterResignationDate() {
+        Project project = createProject();
+        projectRepository.save(project);
+        Employee employee = createEmployee("assignment-resigned-update@abms.co.kr");
+        employee.resign(LocalDate.of(2024, 6, 30));
+        ProjectAssignment assignment = projectAssignmentRepository.save(ProjectAssignment.assign(project, new ProjectAssignmentCreateRequest(
+                project.getId(),
+                employee.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 6, 30)
+        )));
+        flushAndClear();
+
+        assertThatThrownBy(() -> projectAssignmentManager.update(assignment.getId(), new ProjectAssignmentUpdateRequest(
+                employee.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 7, 31)
+        )))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("퇴사일 이후에는 프로젝트 투입을 수립할 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("퇴사일까지만 프로젝트 투입을 수립할 수 있다")
+    void create_untilResignationDate() {
+        Project project = createProject();
+        projectRepository.save(project);
+        Employee employee = createEmployee("assignment-resigned-allowed@abms.co.kr");
+        employee.resign(LocalDate.of(2024, 6, 30));
+        flushAndClear();
+
+        ProjectAssignment result = projectAssignmentManager.create(new ProjectAssignmentCreateRequest(
+                project.getId(),
+                employee.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2024, 6, 1),
+                LocalDate.of(2024, 6, 30)
+        ));
+
+        assertThat(result.getPeriod().endDate()).isEqualTo(LocalDate.of(2024, 6, 30));
+    }
+
+    private Employee createEmployee(String email) {
+        return employeeRepository.save(Employee.create(
+                1L,
+                "투입직원",
+                email,
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(1990, 1, 1),
+                EmployeePosition.ASSOCIATE,
+                EmployeeType.FULL_TIME,
+                EmployeeGrade.JUNIOR,
+                EmployeeAvatar.SKY_GLOW,
+                null
+        ));
     }
 }

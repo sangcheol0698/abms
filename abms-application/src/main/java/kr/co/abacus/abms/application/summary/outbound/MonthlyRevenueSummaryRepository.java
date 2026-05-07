@@ -8,20 +8,23 @@ import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
 
 public interface MonthlyRevenueSummaryRepository {
 
-    Optional<MonthlyRevenueSummary> findFirstBySummaryDateBetweenOrderBySummaryDateDesc(LocalDate start, LocalDate end);
+    Optional<MonthlyRevenueSummary> findByProjectIdAndTargetMonthAndDeletedFalse(Long projectId, LocalDate targetMonth);
 
-    List<MonthlyRevenueSummary> findAllByLeadDepartmentIdAndSummaryDateBetweenAndDeletedFalseOrderBySummaryDateAscIdAsc(
+    List<MonthlyRevenueSummary> findAllByTargetMonthAndDeletedFalseOrderByProjectIdAsc(LocalDate targetMonth);
+
+    List<MonthlyRevenueSummary> findAllByLeadDepartmentIdAndTargetMonthBetweenAndDeletedFalseOrderByTargetMonthAscProjectIdAsc(
         Long leadDepartmentId,
         LocalDate start,
         LocalDate end
     );
 
-    List<MonthlyRevenueSummary> findAllBySummaryDateBetweenAndDeletedFalseOrderBySummaryDateAscIdAsc(
+    List<MonthlyRevenueSummary> findAllByTargetMonthBetweenAndDeletedFalseOrderByTargetMonthAscProjectIdAsc(
         LocalDate start,
         LocalDate end
     );
 
-    void deleteBySummaryDateBetween(LocalDate start, LocalDate end);
-
     <S extends MonthlyRevenueSummary> List<S> saveAll(Iterable<S> summaries);
+
+    void delete(MonthlyRevenueSummary summary);
+
 }

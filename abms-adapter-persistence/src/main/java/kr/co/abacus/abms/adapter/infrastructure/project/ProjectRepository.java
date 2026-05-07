@@ -13,6 +13,9 @@ public interface ProjectRepository
         kr.co.abacus.abms.application.project.outbound.ProjectRepository {
 
     @Override
-    @Query("SELECT p FROM Project p WHERE p.period.startDate <= :endOfMonth AND p.period.endDate >= :startOfMonth")
+    @Query("SELECT p FROM Project p " +
+            "WHERE p.deleted = false " +
+            "AND p.period.startDate <= :endOfMonth " +
+            "AND (p.period.endDate IS NULL OR p.period.endDate >= :startOfMonth)")
     List<Project> findActiveProjects(LocalDate startOfMonth, LocalDate endOfMonth);
 }
