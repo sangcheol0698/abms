@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
 
 import kr.co.abacus.abms.adapter.infrastructure.summary.MonthlyRevenueSummaryRepository;
+import kr.co.abacus.abms.adapter.infrastructure.summary.CompanyMonthlyCostSummaryRepository;
 import kr.co.abacus.abms.application.auth.outbound.AccountRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
@@ -35,6 +36,7 @@ import kr.co.abacus.abms.domain.employee.EmployeeGrade;
 import kr.co.abacus.abms.domain.employee.EmployeePosition;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.summary.CompanyMonthlyCostSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryCreateRequest;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
@@ -59,6 +61,9 @@ class MonthlyRevenueSummaryApiTest extends ApiIntegrationTestBase {
 
     @Autowired
     private MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
+
+    @Autowired
+    private CompanyMonthlyCostSummaryRepository companyMonthlyCostSummaryRepository;
 
     private Long departmentId;
 
@@ -98,6 +103,12 @@ class MonthlyRevenueSummaryApiTest extends ApiIntegrationTestBase {
         monthlyRevenueSummaryRepository.save(createSummary(1L, "SUMMARY-PRJ-01", "2025-12-31", 88_000_000L, 44_000_000L));
         monthlyRevenueSummaryRepository.save(createSummary(1L, "SUMMARY-PRJ-01", "2026-01-31", 90_000_000L, 45_000_000L));
         monthlyRevenueSummaryRepository.save(createSummary(2L, "SUMMARY-PRJ-02", "2026-01-20", 10_000_000L, 5_000_000L));
+        companyMonthlyCostSummaryRepository.save(createCompanyCostSummary("2025-08-01", 70_000_000L, 40_000_000L, 10_000_000L));
+        companyMonthlyCostSummaryRepository.save(createCompanyCostSummary("2025-09-01", 72_000_000L, 41_000_000L, 11_000_000L));
+        companyMonthlyCostSummaryRepository.save(createCompanyCostSummary("2025-10-01", 74_000_000L, 42_000_000L, 12_000_000L));
+        companyMonthlyCostSummaryRepository.save(createCompanyCostSummary("2025-11-01", 76_000_000L, 43_000_000L, 13_000_000L));
+        companyMonthlyCostSummaryRepository.save(createCompanyCostSummary("2025-12-01", 78_000_000L, 44_000_000L, 14_000_000L));
+        companyMonthlyCostSummaryRepository.save(createCompanyCostSummary("2026-01-01", 80_000_000L, 45_000_000L, 15_000_000L));
         flushAndClear();
     }
 
@@ -150,6 +161,62 @@ class MonthlyRevenueSummaryApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$[5].revenue").value(100_000_000));
     }
 
+    @Test
+    @DisplayName("기준 월의 전사 월 손익을 조회한다")
+    void getCompanyMonthlyCostSummary() throws Exception {
+        MockHttpSession session = login();
+
+        mockMvc.perform(get("/api/companyMonthlyCostSummary")
+                        .param("yearMonth", "202601")
+                        .session(session))
+                .andDo(document("company-monthly-cost-summary/get",
+                        queryParameters(
+                                parameterWithName("yearMonth").description("조회 기준 월(yyyyMM)")
+                        ),
+                        responseFields(
+                                fieldWithPath("targetMonth").description("집계 대상 월의 기준일"),
+                                fieldWithPath("revenue").description("프로젝트 매출 합계"),
+                                fieldWithPath("projectAllocatedCost").description("프로젝트 배부 비용 합계"),
+                                fieldWithPath("unallocatedEmployeeCost").description("비가용 정직원 비용"),
+                                fieldWithPath("cost").description("전사 월 비용"),
+                                fieldWithPath("profit").description("전사 월 이익")
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.targetMonth").value("2026-01-01"))
+                .andExpect(jsonPath("$.revenue").value(100_000_000))
+                .andExpect(jsonPath("$.projectAllocatedCost").value(50_000_000))
+                .andExpect(jsonPath("$.unallocatedEmployeeCost").value(15_000_000))
+                .andExpect(jsonPath("$.cost").value(65_000_000))
+                .andExpect(jsonPath("$.profit").value(35_000_000));
+    }
+
+    @Test
+    @DisplayName("기준 월 포함 최근 6개월 전사 월 손익 추이를 조회한다")
+    void getCompanyMonthlyCostSixMonthTrend() throws Exception {
+        MockHttpSession session = login();
+
+        mockMvc.perform(get("/api/companyMonthlyCostSummary/sixMonthTrend")
+                        .param("yearMonth", "202601")
+                        .session(session))
+                .andDo(document("company-monthly-cost-summary/six-month-trend",
+                        queryParameters(
+                                parameterWithName("yearMonth").description("조회 기준 월(yyyyMM)")
+                        ),
+                        responseFields(
+                                fieldWithPath("[].targetMonth").description("집계 대상 월의 기준일"),
+                                fieldWithPath("[].revenue").description("프로젝트 매출 합계"),
+                                fieldWithPath("[].projectAllocatedCost").description("프로젝트 배부 비용 합계"),
+                                fieldWithPath("[].unallocatedEmployeeCost").description("비가용 정직원 비용"),
+                                fieldWithPath("[].cost").description("전사 월 비용"),
+                                fieldWithPath("[].profit").description("전사 월 이익")
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].targetMonth").value("2025-08-01"))
+                .andExpect(jsonPath("$[0].cost").value(50_000_000))
+                .andExpect(jsonPath("$[5].targetMonth").value("2026-01-01"))
+                .andExpect(jsonPath("$[5].cost").value(65_000_000));
+    }
+
     private MockHttpSession login() throws Exception {
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -178,6 +245,20 @@ class MonthlyRevenueSummaryApiTest extends ApiIntegrationTestBase {
                 Money.wons(cost),
                 Money.wons(revenue - cost)
         ));
+    }
+
+    private CompanyMonthlyCostSummary createCompanyCostSummary(
+            String targetMonth,
+            long totalFullTimeCost,
+            long allocatedFullTimeCost,
+            long unallocatedFullTimeCost
+    ) {
+        return CompanyMonthlyCostSummary.create(
+                LocalDate.parse(targetMonth),
+                Money.wons(totalFullTimeCost),
+                Money.wons(allocatedFullTimeCost),
+                Money.wons(unallocatedFullTimeCost)
+        );
     }
 
 }
