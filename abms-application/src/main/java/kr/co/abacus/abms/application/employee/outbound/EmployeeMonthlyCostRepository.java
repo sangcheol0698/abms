@@ -9,6 +9,8 @@ public interface EmployeeMonthlyCostRepository {
 
     Optional<EmployeeMonthlyCost> findByEmployeeIdAndCostMonth(Long employeeId, String costMonth);
 
+    List<EmployeeMonthlyCost> findAllByCostMonthAndDeletedFalse(String costMonth);
+
     <S extends EmployeeMonthlyCost> List<S> saveAll(Iterable<S> employeeMonthlyCosts);
 
 }

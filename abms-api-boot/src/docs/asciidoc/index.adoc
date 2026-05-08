@@ -167,6 +167,36 @@ include::{snippets}/monthly-revenue-summary/six-month-trend/http-request.adoc[]
 .HTTP response
 include::{snippets}/monthly-revenue-summary/six-month-trend/http-response.adoc[]
 
+== Company Monthly Cost Summary API
+
+=== Get Company Monthly Cost Summary
+
+.Query parameters
+include::{snippets}/company-monthly-cost-summary/get/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/company-monthly-cost-summary/get/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/company-monthly-cost-summary/get/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/company-monthly-cost-summary/get/http-response.adoc[]
+
+=== Get Company Monthly Cost Six Month Trend
+
+.Query parameters
+include::{snippets}/company-monthly-cost-summary/six-month-trend/query-parameters.adoc[]
+
+.Response body
+include::{snippets}/company-monthly-cost-summary/six-month-trend/response-body.adoc[]
+
+.HTTP request
+include::{snippets}/company-monthly-cost-summary/six-month-trend/http-request.adoc[]
+
+.HTTP response
+include::{snippets}/company-monthly-cost-summary/six-month-trend/http-response.adoc[]
+
 == Common Error Response
 
 ABMS API는 도메인 오류와 검증 오류에 대해 `ProblemDetail` 형식의 공통 오류 응답을 사용합니다.

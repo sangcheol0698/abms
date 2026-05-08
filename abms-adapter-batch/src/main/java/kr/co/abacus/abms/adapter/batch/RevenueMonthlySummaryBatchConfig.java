@@ -27,17 +27,22 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeMonthlyCostRepository;
+import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
 import kr.co.abacus.abms.application.project.outbound.ProjectRevenuePlanRepository;
 import kr.co.abacus.abms.application.projectassignment.outbound.ProjectAssignmentRepository;
-import kr.co.abacus.abms.application.summary.outbound.RevenueMonthClosingRepository;
+import kr.co.abacus.abms.application.summary.outbound.CompanyMonthlyCostSummaryRepository;
 import kr.co.abacus.abms.application.summary.outbound.MonthlyRevenueSummaryRepository;
+import kr.co.abacus.abms.application.summary.outbound.RevenueMonthClosingRepository;
 import kr.co.abacus.abms.domain.department.Department;
+import kr.co.abacus.abms.domain.employee.Employee;
 import kr.co.abacus.abms.domain.employee.EmployeeMonthlyCost;
+import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.summary.CompanyMonthlyCostSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryCreateRequest;
 import kr.co.abacus.abms.domain.summary.RevenueMonthClosingStatus;
@@ -56,11 +61,13 @@ public class RevenueMonthlySummaryBatchConfig {
     private final PlatformTransactionManager transactionManager;
 
     private final ProjectRepository projectRepository;
+    private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
     private final ProjectAssignmentRepository assignmentRepository;
     private final EmployeeMonthlyCostRepository employeeMonthlyCostRepository;
     private final MonthlyRevenueSummaryRepository summaryRepository;
+    private final CompanyMonthlyCostSummaryRepository companyMonthlyCostSummaryRepository;
     private final RevenueMonthClosingRepository revenueMonthClosingRepository;
     private final BatchObservabilityListener batchObservabilityListener;
 
@@ -104,6 +111,7 @@ public class RevenueMonthlySummaryBatchConfig {
             for (Project project : projects) {
                 reconcileProjectSummary(project, monthStart, monthEnd, costMonth);
             }
+            reconcileCompanyMonthlyCostSummary(monthStart, monthEnd, costMonth);
 
             return RepeatStatus.FINISHED;
         };
@@ -203,6 +211,72 @@ public class RevenueMonthlySummaryBatchConfig {
             totalCost = totalCost.add(empCost.getTotalCost().multiply(mm));
         }
         return totalCost;
+    }
+
+    private void reconcileCompanyMonthlyCostSummary(LocalDate monthStart, LocalDate monthEnd, String costMonth) {
+        List<EmployeeMonthlyCost> monthlyCosts = employeeMonthlyCostRepository.findAllByCostMonthAndDeletedFalse(costMonth);
+        List<ProjectAssignment> assignments = assignmentRepository.findActiveAssignments(monthStart, monthEnd);
+        Set<Long> employeeIds = new LinkedHashSet<>();
+        monthlyCosts.stream()
+                .map(EmployeeMonthlyCost::getEmployeeId)
+                .forEach(employeeIds::add);
+        assignments.stream()
+                .map(ProjectAssignment::getEmployeeId)
+                .forEach(employeeIds::add);
+
+        Map<Long, Employee> employeesById = employeeIds.isEmpty()
+                ? Map.of()
+                : employeeRepository.findAllByIdInAndDeletedFalse(employeeIds.stream().toList()).stream()
+                .collect(Collectors.toMap(Employee::getIdOrThrow, Function.identity()));
+        Set<Long> fullTimeEmployeeIds = employeesById.values().stream()
+                .filter(employee -> employee.getType() == EmployeeType.FULL_TIME)
+                .map(Employee::getIdOrThrow)
+                .collect(Collectors.toSet());
+        Map<Long, EmployeeMonthlyCost> monthlyCostsByEmployeeId = monthlyCosts.stream()
+                .collect(Collectors.toMap(EmployeeMonthlyCost::getEmployeeId, Function.identity(), (left, right) -> left));
+
+        Money totalFullTimeEmployeeCost = monthlyCosts.stream()
+                .filter(cost -> fullTimeEmployeeIds.contains(cost.getEmployeeId()))
+                .map(EmployeeMonthlyCost::getTotalCost)
+                .reduce(Money.zero(), Money::add);
+        Money allocatedFullTimeEmployeeCost = calculateAllocatedFullTimeEmployeeCost(
+                assignments,
+                monthStart,
+                fullTimeEmployeeIds,
+                monthlyCostsByEmployeeId
+        );
+        Money unallocatedFullTimeEmployeeCost = totalFullTimeEmployeeCost.subtract(allocatedFullTimeEmployeeCost);
+
+        CompanyMonthlyCostSummary summary = companyMonthlyCostSummaryRepository
+                .findByTargetMonthAndDeletedFalse(monthStart)
+                .orElseGet(() -> CompanyMonthlyCostSummary.create(
+                        monthStart,
+                        totalFullTimeEmployeeCost,
+                        allocatedFullTimeEmployeeCost,
+                        unallocatedFullTimeEmployeeCost
+                ));
+        summary.update(totalFullTimeEmployeeCost, allocatedFullTimeEmployeeCost, unallocatedFullTimeEmployeeCost);
+        companyMonthlyCostSummaryRepository.saveAll(List.of(summary));
+    }
+
+    private Money calculateAllocatedFullTimeEmployeeCost(
+            List<ProjectAssignment> assignments,
+            LocalDate targetMonth,
+            Set<Long> fullTimeEmployeeIds,
+            Map<Long, EmployeeMonthlyCost> monthlyCostsByEmployeeId
+    ) {
+        Money allocatedCost = Money.zero();
+        for (ProjectAssignment assignment : assignments) {
+            Long employeeId = assignment.getEmployeeId();
+            if (!fullTimeEmployeeIds.contains(employeeId)) {
+                continue;
+            }
+            EmployeeMonthlyCost empCost = java.util.Optional.ofNullable(monthlyCostsByEmployeeId.get(employeeId))
+                    .orElseThrow(() -> new IllegalArgumentException("직원 비용 누락 - 직원(id=" + employeeId + "), 월(targetMonth=" + targetMonth + "): "));
+            BigDecimal mm = assignment.calculateManMonth(targetMonth);
+            allocatedCost = allocatedCost.add(empCost.getTotalCost().multiply(mm));
+        }
+        return allocatedCost;
     }
 
     private boolean overlaps(LocalDate startDate, LocalDate endDate, LocalDate monthStart, LocalDate monthEnd) {

@@ -55,7 +55,9 @@ import kr.co.abacus.abms.domain.project.RevenueType;
 import kr.co.abacus.abms.domain.projectassignment.AssignmentRole;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignment;
 import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentCreateRequest;
+import kr.co.abacus.abms.domain.projectassignment.ProjectAssignmentUpdateRequest;
 import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.summary.CompanyMonthlyCostSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryCreateRequest;
 import kr.co.abacus.abms.domain.summary.RevenueMonthClosing;
@@ -123,6 +125,9 @@ class BatchJobStructureTest {
 
     @Autowired
     private kr.co.abacus.abms.adapter.infrastructure.summary.MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
+
+    @Autowired
+    private kr.co.abacus.abms.adapter.infrastructure.summary.CompanyMonthlyCostSummaryRepository companyMonthlyCostSummaryRepository;
 
     @Autowired
     private kr.co.abacus.abms.adapter.infrastructure.summary.RevenueMonthClosingRepository revenueMonthClosingRepository;
@@ -500,6 +505,118 @@ class BatchJobStructureTest {
     }
 
     @Test
+    @DisplayName("revenueMonthlySummaryJob는 정직원 비가용 비용을 전사 월 비용으로 집계한다")
+    void revenueMonthlySummaryJob_aggregatesCompanyMonthlyCostSummary() throws Exception {
+        LocalDate targetDate = LocalDate.of(2026, 8, 15);
+        Department leadDepartment = createDepartment("전사원가팀");
+        Employee fullTimeAssigned = createEmployee(leadDepartment, "정직A", "batch-company-a@abms.co.kr");
+        Employee fullTimeUnassigned = createEmployee(leadDepartment, "정직B", "batch-company-b@abms.co.kr");
+        Employee freelancerAssigned = createEmployee(leadDepartment, "프리C", "batch-company-c@abms.co.kr", EmployeeType.FREELANCER);
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest("전사원가협력사", null, null, null, null)));
+        Project project = projectRepository.save(Project.create(
+                party.getIdOrThrow(),
+                leadDepartment.getIdOrThrow(),
+                "BATCH-COMP-001",
+                "전사 원가 프로젝트",
+                null,
+                ProjectStatus.IN_PROGRESS,
+                100_000_000L,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31)
+        ));
+
+        ProjectRevenuePlan issuedPlan = ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
+                project.getIdOrThrow(),
+                1,
+                LocalDate.of(2026, 8, 20),
+                RevenueType.INTERMEDIATE_PAYMENT,
+                50_000_000L,
+                "전사 원가 매출"
+        ));
+        issuedPlan.issue();
+        projectRevenuePlanRepository.save(issuedPlan);
+
+        ProjectAssignment fullTimeAssignment = projectAssignmentRepository.save(ProjectAssignment.assign(project, new ProjectAssignmentCreateRequest(
+                project.getIdOrThrow(),
+                fullTimeAssigned.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 16)
+        )));
+        projectAssignmentRepository.save(ProjectAssignment.assign(project, new ProjectAssignmentCreateRequest(
+                project.getIdOrThrow(),
+                freelancerAssigned.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31)
+        )));
+        employeeMonthlyCostRepository.save(EmployeeMonthlyCost.create(
+                fullTimeAssigned.getIdOrThrow(),
+                "202608",
+                Money.wons(10_000_000L),
+                Money.zero(),
+                Money.zero(),
+                Money.wons(10_000_000L)
+        ));
+        employeeMonthlyCostRepository.save(EmployeeMonthlyCost.create(
+                fullTimeUnassigned.getIdOrThrow(),
+                "202608",
+                Money.wons(8_000_000L),
+                Money.zero(),
+                Money.zero(),
+                Money.wons(8_000_000L)
+        ));
+        employeeMonthlyCostRepository.save(EmployeeMonthlyCost.create(
+                freelancerAssigned.getIdOrThrow(),
+                "202608",
+                Money.wons(6_000_000L),
+                Money.zero(),
+                Money.zero(),
+                Money.wons(6_000_000L)
+        ));
+        flushAndClear();
+
+        JobExecution firstExecution = jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 10L));
+
+        assertThat(firstExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        MonthlyRevenueSummary firstProjectSummary = findSummary(project, LocalDate.of(2026, 8, 1));
+        assertThat(firstProjectSummary.getRevenueAmount().amount().longValue()).isEqualTo(50_000_000L);
+        assertThat(firstProjectSummary.getCostAmount().amount().longValue()).isEqualTo(11_000_000L);
+
+        CompanyMonthlyCostSummary firstCompanySummary = companyMonthlyCostSummaryRepository
+                .findByTargetMonthAndDeletedFalse(LocalDate.of(2026, 8, 1))
+                .orElseThrow();
+        Long firstCompanySummaryId = firstCompanySummary.getIdOrThrow();
+        assertThat(firstCompanySummary.getTotalFullTimeEmployeeCost().amount().longValue()).isEqualTo(18_000_000L);
+        assertThat(firstCompanySummary.getAllocatedFullTimeEmployeeCost().amount().longValue()).isEqualTo(5_000_000L);
+        assertThat(firstCompanySummary.getUnallocatedFullTimeEmployeeCost().amount().longValue()).isEqualTo(13_000_000L);
+
+        ProjectAssignment reloadedAssignment = projectAssignmentRepository.findById(fullTimeAssignment.getIdOrThrow()).orElseThrow();
+        reloadedAssignment.update(project, new ProjectAssignmentUpdateRequest(
+                fullTimeAssigned.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31)
+        ));
+        projectAssignmentRepository.save(reloadedAssignment);
+        flushAndClear();
+
+        JobExecution secondExecution = jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 11L));
+
+        assertThat(secondExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(companyMonthlyCostSummaryRepository.findAll().stream()
+                .filter(summary -> summary.getTargetMonth().isEqual(LocalDate.of(2026, 8, 1)))
+                .toList()).hasSize(1);
+        CompanyMonthlyCostSummary updatedCompanySummary = companyMonthlyCostSummaryRepository
+                .findByTargetMonthAndDeletedFalse(LocalDate.of(2026, 8, 1))
+                .orElseThrow();
+        assertThat(updatedCompanySummary.getIdOrThrow()).isEqualTo(firstCompanySummaryId);
+        assertThat(updatedCompanySummary.getAllocatedFullTimeEmployeeCost().amount().longValue()).isEqualTo(10_000_000L);
+        assertThat(updatedCompanySummary.getUnallocatedFullTimeEmployeeCost().amount().longValue()).isEqualTo(8_000_000L);
+        assertThat(findSummary(project, LocalDate.of(2026, 8, 1)).getCostAmount().amount().longValue()).isEqualTo(16_000_000L);
+    }
+
+    @Test
     @DisplayName("revenueMonthlySummaryJob는 마감 월을 자동 재계산하지 않는다")
     void revenueMonthlySummaryJob_skipsClosedMonth() throws Exception {
         LocalDate targetDate = LocalDate.of(2026, 4, 15);
@@ -528,6 +645,12 @@ class BatchJobStructureTest {
                 Money.wons(1_000_000L),
                 Money.wons(9_000_000L)
         )));
+        companyMonthlyCostSummaryRepository.save(CompanyMonthlyCostSummary.create(
+                LocalDate.of(2026, 4, 1),
+                Money.wons(20_000_000L),
+                Money.wons(3_000_000L),
+                Money.wons(17_000_000L)
+        ));
         revenueMonthClosingRepository.save(RevenueMonthClosing.close(LocalDate.of(2026, 4, 1), null));
 
         ProjectRevenuePlan issuedPlan = ProjectRevenuePlan.create(new ProjectRevenuePlanCreateRequest(
@@ -549,6 +672,11 @@ class BatchJobStructureTest {
                 .findByProjectIdAndTargetMonthAndDeletedFalse(project.getIdOrThrow(), LocalDate.of(2026, 4, 1))
                 .orElseThrow();
         assertThat(summary.getRevenueAmount().amount().longValue()).isEqualTo(10_000_000L);
+        CompanyMonthlyCostSummary companySummary = companyMonthlyCostSummaryRepository
+                .findByTargetMonthAndDeletedFalse(LocalDate.of(2026, 4, 1))
+                .orElseThrow();
+        assertThat(companySummary.getTotalFullTimeEmployeeCost().amount().longValue()).isEqualTo(20_000_000L);
+        assertThat(companySummary.getUnallocatedFullTimeEmployeeCost().amount().longValue()).isEqualTo(17_000_000L);
     }
 
     private JobParameters jobParameters(LocalDate targetDate, long runId) {
@@ -590,6 +718,10 @@ class BatchJobStructureTest {
     }
 
     private Employee createEmployee(Department department, String name, String email) {
+        return createEmployee(department, name, email, EmployeeType.FULL_TIME);
+    }
+
+    private Employee createEmployee(Department department, String name, String email, EmployeeType type) {
         return employeeRepository.save(Employee.create(
                 department.getIdOrThrow(),
                 name,
@@ -597,7 +729,7 @@ class BatchJobStructureTest {
                 LocalDate.of(2024, 1, 1),
                 LocalDate.of(1990, 5, 20),
                 EmployeePosition.ASSOCIATE,
-                EmployeeType.FULL_TIME,
+                type,
                 EmployeeGrade.JUNIOR,
                 EmployeeAvatar.SKY_GLOW,
                 null
