@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.co.abacus.abms.adapter.infrastructure.summary.CompanyMonthlyCostSummaryRepository;
 import kr.co.abacus.abms.adapter.infrastructure.summary.MonthlyRevenueSummaryRepository;
 import kr.co.abacus.abms.application.department.outbound.DepartmentRepository;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
@@ -29,6 +30,7 @@ import kr.co.abacus.abms.domain.party.PartyCreateRequest;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.summary.CompanyMonthlyCostSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummaryCreateRequest;
 import kr.co.abacus.abms.support.ApiIntegrationTestBase;
@@ -50,6 +52,9 @@ class DashboardApiTest extends ApiIntegrationTestBase {
 
     @Autowired
     private MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
+
+    @Autowired
+    private CompanyMonthlyCostSummaryRepository companyMonthlyCostSummaryRepository;
 
     @Test
     @DisplayName("연도 기준 대시보드 요약 정보를 조회한다")
@@ -73,6 +78,10 @@ class DashboardApiTest extends ApiIntegrationTestBase {
                 createMonthlyRevenueSummary(department, 10L, "DASH-SUM-01", "1월 프로젝트", LocalDate.of(2026, 1, 20), 100_000_000L, 60_000_000L, 40_000_000L),
                 createMonthlyRevenueSummary(department, 11L, "DASH-SUM-02", "2월 프로젝트", LocalDate.of(2026, 2, 20), 110_000_000L, 70_000_000L, 40_000_000L)
         ));
+        companyMonthlyCostSummaryRepository.saveAll(List.of(
+                createCompanyMonthlyCostSummary(LocalDate.of(2026, 1, 1), 50_000_000L, 45_000_000L, 5_000_000L),
+                createCompanyMonthlyCostSummary(LocalDate.of(2026, 2, 1), 55_000_000L, 45_000_000L, 10_000_000L)
+        ));
         flushAndClear();
 
         mockMvc.perform(get("/api/dashboards/summary")
@@ -85,7 +94,7 @@ class DashboardApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.completedProjectsCount").value(1))
                 .andExpect(jsonPath("$.newEmployeesCount").value(1))
                 .andExpect(jsonPath("$.yearRevenue").value(210_000_000))
-                .andExpect(jsonPath("$.yearProfit").value(80_000_000));
+                .andExpect(jsonPath("$.yearProfit").value(65_000_000));
     }
 
     @Test
@@ -97,6 +106,10 @@ class DashboardApiTest extends ApiIntegrationTestBase {
                 createMonthlyRevenueSummary(department, 101L, "MONTH-01", "1월 프로젝트", LocalDate.of(2026, 1, 31), 140_000_000L, 90_000_000L, 50_000_000L),
                 createMonthlyRevenueSummary(department, 102L, "MONTH-02", "2월 프로젝트", LocalDate.of(2026, 2, 28), 90_000_000L, 60_000_000L, 30_000_000L)
         ));
+        companyMonthlyCostSummaryRepository.saveAll(List.of(
+                createCompanyMonthlyCostSummary(LocalDate.of(2026, 1, 1), 100_000_000L, 80_000_000L, 20_000_000L),
+                createCompanyMonthlyCostSummary(LocalDate.of(2026, 2, 1), 90_000_000L, 75_000_000L, 15_000_000L)
+        ));
         flushAndClear();
 
         mockMvc.perform(get("/api/dashboards/monthly-financials")
@@ -106,9 +119,12 @@ class DashboardApiTest extends ApiIntegrationTestBase {
                 .andExpect(jsonPath("$.length()").value(12))
                 .andExpect(jsonPath("$[0].targetMonth").value("2026-01-01"))
                 .andExpect(jsonPath("$[0].revenue").value(140_000_000))
-                .andExpect(jsonPath("$[0].profit").value(50_000_000))
+                .andExpect(jsonPath("$[0].cost").value(110_000_000))
+                .andExpect(jsonPath("$[0].profit").value(30_000_000))
                 .andExpect(jsonPath("$[1].targetMonth").value("2026-02-01"))
                 .andExpect(jsonPath("$[1].revenue").value(90_000_000))
+                .andExpect(jsonPath("$[1].cost").value(75_000_000))
+                .andExpect(jsonPath("$[1].profit").value(15_000_000))
                 .andExpect(jsonPath("$[2].targetMonth").value("2026-03-01"))
                 .andExpect(jsonPath("$[2].revenue").value(0));
     }
@@ -315,5 +331,19 @@ class DashboardApiTest extends ApiIntegrationTestBase {
                 Money.wons(cost),
                 Money.wons(profit)
         ));
+    }
+
+    private CompanyMonthlyCostSummary createCompanyMonthlyCostSummary(
+            LocalDate targetMonth,
+            long totalFullTimeCost,
+            long allocatedFullTimeCost,
+            long unallocatedFullTimeCost
+    ) {
+        return CompanyMonthlyCostSummary.create(
+                targetMonth,
+                Money.wons(totalFullTimeCost),
+                Money.wons(allocatedFullTimeCost),
+                Money.wons(unallocatedFullTimeCost)
+        );
     }
 }

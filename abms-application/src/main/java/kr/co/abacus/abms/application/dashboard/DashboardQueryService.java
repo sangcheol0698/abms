@@ -23,11 +23,13 @@ import kr.co.abacus.abms.application.dashboard.inbound.DashboardFinder;
 import kr.co.abacus.abms.application.employee.outbound.EmployeeRepository;
 import kr.co.abacus.abms.application.party.PartyQueryService;
 import kr.co.abacus.abms.application.project.outbound.ProjectRepository;
+import kr.co.abacus.abms.application.summary.outbound.CompanyMonthlyCostSummaryRepository;
 import kr.co.abacus.abms.application.summary.outbound.MonthlyRevenueSummaryRepository;
 import kr.co.abacus.abms.domain.employee.EmployeeType;
 import kr.co.abacus.abms.domain.project.Project;
 import kr.co.abacus.abms.domain.project.ProjectStatus;
 import kr.co.abacus.abms.domain.shared.Money;
+import kr.co.abacus.abms.domain.summary.CompanyMonthlyCostSummary;
 import kr.co.abacus.abms.domain.summary.MonthlyRevenueSummary;
 
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,7 @@ public class DashboardQueryService implements DashboardFinder {
     private final ProjectRepository projectRepository;
     private final PartyQueryService partyQueryService;
     private final MonthlyRevenueSummaryRepository monthlyRevenueSummaryRepository;
+    private final CompanyMonthlyCostSummaryRepository companyMonthlyCostSummaryRepository;
 
     @Override
     public DashboardSummaryResponse getDashboardSummary(int year) {
@@ -106,6 +109,7 @@ public class DashboardQueryService implements DashboardFinder {
                         LinkedHashMap::new,
                         java.util.stream.Collectors.toList()
                 ));
+        Map<YearMonth, CompanyMonthlyCostSummary> companyCostByMonth = getCompanyCostSummariesByMonth(year);
 
         List<DashboardMonthlyFinancialItem> result = new ArrayList<>();
         for (int month = 1; month <= 12; month++) {
@@ -117,16 +121,17 @@ public class DashboardQueryService implements DashboardFinder {
                     .reduce(Money.zero(), Money::add)
                     .amount()
                     .longValue();
-            long cost = monthlySummaries.stream()
+            Money projectAllocatedCost = monthlySummaries.stream()
                     .map(MonthlyRevenueSummary::getCostAmount)
-                    .reduce(Money.zero(), Money::add)
+                    .reduce(Money.zero(), Money::add);
+            CompanyMonthlyCostSummary companyCost = companyCostByMonth.get(targetMonth);
+            Money unallocatedCost = companyCost != null
+                    ? companyCost.getUnallocatedFullTimeEmployeeCost()
+                    : Money.zero();
+            long cost = projectAllocatedCost.add(unallocatedCost)
                     .amount()
                     .longValue();
-            long profit = monthlySummaries.stream()
-                    .map(MonthlyRevenueSummary::getProfitAmount)
-                    .reduce(Money.zero(), Money::add)
-                    .amount()
-                    .longValue();
+            long profit = revenue - cost;
 
             result.add(new DashboardMonthlyFinancialItem(
                     targetMonth.atDay(1),
@@ -232,6 +237,20 @@ public class DashboardQueryService implements DashboardFinder {
         LocalDate endDate = LocalDate.of(year, Month.DECEMBER, 31);
         return monthlyRevenueSummaryRepository
                 .findAllByTargetMonthBetweenAndDeletedFalseOrderByTargetMonthAscProjectIdAsc(startDate, endDate);
+    }
+
+    private Map<YearMonth, CompanyMonthlyCostSummary> getCompanyCostSummariesByMonth(int year) {
+        LocalDate startDate = LocalDate.of(year, Month.JANUARY, 1);
+        LocalDate endDate = LocalDate.of(year, Month.DECEMBER, 1);
+        return companyMonthlyCostSummaryRepository
+                .findAllByTargetMonthBetweenAndDeletedFalseOrderByTargetMonthAsc(startDate, endDate)
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        summary -> YearMonth.from(summary.getTargetMonth()),
+                        java.util.function.Function.identity(),
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                ));
     }
 
     private boolean hasVisibleAmounts(DepartmentFinancialAccumulator accumulator) {
