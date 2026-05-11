@@ -34,7 +34,7 @@ const items = computed(() =>
 </script>
 
 <template>
-  <div class="min-w-[180px] rounded-lg bg-background/95 p-3 text-sm shadow-lg backdrop-blur-sm">
+  <div class="min-w-[180px] rounded-lg border border-border bg-background/95 p-3 text-sm text-foreground shadow-lg backdrop-blur-sm">
     <div v-if="title" class="mb-2 text-sm font-semibold text-foreground">
       {{ title }}
     </div>
@@ -42,9 +42,9 @@ const items = computed(() =>
       <div v-for="(item, key) in items" :key="key" class="flex justify-between gap-6">
         <div class="flex items-center">
           <span class="mr-2 h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: item.color }" />
-          <span>{{ item.name }}</span>
+          <span class="text-muted-foreground">{{ item.name }}</span>
         </div>
-        <span class="font-semibold">{{ item.value }}</span>
+        <span class="font-semibold text-foreground">{{ item.value }}</span>
       </div>
     </div>
   </div>
