@@ -617,6 +617,87 @@ class BatchJobStructureTest {
     }
 
     @Test
+    @DisplayName("revenueMonthlySummaryJob는 삭제 프로젝트 투입을 전사 배부 비용에서 제외한다")
+    void revenueMonthlySummaryJob_excludesSoftDeletedProjectAssignmentsFromCompanyAllocatedCost() throws Exception {
+        LocalDate targetDate = LocalDate.of(2026, 9, 15);
+        LocalDate targetMonth = LocalDate.of(2026, 9, 1);
+        Department leadDepartment = createDepartment("전사원가팀D");
+        Employee activeProjectEmployee = createEmployee(leadDepartment, "정직D1", "batch-company-d1@abms.co.kr");
+        Employee deletedProjectEmployee = createEmployee(leadDepartment, "정직D2", "batch-company-d2@abms.co.kr");
+        Party party = partyRepository.save(Party.create(new PartyCreateRequest("전사원가협력사D", null, null, null, null)));
+        Project activeProject = projectRepository.save(Project.create(
+                party.getIdOrThrow(),
+                leadDepartment.getIdOrThrow(),
+                "BATCH-COMP-D-ACTIVE",
+                "전사 원가 활성 프로젝트",
+                null,
+                ProjectStatus.IN_PROGRESS,
+                100_000_000L,
+                LocalDate.of(2026, 9, 1),
+                LocalDate.of(2026, 9, 30)
+        ));
+        Project deletedProject = projectRepository.save(Project.create(
+                party.getIdOrThrow(),
+                leadDepartment.getIdOrThrow(),
+                "BATCH-COMP-D-DELETED",
+                "전사 원가 삭제 프로젝트",
+                null,
+                ProjectStatus.IN_PROGRESS,
+                100_000_000L,
+                LocalDate.of(2026, 9, 1),
+                LocalDate.of(2026, 9, 30)
+        ));
+
+        projectAssignmentRepository.save(ProjectAssignment.assign(activeProject, new ProjectAssignmentCreateRequest(
+                activeProject.getIdOrThrow(),
+                activeProjectEmployee.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2026, 9, 1),
+                LocalDate.of(2026, 9, 30)
+        )));
+        projectAssignmentRepository.save(ProjectAssignment.assign(deletedProject, new ProjectAssignmentCreateRequest(
+                deletedProject.getIdOrThrow(),
+                deletedProjectEmployee.getIdOrThrow(),
+                AssignmentRole.DEV,
+                LocalDate.of(2026, 9, 1),
+                LocalDate.of(2026, 9, 30)
+        )));
+        employeeMonthlyCostRepository.save(EmployeeMonthlyCost.create(
+                activeProjectEmployee.getIdOrThrow(),
+                "202609",
+                Money.wons(10_000_000L),
+                Money.zero(),
+                Money.zero(),
+                Money.wons(10_000_000L)
+        ));
+        employeeMonthlyCostRepository.save(EmployeeMonthlyCost.create(
+                deletedProjectEmployee.getIdOrThrow(),
+                "202609",
+                Money.wons(10_000_000L),
+                Money.zero(),
+                Money.zero(),
+                Money.wons(10_000_000L)
+        ));
+        deletedProject.softDelete(null);
+        projectRepository.save(deletedProject);
+        flushAndClear();
+
+        JobExecution execution = jobLauncher.run(revenueMonthlySummaryJob, jobParameters(targetDate, 12L));
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        CompanyMonthlyCostSummary companySummary = companyMonthlyCostSummaryRepository
+                .findByTargetMonthAndDeletedFalse(targetMonth)
+                .orElseThrow();
+        assertThat(companySummary.getTotalFullTimeEmployeeCost().amount().longValue()).isEqualTo(20_000_000L);
+        assertThat(companySummary.getAllocatedFullTimeEmployeeCost().amount().longValue()).isEqualTo(10_000_000L);
+        assertThat(companySummary.getUnallocatedFullTimeEmployeeCost().amount().longValue()).isEqualTo(10_000_000L);
+        assertThat(monthlyRevenueSummaryRepository.findByProjectIdAndTargetMonthAndDeletedFalse(
+                deletedProject.getIdOrThrow(),
+                targetMonth
+        )).isEmpty();
+    }
+
+    @Test
     @DisplayName("revenueMonthlySummaryJob는 마감 월을 자동 재계산하지 않는다")
     void revenueMonthlySummaryJob_skipsClosedMonth() throws Exception {
         LocalDate targetDate = LocalDate.of(2026, 4, 15);

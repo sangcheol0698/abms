@@ -22,6 +22,8 @@ public interface ProjectAssignmentRepository extends CustomProjectAssignmentRepo
 
     List<ProjectAssignment> findActiveAssignments(LocalDate monthStart, LocalDate monthEnd);
 
+    List<ProjectAssignment> findActiveAssignmentsForNonDeletedProjects(LocalDate monthStart, LocalDate monthEnd);
+
     List<ProjectAssignment> findActiveAssignmentsByProjectId(Long projectId, LocalDate startOfMonth, LocalDate endOfMonth);
 
     List<ProjectAssignment> findOverlappingAssignments(Long projectId, LocalDate startDate, LocalDate endDate);

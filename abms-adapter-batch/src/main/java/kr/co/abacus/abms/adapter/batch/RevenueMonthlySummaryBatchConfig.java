@@ -215,7 +215,7 @@ public class RevenueMonthlySummaryBatchConfig {
 
     private void reconcileCompanyMonthlyCostSummary(LocalDate monthStart, LocalDate monthEnd, String costMonth) {
         List<EmployeeMonthlyCost> monthlyCosts = employeeMonthlyCostRepository.findAllByCostMonthAndDeletedFalse(costMonth);
-        List<ProjectAssignment> assignments = assignmentRepository.findActiveAssignments(monthStart, monthEnd);
+        List<ProjectAssignment> assignments = assignmentRepository.findActiveAssignmentsForNonDeletedProjects(monthStart, monthEnd);
         Set<Long> employeeIds = new LinkedHashSet<>();
         monthlyCosts.stream()
                 .map(EmployeeMonthlyCost::getEmployeeId)

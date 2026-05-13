@@ -36,6 +36,16 @@ public interface ProjectAssignmentRepository
 
     @Override
     @Query("SELECT pa FROM ProjectAssignment pa " +
+            "JOIN Project p ON p.id = pa.projectId " +
+            "WHERE pa.deleted = false " +
+            "AND p.deleted = false " +
+            "AND pa.period.startDate <= :monthEnd " +
+            "AND (pa.period.endDate IS NULL OR pa.period.endDate >= :monthStart)")
+    List<ProjectAssignment> findActiveAssignmentsForNonDeletedProjects(@Param("monthStart") LocalDate monthStart,
+                                                                       @Param("monthEnd") LocalDate monthEnd);
+
+    @Override
+    @Query("SELECT pa FROM ProjectAssignment pa " +
             "WHERE pa.projectId = :projectId " +
             "AND pa.deleted = false " +
             "AND pa.period.startDate <= :endOfMonth " +
