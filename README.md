@@ -84,19 +84,21 @@ flowchart LR
 
 ### 대시보드
 
-![ABMS 대시보드](docs/screenshots/ABMS%20-%20대시보드.png)
+<img width="1582" height="1031" alt="Image" src="https://github.com/user-attachments/assets/1fe2c26a-5ae4-4d38-ae9e-9adcc15a0df7" />
 
 월별 매출, 비용, 이익 흐름과 주요 운영 지표를 확인하는 화면입니다.
 
+### 직원 관리
+
+<img width="1582" height="1031" alt="Image" src="https://github.com/user-attachments/assets/cb8e1af3-6bea-4a31-b7ee-cdc8acff7cae" />
+
+직원 기본 정보, 소속 부서, 재직 상태, 직급/등급, 급여 이력을 관리하고 권한 범위에 따라 조회·수정·엑셀 반출입을 제어합니다.
+
 ### 프로젝트 관리
 
-![ABMS 프로젝트](docs/screenshots/ABMS%20-%20프로젝트.png)
+<img width="1582" height="1031" alt="Image" src="https://github.com/user-attachments/assets/e5d3f244-a1dd-4813-9f5b-8e82f99210c4" />
 
 계약금액, 프로젝트 기간, 주관 부서, 협력사 정보를 관리하고 매출 계획과 투입 관리로 이어지는 핵심 화면입니다.
-
-### 주간보고서
-
-![ABMS 주간보고서](docs/screenshots/ABMS%20-%20주간보고서.png)
 
 프로젝트 진행 상황과 운영 보고 내용을 주간 단위로 관리하는 화면입니다.
 
@@ -104,7 +106,7 @@ flowchart LR
 
 | 부서 | 협력사 |
 |---|---|
-| ![ABMS 부서](docs/screenshots/ABMS%20-%20부서.png) | ![ABMS 협력사](docs/screenshots/ABMS%20-%20협력사.png) |
+| <img width="1582" height="1031" alt="Image" src="https://github.com/user-attachments/assets/11c719c2-7818-4122-af3c-e1e1bb8d33c7" /> | <img width="1582" height="1031" alt="Image" src="https://github.com/user-attachments/assets/25cf7cdf-f4a0-4b35-9a91-f29808b048a6" /> |
 
 부서 구조와 협력사 정보를 별도로 관리해 프로젝트 주관 부서와 고객사/파트너 데이터를 재사용할 수 있도록 구성했습니다.
 
@@ -112,15 +114,19 @@ flowchart LR
 
 | 권한 관리 | 계정 설정 |
 |---|---|
-| ![ABMS 권한 관리](docs/screenshots/ABMS%20-%20권한%20관리.png) | ![ABMS 계정 설정](docs/screenshots/ABMS%20-%20계정%20설정.png) |
+| <img width="1582" height="1031" alt="Image" src="https://github.com/user-attachments/assets/8e0de5d7-eb11-4d88-b057-58e7189fe9b7" /> | <img width="1582" height="1031" alt="Image" src="https://github.com/user-attachments/assets/211a9fa8-e19e-4897-84b7-f734d0a3472b" /> |
 
 권한 그룹과 scope를 기반으로 직원 상세, 프로젝트 관리, 엑셀 반출입 같은 기능 접근을 제어합니다.
 
 ### AI Assistant
 
-[AI Assistant 프로젝트 검색 데모](docs/screenshots/ABMS%20-%20AI%20Assistant%20프로젝트%20검색.mov)
+[AI Assistant 프로젝트 검색 데모](https://github.com/user-attachments/assets/186f3e48-77aa-400c-9124-df09769b0e32)
 
 직원, 부서, 프로젝트 데이터를 자연어로 조회하는 내부 운영 보조 기능입니다.
+
+### 주간보고서
+
+<img width="1582" height="1031" alt="Image" src="https://github.com/user-attachments/assets/11c02083-bf02-4232-8757-5fd01a585dc5" />
 
 ## 핵심 업무 규칙
 
