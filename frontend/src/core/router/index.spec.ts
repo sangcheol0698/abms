@@ -47,8 +47,16 @@ vi.mock('@/core/layouts/SidebarLayout.vue', () => ({
   default: { template: '<div><slot /></div>' },
 }));
 
+vi.mock('@/core/layouts/PublicLayout.vue', () => ({
+  default: { template: '<div><slot /></div>' },
+}));
+
 vi.mock('@/features/auth/views/AuthLoginView.vue', () => ({
   default: { template: '<div>login</div>' },
+}));
+
+vi.mock('@/features/landing/views/SitesLandingView.vue', () => ({
+  default: { template: '<div>sites landing</div>' },
 }));
 
 vi.mock('@/features/auth/views/AuthForbiddenView.vue', () => ({
@@ -134,6 +142,26 @@ describe('router permission guard', () => {
 
     expect(router.currentRoute.value.name).toBe('auth-forbidden');
   }, 15000);
+
+  it('비로그인 루트 진입은 공개 랜딩 페이지로 보낸다', async () => {
+    const router = await loadRouter();
+
+    await router.push('/');
+    await router.isReady();
+
+    expect(router.currentRoute.value.name).toBe('sites-landing');
+    expect(ensureCsrfInitializedMock).not.toHaveBeenCalled();
+  });
+
+  it('공개 랜딩 페이지는 로그인 없이 접근한다', async () => {
+    const router = await loadRouter();
+
+    await router.push('/sites');
+    await router.isReady();
+
+    expect(router.currentRoute.value.name).toBe('sites-landing');
+    expect(ensureCsrfInitializedMock).not.toHaveBeenCalled();
+  });
 
   it('빠른 라우트 이동에서는 nprogress를 표시하지 않는다', async () => {
     authState.hasStoredUser = true;

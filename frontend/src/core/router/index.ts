@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteLocationRaw } from 'vue-router';
 import NProgress from 'nprogress';
 import AuthLayout from '@/core/layouts/AuthLayout.vue';
+import PublicLayout from '@/core/layouts/PublicLayout.vue';
 import SidebarLayout from '@/core/layouts/SidebarLayout.vue';
 import {
   ensureServerSessionValid,
@@ -21,6 +22,16 @@ const NPROGRESS_DELAY_MS = 120;
 let progressStartTimer: number | null = null;
 
 const routes = [
+  {
+    path: '/sites',
+    name: 'sites-landing',
+    component: () => import('@/features/landing/views/SitesLandingView.vue'),
+    meta: {
+      title: 'Sites',
+      layout: PublicLayout,
+      public: true,
+    },
+  },
   {
     path: '/auths',
     children: [
@@ -409,6 +420,10 @@ function isAuthRoute(path: string): boolean {
   return path.startsWith('/auths');
 }
 
+function isPublicRoute(to: { meta?: Record<string, unknown> }): boolean {
+  return to.meta?.public === true;
+}
+
 function resolveLoginRedirect(fullPath: string): RouteLocationRaw {
   return {
     name: 'auth-login',
@@ -449,7 +464,16 @@ router.beforeEach(async (to, from) => {
 
   const isLoggedIn = hasStoredUser();
   const authPage = isAuthRoute(to.path);
+  const publicPage = isPublicRoute(to);
   const isWhitelistedAuthPage = typeof to.name === 'string' && AUTH_ROUTE_WHITELIST.has(to.name);
+
+  if (!isLoggedIn && to.path === '/') {
+    return { name: 'sites-landing' };
+  }
+
+  if (publicPage) {
+    return true;
+  }
 
   if (authPage || isLoggedIn) {
     try {

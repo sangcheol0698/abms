@@ -27,8 +27,6 @@ on:
         required: true
         default: true
         type: boolean
-  schedule:
-    - cron: '0 18 * * *'
 
 permissions:
   contents: write
@@ -58,7 +56,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || 'main' }}
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
 
       - name: Resolve execution parameters
@@ -71,23 +69,15 @@ jobs:
             python3 -c 'from datetime import datetime, timedelta; from zoneinfo import ZoneInfo; print((datetime.now(ZoneInfo("Asia/Seoul")).date() - timedelta(days=1)).isoformat())'
           }
 
-          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
-            checkout_ref="main"
-            job_mode="revenue_summary_only"
-            target_date="$(kst_yesterday)"
-            target_month=""
-            create_tag="false"
-          else
-            checkout_ref="${INPUT_REF:-main}"
-            job_mode="${INPUT_JOB_MODE:-revenue_summary_only}"
-            create_tag="${INPUT_CREATE_TAG:-true}"
-            target_month="${INPUT_TARGET_MONTH:-}"
+          checkout_ref="${INPUT_REF:-main}"
+          job_mode="${INPUT_JOB_MODE:-revenue_summary_only}"
+          create_tag="${INPUT_CREATE_TAG:-true}"
+          target_month="${INPUT_TARGET_MONTH:-}"
 
-            if [ -n "${INPUT_TARGET_DATE:-}" ]; then
-              target_date="${INPUT_TARGET_DATE}"
-            else
-              target_date="$(kst_yesterday)"
-            fi
+          if [ -n "${INPUT_TARGET_DATE:-}" ]; then
+            target_date="${INPUT_TARGET_DATE}"
+          else
+            target_date="$(kst_yesterday)"
           fi
 
           if ! python3 -c 'import datetime, sys; datetime.date.fromisoformat(sys.argv[1])' "$target_date"; then
