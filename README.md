@@ -2,6 +2,8 @@
 
 프로젝트 계약 매출과 인력 투입 비용을 연결해 프로젝트/부서별 월별 손익을 산출하는 비즈니스 관리 시스템입니다.
 
+[데모 사이트](http://3.37.131.192/)
+
 `Java 25` `Spring Boot 4` `Vue 3` `TypeScript` `Hexagonal Architecture` `Spring Batch` `QueryDSL` `MySQL`
 
 기존 Excel 기반 손익 관리의 수작업 계산, 귀속 기준 불일치, 재처리 어려움을 웹 서비스로 전환한 프로젝트입니다. REST API, RDBMS, Batch, AWS EC2 배포, CI/CD, 운영 관측성까지 포함해 운영 가능한 구조를 목표로 설계했습니다.
