@@ -2,7 +2,7 @@
 
 프로젝트 계약 매출과 인력 투입 비용을 연결해 프로젝트/부서별 월별 손익을 산출하는 비즈니스 관리 시스템입니다.
 
-[데모 사이트](http://3.37.131.192/)
+[데모 사이트](http://34.64.223.156/)
 
 `Java 25` `Spring Boot 4` `Vue 3` `TypeScript` `Hexagonal Architecture` `Spring Batch` `QueryDSL` `MySQL`
 
