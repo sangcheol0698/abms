@@ -1,0 +1,112 @@
+spring:
+  application:
+    name: abms
+  profiles:
+    default: local
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3308/abms}
+    username: ${DB_USERNAME:abms}
+    password: ${DB_PASSWORD:abms}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+        default_batch_fetch_size: 100
+  flyway:
+    locations: classpath:db/migration
+  docker:
+    compose:
+      enabled: false
+  threads:
+    virtual:
+      enabled: true
+  ai:
+    model:
+      chat: openai
+      embedding: none
+      image: none
+      audio:
+        speech: none
+        transcription: none
+      moderation: none
+    openai:
+      api-key: ${OPENAI_API_KEY:not-configured}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4.1-mini}
+          temperature: 0.2
+
+server:
+  servlet:
+    session:
+      timeout: 8h
+  error:
+    whitelabel:
+      enabled: false
+
+gg:
+  jte:
+    use-precompiled-templates: true
+
+abms:
+  ai:
+    api-key: ${OPENAI_API_KEY:}
+  summary:
+    schedule-enabled: true
+    cron: "0 0 3 * * *"
+  bootstrap:
+    admin-email: ${ABMS_ADMIN_EMAIL:}
+    admin-password: ${ABMS_ADMIN_PASSWORD:}
+  demo:
+    calculate-on-startup: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start-only
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+
+gg:
+  jte:
+    use-precompiled-templates: false
+    development-mode: true
+
+abms:
+  demo:
+    calculate-on-startup: true
+
+logging:
+  level:
+    kr.co.abacus.abms: debug
+
+---
+spring:
+  config:
+    activate:
+      on-profile: demo
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+
+abms:
+  demo:
+    calculate-on-startup: true

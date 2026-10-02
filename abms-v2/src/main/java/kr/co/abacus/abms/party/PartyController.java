@@ -1,0 +1,171 @@
+package kr.co.abacus.abms.party;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.web.FormErrors;
+import kr.co.abacus.abms.common.web.Htmx;
+import kr.co.abacus.abms.common.web.PageView;
+import kr.co.abacus.abms.common.web.Toast;
+import kr.co.abacus.abms.department.DepartmentService;
+import kr.co.abacus.abms.party.Party.PartyInfo;
+import kr.co.abacus.abms.project.Project;
+import kr.co.abacus.abms.project.ProjectService;
+import kr.co.abacus.abms.security.LoginUser;
+
+@Controller
+@RequestMapping("/parties")
+public class PartyController {
+
+    private final PartyService partyService;
+    private final ProjectService projectService;
+    private final DepartmentService departmentService;
+
+    public PartyController(PartyService partyService, ProjectService projectService, DepartmentService departmentService) {
+        this.partyService = partyService;
+        this.projectService = projectService;
+        this.departmentService = departmentService;
+    }
+
+    @GetMapping
+    public String list(@AuthenticationPrincipal LoginUser user, @RequestParam(required = false) @Nullable String q,
+                       @RequestParam(defaultValue = "0") int page, HttpServletRequest request, Model model) {
+        require(user, PermissionCode.PARTY_READ);
+        var result = partyService.search(q, PageRequest.of(Math.max(page, 0), 20, Sort.by("name")));
+        String baseUrl = UriComponentsBuilder.fromPath("/parties").query(request.getQueryString()).build().toUriString();
+        model.addAttribute("page", PageView.of(result, baseUrl));
+        model.addAttribute("q", q);
+        model.addAttribute("projectCounts", result.getContent().stream()
+                .collect(java.util.stream.Collectors.toMap(Party::id, p -> partyService.projectCount(p.id()))));
+        if (Htmx.targets(request, "party-results")) {
+            return "party/results";
+        }
+        return "party/list";
+    }
+
+    @GetMapping("/new")
+    public String createForm(@AuthenticationPrincipal LoginUser user, Model model) {
+        require(user, PermissionCode.PARTY_WRITE);
+        return form(model, new PartyForm(null, null, null, null, null), FormErrors.none(), null);
+    }
+
+    @PostMapping
+    public String create(@AuthenticationPrincipal LoginUser user, @Valid @ModelAttribute("form") PartyForm form, BindingResult binding,
+                         Model model, HttpServletResponse response, RedirectAttributes redirect) {
+        require(user, PermissionCode.PARTY_WRITE);
+        if (binding.hasErrors()) {
+            response.setStatus(422);
+            return form(model, form, FormErrors.of(binding), null);
+        }
+        try {
+            Party party = partyService.create(form.toInfo());
+            Toast.success(redirect, party.getName() + " 협력사를 등록했습니다.");
+            return "redirect:/parties/" + party.id();
+        } catch (BusinessException e) {
+            response.setStatus(422);
+            return form(model, form, FormErrors.global(e.getMessage()), null);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public String detail(@AuthenticationPrincipal LoginUser user, @PathVariable Long id, Model model) {
+        require(user, PermissionCode.PARTY_READ);
+        Party party = partyService.get(id);
+        model.addAttribute("party", party);
+        model.addAttribute("projects", user.has(PermissionCode.PROJECT_READ)
+                ? projectService.byParty(id).stream().filter(p -> projectService.canRead(user, p)).toList()
+                : java.util.List.<Project>of());
+        model.addAttribute("projectCount", partyService.projectCount(id));
+        model.addAttribute("tree", departmentService.tree());
+        return "party/detail";
+    }
+
+    @GetMapping("/{id}/edit")
+    public String editForm(@AuthenticationPrincipal LoginUser user, @PathVariable Long id, Model model) {
+        require(user, PermissionCode.PARTY_WRITE);
+        Party party = partyService.get(id);
+        return form(model, PartyForm.of(party), FormErrors.none(), party);
+    }
+
+    @PostMapping("/{id}")
+    public String update(@AuthenticationPrincipal LoginUser user, @PathVariable Long id, @Valid @ModelAttribute("form") PartyForm form,
+                         BindingResult binding, Model model, HttpServletResponse response, RedirectAttributes redirect) {
+        require(user, PermissionCode.PARTY_WRITE);
+        Party party = partyService.get(id);
+        if (binding.hasErrors()) {
+            response.setStatus(422);
+            return form(model, form, FormErrors.of(binding), party);
+        }
+        try {
+            partyService.update(id, form.toInfo());
+            Toast.success(redirect, "협력사 정보를 수정했습니다.");
+            return "redirect:/parties/" + id;
+        } catch (BusinessException e) {
+            response.setStatus(422);
+            return form(model, form, FormErrors.global(e.getMessage()), party);
+        }
+    }
+
+    @PostMapping("/{id}/delete")
+    public String delete(@AuthenticationPrincipal LoginUser user, @PathVariable Long id, RedirectAttributes redirect) {
+        require(user, PermissionCode.PARTY_WRITE);
+        partyService.delete(id, user.accountId());
+        Toast.success(redirect, "협력사를 삭제했습니다.");
+        return "redirect:/parties";
+    }
+
+    private String form(Model model, PartyForm form, FormErrors errors, @Nullable Party party) {
+        model.addAttribute("form", form);
+        model.addAttribute("errors", errors);
+        model.addAttribute("party", party);
+        return "party/form";
+    }
+
+    private static void require(LoginUser user, PermissionCode code) {
+        if (!user.has(code)) {
+            throw new AccessDeniedException("협력사 " + (code == PermissionCode.PARTY_READ ? "조회" : "관리") + " 권한이 없습니다.");
+        }
+    }
+
+    public record PartyForm(
+            @NotBlank(message = "협력사명을 입력하세요.") @Size(max = 50, message = "50자 이하로 입력하세요.") @Nullable String name,
+            @Size(max = 30, message = "30자 이하로 입력하세요.") @Nullable String ceoName,
+            @Size(max = 30, message = "30자 이하로 입력하세요.") @Nullable String salesRepName,
+            @Size(max = 20, message = "20자 이하로 입력하세요.") @Nullable String salesRepPhone,
+            @Email(message = "이메일 형식이 올바르지 않습니다.") @Size(max = 100) @Nullable String salesRepEmail
+    ) {
+
+        static PartyForm of(Party p) {
+            return new PartyForm(p.getName(), p.getCeoName(), p.getSalesRepName(), p.getSalesRepPhone(), p.getSalesRepEmail());
+        }
+
+        PartyInfo toInfo() {
+            return new PartyInfo(name == null ? "" : name, ceoName, salesRepName, salesRepPhone, salesRepEmail);
+        }
+
+    }
+
+}
