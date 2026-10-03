@@ -12,18 +12,17 @@
     @template.components.pageHeader(title = "권한 그룹", subtitle = "권한(기능)과 범위(데이터)를 묶어 계정에 부여합니다.", actions = @`
         <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/admin/permission-groups/new" hx-target="#modal-body">${Icons.of("plus", "size-4")} 그룹 추가</button>
     `)
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div class="-mx-x4 border-t border-stroke-neutral-subtle sm:-mx-x6 lg:-mx-x8">
         @for(PermissionGroup g : groups)
-            <a href="/admin/permission-groups/${g.id()}" class="card block p-5 transition hover:ring-stroke-brand-weak">
-                <div class="flex items-center justify-between gap-2">
-                    <h2 class="font-semibold text-fg-neutral">${g.getName()}</h2>
-                    <span class="${Seed.badge(g.isSystem() ? "neutral" : "informative")}">${g.getGroupType().label()}</span>
-                </div>
-                <p class="mt-2 line-clamp-2 text-sm text-fg-neutral-subtle">${g.getDescription()}</p>
-                <div class="mt-4 flex gap-4 text-xs text-fg-neutral-subtle">
-                    <span>${Icons.of("users", "mr-1 inline size-4")} 계정 ${memberCounts.getOrDefault(g.id(), 0L)}개</span>
-                    <span>${Icons.of("shield", "mr-1 inline size-4")} 권한 ${grantCounts.getOrDefault(g.id(), 0)}개</span>
-                </div>
+            <a href="/admin/permission-groups/${g.id()}" class="list-row min-h-14 sm:px-x6 lg:px-x8">
+                <span class="flex size-7 shrink-0 items-center justify-center rounded-r1_5 bg-bg-neutral-weak text-fg-neutral-muted">${Icons.of("shield", "size-4")}</span>
+                <span class="min-w-0 flex-1">
+                    <span class="flex items-center gap-x2"><span class="truncate t4-medium">${g.getName()}</span><span class="${Seed.badge(g.isSystem() ? "neutral" : "informative")}">${g.getGroupType().label()}</span></span>
+                    <span class="block truncate t3-regular text-fg-neutral-subtle">${g.getDescription()}</span>
+                </span>
+                <span class="list-cell-muted hidden w-24 items-center gap-x1 sm:flex">${Icons.of("users", "size-4")} 계정 ${memberCounts.getOrDefault(g.id(), 0L)}</span>
+                <span class="list-cell-muted hidden w-24 items-center gap-x1 sm:flex">${Icons.of("shield", "size-4")} 권한 ${grantCounts.getOrDefault(g.id(), 0)}</span>
+                ${Icons.of("chevron-right", "size-4 shrink-0 text-fg-neutral-subtle")}
             </a>
         @endfor
     </div>

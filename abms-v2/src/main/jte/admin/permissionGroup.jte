@@ -27,9 +27,9 @@
             </form>
         @endif
     `)
-    <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <form method="post" action="/admin/permission-groups/${group.id()}" class="card overflow-hidden xl:col-span-2">
-            <div class="card-body grid grid-cols-1 gap-4 border-b border-stroke-neutral-subtle sm:grid-cols-2">
+    <div class="grid gap-x6 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <form method="post" action="/admin/permission-groups/${group.id()}" class="min-w-0 space-y-6">
+            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
                 <div>
                     <label for="name" class="label">그룹명</label>
                     <input id="name" name="name" class="input" value="${group.getName()}" disabled="${readOnly}" required>
@@ -39,80 +39,84 @@
                     <input id="description" name="description" class="input" value="${group.getDescription()}" disabled="${readOnly}">
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>권한</th>
-                        @for(PermissionScope scope : PermissionScope.values())
-                            <th class="text-center">${scope.label()}</th>
-                        @endfor
-                    </tr>
-                    </thead>
-                    <tbody class="divide-y divide-stroke-neutral-subtle">
-                    @for(Permission p : permissions)
-                        !{Set<PermissionScope> granted = grants.getOrDefault(p.id(), Set.of());}
+            <section>
+                <h2 class="section-title">권한 × 범위 <span class="section-count">범위가 여러 개면 합집합 · 전체는 다른 범위를 포함</span></h2>
+                <div class="list-box overflow-x-auto">
+                    <table class="table">
+                        <thead>
                         <tr>
-                            <td class="min-w-64 !whitespace-normal">
-                                <p class="font-medium text-fg-neutral">${p.getName()}</p>
-                                <p class="text-xs text-fg-neutral-subtle"><code>${p.getCode()}</code> · ${p.getDescription()}</p>
-                            </td>
+                            <th class="bg-bg-neutral-muted">권한</th>
                             @for(PermissionScope scope : PermissionScope.values())
-                                <td class="text-center">
-                                    <input type="checkbox" class="checkbox" name="grant" value="${p.id()}:${scope.name()}"
-                                           checked="${granted.contains(scope)}" disabled="${readOnly}" aria-label="${p.getName()} ${scope.label()}">
-                                </td>
+                                <th class="bg-bg-neutral-muted text-center">${scope.label()}</th>
                             @endfor
                         </tr>
-                    @endfor
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                        @for(Permission p : permissions)
+                            !{Set<PermissionScope> granted = grants.getOrDefault(p.id(), Set.of());}
+                            <tr>
+                                <td class="min-w-64 !whitespace-normal">
+                                    <p class="t4-medium text-fg-neutral">${p.getName()}</p>
+                                    <p class="t3-regular text-fg-neutral-subtle"><code>${p.getCode()}</code> · ${p.getDescription()}</p>
+                                </td>
+                                @for(PermissionScope scope : PermissionScope.values())
+                                    <td class="text-center">
+                                        <input type="checkbox" class="checkbox" name="grant" value="${p.id()}:${scope.name()}"
+                                               checked="${granted.contains(scope)}" disabled="${readOnly}" aria-label="${p.getName()} ${scope.label()}">
+                                    </td>
+                                @endfor
+                            </tr>
+                        @endfor
+                        </tbody>
+                    </table>
+                </div>
+            </section>
             @if(!readOnly)
-                <div class="flex items-center justify-between gap-2 border-t border-stroke-neutral-subtle bg-bg-neutral-muted px-5 py-3.5">
-                    <p class="text-xs text-fg-neutral-subtle">범위가 여러 개면 합집합으로 적용됩니다. 전체(ALL)는 다른 범위를 포함합니다.</p>
+                <div class="sticky bottom-4 flex items-center justify-end gap-x2 rounded-r3 border border-stroke-neutral-subtle bg-bg-layer-floating px-x4 py-x2_5 shadow-s2">
+                    <p class="mr-auto t3-regular text-fg-neutral-subtle">변경 내용은 해당 사용자가 다시 로그인하면 반영됩니다.</p>
                     <button type="submit" class="${Seed.button("brandSolid")}">저장</button>
                 </div>
             @endif
         </form>
 
-        <section class="card h-fit overflow-hidden">
-            <div class="card-header"><h2 class="card-title">할당된 계정 (${members.size()})</h2></div>
-            @if(!candidates.isEmpty())
-                <form method="post" action="/admin/permission-groups/${group.id()}/members" class="flex gap-2 border-b border-stroke-neutral-subtle p-4">
-                    <select name="accountId" class="select" required aria-label="추가할 계정">
-                        <option value="">계정 선택</option>
-                        @for(Account a : candidates)
+        <%-- 할당된 계정 패널 --%>
+        <aside>
+            <div class="xl:sticky xl:top-6">
+                <h2 class="section-title">할당된 계정 <span class="section-count">${members.size()}</span></h2>
+                @if(!candidates.isEmpty())
+                    <form method="post" action="/admin/permission-groups/${group.id()}/members" class="mb-x3 flex gap-x2">
+                        <select name="accountId" class="select" required aria-label="추가할 계정">
+                            <option value="">계정 선택</option>
+                            @for(Account a : candidates)
+                                !{Employee e = employees.get(a.getEmployeeId());}
+                                <option value="${a.id()}">${e == null ? a.getUsername() : e.getName() + " (" + a.getUsername() + ")"}</option>
+                            @endfor
+                        </select>
+                        <button class="${Seed.button("neutralOutline")}">추가</button>
+                    </form>
+                @endif
+                <div class="list-box">
+                    @if(members.isEmpty())
+                        @template.components.empty(message = "할당된 계정이 없습니다.", icon = "users")
+                    @else
+                        @for(Account a : members)
                             !{Employee e = employees.get(a.getEmployeeId());}
-                            <option value="${a.id()}">${e == null ? a.getUsername() : e.getName() + " (" + a.getUsername() + ")"}</option>
-                        @endfor
-                    </select>
-                    <button class="${Seed.button("neutralWeak")}">추가</button>
-                </form>
-            @endif
-            @if(members.isEmpty())
-                @template.components.empty(message = "할당된 계정이 없습니다.", icon = "users")
-            @else
-                <ul class="divide-y divide-stroke-neutral-subtle">
-                    @for(Account a : members)
-                        !{Employee e = employees.get(a.getEmployeeId());}
-                        <li class="flex items-center justify-between gap-3 px-5 py-3">
-                            <div class="flex min-w-0 items-center gap-2.5">
+                            <div class="list-row">
                                 @if(e != null)
-                                    @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-7 text-xs")
+                                    @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-6 text-[11px]")
                                 @endif
-                                <div class="min-w-0">
-                                    <p class="text-sm font-medium text-fg-neutral">${e == null ? "-" : e.getName()}</p>
-                                    <p class="truncate text-xs text-fg-neutral-subtle">${a.getUsername()}</p>
-                                </div>
+                                <span class="min-w-0 flex-1">
+                                    <span class="block truncate t4-medium">${e == null ? "-" : e.getName()}</span>
+                                    <span class="block truncate t3-regular text-fg-neutral-subtle">${a.getUsername()}</span>
+                                </span>
+                                <form method="post" action="/admin/permission-groups/${group.id()}/members/${a.id()}/delete" hx-confirm="그룹에서 제외할까요?">
+                                    <button class="${Seed.iconButton("ghost", "xsmall")}" aria-label="${a.getUsername()} 제외" title="그룹에서 제외">${Icons.of("x", "size-4")}</button>
+                                </form>
                             </div>
-                            <form method="post" action="/admin/permission-groups/${group.id()}/members/${a.id()}/delete" hx-confirm="그룹에서 제외할까요?">
-                                <button class="${Seed.button("ghost", "xsmall")}" aria-label="제외">${Icons.of("x", "size-4")}</button>
-                            </form>
-                        </li>
-                    @endfor
-                </ul>
-            @endif
-        </section>
+                        @endfor
+                    @endif
+                </div>
+            </div>
+        </aside>
     </div>
 `)

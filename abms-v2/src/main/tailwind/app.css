@@ -183,7 +183,7 @@
     }
 
     .stat-value {
-        @apply mt-x1 t8-bold tracking-tight text-fg-neutral tabular-nums;
+        @apply mt-x1 t6-bold tracking-tight whitespace-nowrap text-fg-neutral tabular-nums sm:t8-bold;
     }
 
     /* 단축키 표시 (Linear 풍 kbd) */
@@ -243,6 +243,20 @@
 
     .list-box {
         @apply overflow-hidden rounded-r3 border border-stroke-neutral-subtle;
+    }
+
+    /* 열 머리가 있는 리스트 (숫자 비교가 필요한 목록) */
+    .list-head {
+        @apply flex h-8 items-center gap-x3 border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 t3-medium whitespace-nowrap text-fg-neutral-subtle;
+    }
+
+    .col-num {
+        @apply w-28 shrink-0 text-right tabular-nums;
+    }
+
+    /* 비율 막대 */
+    .meter {
+        @apply flex h-1.5 w-full overflow-hidden rounded-full bg-bg-neutral-weak;
     }
 
     /* 트리 (조직도) */
