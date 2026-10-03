@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
+import kr.co.abacus.abms.common.domain.Period;
 import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.employee.EmployeeRepository;
 import kr.co.abacus.abms.notification.NotificationService;
@@ -56,7 +57,7 @@ public class ProjectAssignmentService {
                                     LocalDate startDate, @Nullable LocalDate endDate) {
         Project project = projectService.getForWrite(user, projectId);
         Employee employee = employee(employeeId);
-        checkOverlap(projectId, employeeId, startDate, endDate, -1L);
+        checkOverlap(employeeId, startDate, endDate, -1L);
         ProjectAssignment assignment = assignmentRepository.save(
                 ProjectAssignment.assign(project, employee, role, ProjectAssignment.periodOf(startDate, endDate)));
         notificationService.notifyEmployee(employeeId, NotificationType.INFO,
@@ -70,7 +71,7 @@ public class ProjectAssignmentService {
                        LocalDate startDate, @Nullable LocalDate endDate) {
         Project project = projectService.getForWrite(user, projectId);
         ProjectAssignment assignment = get(projectId, assignmentId);
-        checkOverlap(projectId, employeeId, startDate, endDate, assignmentId);
+        checkOverlap(employeeId, startDate, endDate, assignmentId);
         assignment.update(project, employee(employeeId), role, ProjectAssignment.periodOf(startDate, endDate));
     }
 
@@ -79,12 +80,18 @@ public class ProjectAssignmentService {
         get(projectId, assignmentId).softDelete(user.accountId());
     }
 
-    /** 동일 직원은 같은 프로젝트에 기간이 겹치게 투입될 수 없다. */
-    private void checkOverlap(Long projectId, Long employeeId, LocalDate startDate, @Nullable LocalDate endDate, Long excludeId) {
+    /**
+     * 투입 M/M은 투입 기간 전체를 1.0으로 계산하므로, 동일 직원은 프로젝트와 관계없이 기간이 겹치게 투입될 수 없다.
+     * (겹치면 같은 원가가 여러 프로젝트에 중복 배분된다)
+     */
+    private void checkOverlap(Long employeeId, LocalDate startDate, @Nullable LocalDate endDate, Long excludeId) {
         LocalDate to = endDate == null ? LocalDate.of(9999, 12, 31) : endDate;
-        if (assignmentRepository.existsOverlap(projectId, employeeId, startDate, to, excludeId)) {
-            throw new BusinessException("이미 같은 기간에 이 프로젝트에 투입된 직원입니다.");
-        }
+        assignmentRepository.findOverlappingOfEmployee(employeeId, startDate, to, excludeId).stream().findFirst()
+                .ifPresent(overlap -> {
+                    Period period = overlap.getPeriod();
+                    throw new BusinessException("이미 같은 기간에 다른 투입이 있는 직원입니다. ("
+                            + period.startDate() + " ~ " + (period.endDate() == null ? "" : period.endDate()) + ")");
+                });
     }
 
     private Employee employee(Long employeeId) {

@@ -113,4 +113,29 @@ class ProjectServiceTest {
         assertThat(assignmentService.assignments(joined.id())).hasSize(2);
     }
 
+    @Test
+    void 같은_직원을_다른_프로젝트에도_겹치는_기간으로_투입할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+
+        assertThatThrownBy(() -> assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV, today, today.plusMonths(2)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 같은 기간");
+        // 다른 프로젝트 투입이 끝난 다음 날부터는 투입할 수 있다.
+        assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV, today.plusMonths(1).plusDays(1), today.plusMonths(2));
+        assertThat(assignmentService.assignments(otherTeam.id())).hasSize(1);
+    }
+
+    @Test
+    void 투입_기간을_수정해_다른_프로젝트_투입과_겹치게_할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+        ProjectAssignment later = assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV,
+                today.plusMonths(1).plusDays(1), today.plusMonths(2));
+
+        assertThatThrownBy(() -> assignmentService.update(admin, otherTeam.id(), later.id(), member.id(), AssignmentRole.DEV,
+                today, today.plusMonths(2)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 같은 기간");
+        // 자기 자신과의 겹침은 무시한다.
+        assignmentService.update(admin, otherTeam.id(), later.id(), member.id(), AssignmentRole.PL,
+                today.plusMonths(1).plusDays(1), today.plusMonths(3));
+    }
+
 }
