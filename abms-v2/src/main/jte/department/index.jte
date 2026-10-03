@@ -21,7 +21,7 @@
 @template.layout.app(ctx = ctx, title = "부서", content = @`
     @template.components.pageHeader(title = "부서", subtitle = "조직도와 부서별 구성원·주관 프로젝트를 확인합니다.", actions = @`
         @if(ctx.can(PermissionCode.DEPARTMENT_WRITE))
-            <button type="button" class="${Seed.button("brandSolid")}" hx-get="/departments/new${selectedId == null ? "" : "?parentId=" + selectedId}" hx-target="#modal-body">${Icons.of("plus", "size-4")} 부서 추가</button>
+            <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/departments/new${selectedId == null ? "" : "?parentId=" + selectedId}" hx-target="#modal-body">${Icons.of("plus", "size-4")} 부서 추가</button>
         @endif
     `)
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-[18rem_1fr]">

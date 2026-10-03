@@ -149,6 +149,47 @@
 <dialog id="modal" class="m-auto w-full max-w-lg rounded-r5 bg-bg-layer-floating p-0 shadow-s3">
     <div id="modal-body"></div>
 </dialog>
+<%-- Cmd+K 명령 팔레트 --%>
+<dialog id="palette" class="mx-auto mt-[12vh] w-[calc(100%-32px)] max-w-xl overflow-hidden rounded-r5 bg-bg-layer-floating p-0 shadow-s3" aria-label="명령 팔레트">
+    <div class="flex items-center gap-x2 border-b border-stroke-neutral-subtle px-x4">
+        ${Icons.of("search", "size-4 shrink-0 text-fg-neutral-subtle")}
+        <input id="palette-input" name="q" type="text" autocomplete="off" spellcheck="false" placeholder="이동, 검색, 명령 실행…"
+               class="h-12 w-full bg-transparent t5-regular text-fg-neutral outline-none placeholder:text-fg-placeholder"
+               hx-get="/palette" hx-trigger="input changed delay:120ms, palette-open" hx-target="#palette-results" hx-sync="this:replace"
+               role="combobox" aria-controls="palette-results" aria-expanded="true">
+        <span class="kbd">esc</span>
+    </div>
+    <div id="palette-results" class="max-h-[min(60vh,420px)] overflow-y-auto p-x1_5" role="listbox"></div>
+    <div class="flex items-center gap-x4 border-t border-stroke-neutral-subtle px-x4 py-x2 t3-regular text-fg-neutral-subtle">
+        <span class="flex items-center gap-x1"><span class="kbd">↑</span><span class="kbd">↓</span> 이동</span>
+        <span class="flex items-center gap-x1"><span class="kbd">↵</span> 선택</span>
+        <span class="ml-auto flex items-center gap-x1"><span class="kbd">?</span> 단축키</span>
+    </div>
+</dialog>
+
+<%-- 단축키 도움말 --%>
+<dialog id="shortcuts" class="m-auto w-[calc(100%-32px)] max-w-md rounded-r5 bg-bg-layer-floating p-0 shadow-s3" aria-label="키보드 단축키">
+    <div class="flex items-center justify-between border-b border-stroke-neutral-subtle px-x5 py-x3">
+        <h2 class="t5-bold text-fg-neutral">키보드 단축키</h2>
+        <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" onclick="this.closest('dialog').close()" aria-label="닫기">${Icons.of("x", "size-4")}</button>
+    </div>
+    <dl class="grid grid-cols-[1fr_auto] gap-x-x4 gap-y-x2_5 px-x5 py-x4 t4-regular">
+        <dt class="text-fg-neutral-muted">명령 팔레트</dt><dd class="flex gap-x1"><span class="kbd">⌘</span><span class="kbd">K</span></dd>
+        <dt class="text-fg-neutral-muted">목록 검색창으로 이동</dt><dd><span class="kbd">/</span></dd>
+        <dt class="text-fg-neutral-muted">새로 만들기 (현재 화면)</dt><dd><span class="kbd">C</span></dd>
+        <dt class="text-fg-neutral-muted">대시보드</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">D</span></dd>
+        <dt class="text-fg-neutral-muted">직원</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">E</span></dd>
+        <dt class="text-fg-neutral-muted">부서</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">O</span></dd>
+        <dt class="text-fg-neutral-muted">프로젝트</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">P</span></dd>
+        <dt class="text-fg-neutral-muted">협력사</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">C</span></dd>
+        <dt class="text-fg-neutral-muted">손익 현황</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">S</span></dd>
+        <dt class="text-fg-neutral-muted">주간 보고서</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">R</span></dd>
+        <dt class="text-fg-neutral-muted">AI 어시스턴트</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">A</span></dd>
+        <dt class="text-fg-neutral-muted">내 정보</dt><dd class="flex gap-x1"><span class="kbd">G</span><span class="kbd">M</span></dd>
+        <dt class="text-fg-neutral-muted">단축키 보기</dt><dd><span class="kbd">?</span></dd>
+    </dl>
+</dialog>
+
 <div id="toasts" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex flex-col items-center gap-x2 px-x4" aria-live="polite"></div>
 @if(ctx.toast() != null)
     <div id="flash-toast" hidden data-type="${ctx.toast().type()}" data-message="${ctx.toast().message()}"></div>

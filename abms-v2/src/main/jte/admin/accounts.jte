@@ -15,7 +15,7 @@
 @param Long issueEmployeeId = null
 @template.layout.app(ctx = ctx, title = "계정 관리", content = @`
     @template.components.pageHeader(title = "계정 관리", subtitle = "직원에게 로그인 계정을 발급하고 비밀번호·잠금 상태를 관리합니다.", actions = @`
-        <button type="button" class="${Seed.button("brandSolid")}" hx-get="/admin/accounts/issue${issueEmployeeId == null ? "" : "?employeeId=" + issueEmployeeId}" hx-target="#modal-body"
+        <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/admin/accounts/issue${issueEmployeeId == null ? "" : "?employeeId=" + issueEmployeeId}" hx-target="#modal-body"
                 hx-trigger="click${issueEmployeeId == null ? "" : ", load"}">${Icons.of("plus", "size-4")} 계정 발급</button>
     `)
     <div class="card overflow-hidden" hx-get="/admin/accounts" hx-trigger="accountsChanged from:body" hx-select="#account-table" hx-target="#account-table" hx-swap="outerHTML">

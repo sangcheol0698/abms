@@ -13,7 +13,7 @@
 @template.layout.app(ctx = ctx, title = "협력사", content = @`
     @template.components.pageHeader(title = "협력사", subtitle = "프로젝트 고객사와 파트너 정보를 관리합니다.", actions = @`
         @if(ctx.can(PermissionCode.PARTY_WRITE))
-            <a href="/parties/new" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 협력사 등록</a>
+            <a href="/parties/new" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 협력사 등록</a>
         @endif
     `)
     <div class="card">

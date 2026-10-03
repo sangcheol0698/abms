@@ -246,6 +246,129 @@
     document.body.addEventListener('htmx:afterSettle', showFlash);
 })();
 
+// ---------------------------------------------------------------------
+// Cmd+K 명령 팔레트 + 키보드 단축키
+// ---------------------------------------------------------------------
+(function () {
+    'use strict';
+    const palette = () => document.getElementById('palette');
+    const items = () => Array.from(document.querySelectorAll('#palette-results [data-palette-item]'));
+    let active = 0;
+
+    function setActive(index) {
+        const list = items();
+        if (!list.length) return;
+        active = (index + list.length) % list.length;
+        list.forEach((el, i) => {
+            if (i === active) {
+                el.dataset.active = '';
+                el.scrollIntoView({block: 'nearest'});
+            } else {
+                delete el.dataset.active;
+            }
+        });
+    }
+
+    function openPalette() {
+        const dialog = palette();
+        if (!dialog || dialog.open) return;
+        const input = document.getElementById('palette-input');
+        input.value = '';
+        dialog.showModal();
+        input.focus();
+        htmx.trigger(input, 'palette-open');
+    }
+
+    function closePalette() {
+        const dialog = palette();
+        if (dialog && dialog.open) dialog.close();
+    }
+
+    function runAction(action) {
+        closePalette();
+        if (action.startsWith('theme:')) window.abmsTheme(action.substring(6));
+        if (action === 'shortcuts') document.getElementById('shortcuts').showModal();
+    }
+
+    window.abmsPalette = {open: openPalette, close: closePalette};
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('[data-open-palette]')) {
+            e.preventDefault();
+            openPalette();
+            return;
+        }
+        const item = e.target.closest('#palette-results [data-palette-item]');
+        if (!item) return;
+        if (item.dataset.paletteAction) {
+            runAction(item.dataset.paletteAction);
+        } else {
+            closePalette();
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        const item = e.target.closest && e.target.closest('#palette-results [data-palette-item]');
+        if (item) setActive(items().indexOf(item));
+    });
+
+    document.body.addEventListener('htmx:afterSwap', (e) => {
+        if (e.detail.target && e.detail.target.id === 'palette-results') setActive(0);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (palette() && palette().open) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+            if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+            if (e.key === 'Enter' && !e.isComposing) {
+                const item = items()[active];
+                if (item) { e.preventDefault(); item.click(); }
+            }
+        }
+    });
+
+    // 전역 단축키 — 입력 중이거나 다른 대화상자가 열려 있으면 무시한다.
+    const GO = {d: '/', e: '/employees', o: '/departments', p: '/projects', c: '/parties', s: '/summary', r: '/reports', a: '/assistant', m: '/me'};
+    let goPending = false;
+    let goTimer;
+
+    function typing(target) {
+        return target.closest('input, textarea, select, [contenteditable="true"]') !== null;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            palette() && palette().open ? closePalette() : openPalette();
+            return;
+        }
+        if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing || typing(e.target) || document.querySelector('dialog[open]')) return;
+        const key = e.key.toLowerCase();
+        if (goPending) {
+            goPending = false;
+            clearTimeout(goTimer);
+            if (GO[key] && document.querySelector('a[href="' + GO[key] + '"]')) {
+                e.preventDefault();
+                document.querySelector('a[href="' + GO[key] + '"]').click();
+            }
+            return;
+        }
+        if (key === 'g') {
+            goPending = true;
+            goTimer = setTimeout(() => goPending = false, 1200);
+        } else if (key === '/') {
+            const search = document.querySelector('main input[type="search"]');
+            if (search) { e.preventDefault(); search.focus(); search.select(); }
+        } else if (key === 'c') {
+            const create = document.querySelector('[data-shortcut="create"]');
+            if (create) { e.preventDefault(); create.click(); }
+        } else if (e.key === '?') {
+            e.preventDefault();
+            document.getElementById('shortcuts').showModal();
+        }
+    });
+})();
+
 // 모바일 사이드바 열기/닫기 (백드롭 클릭·Esc 로 닫힘)
 window.abmsSidebar = function (open) {
     document.getElementById('sidebar').classList.toggle('hidden', !open);

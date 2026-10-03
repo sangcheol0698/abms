@@ -23,7 +23,7 @@
             <a href="/employees/export${search.exportQuery()}" hx-boost="false" class="${Seed.button("neutralOutline")}">${Icons.of("download", "size-4")} CSV 내보내기</a>
         @endif
         @if(ctx.can(PermissionCode.EMPLOYEE_WRITE))
-            <a href="/employees/new" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 직원 등록</a>
+            <a href="/employees/new" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 직원 등록</a>
         @endif
     `)
 

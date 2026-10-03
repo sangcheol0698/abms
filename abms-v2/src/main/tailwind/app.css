@@ -191,6 +191,23 @@
         @apply inline-flex h-x5 min-w-5 items-center justify-center rounded-r1 border border-stroke-neutral-subtle bg-bg-layer-default px-x1 t2-medium text-fg-neutral-subtle;
     }
 
+    /* 명령 팔레트 */
+    .palette-group {
+        @apply px-x2_5 pt-x2_5 pb-x1 t3-medium text-fg-neutral-subtle;
+    }
+
+    .palette-item {
+        @apply flex h-9 w-full cursor-pointer items-center gap-x2_5 rounded-r2 px-x2_5 text-left t4-regular text-fg-neutral;
+    }
+
+    .palette-item[data-active] {
+        @apply bg-bg-transparent-selected;
+    }
+
+    #palette::backdrop, #shortcuts::backdrop {
+        background: var(--seed-color-bg-overlay-muted);
+    }
+
     .theme-option {
         @apply flex cursor-pointer flex-col items-center gap-x1 rounded-r1_5 py-x1_5 t3-regular text-fg-neutral-subtle hover:bg-bg-layer-floating-pressed;
     }

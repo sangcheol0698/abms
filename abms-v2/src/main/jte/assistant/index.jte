@@ -13,7 +13,7 @@
     <div class="-my-6 flex h-[calc(100vh-4rem)] gap-4 py-4 lg:-mx-2">
         <aside class="card hidden w-72 shrink-0 flex-col overflow-hidden md:flex">
             <div class="border-b border-stroke-neutral-subtle p-3">
-                <a href="/assistant" class="${Seed.button("brandSolid")} w-full">${Icons.of("plus", "size-4")} 새 대화</a>
+                <a href="/assistant" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")} w-full">${Icons.of("plus", "size-4")} 새 대화</a>
             </div>
             <nav class="flex-1 overflow-y-auto p-2" aria-label="대화 목록">
                 @if(sessions.isEmpty())
