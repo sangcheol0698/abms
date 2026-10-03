@@ -49,6 +49,8 @@ Excel로 관리하던 손익 계산(수작업 집계, 귀속 기준 불일치, �
 | ![직원](docs/screenshots/employees.png) | ![부서](docs/screenshots/departments.png) |
 | **권한 그룹 (권한 × 범위)** | **로그인** |
 | ![권한 그룹](docs/screenshots/permission-group.png) | ![로그인](docs/screenshots/login.png) |
+| **명령 팔레트 (⌘K)** | **다크 모드** |
+| ![명령 팔레트](docs/screenshots/command-palette.png) | ![다크 모드](docs/screenshots/dark-mode.png) |
 
 ## 핵심 업무 규칙
 
