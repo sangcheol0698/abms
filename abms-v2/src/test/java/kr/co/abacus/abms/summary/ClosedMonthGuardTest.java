@@ -166,4 +166,17 @@ class ClosedMonthGuardTest {
         assertThat(policy.getOverheadRate()).isEqualByComparingTo("0.2");
     }
 
+    @Test
+    void 마감_월에_재직한_직원은_삭제하거나_복구할_수_없다() {
+        Employee newcomer = fixtures.employee(fixtures.department("다른팀", null), "신규");
+        fixtures.payroll(newcomer, 60_000_000, LocalDate.of(2025, 1, 1));
+        employeeService.delete(admin, newcomer.id());
+        closingService.close(admin, FEB);
+
+        assertThatThrownBy(() -> employeeService.restore(admin, newcomer.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("직원 복구");
+        assertThatThrownBy(() -> employeeService.delete(admin, member.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("직원 삭제");
+    }
+
 }

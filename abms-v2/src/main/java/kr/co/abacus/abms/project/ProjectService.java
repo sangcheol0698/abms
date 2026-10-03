@@ -1,5 +1,6 @@
 package kr.co.abacus.abms.project;
 
+import java.time.LocalDate;
 import java.time.Year;
 import java.util.List;
 
@@ -133,9 +134,18 @@ public class ProjectService {
         getForWrite(user, id).cancel();
     }
 
-    /** 프로젝트와 하위 매출 계획/투입을 함께 삭제한다. 손익 집계는 다음 재집계 시 제거된다. */
+    /**
+     * 프로젝트와 하위 매출 계획/투입을 함께 삭제한다. 손익 집계는 다음 재집계 시 제거된다.
+     * 삭제하면 실적이 집계에서 사라지므로, 발행된 매출이나 이미 시작된 투입이 있으면 삭제 대신 취소 처리해야 한다.
+     */
     public void delete(LoginUser user, Long id) {
         Project project = getForWrite(user, id);
+        if (revenuePlanRepository.existsByProjectIdAndIssuedTrue(id)) {
+            throw new BusinessException("발행된 매출이 있는 프로젝트는 삭제할 수 없습니다. 프로젝트를 취소 처리하세요.");
+        }
+        if (assignmentRepository.existsByProjectIdAndPeriodStartDateLessThanEqual(id, LocalDate.now())) {
+            throw new BusinessException("이미 시작된 투입이 있는 프로젝트는 삭제할 수 없습니다. 프로젝트를 취소 처리하세요.");
+        }
         revenuePlanRepository.findAllByProjectIdOrderBySequenceAsc(id).forEach(plan -> plan.softDelete(user.accountId()));
         assignmentRepository.findAllByProjectIdOrderByPeriodStartDateAsc(id).forEach(a -> a.softDelete(user.accountId()));
         project.softDelete(user.accountId());

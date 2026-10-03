@@ -19,6 +19,7 @@ import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.department.DepartmentTree;
+import kr.co.abacus.abms.project.ProjectAssignmentRepository;
 import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.DataScope;
 import kr.co.abacus.abms.security.LoginUser;
@@ -39,17 +40,19 @@ public class EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final AccessService accessService;
     private final ClosedMonthGuard closedMonthGuard;
+    private final ProjectAssignmentRepository assignmentRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository, PayrollRepository payrollRepository,
                            PositionHistoryRepository positionHistoryRepository,
                            DepartmentRepository departmentRepository, AccessService accessService,
-                           ClosedMonthGuard closedMonthGuard) {
+                           ClosedMonthGuard closedMonthGuard, ProjectAssignmentRepository assignmentRepository) {
         this.employeeRepository = employeeRepository;
         this.payrollRepository = payrollRepository;
         this.positionHistoryRepository = positionHistoryRepository;
         this.departmentRepository = departmentRepository;
         this.accessService = accessService;
         this.closedMonthGuard = closedMonthGuard;
+        this.assignmentRepository = assignmentRepository;
     }
 
     @Transactional(readOnly = true)
@@ -184,8 +187,14 @@ public class EmployeeService {
         recordPositionChange(employee, effectiveDate);
     }
 
+    /** 삭제된 직원은 원가 집계에서 빠지므로, 투입 이력이 있는 직원은 삭제 대신 퇴사 처리해야 한다. */
     public void delete(LoginUser user, Long id) {
-        getForWrite(user, id).softDelete(user.accountId());
+        Employee employee = getForWrite(user, id);
+        if (assignmentRepository.existsByEmployeeId(id)) {
+            throw new BusinessException("프로젝트 투입 이력이 있는 직원은 삭제할 수 없습니다. 퇴사 처리하세요.");
+        }
+        checkEmploymentPeriodOpen(employee, "직원 삭제");
+        employee.softDelete(user.accountId());
     }
 
     public void restore(LoginUser user, Long id) {
@@ -194,6 +203,7 @@ public class EmployeeService {
         if (employeeRepository.existsByEmailAndDeletedFalse(employee.originalEmail())) {
             throw new BusinessException("같은 이메일의 직원이 이미 있어 복구할 수 없습니다: " + employee.originalEmail());
         }
+        checkEmploymentPeriodOpen(employee, "직원 복구");
         employee.restore();
     }
 
@@ -243,6 +253,13 @@ public class EmployeeService {
     private void requireDepartment(Long departmentId) {
         if (!departmentRepository.existsById(departmentId)) {
             throw NotFoundException.of("부서", departmentId);
+        }
+    }
+
+    /** 급여가 있는 직원은 재직 기간 동안 전사 원가에 포함되므로, 그 기간에 마감된 월이 있으면 막는다. */
+    private void checkEmploymentPeriodOpen(Employee employee, String subject) {
+        if (!payrollRepository.findAllByEmployeeIdOrderByPeriodStartDateDesc(employee.id()).isEmpty()) {
+            closedMonthGuard.checkOpen(employee.getJoinDate(), employee.getResignationDate(), subject);
         }
     }
 

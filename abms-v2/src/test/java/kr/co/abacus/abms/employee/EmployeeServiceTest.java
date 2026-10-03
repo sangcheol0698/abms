@@ -16,6 +16,7 @@ import kr.co.abacus.abms.access.PermissionScope;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.department.Department;
+import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.security.LoginUser;
 import kr.co.abacus.abms.support.Fixtures;
 import kr.co.abacus.abms.support.IntegrationTest;
@@ -134,6 +135,17 @@ class EmployeeServiceTest {
 
         employeeService.restore(admin, teamMember.id());
         assertThat(teamMember.getEmail()).isEqualTo(email);
+    }
+
+    @Test
+    void 프로젝트_투입_이력이_있는_직원은_삭제할_수_없다() {
+        LoginUser admin = Fixtures.admin(manager);
+        Project project = fixtures.project(team, 100_000_000, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31));
+        fixtures.assign(project, teamMember, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 6, 30));
+
+        assertThatThrownBy(() -> employeeService.delete(admin, teamMember.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("퇴사 처리");
+        assertThat(teamMember.isDeleted()).isFalse();
     }
 
     private static EmployeeProfile profileOf(Employee e, Long departmentId) {

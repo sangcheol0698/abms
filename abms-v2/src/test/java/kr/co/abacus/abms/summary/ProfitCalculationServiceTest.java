@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.summary;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.employee.Employee;
@@ -134,15 +136,27 @@ class ProfitCalculationServiceTest {
 
     @Test
     void 삭제된_프로젝트의_집계는_재집계_시_제거된다() {
+        Project empty = fixtures.project(lead, 100_000_000, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
         calculationService.calculate(FEB);
-        projectService.delete(Fixtures.admin(leadMember), project.id());
+        projectService.delete(Fixtures.admin(leadMember), empty.id());
 
         CalculationResult result = calculationService.calculate(FEB);
 
         assertThat(result.removedCount()).isEqualTo(1);
-        assertThat(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id())).isEmpty();
-        CompanyMonthlyCostSummary company = companySummaryRepository.findByTargetMonth(FEB.atDay(1)).orElseThrow();
-        assertThat(company.getAllocatedFullTimeCost()).isEqualTo(Money.ZERO);
+        assertThat(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(empty.id())).isEmpty();
+        assertThat(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id())).hasSize(1);
+    }
+
+    @Test
+    void 실적이_있는_프로젝트는_삭제할_수_없어_집계가_유지된다() {
+        calculationService.calculate(FEB);
+
+        assertThatThrownBy(() -> projectService.delete(Fixtures.admin(leadMember), project.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("취소 처리");
+
+        calculationService.calculate(FEB);
+        MonthlyRevenueSummary summary = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id()));
+        assertThat(summary.getRevenueAmount()).isEqualTo(Money.wons(100_000_000));
     }
 
     @Test

@@ -12,6 +12,10 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
 
     List<ProjectAssignment> findAllByEmployeeIdOrderByPeriodStartDateDesc(Long employeeId);
 
+    boolean existsByEmployeeId(Long employeeId);
+
+    boolean existsByProjectIdAndPeriodStartDateLessThanEqual(Long projectId, LocalDate date);
+
     @Query("""
             select a from ProjectAssignment a
             where a.period.startDate <= :to and (a.period.endDate is null or a.period.endDate >= :from)

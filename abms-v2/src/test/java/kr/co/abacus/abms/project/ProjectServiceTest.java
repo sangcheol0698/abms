@@ -138,4 +138,26 @@ class ProjectServiceTest {
                 today.plusMonths(1).plusDays(1), today.plusMonths(3));
     }
 
+    @Test
+    void 이미_시작된_투입이_있는_프로젝트는_삭제할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+
+        assertThatThrownBy(() -> projectService.delete(admin, joined.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 시작된 투입");
+        // 시작 전인 투입만 있으면 함께 삭제된다.
+        Employee newcomer = fixtures.employee(teamA, "신규");
+        fixtures.assign(otherTeam, newcomer, today.plusDays(1), today.plusMonths(1));
+        projectService.delete(admin, otherTeam.id());
+        assertThat(assignmentService.assignments(otherTeam.id())).isEmpty();
+    }
+
+    @Test
+    void 발행된_매출이_있는_프로젝트는_삭제할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+        fixtures.revenue(otherTeam, 1, today, 10_000_000, true);
+
+        assertThatThrownBy(() -> projectService.delete(admin, otherTeam.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("발행된 매출");
+    }
+
 }
