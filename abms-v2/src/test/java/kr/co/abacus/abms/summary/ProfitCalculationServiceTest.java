@@ -1,0 +1,162 @@
+package kr.co.abacus.abms.summary;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import kr.co.abacus.abms.common.domain.Money;
+import kr.co.abacus.abms.department.Department;
+import kr.co.abacus.abms.employee.Employee;
+import kr.co.abacus.abms.project.Project;
+import kr.co.abacus.abms.project.ProjectService;
+import kr.co.abacus.abms.security.LoginUser;
+import kr.co.abacus.abms.support.Fixtures;
+import kr.co.abacus.abms.support.IntegrationTest;
+
+/**
+ * 월 손익 집계 규칙 검증. (2026년 정직원 원가 정책: 제경비 10%, 판관비 5% → 월급 × 1.15)
+ */
+@IntegrationTest
+class ProfitCalculationServiceTest {
+
+    private static final YearMonth FEB = YearMonth.of(2026, 2);
+
+    @Autowired
+    private ProfitCalculationService calculationService;
+
+    @Autowired
+    private MonthlyRevenueSummaryRepository summaryRepository;
+
+    @Autowired
+    private CompanyMonthlyCostSummaryRepository companySummaryRepository;
+
+    @Autowired
+    private EmployeeMonthlyCostRepository monthlyCostRepository;
+
+    @Autowired
+    private MonthClosingService closingService;
+
+    @Autowired
+    private ProjectService projectService;
+
+    @Autowired
+    private Fixtures fixtures;
+
+    private Department lead;
+    private Employee leadMember;
+    private Employee supporter;
+    private Employee idle;
+    private Project project;
+
+    @BeforeEach
+    void setUp() {
+        Department root = fixtures.department("회사", null);
+        lead = fixtures.department("주관팀", root);
+        Department support = fixtures.department("지원팀", root);
+
+        leadMember = fixtures.employee(lead, "주관팀원");
+        supporter = fixtures.employee(support, "지원팀원");
+        idle = fixtures.employee(support, "대기인력");
+        fixtures.payroll(leadMember, 120_000_000, LocalDate.of(2025, 1, 1)); // 월 1,000만 → 원가 1,150만
+        fixtures.payroll(supporter, 60_000_000, LocalDate.of(2025, 1, 1));   // 월 500만 → 원가 575만
+        fixtures.payroll(idle, 36_000_000, LocalDate.of(2025, 1, 1));        // 월 300만 → 원가 345만
+
+        project = fixtures.project(lead, 1_000_000_000, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
+        fixtures.revenue(project, 1, LocalDate.of(2026, 2, 10), 100_000_000, true);
+        fixtures.revenue(project, 2, LocalDate.of(2026, 2, 20), 50_000_000, false);   // 미발행 → 제외
+        fixtures.revenue(project, 3, LocalDate.of(2026, 3, 10), 200_000_000, true);   // 다른 월 → 제외
+        fixtures.assign(project, leadMember, LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28));   // 1.0 M/M
+        fixtures.assign(project, supporter, LocalDate.of(2026, 2, 15), LocalDate.of(2026, 2, 28));   // 0.5 M/M
+    }
+
+    @Test
+    void 발행된_매출과_투입_MM_기준_비용을_주관_부서에_귀속한다() {
+        CalculationResult result = calculationService.calculate(FEB);
+
+        assertThat(result.skipped()).isFalse();
+        assertThat(result.warnings()).isEmpty();
+        MonthlyRevenueSummary summary = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id()));
+        assertThat(summary.getTargetMonth()).isEqualTo(LocalDate.of(2026, 2, 1));
+        assertThat(summary.getRevenueAmount()).isEqualTo(Money.wons(100_000_000));
+        assertThat(summary.getCostAmount()).isEqualTo(Money.wons(11_500_000 + 2_875_000));
+        assertThat(summary.getProfitAmount()).isEqualTo(Money.wons(100_000_000 - 14_375_000));
+        assertThat(summary.getLeadDepartmentId()).isEqualTo(lead.id()); // 지원 인력 비용도 주관 부서로
+    }
+
+    @Test
+    void 직원_월_원가를_스냅샷으로_저장한다() {
+        calculationService.calculate(FEB);
+
+        EmployeeMonthlyCost cost = monthlyCostRepository.findByEmployeeIdAndTargetMonth(leadMember.id(), FEB.atDay(1)).orElseThrow();
+        assertThat(cost.getMonthlySalary()).isEqualTo(Money.wons(10_000_000));
+        assertThat(cost.getOverheadCost()).isEqualTo(Money.wons(1_000_000));
+        assertThat(cost.getSgaCost()).isEqualTo(Money.wons(500_000));
+        assertThat(cost.getTotalCost()).isEqualTo(Money.wons(11_500_000));
+    }
+
+    @Test
+    void 프로젝트에_배분되지_않은_정직원_비용을_집계한다() {
+        calculationService.calculate(FEB);
+
+        CompanyMonthlyCostSummary company = companySummaryRepository.findByTargetMonth(FEB.atDay(1)).orElseThrow();
+        assertThat(company.getTotalFullTimeCost()).isEqualTo(Money.wons(11_500_000 + 5_750_000 + 3_450_000));
+        assertThat(company.getAllocatedFullTimeCost()).isEqualTo(Money.wons(14_375_000));
+        assertThat(company.getUnallocatedFullTimeCost()).isEqualTo(Money.wons(6_325_000));
+    }
+
+    @Test
+    void 같은_월을_다시_집계해도_결과가_같다() {
+        calculationService.calculate(FEB);
+        calculationService.calculate(FEB);
+
+        assertThat(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id())).hasSize(1);
+        assertThat(monthlyCostRepository.findAllByTargetMonth(FEB.atDay(1))).hasSize(3);
+    }
+
+    @Test
+    void 마감된_월은_집계하지_않는다() {
+        LoginUser admin = Fixtures.admin(leadMember);
+        closingService.close(admin, FEB);
+        fixtures.revenue(project, 4, LocalDate.of(2026, 2, 25), 30_000_000, true);
+
+        CalculationResult result = calculationService.calculate(FEB);
+
+        assertThat(result.skipped()).isTrue();
+        MonthlyRevenueSummary summary = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id()));
+        assertThat(summary.getRevenueAmount()).isEqualTo(Money.wons(100_000_000)); // 마감 시점 값 유지
+    }
+
+    @Test
+    void 삭제된_프로젝트의_집계는_재집계_시_제거된다() {
+        calculationService.calculate(FEB);
+        projectService.delete(Fixtures.admin(leadMember), project.id());
+
+        CalculationResult result = calculationService.calculate(FEB);
+
+        assertThat(result.removedCount()).isEqualTo(1);
+        assertThat(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id())).isEmpty();
+        CompanyMonthlyCostSummary company = companySummaryRepository.findByTargetMonth(FEB.atDay(1)).orElseThrow();
+        assertThat(company.getAllocatedFullTimeCost()).isEqualTo(Money.ZERO);
+    }
+
+    @Test
+    void 급여_정보가_없는_직원은_경고로_알린다() {
+        fixtures.employee(lead, "급여없음");
+
+        CalculationResult result = calculationService.calculate(FEB);
+
+        assertThat(result.warnings()).anyMatch(w -> w.contains("급여 정보 없음") && w.contains("급여없음"));
+    }
+
+    private static <T> T only(List<T> items) {
+        assertThat(items).hasSize(1);
+        return items.getFirst();
+    }
+
+}

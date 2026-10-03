@@ -1,0 +1,12 @@
+{
+  "name": "abms-ui",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/main/tailwind/app.css -o ./src/main/resources/static/css/app.css --minify",
+    "watch:css": "tailwindcss -i ./src/main/tailwind/app.css -o ./src/main/resources/static/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

@@ -1,0 +1,42 @@
+name: CI (abms-v2)
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'abms-v2/**', '.github/workflows/ci-v2.yml' ]
+  pull_request:
+    paths: [ 'abms-v2/**', '.github/workflows/ci-v2.yml' ]
+
+defaults:
+  run:
+    working-directory: abms-v2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+          cache-dependency-path: abms-v2/**/*.gradle.kts
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: abms-v2/package-lock.json
+
+      # Tailwind CSS 빌드 → 컴파일(JTE 템플릿 포함) → 테스트(Testcontainers MySQL)
+      - name: Build and test
+        run: ./gradlew build --no-daemon
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: abms-v2/build/reports/tests/test
