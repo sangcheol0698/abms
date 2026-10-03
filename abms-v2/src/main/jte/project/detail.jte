@@ -26,9 +26,9 @@
         <a href="/projects" class="hover:text-fg-neutral-muted">프로젝트</a>${Icons.of("chevron-right", "size-3")}<span>${project.getName()}</span>
     `, actions = @`
         @if(canWrite)
-            <a href="/projects/${project.id()}/edit" class="${Seed.button("neutralWeak")}">${Icons.of("pencil", "size-4")} 수정</a>
+            <a href="/projects/${project.id()}/edit" class="${Seed.button("neutralOutline")}">${Icons.of("pencil", "size-4")} 수정</a>
             <details class="relative" data-dropdown>
-                <summary class="${Seed.button("neutralWeak")}">더보기 ${Icons.of("chevron-down", "size-4")}</summary>
+                <summary class="${Seed.button("neutralOutline")}">더보기 ${Icons.of("chevron-down", "size-4")}</summary>
                 <div class="dropdown-panel w-44 py-1.5">
                     @if(!project.getStatus().isClosed())
                         <form method="post" action="/projects/${project.id()}/complete" hx-confirm="프로젝트를 완료 처리할까요?">

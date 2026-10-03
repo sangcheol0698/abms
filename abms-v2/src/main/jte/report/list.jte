@@ -28,7 +28,7 @@
                                 </div>
                                 <div class="flex shrink-0 gap-1">
                                     @if(r.getGenerator() == WeeklyReport.Generator.AI)
-                                        <span class="${Seed.badge("brand")}">${Icons.of("sparkles", "size-3")} AI</span>
+                                        <span class="${Seed.badge("neutral")} bg-bg-magic-weak">${Icons.of("sparkles", "size-3 text-fg-brand")} AI</span>
                                     @else
                                         <span class="${Seed.badge("neutral")}">템플릿</span>
                                     @endif

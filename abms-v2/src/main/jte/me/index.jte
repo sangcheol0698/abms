@@ -23,7 +23,7 @@
 @param FormErrors errors
 @template.layout.app(ctx = ctx, title = "내 정보", content = @`
     @template.components.pageHeader(title = "내 정보", actions = @`
-        <a href="/employees/${employee.id()}" class="${Seed.button("neutralWeak")}">${Icons.of("user", "size-4")} 직원 상세 보기</a>
+        <a href="/employees/${employee.id()}" class="${Seed.button("neutralOutline")}">${Icons.of("user", "size-4")} 직원 상세 보기</a>
     `)
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div class="space-y-4">
@@ -66,7 +66,7 @@
                                 @if(a.isActiveOn(java.time.LocalDate.now()))
                                     <span class="${Seed.badge("informative")}">투입 중</span>
                                 @elseif(a.getPeriod().startDate().isAfter(java.time.LocalDate.now()))
-                                    <span class="${Seed.badge("brand")}">예정</span>
+                                    <span class="${Seed.badge("neutral", "outline")}">예정</span>
                                 @else
                                     <span class="${Seed.badge("neutral")}">종료</span>
                                 @endif

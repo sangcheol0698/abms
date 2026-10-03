@@ -37,7 +37,7 @@
                     </td>
                     <td>
                         ${row.departmentName()}
-                        @if(row.supporting())<span class="${Seed.badge("brand")} ml-1">지원</span>@endif
+                        @if(row.supporting())<span class="${Seed.badge("neutral", "outline")} ml-x1">지원</span>@endif
                     </td>
                     <td>${row.assignment().getRole() == null ? "-" : row.assignment().getRole().label()}</td>
                     <td class="tabular-nums">${Ui.period(row.assignment().getPeriod().startDate(), row.assignment().getPeriod().endDate())}</td>
@@ -45,7 +45,7 @@
                         @if(row.assignment().isActiveOn(today))
                             <span class="${Seed.badge("informative")}">투입 중</span>
                         @elseif(row.assignment().getPeriod().startDate().isAfter(today))
-                            <span class="${Seed.badge("brand")}">예정</span>
+                            <span class="${Seed.badge("neutral", "outline")}">예정</span>
                         @else
                             <span class="${Seed.badge("neutral")}">종료</span>
                         @endif

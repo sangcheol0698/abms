@@ -31,9 +31,9 @@
                     <li>
                         <a href="/departments?selected=${node.department().id()}"
                            hx-get="/departments/${node.department().id()}" hx-target="#department-detail" hx-push-url="/departments?selected=${node.department().id()}"
-                           onclick="document.querySelectorAll('[data-dept-link]').forEach(e => e.classList.remove('bg-bg-brand-weak','text-fg-brand')); this.classList.add('bg-bg-brand-weak','text-fg-brand')"
+                           onclick="document.querySelectorAll('[data-dept-link]').forEach(e => e.classList.remove('bg-bg-transparent-selected','t4-bold','text-fg-neutral')); this.classList.add('bg-bg-transparent-selected','t4-bold','text-fg-neutral')"
                            data-dept-link
-                           class="flex items-center gap-1.5 rounded-lg py-1.5 pr-2 text-sm hover:bg-bg-neutral-muted ${node.department().id().equals(selectedId) ? "bg-bg-brand-weak text-fg-brand" : "text-fg-neutral-muted"}"
+                           class="flex items-center gap-1.5 rounded-r2 py-x1_5 pr-x2 t4-regular hover:bg-bg-transparent-pressed ${node.department().id().equals(selectedId) ? "bg-bg-transparent-selected t4-bold text-fg-neutral" : "text-fg-neutral-muted"}"
                            style="padding-left: ${8 + node.depth() * 14}px">
                             @if(tree.children(node.department().id()).isEmpty())
                                 <span class="size-1.5 rounded-full bg-palette-gray-400"></span>

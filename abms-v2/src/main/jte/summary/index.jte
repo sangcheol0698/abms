@@ -14,11 +14,11 @@
 @template.layout.app(ctx = ctx, title = "손익 현황", content = @`
     @template.components.pageHeader(title = "손익 현황", subtitle = "프로젝트 주관 부서 기준 월 손익 · 청구(발행) 기준 매출, 투입 M/M 기준 비용", actions = @`
         <div class="flex items-center gap-1">
-            <a href="/summary?month=${report.month().minusMonths(1).toString()}" class="${Seed.button("neutralWeak")} !px-2.5" aria-label="이전 달">${Icons.of("chevron-left", "size-4")}</a>
+            <a href="/summary?month=${report.month().minusMonths(1).toString()}" class="${Seed.button("neutralOutline")} !px-2.5" aria-label="이전 달">${Icons.of("chevron-left", "size-4")}</a>
             <form action="/summary" method="get">
                 <input type="month" name="month" value="${month}" class="input !w-auto" onchange="this.form.requestSubmit()" aria-label="조회 월">
             </form>
-            <a href="/summary?month=${report.month().plusMonths(1).toString()}" class="${Seed.button("neutralWeak")} !px-2.5" aria-label="다음 달">${Icons.of("chevron-right", "size-4")}</a>
+            <a href="/summary?month=${report.month().plusMonths(1).toString()}" class="${Seed.button("neutralOutline")} !px-2.5" aria-label="다음 달">${Icons.of("chevron-right", "size-4")}</a>
         </div>
         @if(canManage)
             @if(!report.closed())
@@ -29,13 +29,13 @@
                 @if(isPast)
                     <form method="post" action="/summary/close" hx-confirm="${month} 손익을 최신 값으로 재집계한 뒤 마감할까요? 마감된 월은 자동 재집계되지 않습니다.">
                         <input type="hidden" name="month" value="${month}">
-                        <button class="${Seed.button("neutralWeak")}">${Icons.of("lock", "size-4")} 마감</button>
+                        <button class="${Seed.button("neutralOutline")}">${Icons.of("lock", "size-4")} 마감</button>
                     </form>
                 @endif
             @else
                 <form method="post" action="/summary/reopen" hx-confirm="${month} 마감을 해제할까요?">
                     <input type="hidden" name="month" value="${month}">
-                    <button class="${Seed.button("neutralWeak")}">마감 해제</button>
+                    <button class="${Seed.button("neutralOutline")}">마감 해제</button>
                 </form>
             @endif
         @endif

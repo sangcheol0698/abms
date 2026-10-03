@@ -36,11 +36,11 @@
             @endif
         @else
             @if(canWrite || canEditOwn)
-                <a href="/employees/${employee.id()}/edit" class="${Seed.button("neutralWeak")}">${Icons.of("pencil", "size-4")} 정보 수정</a>
+                <a href="/employees/${employee.id()}/edit" class="${Seed.button("neutralOutline")}">${Icons.of("pencil", "size-4")} 정보 수정</a>
             @endif
             @if(canWrite)
                 <details class="relative" data-dropdown>
-                    <summary class="${Seed.button("neutralWeak")}">상태 변경 ${Icons.of("chevron-down", "size-4")}</summary>
+                    <summary class="${Seed.button("neutralOutline")}">상태 변경 ${Icons.of("chevron-down", "size-4")}</summary>
                     <div class="dropdown-panel w-48 py-1.5">
                         @if(employee.getStatus() != EmployeeStatus.RESIGNED)
                             <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-bg-neutral-muted" hx-get="/employees/${employee.id()}/promote" hx-target="#modal-body">승진 / 등급 변경</button>
@@ -150,7 +150,7 @@
                                         @if(a.isActiveOn(java.time.LocalDate.now()))
                                             <span class="${Seed.badge("informative")}">투입 중</span>
                                         @elseif(a.getPeriod().startDate().isAfter(java.time.LocalDate.now()))
-                                            <span class="${Seed.badge("brand")}">예정</span>
+                                            <span class="${Seed.badge("neutral", "outline")}">예정</span>
                                         @else
                                             <span class="${Seed.badge("neutral")}">종료</span>
                                         @endif

@@ -13,15 +13,17 @@
 </head>
 <body class="h-full" hx-boost="true" hx-headers="${ctx.csrfHeaderJson()}">
 <div class="flex min-h-full">
+    <%-- 모바일 메뉴 백드롭 --%>
+    <div id="sidebar-backdrop" class="fixed inset-0 z-[35] hidden bg-bg-overlay-muted lg:hidden" onclick="abmsSidebar(false)"></div>
     <%-- 사이드바 (SEED Side Navigation) --%>
-    <aside id="sidebar" class="seed-side-navigation__root seed-side-navigation__root--tone_neutral fixed! inset-y-0 left-0 z-40 hidden lg:flex">
+    <aside id="sidebar" class="seed-side-navigation__root seed-side-navigation__root--tone_neutral fixed! inset-y-0 left-0 z-40 hidden shadow-s3 lg:flex lg:shadow-none">
         <div class="seed-side-navigation__header flex items-center gap-x2_5 px-x4">
             <a href="/" class="flex items-center gap-x2_5">
                 <span class="flex size-x8 items-center justify-center rounded-r2 bg-bg-brand-solid t4-bold text-fg-on-brand-solid">A</span>
                 <span class="t6-bold text-fg-neutral">ABMS</span>
             </a>
             <button type="button" class="${Seed.iconButton("ghost", "small")} ml-auto lg:hidden" aria-label="메뉴 닫기"
-                    onclick="document.getElementById('sidebar').classList.add('hidden')">
+                    onclick="abmsSidebar(false)">
                 ${Icons.of("x", "size-5")}
             </button>
         </div>
@@ -73,7 +75,7 @@
         <%-- 상단 바 --%>
         <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x2 border-b border-stroke-neutral-subtle bg-bg-layer-default px-x4 sm:px-x6">
             <button type="button" class="${Seed.iconButton("ghost", "small")} -ml-x2 lg:hidden" aria-label="메뉴 열기"
-                    onclick="document.getElementById('sidebar').classList.remove('hidden')">
+                    onclick="abmsSidebar(true)">
                 ${Icons.of("menu", "size-5")}
             </button>
             <div class="flex-1"></div>

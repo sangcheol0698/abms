@@ -22,6 +22,27 @@
     });
     htmx.config.scrollIntoViewOnBoost = false;
 
+    // 요청 중인 버튼은 SEED Action Button 로딩 상태(data-loading)로 표시하고 중복 클릭을 막는다.
+    const loadingButton = (e) => {
+        const submitter = e.detail.requestConfig && e.detail.requestConfig.triggeringEvent && e.detail.requestConfig.triggeringEvent.submitter;
+        const el = submitter || e.detail.elt;
+        return el && el.classList && el.classList.contains('seed-action-button') ? el : null;
+    };
+    document.body.addEventListener('htmx:beforeRequest', (e) => {
+        const button = loadingButton(e);
+        if (button) {
+            button.dataset.loading = '';
+            button.setAttribute('aria-busy', 'true');
+        }
+    });
+    document.body.addEventListener('htmx:afterRequest', (e) => {
+        const button = loadingButton(e);
+        if (button) {
+            delete button.dataset.loading;
+            button.removeAttribute('aria-busy');
+        }
+    });
+
     // ---------------------------------------------------------------------
     // 토스트 — SEED Snackbar (화면 하단 중앙, data-open 해제 시 퇴장 애니메이션)
     // ---------------------------------------------------------------------
@@ -201,6 +222,15 @@
     }
     document.body.addEventListener('htmx:afterSettle', showFlash);
 })();
+
+// 모바일 사이드바 열기/닫기 (백드롭 클릭·Esc 로 닫힘)
+window.abmsSidebar = function (open) {
+    document.getElementById('sidebar').classList.toggle('hidden', !open);
+    document.getElementById('sidebar-backdrop').classList.toggle('hidden', !open);
+};
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('sidebar-backdrop')) window.abmsSidebar(false);
+});
 
 // AI 어시스턴트: 전송 즉시 내 메시지와 "답변 생성 중" 표시
 window.abmsChat = {

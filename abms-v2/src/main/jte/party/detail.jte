@@ -18,10 +18,10 @@
         <a href="/parties" class="hover:text-fg-neutral-muted">협력사</a>${Icons.of("chevron-right", "size-3")}<span>${party.getName()}</span>
     `, actions = @`
         @if(ctx.can(PermissionCode.PARTY_WRITE))
-            <a href="/parties/${party.id()}/edit" class="${Seed.button("neutralWeak")}">${Icons.of("pencil", "size-4")} 수정</a>
+            <a href="/parties/${party.id()}/edit" class="${Seed.button("neutralOutline")}">${Icons.of("pencil", "size-4")} 수정</a>
             @if(projectCount == 0)
                 <form method="post" action="/parties/${party.id()}/delete" hx-confirm="${party.getName()} 협력사를 삭제할까요?">
-                    <button class="${Seed.button("ghost")} text-fg-critical">${Icons.of("trash", "size-4")} 삭제</button>
+                    <button class="${Seed.button("neutralOutline")} text-fg-critical">${Icons.of("trash", "size-4")} 삭제</button>
                 </form>
             @endif
         @endif

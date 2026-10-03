@@ -112,15 +112,15 @@ public final class Ui {
     public static String badge(EmployeeType type) {
         return switch (type) {
             case FULL_TIME -> Seed.badge("informative");
-            case FREELANCER -> Seed.badge("brand");
-            case OUTSOURCING -> Seed.badge("warning");
+            case FREELANCER -> Seed.badge("neutral", "outline");
+            case OUTSOURCING -> Seed.badge("neutral", "outline");
             case PART_TIME -> Seed.badge("neutral");
         };
     }
 
     public static String badge(ProjectStatus status) {
         return switch (status) {
-            case SCHEDULED -> Seed.badge("brand");
+            case SCHEDULED -> Seed.badge("neutral", "outline");
             case IN_PROGRESS -> Seed.badge("informative");
             case COMPLETED -> Seed.badge("positive");
             case ON_HOLD -> Seed.badge("warning");

@@ -23,7 +23,7 @@
                 </select>
             </form>
             @if(ctx.can(kr.co.abacus.abms.access.PermissionCode.DASHBOARD_READ))
-                <a href="/summary" class="${Seed.button("neutralWeak")}">${Icons.of("chart", "size-4")} 월별 손익</a>
+                <a href="/summary" class="${Seed.button("neutralOutline")}">${Icons.of("chart", "size-4")} 월별 손익</a>
             @endif
         `)
 

@@ -21,7 +21,7 @@
 @template.layout.app(ctx = ctx, title = "프로젝트", content = @`
     @template.components.pageHeader(title = "프로젝트", subtitle = "계약·매출 계획·투입 인력을 관리합니다. 손익은 주관 부서에 귀속됩니다.", actions = @`
         @if(ctx.can(PermissionCode.PROJECT_EXPORT))
-            <a href="/projects/export${search.exportQuery()}" hx-boost="false" class="${Seed.button("neutralWeak")}">${Icons.of("download", "size-4")} CSV 내보내기</a>
+            <a href="/projects/export${search.exportQuery()}" hx-boost="false" class="${Seed.button("neutralOutline")}">${Icons.of("download", "size-4")} CSV 내보내기</a>
         @endif
         @if(ctx.can(PermissionCode.PROJECT_WRITE))
             <a href="/projects/new" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 프로젝트 등록</a>

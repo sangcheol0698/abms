@@ -20,7 +20,7 @@
 @template.layout.app(ctx = ctx, title = "직원", content = @`
     @template.components.pageHeader(title = "직원", subtitle = "임직원 디렉터리 · 상세 정보는 권한 범위 안에서만 조회됩니다.", actions = @`
         @if(ctx.can(PermissionCode.EMPLOYEE_EXPORT))
-            <a href="/employees/export${search.exportQuery()}" hx-boost="false" class="${Seed.button("neutralWeak")}">${Icons.of("download", "size-4")} CSV 내보내기</a>
+            <a href="/employees/export${search.exportQuery()}" hx-boost="false" class="${Seed.button("neutralOutline")}">${Icons.of("download", "size-4")} CSV 내보내기</a>
         @endif
         @if(ctx.can(PermissionCode.EMPLOYEE_WRITE))
             <a href="/employees/new" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 직원 등록</a>

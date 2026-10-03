@@ -23,7 +23,7 @@
     `, actions = @`
         @if(!readOnly)
             <form method="post" action="/admin/permission-groups/${group.id()}/delete" hx-confirm="${group.getName()} 그룹을 삭제할까요? 할당된 계정에서 권한이 제거됩니다.">
-                <button class="${Seed.button("ghost")} text-fg-critical">${Icons.of("trash", "size-4")} 그룹 삭제</button>
+                <button class="${Seed.button("neutralOutline")} text-fg-critical">${Icons.of("trash", "size-4")} 그룹 삭제</button>
             </form>
         @endif
     `)

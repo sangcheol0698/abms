@@ -35,6 +35,11 @@
         line-height: var(--seed-line-height-t4);
     }
 
+    .seed-action-button[data-loading] {
+        pointer-events: none;
+        cursor: progress;
+    }
+
     [x-cloak], .htmx-indicator {
         display: none;
     }
@@ -116,8 +121,17 @@
         @apply ml-x0_5 text-fg-critical;
     }
 
+    /* SEED Checkmark (square · medium · brand) 스펙 */
     .checkbox {
-        @apply size-[18px] cursor-pointer rounded-r1 accent-(--seed-color-bg-brand-solid);
+        @apply size-x5 shrink-0 cursor-pointer appearance-none rounded-r1 border border-stroke-neutral-weak bg-bg-layer-default
+        bg-center bg-no-repeat transition-colors duration-100
+        checked:border-0 checked:bg-bg-brand-solid
+        disabled:cursor-not-allowed disabled:border-stroke-neutral-muted disabled:bg-bg-disabled;
+    }
+
+    .checkbox:checked {
+        background-size: 14px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
     }
 
     /* 표 (SEED 에는 테이블 컴포넌트가 없어 List 스펙의 간격·구분선을 따른다) */
