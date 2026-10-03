@@ -106,7 +106,8 @@ flowchart LR
 - **SEED 디자인 시스템**: `@seed-design/css`의 토큰과 컴포넌트 CSS를 React 없이 사용합니다.
   - 버튼·뱃지·Callout·Snackbar·Side Navigation은 SEED 레시피 클래스를 그대로 쓰고, 템플릿에서는 `Seed` 헬퍼(`${Seed.button("brandSolid")}`)로 클래스 이름을 만듭니다.
   - 카드·표·입력 필드처럼 SEED에 없거나 React 상태가 필요한 요소는 `src/main/tailwind/app.css`에서 SEED 토큰(`bg-bg-layer-default`, `text-fg-neutral`, `p-x4`, `t4-bold` …)으로 정의합니다.
-  - 색은 역할 토큰만 사용합니다. 현재는 `data-seed-color-mode="light-only"`이며, 이 값을 `system`으로 바꾸면 다크 모드로 전환할 수 있는 구조입니다.
+  - 색은 역할 토큰만 사용합니다. `linear-theme.css`가 SEED 토큰 값을 Linear 풍(무채색·인디고 강조·13px 밀도)으로 덮어쓰며, 라이트/다크/시스템 테마를 사용자 메뉴에서 전환합니다.
+- **키보드 중심 UX**: `⌘K`(Ctrl+K) 명령 팔레트로 화면 이동·생성·테마 전환과 직원/프로젝트/부서/협력사 검색을 합니다(`/palette`, 권한 범위 유지). `G` → `P` 같은 이동 단축키, `/` 검색, `C` 새로 만들기, `?` 도움말을 지원합니다.
 - **소프트 삭제 + 고유성**: 생성 컬럼(`CASE WHEN deleted = 0 THEN code END`)에 유니크 인덱스를 걸어 삭제 후 같은 코드/이름 재사용을 허용합니다.
 
 ## 실행 방법

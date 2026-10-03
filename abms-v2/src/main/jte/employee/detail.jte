@@ -41,27 +41,27 @@
             @if(canWrite)
                 <details class="relative" data-dropdown>
                     <summary class="${Seed.button("neutralOutline")}">상태 변경 ${Icons.of("chevron-down", "size-4")}</summary>
-                    <div class="dropdown-panel w-48 py-1.5">
+                    <div class="dropdown-panel w-48 p-x1">
                         @if(employee.getStatus() != EmployeeStatus.RESIGNED)
-                            <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-bg-neutral-muted" hx-get="/employees/${employee.id()}/promote" hx-target="#modal-body">승진 / 등급 변경</button>
-                            <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-bg-neutral-muted" hx-get="/employees/${employee.id()}/salary" hx-target="#modal-body">연봉 변경</button>
+                            <button type="button" class="menu-item" hx-get="/employees/${employee.id()}/promote" hx-target="#modal-body">승진 / 등급 변경</button>
+                            <button type="button" class="menu-item" hx-get="/employees/${employee.id()}/salary" hx-target="#modal-body">연봉 변경</button>
                         @endif
                         @if(employee.getStatus() == EmployeeStatus.ACTIVE)
                             <form method="post" action="/employees/${employee.id()}/leave" hx-confirm="휴직 처리할까요?">
-                                <button class="block w-full px-4 py-2 text-left text-sm hover:bg-bg-neutral-muted">휴직 처리</button>
+                                <button class="menu-item">휴직 처리</button>
                             </form>
                         @endif
                         @if(employee.getStatus() != EmployeeStatus.ACTIVE)
                             <form method="post" action="/employees/${employee.id()}/activate" hx-confirm="재직 상태로 변경할까요?">
-                                <button class="block w-full px-4 py-2 text-left text-sm hover:bg-bg-neutral-muted">${employee.isResigned() ? "재입사 처리" : "복직 처리"}</button>
+                                <button class="menu-item">${employee.isResigned() ? "재입사 처리" : "복직 처리"}</button>
                             </form>
                         @endif
                         @if(employee.getStatus() != EmployeeStatus.RESIGNED)
-                            <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-bg-neutral-muted" hx-get="/employees/${employee.id()}/resign" hx-target="#modal-body">퇴사 처리</button>
+                            <button type="button" class="menu-item" hx-get="/employees/${employee.id()}/resign" hx-target="#modal-body">퇴사 처리</button>
                         @endif
-                        <div class="my-1 border-t border-stroke-neutral-subtle"></div>
+                        <div class="my-x1 border-t border-stroke-neutral-subtle"></div>
                         <form method="post" action="/employees/${employee.id()}/delete" hx-confirm="${employee.getName()} 직원을 삭제할까요? 삭제 후에도 복구할 수 있습니다.">
-                            <button class="block w-full px-4 py-2 text-left text-sm text-fg-critical hover:bg-bg-critical-weak">삭제</button>
+                            <button class="menu-item text-fg-critical">삭제</button>
                         </form>
                     </div>
                 </details>
@@ -70,61 +70,16 @@
     `)
 
     @if(employee.isDeleted())
-        <div class="mb-4 rounded-lg bg-bg-critical-weak px-4 py-3 text-sm text-fg-critical ring-1 ring-stroke-critical-weak">삭제된 직원입니다. (${Ui.dateTime(employee.getDeletedAt())})</div>
+        <div role="alert" class="mb-x4 rounded-r2 bg-bg-critical-weak px-x4 py-x2_5 t4-regular text-fg-critical">삭제된 직원입니다. (${Ui.dateTime(employee.getDeletedAt())})</div>
     @endif
 
-    <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <section class="card xl:col-span-1">
-            <div class="card-body">
-                <div class="flex items-center gap-4">
-                    @template.components.avatar(avatar = employee.getAvatar(), initial = employee.initial(), size = "size-16 text-2xl")
-                    <div class="min-w-0">
-                        <p class="text-lg font-semibold text-fg-neutral">${employee.getName()}</p>
-                        <p class="text-sm text-fg-neutral-subtle">${employee.getPosition().label()} · ${employee.getGrade().label()}</p>
-                        <div class="mt-1.5 flex flex-wrap gap-1.5">
-                            <span class="${Ui.badge(employee.getStatus())}">${employee.getStatus().label()}</span>
-                            <span class="${Ui.badge(employee.getType())}">${employee.getType().label()}</span>
-                        </div>
-                    </div>
-                </div>
-                <dl class="mt-6 space-y-3 text-sm [&_dt]:shrink-0">
-                    <div class="flex justify-between gap-4"><dt class="text-fg-neutral-subtle">부서</dt>
-                        <dd class="text-right">
-                            @for(Department d : tree.path(employee.getDepartmentId()))
-                                @if(d.id().equals(employee.getDepartmentId()))
-                                    <a class="link" href="/departments?selected=${d.id()}">${d.getName()}</a>
-                                @else
-                                    <span class="text-fg-placeholder">${d.getName()} ›</span>
-                                @endif
-                            @endfor
-                        </dd>
-                    </div>
-                    <div class="flex justify-between gap-4"><dt class="text-fg-neutral-subtle">이메일</dt><dd class="truncate">${employee.isDeleted() ? employee.originalEmail() : employee.getEmail()}</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-fg-neutral-subtle">입사일</dt><dd class="tabular-nums">${Ui.date(employee.getJoinDate())}</dd></div>
-                    @if(employee.getResignationDate() != null)
-                        <div class="flex justify-between gap-4"><dt class="text-fg-neutral-subtle">퇴사일</dt><dd class="tabular-nums">${Ui.date(employee.getResignationDate())}</dd></div>
-                    @endif
-                    <div class="flex justify-between gap-4"><dt class="text-fg-neutral-subtle">생년월일</dt><dd class="tabular-nums">${Ui.date(employee.getBirthDate())}</dd></div>
-                    @if(ctx.can(PermissionCode.ACCOUNT_MANAGE))
-                        <div class="flex justify-between gap-4"><dt class="text-fg-neutral-subtle">계정</dt>
-                            <dd>
-                                @if(account != null)
-                                    <a href="/admin/accounts" class="link">${account.getUsername()}</a>
-                                @else
-                                    <a href="/admin/accounts?issue=${employee.id()}" class="link">계정 발급</a>
-                                @endif
-                            </dd>
-                        </div>
-                    @endif
-                </dl>
-                @if(employee.getMemo() != null)
-                    <div class="mt-5 rounded-lg bg-bg-neutral-muted p-3 text-sm whitespace-pre-line text-fg-neutral-muted">${employee.getMemo()}</div>
-                @endif
-            </div>
-        </section>
+    <div class="grid gap-x6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div class="min-w-0 space-y-4">
+            @if(employee.getMemo() != null)
+                <p class="rounded-r2 bg-bg-neutral-muted p-x3 t4-regular whitespace-pre-line text-fg-neutral-muted">${employee.getMemo()}</p>
+            @endif
 
-        <div class="space-y-4 xl:col-span-2">
-            <section class="card overflow-hidden">
+        <section class="card overflow-hidden">
                 <div class="card-header"><h2 class="card-title">프로젝트 투입 이력</h2></div>
                 @if(assignments.isEmpty())
                     @template.components.empty(message = "투입 이력이 없습니다.")
@@ -163,7 +118,8 @@
                 @endif
             </section>
 
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+            <div class="grid grid-cols-1 gap-x4 xl:grid-cols-2">
                 <section class="card overflow-hidden">
                     <div class="card-header">
                         <h2 class="card-title">연봉 이력</h2>
@@ -176,7 +132,7 @@
                     @else
                         <ul class="divide-y divide-stroke-neutral-subtle">
                             @for(Payroll p : payrolls)
-                                <li class="flex items-center justify-between px-5 py-3 text-sm">
+                                <li class="flex items-center justify-between px-x4 py-x2_5 t4-regular">
                                     <span class="text-fg-neutral-subtle tabular-nums">${Ui.period(p.getPeriod().startDate(), p.getPeriod().endDate())}</span>
                                     <span class="font-semibold tabular-nums">${Ui.won(p.getAnnualSalary())}원</span>
                                 </li>
@@ -191,7 +147,7 @@
                     @else
                         <ul class="divide-y divide-stroke-neutral-subtle">
                             @for(PositionHistory h : positions)
-                                <li class="flex items-center justify-between px-5 py-3 text-sm">
+                                <li class="flex items-center justify-between px-x4 py-x2_5 t4-regular">
                                     <span class="text-fg-neutral-subtle tabular-nums">${Ui.period(h.getPeriod().startDate(), h.getPeriod().endDate())}</span>
                                     <span class="font-medium">${h.getPosition().label()} · ${h.getGrade().label()}</span>
                                 </li>
@@ -201,5 +157,55 @@
                 </section>
             </div>
         </div>
+
+        <%-- 속성 패널 --%>
+        <aside class="order-first lg:order-none">
+            <div class="lg:sticky lg:top-6">
+                <div class="mb-x5 flex items-center gap-x3">
+                    @template.components.avatar(avatar = employee.getAvatar(), initial = employee.initial(), size = "size-10 text-base")
+                    <div class="min-w-0">
+                        <p class="truncate t5-bold text-fg-neutral">${employee.getName()}</p>
+                        <p class="truncate t3-regular text-fg-neutral-subtle">${employee.getPosition().label()} · ${employee.getGrade().label()}</p>
+                    </div>
+                </div>
+                <h2 class="mb-x3 t3-medium text-fg-neutral-subtle">속성</h2>
+                <dl class="property-list">
+                    <dt>상태</dt>
+                    <dd><span class="${Ui.badge(employee.getStatus())}">${employee.getStatus().label()}</span></dd>
+                    <dt>고용유형</dt>
+                    <dd><span class="${Ui.badge(employee.getType())}">${employee.getType().label()}</span></dd>
+                    <dt>부서</dt>
+                    <dd class="whitespace-normal">
+                        @for(Department d : tree.path(employee.getDepartmentId()))
+                            @if(d.id().equals(employee.getDepartmentId()))
+                                <a class="link" href="/departments?selected=${d.id()}">${d.getName()}</a>
+                            @else
+                                <span class="text-fg-neutral-subtle">${d.getName()} ›</span>
+                            @endif
+                        @endfor
+                    </dd>
+                    <dt>이메일</dt>
+                    <dd title="${employee.isDeleted() ? employee.originalEmail() : employee.getEmail()}">${employee.isDeleted() ? employee.originalEmail() : employee.getEmail()}</dd>
+                    <dt>입사일</dt>
+                    <dd class="tabular-nums">${Ui.date(employee.getJoinDate())}</dd>
+                    @if(employee.getResignationDate() != null)
+                        <dt>퇴사일</dt>
+                        <dd class="tabular-nums">${Ui.date(employee.getResignationDate())}</dd>
+                    @endif
+                    <dt>생년월일</dt>
+                    <dd class="tabular-nums">${Ui.date(employee.getBirthDate())}</dd>
+                    @if(ctx.can(PermissionCode.ACCOUNT_MANAGE))
+                        <dt>계정</dt>
+                        <dd>
+                            @if(account != null)
+                                <a href="/admin/accounts" class="link">${account.getUsername()}</a>
+                            @else
+                                <a href="/admin/accounts?issue=${employee.id()}" class="link">계정 발급</a>
+                            @endif
+                        </dd>
+                    @endif
+                </dl>
+            </div>
+        </aside>
     </div>
 `)

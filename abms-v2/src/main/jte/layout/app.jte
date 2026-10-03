@@ -29,7 +29,7 @@
                              hx-get="/notifications" hx-target="#notification-panel" hx-trigger="click">
                         ${Icons.of("bell", "size-4")}
                         @if(ctx.unreadNotifications() > 0)
-                            <span id="notification-dot" class="absolute top-x1_5 right-x1_5 flex size-x1_5 rounded-full bg-bg-brand-solid"></span>
+                            <span id="notification-dot" class="absolute top-1.5 right-1.5 flex size-x1_5 rounded-full bg-bg-brand-solid"></span>
                         @endif
                     </summary>
                     <div class="dropdown-panel left-0 right-auto w-80 origin-top-left sm:w-96">

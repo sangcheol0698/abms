@@ -191,6 +191,60 @@
         @apply inline-flex h-x5 min-w-5 items-center justify-center rounded-r1 border border-stroke-neutral-subtle bg-bg-layer-default px-x1 t2-medium text-fg-neutral-subtle;
     }
 
+    /* Linear 풍 목록: 필터 바 · 칩 · 그룹 헤더 · 행 */
+    .view-bar {
+        @apply flex flex-wrap items-center gap-x2 border-b border-stroke-neutral-subtle px-x4 py-x2;
+    }
+
+    .chip {
+        @apply inline-flex h-7 cursor-pointer items-center gap-x1_5 rounded-r2 border border-transparent px-x2_5 t4-medium whitespace-nowrap text-fg-neutral-subtle
+        transition-colors select-none hover:bg-bg-transparent-pressed hover:text-fg-neutral
+        has-[:checked]:border-stroke-neutral-subtle has-[:checked]:bg-bg-transparent-selected has-[:checked]:text-fg-neutral
+        has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-(--seed-color-stroke-focus-ring);
+    }
+
+    .chip input {
+        @apply sr-only;
+    }
+
+    .chip-count {
+        @apply t3-regular text-fg-neutral-subtle tabular-nums;
+    }
+
+    .filter-input, .filter-select {
+        @apply min-h-7 py-x1 t3-regular;
+    }
+
+    .filter-select {
+        @apply w-auto max-w-44 pr-x8;
+    }
+
+    .list-group-header {
+        @apply sticky top-0 z-[1] flex items-center gap-x2 border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x1_5 t3-medium text-fg-neutral-muted;
+    }
+
+    .list-row {
+        @apply flex min-h-11 items-center gap-x3 border-b border-stroke-neutral-subtle px-x4 py-x1_5 t4-regular text-fg-neutral transition-colors
+        last:border-b-0 hover:bg-bg-layer-default-pressed;
+    }
+
+    .list-cell-muted {
+        @apply truncate t4-regular text-fg-neutral-subtle;
+    }
+
+    /* 상세: 오른쪽 속성 패널 */
+    .property-list {
+        @apply grid grid-cols-[96px_1fr] items-center gap-x-x3 gap-y-x3 t4-regular;
+    }
+
+    .property-list dt {
+        @apply t4-regular text-fg-neutral-subtle;
+    }
+
+    .property-list dd {
+        @apply min-w-0 truncate text-fg-neutral;
+    }
+
     /* 명령 팔레트 */
     .palette-group {
         @apply px-x2_5 pt-x2_5 pb-x1 t3-medium text-fg-neutral-subtle;
