@@ -35,7 +35,7 @@
     `)
 
     <%-- 월 이동 · 상태 --%>
-    <div class="-mx-x4 mb-x6 sm:-mx-x6 lg:-mx-x8">
+    <div class="-mx-4 mb-x6 sm:-mx-6 lg:-mx-8">
         <div class="view-bar border-t sm:px-x6 lg:px-x8">
             <div class="flex items-center rounded-r2 border border-stroke-neutral-subtle">
                 <a href="/summary?month=${report.month().minusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>

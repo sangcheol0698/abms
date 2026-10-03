@@ -24,7 +24,7 @@
             <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/departments/new${selectedId == null ? "" : "?parentId=" + selectedId}" hx-target="#modal-body">${Icons.of("plus", "size-4")} 부서 추가</button>
         @endif
     `)
-    <div class="-mx-x4 grid border-t border-stroke-neutral-subtle sm:-mx-x6 lg:-mx-x8 lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div class="-mx-4 grid border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8 lg:grid-cols-[260px_minmax(0,1fr)]">
         <nav class="border-b border-stroke-neutral-subtle p-x2 lg:border-r lg:border-b-0" aria-label="조직도">
             <div class="max-h-64 overflow-y-auto lg:sticky lg:top-2 lg:max-h-[calc(100vh-120px)]">
                 <ul class="space-y-px">

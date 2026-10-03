@@ -12,7 +12,7 @@
     @template.components.pageHeader(title = "권한 그룹", subtitle = "권한(기능)과 범위(데이터)를 묶어 계정에 부여합니다.", actions = @`
         <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/admin/permission-groups/new" hx-target="#modal-body">${Icons.of("plus", "size-4")} 그룹 추가</button>
     `)
-    <div class="-mx-x4 border-t border-stroke-neutral-subtle sm:-mx-x6 lg:-mx-x8">
+    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8">
         @for(PermissionGroup g : groups)
             <a href="/admin/permission-groups/${g.id()}" class="list-row min-h-14 sm:px-x6 lg:px-x8">
                 <span class="flex size-7 shrink-0 items-center justify-center rounded-r1_5 bg-bg-neutral-weak text-fg-neutral-muted">${Icons.of("shield", "size-4")}</span>

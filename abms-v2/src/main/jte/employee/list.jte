@@ -27,7 +27,7 @@
         @endif
     `)
 
-    <div class="-mx-x4 border-t border-stroke-neutral-subtle sm:-mx-x6 lg:-mx-x8">
+    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8">
         <form class="view-bar sm:px-x6 lg:px-x8" action="/employees" method="get"
               hx-get="/employees" hx-target="#employee-results" hx-push-url="true"
               hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], change from:input[type=checkbox], submit">

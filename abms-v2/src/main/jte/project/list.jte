@@ -27,7 +27,7 @@
             <a href="/projects/new" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 프로젝트 등록</a>
         @endif
     `)
-    <div class="-mx-x4 border-t border-stroke-neutral-subtle sm:-mx-x6 lg:-mx-x8">
+    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8">
         <form class="view-bar sm:px-x6 lg:px-x8" action="/projects"
               hx-get="/projects" hx-target="#project-results" hx-push-url="true"
               hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], submit">

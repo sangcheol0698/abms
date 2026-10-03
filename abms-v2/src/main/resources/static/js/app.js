@@ -396,12 +396,12 @@ window.abmsChat = {
         mine.className = 'flex justify-end';
         mine.dataset.pending = 'true';
         const bubble = document.createElement('div');
-        bubble.className = 'max-w-[80%] rounded-2xl rounded-tr-md bg-bg-brand-solid px-4 py-2.5 text-sm whitespace-pre-wrap text-white';
+        bubble.className = 'max-w-[80%] rounded-r4 bg-bg-neutral-weak px-x4 py-x2_5 t4-regular whitespace-pre-wrap text-fg-neutral';
         bubble.textContent = input.value.trim();
         mine.appendChild(bubble);
         const typing = document.createElement('div');
         typing.dataset.pending = 'true';
-        typing.className = 'flex items-center gap-2 text-sm text-fg-neutral-subtle';
+        typing.className = 'flex items-center gap-x2 t4-regular text-fg-neutral-subtle';
         typing.innerHTML = '<span class="flex gap-1"><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400"></span><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400 [animation-delay:120ms]"></span><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400 [animation-delay:240ms]"></span></span> 답변을 생성하고 있어요…';
         messages.append(mine, typing);
         messages.scrollTop = messages.scrollHeight;

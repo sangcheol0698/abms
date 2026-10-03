@@ -18,7 +18,7 @@
         <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/admin/accounts/issue${issueEmployeeId == null ? "" : "?employeeId=" + issueEmployeeId}" hx-target="#modal-body"
                 hx-trigger="click${issueEmployeeId == null ? "" : ", load"}">${Icons.of("plus", "size-4")} 계정 발급</button>
     `)
-    <div class="-mx-x4 border-t border-stroke-neutral-subtle sm:-mx-x6 lg:-mx-x8" hx-get="/admin/accounts" hx-trigger="accountsChanged from:body" hx-select="#account-table" hx-target="#account-table" hx-swap="outerHTML">
+    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8" hx-get="/admin/accounts" hx-trigger="accountsChanged from:body" hx-select="#account-table" hx-target="#account-table" hx-swap="outerHTML">
         <div id="account-table" class="overflow-x-auto xl:overflow-visible">
             <div class="min-w-[880px] xl:min-w-0">
                 <div class="list-head sm:px-x6 lg:px-x8">

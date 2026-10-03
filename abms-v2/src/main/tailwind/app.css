@@ -259,6 +259,23 @@
         @apply flex h-1.5 w-full overflow-hidden rounded-full bg-bg-neutral-weak;
     }
 
+    /* 설정형 폼: 왼쪽 섹션 설명 + 오른쪽 입력, 하단 고정 저장 바 */
+    .form-section {
+        @apply grid gap-x4 border-t border-stroke-neutral-subtle py-x6 first:border-t-0 first:pt-x2 md:grid-cols-[200px_minmax(0,1fr)] md:gap-x8;
+    }
+
+    .form-section-title {
+        @apply t4-bold text-fg-neutral;
+    }
+
+    .form-section-desc {
+        @apply mt-x1 t3-regular text-fg-neutral-subtle;
+    }
+
+    .form-actions {
+        @apply sticky bottom-4 z-10 mt-x2 flex items-center justify-end gap-x2 rounded-r3 border border-stroke-neutral-subtle bg-bg-layer-floating px-x4 py-x2_5 shadow-s2;
+    }
+
     /* 트리 (조직도) */
     .tree-item {
         @apply flex h-7 items-center gap-x1_5 rounded-r1_5 pr-x2 t4-regular text-fg-neutral-muted transition-colors hover:bg-bg-transparent-pressed;

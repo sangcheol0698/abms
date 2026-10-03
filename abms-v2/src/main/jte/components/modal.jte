@@ -12,7 +12,7 @@
             <p class="mt-x1 t4-regular text-fg-neutral-subtle">${description}</p>
         @endif
     </div>
-    <button type="button" class="${Seed.iconButton("ghost", "small")} -mr-x2 -mt-x1" data-close-modal aria-label="닫기">${Icons.of("x", "size-5")}</button>
+    <button type="button" class="${Seed.iconButton("ghost", "small")} -mr-2 -mt-1" data-close-modal aria-label="닫기">${Icons.of("x", "size-5")}</button>
 </div>
 <div class="px-x6 py-x4">${body}</div>
 @if(footer != null)
