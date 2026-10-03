@@ -16,13 +16,14 @@
             <a href="/parties/new" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 협력사 등록</a>
         @endif
     `)
-    <div class="card">
-        <form class="border-b border-stroke-neutral-subtle p-4" action="/parties" hx-get="/parties" hx-target="#party-results" hx-push-url="true"
+    <div class="-mx-x4 border-t border-stroke-neutral-subtle sm:-mx-x6 lg:-mx-x8">
+        <form class="view-bar sm:px-x6 lg:px-x8" action="/parties" hx-get="/parties" hx-target="#party-results" hx-push-url="true"
               hx-trigger="input changed delay:300ms from:input[name=q], submit">
-            <div class="relative max-w-sm">
-                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-fg-placeholder">${Icons.of("search", "size-4")}</span>
-                <input type="search" name="q" value="${Ui.value(q)}" placeholder="협력사명 검색" class="input pl-9" aria-label="협력사명 검색">
+            <div class="relative">
+                <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-fg-placeholder">${Icons.of("search", "size-3.5")}</span>
+                <input type="search" name="q" value="${Ui.value(q)}" placeholder="협력사명 검색" class="input filter-input w-60 pl-x8" aria-label="협력사명 검색">
             </div>
+            <span class="ml-auto t3-regular text-fg-neutral-subtle">총 ${page.totalElements()}곳</span>
         </form>
         <div id="party-results">@template.party.results(page = page, projectCounts = projectCounts)</div>
     </div>

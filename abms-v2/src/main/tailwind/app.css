@@ -232,6 +232,28 @@
         @apply truncate t4-regular text-fg-neutral-subtle;
     }
 
+    /* 섹션 제목 + 테두리 리스트 상자 (상세 화면) */
+    .section-title {
+        @apply mb-x2 flex items-center gap-x2 t4-bold text-fg-neutral;
+    }
+
+    .section-count {
+        @apply t4-regular text-fg-neutral-subtle tabular-nums;
+    }
+
+    .list-box {
+        @apply overflow-hidden rounded-r3 border border-stroke-neutral-subtle;
+    }
+
+    /* 트리 (조직도) */
+    .tree-item {
+        @apply flex h-7 items-center gap-x1_5 rounded-r1_5 pr-x2 t4-regular text-fg-neutral-muted transition-colors hover:bg-bg-transparent-pressed;
+    }
+
+    .tree-item[aria-current="page"] {
+        @apply bg-bg-transparent-selected t4-medium text-fg-neutral;
+    }
+
     /* 상세: 오른쪽 속성 패널 */
     .property-list {
         @apply grid grid-cols-[96px_1fr] items-center gap-x-x3 gap-y-x3 t4-regular;

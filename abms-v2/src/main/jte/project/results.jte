@@ -1,7 +1,6 @@
 @import java.util.List
 @import java.util.Map
 @import kr.co.abacus.abms.common.web.PageView
-@import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.project.ProjectStatus
@@ -23,15 +22,7 @@
                     <span class="tabular-nums">${rows.size()}</span>
                 </h3>
                 @for(Project p : rows)
-                    <a href="/projects/${p.id()}" class="list-row group sm:px-x6 lg:px-x8">
-                        <span class="hidden w-24 shrink-0 t3-regular text-fg-neutral-subtle tabular-nums sm:block">${p.getCode()}</span>
-                        @template.components.statusIcon(status = p.getStatus())
-                        <span class="min-w-0 flex-1 truncate t4-medium">${p.getName()}</span>
-                        <span class="list-cell-muted hidden w-36 md:block">${partyNames.getOrDefault(p.getPartyId(), "-")}</span>
-                        <span class="list-cell-muted hidden w-40 lg:block">${tree.nameOf(p.getLeadDepartmentId())}</span>
-                        <span class="list-cell-muted hidden w-52 tabular-nums xl:block">${Ui.period(p.getPeriod().startDate(), p.getPeriod().endDate())}</span>
-                        <span class="w-28 shrink-0 text-right tabular-nums">${Ui.won(p.getContractAmount())}</span>
-                    </a>
+                    @template.components.projectRow(project = p, tree = tree, partyName = partyNames.getOrDefault(p.getPartyId(), "-"), padding = "sm:px-x6 lg:px-x8")
                 @endfor
             </section>
         @endif

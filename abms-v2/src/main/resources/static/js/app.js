@@ -225,6 +225,11 @@
         renderCharts(root);
         renderMarkdown(root);
         root.querySelectorAll('[data-scroll-bottom]').forEach((el) => el.scrollTop = el.scrollHeight);
+        // 조직도에서 선택된 부서가 스크롤 영역 안에 보이도록 맞춘다.
+        root.querySelectorAll('[data-dept-link][aria-current="page"]').forEach((el) => {
+            const box = el.closest('.overflow-y-auto');
+            if (box) box.scrollTop += el.getBoundingClientRect().top - box.getBoundingClientRect().top - (box.clientHeight - el.offsetHeight) / 2;
+        });
     }
 
     htmx.onLoad((el) => enhance(el));

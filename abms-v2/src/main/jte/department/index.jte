@@ -24,34 +24,35 @@
             <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/departments/new${selectedId == null ? "" : "?parentId=" + selectedId}" hx-target="#modal-body">${Icons.of("plus", "size-4")} 부서 추가</button>
         @endif
     `)
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[18rem_1fr]">
-        <nav class="card h-fit p-2 lg:sticky lg:top-20" aria-label="조직도">
-            <ul class="space-y-0.5">
-                @for(DepartmentTree.Node node : tree.flatten())
-                    <li>
-                        <a href="/departments?selected=${node.department().id()}"
-                           hx-get="/departments/${node.department().id()}" hx-target="#department-detail" hx-push-url="/departments?selected=${node.department().id()}"
-                           onclick="document.querySelectorAll('[data-dept-link]').forEach(e => e.classList.remove('bg-bg-transparent-selected','t4-bold','text-fg-neutral')); this.classList.add('bg-bg-transparent-selected','t4-bold','text-fg-neutral')"
-                           data-dept-link
-                           class="flex items-center gap-1.5 rounded-r2 py-x1_5 pr-x2 t4-regular hover:bg-bg-transparent-pressed ${node.department().id().equals(selectedId) ? "bg-bg-transparent-selected t4-bold text-fg-neutral" : "text-fg-neutral-muted"}"
-                           style="padding-left: ${8 + node.depth() * 14}px">
-                            @if(tree.children(node.department().id()).isEmpty())
-                                <span class="size-1.5 rounded-full bg-palette-gray-400"></span>
-                            @else
-                                ${Icons.of("chevron-down", "size-3 text-fg-placeholder")}
-                            @endif
-                            <span class="truncate ${node.depth() == 0 ? "font-semibold" : ""}">${node.department().getName()}</span>
-                        </a>
-                    </li>
-                @endfor
-            </ul>
+    <div class="-mx-x4 grid border-t border-stroke-neutral-subtle sm:-mx-x6 lg:-mx-x8 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <nav class="border-b border-stroke-neutral-subtle p-x2 lg:border-r lg:border-b-0" aria-label="조직도">
+            <div class="max-h-64 overflow-y-auto lg:sticky lg:top-2 lg:max-h-[calc(100vh-120px)]">
+                <ul class="space-y-px">
+                    @for(DepartmentTree.Node node : tree.flatten())
+                        <li>
+                            <a href="/departments?selected=${node.department().id()}"
+                               hx-get="/departments/${node.department().id()}" hx-target="#department-detail" hx-push-url="/departments?selected=${node.department().id()}"
+                               onclick="document.querySelectorAll('[data-dept-link]').forEach(e => e.removeAttribute('aria-current')); this.setAttribute('aria-current', 'page')"
+                               data-dept-link class="tree-item" aria-current="${node.department().id().equals(selectedId) ? "page" : null}"
+                               style="padding-left: ${8 + node.depth() * 14}px">
+                                @if(tree.children(node.department().id()).isEmpty())
+                                    <span class="flex size-3 shrink-0 items-center justify-center"><span class="size-1 rounded-full bg-palette-gray-500"></span></span>
+                                @else
+                                    ${Icons.of("chevron-down", "size-3 shrink-0 text-fg-neutral-subtle")}
+                                @endif
+                                <span class="truncate">${node.department().getName()}</span>
+                            </a>
+                        </li>
+                    @endfor
+                </ul>
+            </div>
         </nav>
-        <div id="department-detail">
+        <div id="department-detail" class="min-w-0 px-x4 py-x5 sm:px-x6 lg:px-x8">
             @if(department != null)
                 @template.department.detail(ctx = ctx, department = department, tree = tree, members = members,
                     subtreeMemberCount = subtreeMemberCount, leader = leader, projects = projects, trend = trend, canWrite = canWrite)
             @else
-                <div class="card">@template.components.empty(message = "부서가 없습니다.", icon = "building")</div>
+                @template.components.empty(message = "부서가 없습니다.", icon = "building")
             @endif
         </div>
     </div>
