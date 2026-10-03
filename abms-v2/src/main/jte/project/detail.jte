@@ -19,6 +19,7 @@
 @param RevenueSection revenue
 @param StaffingSection staffing
 @param List<MonthlyRevenueSummary> history
+@param boolean showHistory
 @template.layout.app(ctx = ctx, title = project.getName(), content = @`
     @template.components.pageHeader(title = project.getName(), subtitle = project.getCode(), breadcrumb = @`
         <a href="/projects" class="hover:text-slate-700">프로젝트</a>${Icons.of("chevron-right", "size-3")}<span>${project.getName()}</span>
@@ -67,7 +68,7 @@
         @template.project.staffingSection(section = staffing)
     </section>
 
-    @if(ctx.can(PermissionCode.DASHBOARD_READ))
+    @if(showHistory)
         <section class="card mt-4 overflow-hidden">
             <div class="card-header">
                 <h2 class="card-title">월별 손익 집계</h2>

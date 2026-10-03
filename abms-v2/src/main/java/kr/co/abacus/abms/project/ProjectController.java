@@ -143,7 +143,10 @@ public class ProjectController {
         model.addAttribute("canWrite", canWrite);
         model.addAttribute("revenue", sections.revenue(project, canWrite));
         model.addAttribute("staffing", sections.staffing(project, canWrite));
-        model.addAttribute("history", user.has(PermissionCode.DASHBOARD_READ) ? profitQueryService.projectHistory(id) : List.of());
+        // 손익 이력은 대시보드(손익) 조회 범위가 이 프로젝트를 포함할 때만 보여준다.
+        boolean showHistory = profitQueryService.scope(user).coversProject(project.id(), project.getLeadDepartmentId());
+        model.addAttribute("showHistory", showHistory);
+        model.addAttribute("history", showHistory ? profitQueryService.projectHistory(id) : List.of());
         return "project/detail";
     }
 

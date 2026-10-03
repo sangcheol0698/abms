@@ -26,6 +26,7 @@ import kr.co.abacus.abms.common.web.Toast;
 import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.employee.EmployeeService;
 import kr.co.abacus.abms.project.ProjectRepository;
+import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.DataScope;
 import kr.co.abacus.abms.security.LoginUser;
 import kr.co.abacus.abms.summary.ProfitQueryService;
@@ -38,13 +39,16 @@ public class DepartmentController {
     private final EmployeeService employeeService;
     private final ProjectRepository projectRepository;
     private final ProfitQueryService profitQueryService;
+    private final AccessService accessService;
 
     public DepartmentController(DepartmentService departmentService, EmployeeService employeeService,
-                                ProjectRepository projectRepository, ProfitQueryService profitQueryService) {
+                                ProjectRepository projectRepository, ProfitQueryService profitQueryService,
+                                AccessService accessService) {
         this.departmentService = departmentService;
         this.employeeService = employeeService;
         this.projectRepository = projectRepository;
         this.profitQueryService = profitQueryService;
+        this.accessService = accessService;
     }
 
     @GetMapping
@@ -144,8 +148,11 @@ public class DepartmentController {
         model.addAttribute("subtreeMemberCount", subtree.stream().mapToInt(d -> departmentService.members(d).size()).sum());
         model.addAttribute("leader", department.getLeaderEmployeeId() == null ? null
                 : employeeService.findAll(Set.of(department.getLeaderEmployeeId())).stream().findFirst().orElse(null));
-        model.addAttribute("projects", user.has(PermissionCode.PROJECT_READ)
-                ? projectRepository.findAllByLeadDepartmentIdInOrderByPeriodStartDateDesc(subtree) : List.of());
+        // 프로젝트 조회 권한의 범위(주관 부서, 참여 프로젝트) 안에 있는 프로젝트만 보여준다.
+        DataScope projectScope = accessService.scopeOf(user, PermissionCode.PROJECT_READ);
+        model.addAttribute("projects", projectRepository.findAllByLeadDepartmentIdInOrderByPeriodStartDateDesc(subtree).stream()
+                .filter(p -> projectScope.coversProject(p.id(), p.getLeadDepartmentId()))
+                .toList());
         DataScope scope = profitQueryService.scope(user);
         boolean showProfit = scope.all() || scope.departmentIds().containsAll(subtree);
         model.addAttribute("trend", showProfit ? profitQueryService.departmentTrend(subtree, Year.now().getValue()) : null);
