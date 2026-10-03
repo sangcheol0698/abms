@@ -144,7 +144,7 @@
             if (canvas.dataset.rendered) return;
             canvas.dataset.rendered = 'true';
             const data = JSON.parse(canvas.dataset.chart);
-            new Chart(canvas, {
+            canvas._chart = new Chart(canvas, {
                 data: {
                     labels: data.labels,
                     datasets: [
@@ -198,7 +198,30 @@
         });
     }
 
+    // 테마가 바뀌면 토큰 색으로 차트를 다시 그린다.
+    window.abmsThemeChanged = () => {
+        document.querySelectorAll('canvas[data-chart]').forEach((canvas) => {
+            if (canvas._chart) canvas._chart.destroy();
+            delete canvas.dataset.rendered;
+        });
+        renderCharts(document);
+        syncThemeOptions();
+    };
+
+    function syncThemeOptions() {
+        let mode = 'system';
+        try { mode = localStorage.getItem('abms-theme') || 'system'; } catch (e) {}
+        document.querySelectorAll('[data-theme-option]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeOption === mode)));
+    }
+
+    window.abmsTheme = (mode) => {
+        try { localStorage.setItem('abms-theme', mode); } catch (e) {}
+        document.documentElement.dataset.seedColorMode = mode === 'light' ? 'light-only' : mode === 'dark' ? 'dark-only' : 'system';
+        window.abmsThemeChanged();
+    };
+
     function enhance(root) {
+        syncThemeOptions();
         renderCharts(root);
         renderMarkdown(root);
         root.querySelectorAll('[data-scroll-bottom]').forEach((el) => el.scrollTop = el.scrollHeight);

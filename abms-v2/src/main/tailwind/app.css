@@ -3,10 +3,12 @@
  * - 토큰: @seed-design/css 의 CSS 변수 + @seed-design/tailwind4-theme 유틸리티 (bg-bg-*, text-fg-*, p-x4, rounded-r2, t4-bold …)
  * - 컴포넌트: SEED 레시피 CSS(seed-action-button, seed-badge …)는 그대로 쓰고,
  *   SEED에 없는 데스크톱 요소(카드, 표 등)는 아래 components 레이어에서 SEED 토큰으로 정의한다.
- * - 색은 역할 토큰만 쓴다. (다크 모드 전환 대비: html[data-seed-color-mode] 값만 바꾸면 된다)
+ * - 색은 역할 토큰만 쓴다. 라이트/다크는 html[data-seed-color-mode] 로 전환한다.
+ * - linear-theme.css 가 SEED 토큰 값을 Linear 풍(무채색·인디고·촘촘한 밀도)으로 덮어쓴다.
  */
-@layer theme, base, seed-base, components, seed-components, utilities;
+@layer theme, base, seed-base, abms-theme, components, seed-components, abms-overrides, utilities;
 @import "@seed-design/css/base.layered.css";
+@import "./linear-theme.css";
 @import "@seed-design/css/recipes/action-button.layered.css";
 @import "@seed-design/css/recipes/badge.layered.css";
 @import "@seed-design/css/recipes/callout.layered.css";
@@ -76,15 +78,15 @@
     }
 
     .card-header {
-        @apply flex items-center justify-between gap-x3 border-b border-stroke-neutral-subtle px-x5 py-x3_5;
+        @apply flex min-h-11 items-center justify-between gap-x3 border-b border-stroke-neutral-subtle px-x4 py-x2;
     }
 
     .card-title {
-        @apply t5-bold text-fg-neutral;
+        @apply t4-bold text-fg-neutral;
     }
 
     .card-body {
-        @apply p-x5;
+        @apply p-x4;
     }
 
     /* 폼 필드 (SEED Field / Text Input outline-medium 스펙) */
@@ -93,20 +95,20 @@
     }
 
     .input, .select, .textarea {
-        @apply block min-h-10 w-full rounded-r2 border-0 bg-bg-layer-default px-x3 py-x2 t4-regular text-fg-neutral
+        @apply block min-h-8 w-full rounded-r2 border-0 bg-bg-layer-default px-x2_5 py-x1_5 t4-regular text-fg-neutral
         shadow-[inset_0_0_0_1px_var(--seed-color-stroke-neutral-weak)] transition-shadow duration-100 outline-none
         placeholder:text-fg-placeholder
-        focus:shadow-[inset_0_0_0_2px_var(--seed-color-stroke-neutral-contrast)]
+        focus:shadow-[inset_0_0_0_1px_var(--seed-color-bg-brand-solid),0_0_0_3px_var(--seed-color-bg-brand-weak)]
         disabled:cursor-not-allowed disabled:bg-bg-disabled disabled:text-fg-disabled;
     }
 
     .select {
         @apply appearance-none bg-[length:16px] bg-[right_var(--seed-dimension-x3)_center] bg-no-repeat pr-x9;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555d6d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8f98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     }
 
     .input-error, .input-error:focus {
-        @apply shadow-[inset_0_0_0_2px_var(--seed-color-stroke-critical-solid)];
+        @apply shadow-[inset_0_0_0_1px_var(--seed-color-stroke-critical-solid),0_0_0_3px_var(--seed-color-bg-critical-weak)];
     }
 
     .field-error {
@@ -123,14 +125,14 @@
 
     /* SEED Checkmark (square · medium · brand) 스펙 */
     .checkbox {
-        @apply size-x5 shrink-0 cursor-pointer appearance-none rounded-r1 border border-stroke-neutral-weak bg-bg-layer-default
+        @apply size-4 shrink-0 cursor-pointer appearance-none rounded-r1 border border-stroke-neutral-weak bg-bg-layer-default
         bg-center bg-no-repeat transition-colors duration-100
         checked:border-0 checked:bg-bg-brand-solid
         disabled:cursor-not-allowed disabled:border-stroke-neutral-muted disabled:bg-bg-disabled;
     }
 
     .checkbox:checked {
-        background-size: 14px;
+        background-size: 12px;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
     }
 
@@ -140,11 +142,11 @@
     }
 
     .table thead th {
-        @apply border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x2_5 text-left t3-medium whitespace-nowrap text-fg-neutral-subtle;
+        @apply border-b border-stroke-neutral-subtle px-x4 py-x2 text-left t3-medium whitespace-nowrap text-fg-neutral-subtle;
     }
 
     .table tbody td {
-        @apply border-b border-stroke-neutral-subtle px-x4 py-x3 align-middle whitespace-nowrap text-fg-neutral;
+        @apply border-b border-stroke-neutral-subtle px-x4 py-x2 align-middle whitespace-nowrap text-fg-neutral;
     }
 
     .table tbody tr:last-child td {
@@ -181,7 +183,25 @@
     }
 
     .stat-value {
-        @apply mt-x1 t9-bold text-fg-neutral tabular-nums;
+        @apply mt-x1 t8-bold tracking-tight text-fg-neutral tabular-nums;
+    }
+
+    /* 단축키 표시 (Linear 풍 kbd) */
+    .kbd {
+        @apply inline-flex h-x5 min-w-5 items-center justify-center rounded-r1 border border-stroke-neutral-subtle bg-bg-layer-default px-x1 t2-medium text-fg-neutral-subtle;
+    }
+
+    .theme-option {
+        @apply flex cursor-pointer flex-col items-center gap-x1 rounded-r1_5 py-x1_5 t3-regular text-fg-neutral-subtle hover:bg-bg-layer-floating-pressed;
+    }
+
+    .theme-option[aria-pressed="true"] {
+        @apply bg-bg-transparent-selected t3-medium text-fg-neutral;
+    }
+
+    /* 드롭다운 메뉴 항목 */
+    .menu-item {
+        @apply flex w-full cursor-pointer items-center gap-x2 rounded-r1_5 px-x2 py-x1_5 text-left t4-regular text-fg-neutral hover:bg-bg-layer-floating-pressed;
     }
 
     /* 표 셀 기본 색상보다 우선하도록 important 처리 */
@@ -252,5 +272,66 @@
 
     .prose-md > :first-child {
         @apply mt-0;
+    }
+}
+
+/* SEED 레시피 값 조정 (Linear 풍 밀도). seed-components 레이어 이후라 레시피보다 우선한다. */
+@layer abms-overrides {
+    .seed-side-navigation__root--tone_neutral {
+        background-color: transparent;
+        box-shadow: none;
+    }
+
+    .seed-side-navigation__header {
+        min-height: 52px;
+        padding: 8px 12px;
+    }
+
+    .seed-side-navigation__content {
+        padding: 4px 12px 16px;
+        gap: 14px;
+    }
+
+    .seed-side-navigation__groupLabel {
+        padding: 4px 8px;
+        font-size: var(--seed-font-size-t3);
+        line-height: var(--seed-line-height-t3);
+        font-weight: var(--seed-font-weight-medium);
+        color: var(--seed-color-fg-neutral-subtle);
+    }
+
+    .seed-side-navigation-menu-item__root {
+        height: 30px;
+        padding-inline: 8px;
+        border-radius: var(--seed-radius-r2);
+        gap: 8px;
+    }
+
+    .seed-side-navigation-menu-item__root::before {
+        border-radius: var(--seed-radius-r2);
+    }
+
+    .seed-side-navigation-menu-item__root[data-current] {
+        background-color: var(--seed-color-bg-transparent-selected);
+    }
+
+    .seed-side-navigation-menu-item__prefixIcon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .seed-side-navigation-menu-item__label {
+        padding: 0 0 0 24px;
+        font-size: var(--seed-font-size-t4);
+        line-height: var(--seed-line-height-t4);
+    }
+
+    .seed-badge__root--size_large {
+        min-height: 20px;
+        padding-inline: 6px;
+        padding-block: 2px;
+        border-radius: var(--seed-radius-r1);
+        font-size: var(--seed-font-size-t3);
+        line-height: var(--seed-line-height-t3);
     }
 }

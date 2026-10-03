@@ -2,7 +2,7 @@
 @param String title
 @param Content content
 <!DOCTYPE html>
-<html lang="ko" class="h-full" data-seed data-seed-color-mode="light-only">
+<html lang="ko" class="h-full" data-seed data-seed-color-mode="system" data-seed-user-color-scheme="light">
 <head>
     @template.layout.head(title = title)
 </head>
