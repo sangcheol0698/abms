@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.common.domain.Money;
+import kr.co.abacus.abms.common.domain.Period;
 import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.employee.Employee;
@@ -199,15 +200,20 @@ public class ProfitCalculationService {
         return totals;
     }
 
-    /** 정직원 전체 원가 중 프로젝트에 배분된 금액과 배분되지 않은 금액을 집계한다. */
+    /**
+     * 정직원 전체 원가 중 프로젝트에 배분된 금액과 배분되지 않은 금액을 집계한다.
+     * 총원가는 투입 M/M과 같은 기준으로 재직일수만큼 일할한다. (월중 입사·퇴사)
+     */
     private void calculateCompanyCost(YearMonth month, Map<Long, EmployeeMonthlyCost> costs) {
         LocalDate monthStart = month.atDay(1);
-        Set<Long> fullTimeIds = employeeRepository.findAllByIdInAndDeletedFalse(costs.keySet()).stream()
+        List<Employee> fullTimers = employeeRepository.findAllByIdInAndDeletedFalse(costs.keySet()).stream()
                 .filter(e -> e.getType() == EmployeeType.FULL_TIME)
-                .map(Employee::id)
-                .collect(Collectors.toSet());
+                .toList();
+        Set<Long> fullTimeIds = fullTimers.stream().map(Employee::id).collect(Collectors.toSet());
 
-        Money total = fullTimeIds.stream().map(id -> costs.get(id).getTotalCost()).reduce(Money.ZERO, Money::plus);
+        Money total = fullTimers.stream()
+                .map(e -> costs.get(e.id()).getTotalCost().times(employmentPeriod(e).manMonth(month)))
+                .reduce(Money.ZERO, Money::plus);
 
         // 프로젝트 비용 산식과 동일하게 투입 M/M 만큼 배분된 것으로 본다. (삭제된 프로젝트의 투입은 제외)
         List<ProjectAssignment> assignments = assignmentRepository.findOverlapping(monthStart, month.atEndOfMonth());
@@ -222,6 +228,10 @@ public class ProfitCalculationService {
         companySummaryRepository.findByTargetMonth(monthStart).ifPresentOrElse(
                 summary -> summary.update(total, allocated),
                 () -> companySummaryRepository.save(CompanyMonthlyCostSummary.create(month, total, allocated)));
+    }
+
+    private static Period employmentPeriod(Employee employee) {
+        return new Period(employee.getJoinDate(), employee.getResignationDate());
     }
 
     private static boolean employedDuring(Employee employee, LocalDate monthStart, LocalDate monthEnd) {

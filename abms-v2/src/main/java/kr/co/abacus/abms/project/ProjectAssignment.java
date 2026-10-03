@@ -1,10 +1,8 @@
 package kr.co.abacus.abms.project;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 import jakarta.persistence.Column;
@@ -81,23 +79,9 @@ public class ProjectAssignment extends BaseEntity {
         }
     }
 
-    /**
-     * 해당 월의 투입 M/M. 월 총일수 대비 실제 투입일수 (소수 첫째 자리 반올림).
-     * 예: 2월(28일) 중 14일 투입 → 0.5
-     */
+    /** 해당 월의 투입 M/M. 월 총일수 대비 실제 투입일수 (소수 첫째 자리 반올림). */
     public BigDecimal manMonth(YearMonth month) {
-        LocalDate monthStart = month.atDay(1);
-        LocalDate monthEnd = month.atEndOfMonth();
-
-        LocalDate realStart = period.startDate().isAfter(monthStart) ? period.startDate() : monthStart;
-        LocalDate end = period.endDate() != null ? period.endDate() : LocalDate.MAX;
-        LocalDate realEnd = end.isBefore(monthEnd) ? end : monthEnd;
-        if (realStart.isAfter(realEnd)) {
-            return BigDecimal.ZERO;
-        }
-        long workedDays = ChronoUnit.DAYS.between(realStart, realEnd) + 1;
-        return BigDecimal.valueOf(workedDays)
-                .divide(BigDecimal.valueOf(month.lengthOfMonth()), 1, RoundingMode.HALF_UP);
+        return period.manMonth(month);
     }
 
     public boolean isActiveOn(LocalDate date) {

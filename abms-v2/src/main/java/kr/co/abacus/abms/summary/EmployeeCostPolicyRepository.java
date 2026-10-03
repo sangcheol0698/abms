@@ -16,4 +16,6 @@ public interface EmployeeCostPolicyRepository extends JpaRepository<EmployeeCost
     /** 해당 연도 정책이 없으면 가장 최근 연도의 정책을 쓴다. */
     Optional<EmployeeCostPolicy> findFirstByTypeAndApplyYearLessThanEqualOrderByApplyYearDesc(EmployeeType type, int applyYear);
 
+    Optional<EmployeeCostPolicy> findFirstByTypeAndApplyYearGreaterThanOrderByApplyYearAsc(EmployeeType type, int applyYear);
+
 }

@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.employee;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -18,9 +19,11 @@ import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.department.DepartmentTree;
+import kr.co.abacus.abms.project.ProjectAssignmentRepository;
 import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.DataScope;
 import kr.co.abacus.abms.security.LoginUser;
+import kr.co.abacus.abms.summary.ClosedMonthGuard;
 
 /**
  * 직원 관리 유스케이스.
@@ -36,15 +39,20 @@ public class EmployeeService {
     private final PositionHistoryRepository positionHistoryRepository;
     private final DepartmentRepository departmentRepository;
     private final AccessService accessService;
+    private final ClosedMonthGuard closedMonthGuard;
+    private final ProjectAssignmentRepository assignmentRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository, PayrollRepository payrollRepository,
                            PositionHistoryRepository positionHistoryRepository,
-                           DepartmentRepository departmentRepository, AccessService accessService) {
+                           DepartmentRepository departmentRepository, AccessService accessService,
+                           ClosedMonthGuard closedMonthGuard, ProjectAssignmentRepository assignmentRepository) {
         this.employeeRepository = employeeRepository;
         this.payrollRepository = payrollRepository;
         this.positionHistoryRepository = positionHistoryRepository;
         this.departmentRepository = departmentRepository;
         this.accessService = accessService;
+        this.closedMonthGuard = closedMonthGuard;
+        this.assignmentRepository = assignmentRepository;
     }
 
     @Transactional(readOnly = true)
@@ -136,6 +144,7 @@ public class EmployeeService {
         if (!email.equals(employee.getEmail()) && employeeRepository.existsByEmail(email)) {
             throw new BusinessException("이미 사용 중인 이메일입니다: " + profile.email());
         }
+        checkJoinDateChangeOpen(employee.getJoinDate(), profile.joinDate());
         EmployeePosition before = employee.getPosition();
         EmployeeGrade beforeGrade = employee.getGrade();
         employee.update(profile);
@@ -154,6 +163,7 @@ public class EmployeeService {
 
     public void resign(LoginUser user, Long id, LocalDate resignationDate) {
         Employee employee = getForWrite(user, id);
+        checkEmploymentEndChangeOpen(resignationDate);
         employee.resign(resignationDate);
         payrollRepository.findOpen(id).ifPresent(p -> p.closeAt(resignationDate.isBefore(p.getPeriod().startDate()) ? p.getPeriod().startDate() : resignationDate));
         positionHistoryRepository.findOpen(id).ifPresent(h -> h.closeAt(resignationDate));
@@ -164,7 +174,11 @@ public class EmployeeService {
     }
 
     public void activate(LoginUser user, Long id) {
-        getForWrite(user, id).activate();
+        Employee employee = getForWrite(user, id);
+        if (employee.getResignationDate() != null) {
+            checkEmploymentEndChangeOpen(employee.getResignationDate());
+        }
+        employee.activate();
     }
 
     public void promote(LoginUser user, Long id, EmployeePosition position, @Nullable EmployeeGrade grade, LocalDate effectiveDate) {
@@ -173,8 +187,14 @@ public class EmployeeService {
         recordPositionChange(employee, effectiveDate);
     }
 
+    /** 삭제된 직원은 원가 집계에서 빠지므로, 투입 이력이 있는 직원은 삭제 대신 퇴사 처리해야 한다. */
     public void delete(LoginUser user, Long id) {
-        getForWrite(user, id).softDelete(user.accountId());
+        Employee employee = getForWrite(user, id);
+        if (assignmentRepository.existsByEmployeeId(id)) {
+            throw new BusinessException("프로젝트 투입 이력이 있는 직원은 삭제할 수 없습니다. 퇴사 처리하세요.");
+        }
+        checkEmploymentPeriodOpen(employee, "직원 삭제");
+        employee.softDelete(user.accountId());
     }
 
     public void restore(LoginUser user, Long id) {
@@ -183,6 +203,7 @@ public class EmployeeService {
         if (employeeRepository.existsByEmailAndDeletedFalse(employee.originalEmail())) {
             throw new BusinessException("같은 이메일의 직원이 이미 있어 복구할 수 없습니다: " + employee.originalEmail());
         }
+        checkEmploymentPeriodOpen(employee, "직원 복구");
         employee.restore();
     }
 
@@ -192,6 +213,7 @@ public class EmployeeService {
         if (startDate.isBefore(employee.getJoinDate())) {
             throw new BusinessException("연봉 적용일은 입사일 이후여야 합니다.");
         }
+        closedMonthGuard.checkOpen(startDate, null, "연봉 변경");
         payrollRepository.findOpen(id).ifPresent(open -> {
             if (!startDate.isAfter(open.getPeriod().startDate())) {
                 throw new BusinessException("새 연봉 적용일은 현재 연봉 적용일(" + open.getPeriod().startDate() + ") 이후여야 합니다.");
@@ -232,6 +254,30 @@ public class EmployeeService {
         if (!departmentRepository.existsById(departmentId)) {
             throw NotFoundException.of("부서", departmentId);
         }
+    }
+
+    /** 급여가 있는 직원은 재직 기간 동안 전사 원가에 포함되므로, 그 기간에 마감된 월이 있으면 막는다. */
+    private void checkEmploymentPeriodOpen(Employee employee, String subject) {
+        if (!payrollRepository.findAllByEmployeeIdOrderByPeriodStartDateDesc(employee.id()).isEmpty()) {
+            closedMonthGuard.checkOpen(employee.getJoinDate(), employee.getResignationDate(), subject);
+        }
+    }
+
+    /** 입사일이 바뀌면 이전/이후 입사일 사이 월의 재직 여부(원가 포함 여부)가 달라진다. */
+    private void checkJoinDateChangeOpen(LocalDate before, LocalDate after) {
+        YearMonth beforeMonth = YearMonth.from(before);
+        YearMonth afterMonth = YearMonth.from(after);
+        if (beforeMonth.equals(afterMonth)) {
+            return;
+        }
+        YearMonth earlier = beforeMonth.isBefore(afterMonth) ? beforeMonth : afterMonth;
+        YearMonth later = beforeMonth.isBefore(afterMonth) ? afterMonth : beforeMonth;
+        closedMonthGuard.checkOpen(earlier.atDay(1), later.minusMonths(1).atDay(1), "입사일 변경");
+    }
+
+    /** 퇴사일이 생기거나 없어지면 퇴사월 다음 달부터 원가 포함 여부가 달라진다. */
+    private void checkEmploymentEndChangeOpen(LocalDate resignationDate) {
+        closedMonthGuard.checkOpen(YearMonth.from(resignationDate).plusMonths(1).atDay(1), null, "퇴사 처리 변경");
     }
 
     private void recordPositionChange(Employee employee, LocalDate effectiveDate) {

@@ -10,6 +10,7 @@ import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.project.ProjectRevenuePlan.RevenuePlanInfo;
 import kr.co.abacus.abms.security.LoginUser;
+import kr.co.abacus.abms.summary.ClosedMonthGuard;
 
 /**
  * 프로젝트 매출(청구) 계획 관리.
@@ -20,10 +21,13 @@ public class ProjectRevenueService {
 
     private final ProjectService projectService;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
+    private final ClosedMonthGuard closedMonthGuard;
 
-    public ProjectRevenueService(ProjectService projectService, ProjectRevenuePlanRepository revenuePlanRepository) {
+    public ProjectRevenueService(ProjectService projectService, ProjectRevenuePlanRepository revenuePlanRepository,
+                                 ClosedMonthGuard closedMonthGuard) {
         this.projectService = projectService;
         this.revenuePlanRepository = revenuePlanRepository;
+        this.closedMonthGuard = closedMonthGuard;
     }
 
     @Transactional(readOnly = true)
@@ -59,17 +63,26 @@ public class ProjectRevenueService {
             throw new BusinessException(info.sequence() + "차 매출 계획이 이미 있습니다.");
         }
         checkTotal(project, plans(projectId).stream().filter(p -> !p.id().equals(planId)).toList(), info.amount());
+        // 발행된 매출만 집계에 반영되므로, 발행된 매출의 청구일·금액 변경만 마감 여부를 확인한다.
+        if (plan.isIssued() && (!plan.getRevenueDate().equals(info.revenueDate()) || !plan.getAmount().equals(info.amount()))) {
+            closedMonthGuard.checkOpen(plan.getRevenueDate(), "매출 계획 수정");
+            closedMonthGuard.checkOpen(info.revenueDate(), "매출 계획 수정");
+        }
         plan.update(info);
     }
 
     public void issue(LoginUser user, Long projectId, Long planId) {
         projectService.getForWrite(user, projectId);
-        get(projectId, planId).issue();
+        ProjectRevenuePlan plan = get(projectId, planId);
+        closedMonthGuard.checkOpen(plan.getRevenueDate(), "세금계산서 발행");
+        plan.issue();
     }
 
     public void cancelIssue(LoginUser user, Long projectId, Long planId) {
         projectService.getForWrite(user, projectId);
-        get(projectId, planId).cancelIssue();
+        ProjectRevenuePlan plan = get(projectId, planId);
+        closedMonthGuard.checkOpen(plan.getRevenueDate(), "발행 취소");
+        plan.cancelIssue();
     }
 
     public void delete(LoginUser user, Long projectId, Long planId) {

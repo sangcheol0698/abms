@@ -113,4 +113,51 @@ class ProjectServiceTest {
         assertThat(assignmentService.assignments(joined.id())).hasSize(2);
     }
 
+    @Test
+    void 같은_직원을_다른_프로젝트에도_겹치는_기간으로_투입할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+
+        assertThatThrownBy(() -> assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV, today, today.plusMonths(2)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 같은 기간");
+        // 다른 프로젝트 투입이 끝난 다음 날부터는 투입할 수 있다.
+        assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV, today.plusMonths(1).plusDays(1), today.plusMonths(2));
+        assertThat(assignmentService.assignments(otherTeam.id())).hasSize(1);
+    }
+
+    @Test
+    void 투입_기간을_수정해_다른_프로젝트_투입과_겹치게_할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+        ProjectAssignment later = assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV,
+                today.plusMonths(1).plusDays(1), today.plusMonths(2));
+
+        assertThatThrownBy(() -> assignmentService.update(admin, otherTeam.id(), later.id(), member.id(), AssignmentRole.DEV,
+                today, today.plusMonths(2)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 같은 기간");
+        // 자기 자신과의 겹침은 무시한다.
+        assignmentService.update(admin, otherTeam.id(), later.id(), member.id(), AssignmentRole.PL,
+                today.plusMonths(1).plusDays(1), today.plusMonths(3));
+    }
+
+    @Test
+    void 이미_시작된_투입이_있는_프로젝트는_삭제할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+
+        assertThatThrownBy(() -> projectService.delete(admin, joined.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 시작된 투입");
+        // 시작 전인 투입만 있으면 함께 삭제된다.
+        Employee newcomer = fixtures.employee(teamA, "신규");
+        fixtures.assign(otherTeam, newcomer, today.plusDays(1), today.plusMonths(1));
+        projectService.delete(admin, otherTeam.id());
+        assertThat(assignmentService.assignments(otherTeam.id())).isEmpty();
+    }
+
+    @Test
+    void 발행된_매출이_있는_프로젝트는_삭제할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+        fixtures.revenue(otherTeam, 1, today, 10_000_000, true);
+
+        assertThatThrownBy(() -> projectService.delete(admin, otherTeam.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("발행된 매출");
+    }
+
 }
