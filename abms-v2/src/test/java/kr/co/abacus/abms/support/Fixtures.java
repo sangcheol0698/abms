@@ -76,8 +76,12 @@ public class Fixtures {
     }
 
     public Employee employee(Department department, String name, EmployeeType type) {
+        return employee(department, name, type, LocalDate.of(2020, 1, 1));
+    }
+
+    public Employee employee(Department department, String name, EmployeeType type, LocalDate joinDate) {
         return employeeRepository.save(Employee.create(new EmployeeProfile(department.id(), name,
-                "e" + SEQ.incrementAndGet() + "@test.co", LocalDate.of(2020, 1, 1), LocalDate.of(1990, 1, 1),
+                "e" + SEQ.incrementAndGet() + "@test.co", joinDate, LocalDate.of(1990, 1, 1),
                 EmployeePosition.SENIOR_ASSOCIATE, type, EmployeeGrade.MID_LEVEL, EmployeeAvatar.SKY_GLOW, null)));
     }
 

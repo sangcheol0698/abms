@@ -15,6 +15,7 @@ import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.employee.Employee;
+import kr.co.abacus.abms.employee.EmployeeType;
 import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.project.ProjectService;
 import kr.co.abacus.abms.security.LoginUser;
@@ -109,6 +110,34 @@ class ProfitCalculationServiceTest {
         CompanyMonthlyCostSummary company = companySummaryRepository.findByTargetMonth(FEB.atDay(1)).orElseThrow();
         assertThat(company.getTotalFullTimeCost()).isEqualTo(Money.wons(11_500_000 + 5_750_000 + 3_450_000));
         assertThat(company.getAllocatedFullTimeCost()).isEqualTo(Money.wons(14_375_000));
+        assertThat(company.getUnallocatedFullTimeCost()).isEqualTo(Money.wons(6_325_000));
+    }
+
+    @Test
+    void 월중_입사자와_퇴사자의_총원가는_재직일수만큼_일할한다() {
+        Employee newcomer = fixtures.employee(lead, "신규입사", EmployeeType.FULL_TIME, LocalDate.of(2026, 2, 15));
+        fixtures.payroll(newcomer, 120_000_000, LocalDate.of(2026, 2, 15));   // 원가 1,150만 × 0.5 (14/28)
+        Employee leaver = fixtures.employee(lead, "퇴사예정");
+        fixtures.payroll(leaver, 120_000_000, LocalDate.of(2025, 1, 1));
+        leaver.resign(LocalDate.of(2026, 2, 7));                               // 원가 1,150만 × 0.3 (7/28 = 0.25 → 0.3)
+
+        calculationService.calculate(FEB);
+
+        CompanyMonthlyCostSummary company = companySummaryRepository.findByTargetMonth(FEB.atDay(1)).orElseThrow();
+        assertThat(company.getTotalFullTimeCost())
+                .isEqualTo(Money.wons(11_500_000 + 5_750_000 + 3_450_000 + 5_750_000 + 3_450_000));
+        assertThat(company.getUnallocatedFullTimeCost()).isEqualTo(Money.wons(6_325_000 + 5_750_000 + 3_450_000));
+    }
+
+    @Test
+    void 입사일부터_전부_투입된_월중_입사자는_미배분_비용이_없다() {
+        Employee newcomer = fixtures.employee(lead, "신규입사", EmployeeType.FULL_TIME, LocalDate.of(2026, 2, 15));
+        fixtures.payroll(newcomer, 120_000_000, LocalDate.of(2026, 2, 15));
+        fixtures.assign(project, newcomer, LocalDate.of(2026, 2, 15), LocalDate.of(2026, 2, 28));
+
+        calculationService.calculate(FEB);
+
+        CompanyMonthlyCostSummary company = companySummaryRepository.findByTargetMonth(FEB.atDay(1)).orElseThrow();
         assertThat(company.getUnallocatedFullTimeCost()).isEqualTo(Money.wons(6_325_000));
     }
 
