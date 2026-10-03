@@ -5,6 +5,7 @@
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.common.web.ViewContext
 @import kr.co.abacus.abms.report.WeeklyReport
+@import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param PageView<WeeklyReport> page
 @param Map<Long, String> authors
@@ -17,21 +18,21 @@
             @if(page.isEmpty())
                 @template.components.empty(message = "생성된 보고서가 없습니다.", icon = "document")
             @else
-                <ul class="divide-y divide-slate-100">
+                <ul class="divide-y divide-stroke-neutral-subtle">
                     @for(WeeklyReport r : page.content())
                         <li>
-                            <a href="/reports/${r.id()}" class="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-slate-50">
+                            <a href="/reports/${r.id()}" class="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-bg-neutral-muted">
                                 <div class="min-w-0">
-                                    <p class="truncate text-sm font-medium text-slate-900">${r.getTitle()}</p>
-                                    <p class="text-xs text-slate-500">${Ui.date(r.getWeekStart())} ~ ${Ui.date(r.getWeekEnd())} · ${authors.getOrDefault(r.getAuthorAccountId(), "-")} · ${Ui.relative(r.getCreatedAt())}</p>
+                                    <p class="truncate text-sm font-medium text-fg-neutral">${r.getTitle()}</p>
+                                    <p class="text-xs text-fg-neutral-subtle">${Ui.date(r.getWeekStart())} ~ ${Ui.date(r.getWeekEnd())} · ${authors.getOrDefault(r.getAuthorAccountId(), "-")} · ${Ui.relative(r.getCreatedAt())}</p>
                                 </div>
                                 <div class="flex shrink-0 gap-1">
                                     @if(r.getGenerator() == WeeklyReport.Generator.AI)
-                                        <span class="badge badge-purple">${Icons.of("sparkles", "size-3")} AI</span>
+                                        <span class="${Seed.badge("brand")}">${Icons.of("sparkles", "size-3")} AI</span>
                                     @else
-                                        <span class="badge badge-gray">템플릿</span>
+                                        <span class="${Seed.badge("neutral")}">템플릿</span>
                                     @endif
-                                    @if(r.isEdited())<span class="badge badge-blue">편집됨</span>@endif
+                                    @if(r.isEdited())<span class="${Seed.badge("informative")}">편집됨</span>@endif
                                 </div>
                             </a>
                         </li>
@@ -48,14 +49,14 @@
                     <input id="date" name="date" type="date" class="input" value="${defaultDate.toString()}" max="${LocalDate.now().toString()}" required>
                     <p class="field-help">월요일~일요일 기준으로 집계합니다.</p>
                 </div>
-                <button type="submit" class="btn btn-primary w-full">
+                <button type="submit" class="${Seed.button("brandSolid")} w-full">
                     <span class="htmx-indicator">
                         <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"/><path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" stroke-width="3" class="opacity-75"/></svg>
                     </span>
                     ${Icons.of("sparkles", "size-4 htmx-hide-on-request")} 보고서 생성
                 </button>
                 @if(!ctx.aiEnabled())
-                    <p class="text-xs text-slate-500">AI 모델이 설정되지 않아 템플릿 기반 보고서가 생성됩니다.</p>
+                    <p class="text-xs text-fg-neutral-subtle">AI 모델이 설정되지 않아 템플릿 기반 보고서가 생성됩니다.</p>
                 @endif
             </form>
         </section>

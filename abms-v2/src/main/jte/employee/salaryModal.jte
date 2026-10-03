@@ -1,5 +1,6 @@
 @import kr.co.abacus.abms.common.web.FormErrors
 @import kr.co.abacus.abms.employee.Employee
+@import kr.co.abacus.abms.common.web.Seed
 @param Employee employee
 @param FormErrors errors
 <form hx-post="/employees/${employee.id()}/salary" hx-target="#modal-body">
@@ -16,7 +17,7 @@
             </div>
         </div>
     `, footer = @`
-        <button type="button" class="btn btn-secondary" data-close-modal>취소</button>
-        <button type="submit" class="btn btn-primary">등록</button>
+        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="submit" class="${Seed.button("brandSolid")}">등록</button>
     `)
 </form>

@@ -1,31 +1,38 @@
+/*
+ * SEED Design 기반 스타일 (https://seed-design.io)
+ * - 토큰: @seed-design/css 의 CSS 변수 + @seed-design/tailwind4-theme 유틸리티 (bg-bg-*, text-fg-*, p-x4, rounded-r2, t4-bold …)
+ * - 컴포넌트: SEED 레시피 CSS(seed-action-button, seed-badge …)는 그대로 쓰고,
+ *   SEED에 없는 데스크톱 요소(카드, 표 등)는 아래 components 레이어에서 SEED 토큰으로 정의한다.
+ * - 색은 역할 토큰만 쓴다. (다크 모드 전환 대비: html[data-seed-color-mode] 값만 바꾸면 된다)
+ */
+@layer theme, base, seed-base, components, seed-components, utilities;
+@import "@seed-design/css/base.layered.css";
+@import "@seed-design/css/recipes/action-button.layered.css";
+@import "@seed-design/css/recipes/badge.layered.css";
+@import "@seed-design/css/recipes/callout.layered.css";
+@import "@seed-design/css/recipes/snackbar.layered.css";
+@import "@seed-design/css/recipes/side-navigation.layered.css";
+@import "@seed-design/css/recipes/side-navigation-menu-item.layered.css";
 @import "tailwindcss";
+@import "@seed-design/tailwind4-theme";
 
-/* 템플릿과 Java 코드(뱃지 색상 등)에 쓰인 클래스를 스캔한다 */
+/* 템플릿과 Java 코드(뱃지 등)에 쓰인 클래스를 스캔한다 */
 @source "../jte";
 @source "../java";
 @source "../resources/static/js";
-
-@theme {
-    --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-    --color-brand-50: #eef4ff;
-    --color-brand-100: #dbe7fe;
-    --color-brand-200: #bfd3fe;
-    --color-brand-300: #93b4fd;
-    --color-brand-400: #608bfa;
-    --color-brand-500: #3b65f5;
-    --color-brand-600: #2546ea;
-    --color-brand-700: #1d35d7;
-    --color-brand-800: #1e2eae;
-    --color-brand-900: #1e2d89;
-}
 
 @layer base {
     html {
         -webkit-font-smoothing: antialiased;
     }
 
+    /* SEED 권장: font-family 는 body 에 선언한다. (Windows 는 Pretendard 웹폰트 사용) */
     body {
-        @apply bg-slate-50 text-slate-800;
+        font-family: var(--seed-font-family);
+        background-color: var(--seed-color-bg-layer-basement);
+        color: var(--seed-color-fg-neutral);
+        font-size: var(--seed-font-size-t4);
+        line-height: var(--seed-line-height-t4);
     }
 
     [x-cloak], .htmx-indicator {
@@ -41,8 +48,7 @@
     }
 
     dialog::backdrop {
-        background: rgb(15 23 42 / 0.45);
-        backdrop-filter: blur(2px);
+        background: var(--seed-color-bg-overlay-muted);
     }
 
     details > summary {
@@ -52,227 +58,182 @@
     details > summary::-webkit-details-marker {
         display: none;
     }
+
+    :focus-visible {
+        outline-color: var(--seed-color-stroke-focus-ring);
+    }
 }
 
 @layer components {
-    .btn {
-        @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium whitespace-nowrap transition
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer;
-    }
-
-    .btn-sm {
-        @apply px-2.5 py-1.5 text-xs;
-    }
-
-    .btn-primary {
-        @apply bg-brand-600 text-white shadow-sm hover:bg-brand-700;
-    }
-
-    .btn-secondary {
-        @apply bg-white text-slate-700 shadow-sm ring-1 ring-slate-300 ring-inset hover:bg-slate-50;
-    }
-
-    .btn-danger {
-        @apply bg-rose-600 text-white shadow-sm hover:bg-rose-700;
-    }
-
-    .btn-danger-ghost {
-        @apply text-rose-600 hover:bg-rose-50;
-    }
-
-    .btn-ghost {
-        @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900;
-    }
-
+    /* 카드 (SEED Layer: layer-default 표면 + subtle 테두리) */
     .card {
-        @apply rounded-xl bg-white shadow-sm ring-1 ring-slate-200;
+        @apply rounded-r3 border border-stroke-neutral-subtle bg-bg-layer-default;
     }
 
     .card-header {
-        @apply flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5;
+        @apply flex items-center justify-between gap-x3 border-b border-stroke-neutral-subtle px-x5 py-x3_5;
     }
 
     .card-title {
-        @apply text-sm font-semibold text-slate-900;
+        @apply t5-bold text-fg-neutral;
     }
 
     .card-body {
-        @apply p-5;
+        @apply p-x5;
     }
 
+    /* 폼 필드 (SEED Field / Text Input outline-medium 스펙) */
     .label {
-        @apply mb-1.5 block text-sm font-medium text-slate-700;
+        @apply mb-x1_5 block t4-medium text-fg-neutral;
     }
 
     .input, .select, .textarea {
-        @apply block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-300 ring-inset
-        placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500 focus:ring-inset disabled:bg-slate-50 disabled:text-slate-500;
+        @apply block min-h-10 w-full rounded-r2 border-0 bg-bg-layer-default px-x3 py-x2 t4-regular text-fg-neutral
+        shadow-[inset_0_0_0_1px_var(--seed-color-stroke-neutral-weak)] transition-shadow duration-100 outline-none
+        placeholder:text-fg-placeholder
+        focus:shadow-[inset_0_0_0_2px_var(--seed-color-stroke-neutral-contrast)]
+        disabled:cursor-not-allowed disabled:bg-bg-disabled disabled:text-fg-disabled;
     }
 
-    .input-error {
-        @apply ring-rose-400 focus:ring-rose-500;
+    .select {
+        @apply appearance-none bg-[length:16px] bg-[right_var(--seed-dimension-x3)_center] bg-no-repeat pr-x9;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555d6d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    }
+
+    .input-error, .input-error:focus {
+        @apply shadow-[inset_0_0_0_2px_var(--seed-color-stroke-critical-solid)];
     }
 
     .field-error {
-        @apply mt-1 text-xs text-rose-600;
+        @apply mt-x1_5 t3-regular text-fg-critical;
     }
 
     .field-help {
-        @apply mt-1 text-xs text-slate-500;
+        @apply mt-x1_5 t3-regular text-fg-neutral-subtle;
+    }
+
+    .required-mark {
+        @apply ml-x0_5 text-fg-critical;
     }
 
     .checkbox {
-        @apply size-4 rounded border-slate-300 text-brand-600 accent-brand-600;
+        @apply size-[18px] cursor-pointer rounded-r1 accent-(--seed-color-bg-brand-solid);
     }
 
+    /* 표 (SEED 에는 테이블 컴포넌트가 없어 List 스펙의 간격·구분선을 따른다) */
     .table {
-        @apply min-w-full divide-y divide-slate-200 text-sm;
+        @apply min-w-full t4-regular;
     }
 
     .table thead th {
-        @apply bg-slate-50 px-4 py-2.5 text-left text-xs font-semibold tracking-wide whitespace-nowrap text-slate-500;
+        @apply border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x2_5 text-left t3-medium whitespace-nowrap text-fg-neutral-subtle;
     }
 
     .table tbody td {
-        @apply px-4 py-3 align-middle whitespace-nowrap text-slate-700;
+        @apply border-b border-stroke-neutral-subtle px-x4 py-x3 align-middle whitespace-nowrap text-fg-neutral;
+    }
+
+    .table tbody tr:last-child td {
+        @apply border-b-0;
     }
 
     .table tbody tr {
-        @apply hover:bg-slate-50/70;
+        @apply transition-colors hover:bg-bg-layer-default-pressed;
     }
 
     .table .num {
         @apply text-right tabular-nums;
     }
 
-    .badge {
-        @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset whitespace-nowrap;
-    }
-
-    .badge-gray {
-        @apply bg-slate-50 text-slate-600 ring-slate-500/20;
-    }
-
-    .badge-blue {
-        @apply bg-blue-50 text-blue-700 ring-blue-600/20;
-    }
-
-    .badge-green {
-        @apply bg-emerald-50 text-emerald-700 ring-emerald-600/20;
-    }
-
-    .badge-yellow {
-        @apply bg-amber-50 text-amber-800 ring-amber-600/20;
-    }
-
-    .badge-red {
-        @apply bg-rose-50 text-rose-700 ring-rose-600/20;
-    }
-
-    .badge-purple {
-        @apply bg-violet-50 text-violet-700 ring-violet-600/20;
-    }
-
-    .nav-link {
-        @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white;
-    }
-
-    .nav-link.active {
-        @apply bg-white/10 text-white;
-    }
-
-    .nav-section {
-        @apply mt-6 mb-2 px-3 text-[11px] font-semibold tracking-wider text-slate-500 uppercase;
-    }
-
+    /* 본문·표 안 링크: 브랜드 색은 주요 행동(CTA)에만 쓰고 링크는 중립색 + 밑줄로 표현한다 */
     .link {
-        @apply font-medium text-brand-600 hover:text-brand-700 hover:underline;
+        @apply t4-medium text-fg-neutral underline-offset-2 hover:underline;
     }
 
     .dropdown-panel {
-        @apply absolute right-0 z-30 mt-2 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-slate-200;
+        @apply absolute right-0 z-30 mt-x2 origin-top-right rounded-r3 border border-stroke-neutral-subtle bg-bg-layer-floating shadow-s2;
     }
 
     .tab {
-        @apply border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700;
+        @apply border-b-2 border-transparent px-x1 pb-x3 t4-medium text-fg-neutral-subtle hover:text-fg-neutral;
     }
 
     .tab.active {
-        @apply border-brand-600 text-brand-700;
+        @apply border-stroke-neutral-contrast t4-bold text-fg-neutral;
     }
 
     .stat-label {
-        @apply text-xs font-medium text-slate-500;
+        @apply t3-medium text-fg-neutral-subtle;
     }
 
     .stat-value {
-        @apply mt-1 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums;
+        @apply mt-x1 t9-bold text-fg-neutral tabular-nums;
     }
 
     /* 표 셀 기본 색상보다 우선하도록 important 처리 */
     .positive {
-        @apply text-emerald-600!;
+        @apply text-fg-positive!;
     }
 
     .negative {
-        @apply text-rose-600!;
+        @apply text-fg-critical!;
     }
 
-    /* 마크다운 본문 (AI 어시스턴트, 주간 보고서) */
+    /* 마크다운 본문 (AI 어시스턴트, 주간 보고서) — SEED article 스타일 */
     .prose-md {
-        @apply text-sm leading-relaxed text-slate-700;
+        @apply t4-regular leading-relaxed text-fg-neutral-muted;
     }
 
     .prose-md h1 {
-        @apply mt-5 mb-3 text-xl font-bold text-slate-900;
+        @apply mt-x5 mb-x3 t7-bold text-fg-neutral;
     }
 
     .prose-md h2 {
-        @apply mt-6 mb-3 border-b border-slate-100 pb-1.5 text-base font-semibold text-slate-900;
+        @apply mt-x6 mb-x3 border-b border-stroke-neutral-subtle pb-x1_5 t5-bold text-fg-neutral;
     }
 
     .prose-md h3 {
-        @apply mt-4 mb-2 text-sm font-semibold text-slate-900;
+        @apply mt-x4 mb-x2 t4-bold text-fg-neutral;
     }
 
     .prose-md p {
-        @apply my-2;
+        @apply my-x2;
     }
 
     .prose-md ul {
-        @apply my-2 list-disc space-y-1 pl-5;
+        @apply my-x2 list-disc space-y-1 pl-x5;
     }
 
     .prose-md ol {
-        @apply my-2 list-decimal space-y-1 pl-5;
+        @apply my-x2 list-decimal space-y-1 pl-x5;
     }
 
     .prose-md a {
-        @apply font-medium text-brand-600 hover:underline;
+        @apply t4-medium text-fg-brand hover:underline;
     }
 
     .prose-md code {
-        @apply rounded bg-slate-100 px-1 py-0.5 text-[0.85em];
+        @apply rounded-r1 bg-bg-neutral-weak px-x1 py-x0_5 text-[0.85em];
     }
 
     .prose-md pre {
-        @apply my-3 overflow-x-auto rounded-lg bg-slate-900 p-3 text-slate-100;
+        @apply my-x3 overflow-x-auto rounded-r2 bg-bg-neutral-inverted p-x3 text-fg-neutral-inverted;
     }
 
     .prose-md table {
-        @apply my-3 block w-full overflow-x-auto text-xs;
+        @apply my-x3 block w-full overflow-x-auto t3-regular;
     }
 
     .prose-md th {
-        @apply border-b border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold whitespace-nowrap;
+        @apply border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x3 py-x2 text-left t3-bold whitespace-nowrap;
     }
 
     .prose-md td {
-        @apply border-b border-slate-100 px-3 py-2 whitespace-nowrap;
+        @apply border-b border-stroke-neutral-subtle px-x3 py-x2 whitespace-nowrap;
     }
 
     .prose-md blockquote {
-        @apply my-3 border-l-4 border-slate-200 pl-3 text-slate-500;
+        @apply my-x3 border-l-4 border-stroke-neutral-weak pl-x3 text-fg-neutral-subtle;
     }
 
     .prose-md > :first-child {

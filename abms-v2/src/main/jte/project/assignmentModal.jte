@@ -7,6 +7,7 @@
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.project.ProjectAssignment
 @import kr.co.abacus.abms.project.ProjectAssignmentController.AssignmentForm
+@import kr.co.abacus.abms.common.web.Seed
 @param Project project
 @param ProjectAssignment assignment = null
 @param AssignmentForm form
@@ -40,7 +41,7 @@
         </div>
         <p class="field-help mt-3">투입 기간은 프로젝트 기간 안이어야 하며, 퇴사자는 퇴사일을 넘길 수 없습니다.</p>
     `, footer = @`
-        <button type="button" class="btn btn-secondary" data-close-modal>취소</button>
-        <button type="submit" class="btn btn-primary">${editing ? "저장" : "투입"}</button>
+        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="submit" class="${Seed.button("brandSolid")}">${editing ? "저장" : "투입"}</button>
     `)
 </form>

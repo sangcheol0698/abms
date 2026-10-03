@@ -3,6 +3,7 @@
 @import kr.co.abacus.abms.common.web.ViewContext
 @import kr.co.abacus.abms.employee.EmployeeType
 @import kr.co.abacus.abms.summary.EmployeeCostPolicy
+@import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param List<EmployeeCostPolicy> policies
 @param int currentYear
@@ -17,7 +18,7 @@
                 <div class="overflow-x-auto">
                     <table class="table">
                         <thead><tr><th>연도</th><th>고용유형</th><th>제경비율 (%)</th><th>판관비율 (%)</th><th>원가 배수</th><th></th></tr></thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-stroke-neutral-subtle">
                         @for(EmployeeCostPolicy p : policies)
                             !{String formId = "policy-" + p.id();}
                             <tr>
@@ -25,11 +26,11 @@
                                 <td>${p.getType().label()}</td>
                                 <td><input form="${formId}" name="overheadPercent" type="number" step="0.01" min="0" max="100" class="input !w-24" value="${p.getOverheadRate().movePointRight(2).stripTrailingZeros().toPlainString()}" aria-label="제경비율"></td>
                                 <td><input form="${formId}" name="sgaPercent" type="number" step="0.01" min="0" max="100" class="input !w-24" value="${p.getSgaRate().movePointRight(2).stripTrailingZeros().toPlainString()}" aria-label="판관비율"></td>
-                                <td class="tabular-nums text-slate-500">× ${java.math.BigDecimal.ONE.add(p.getOverheadRate()).add(p.getSgaRate()).stripTrailingZeros().toPlainString()}</td>
+                                <td class="tabular-nums text-fg-neutral-subtle">× ${java.math.BigDecimal.ONE.add(p.getOverheadRate()).add(p.getSgaRate()).stripTrailingZeros().toPlainString()}</td>
                                 <td class="text-right">
-                                    <form id="${formId}" method="post" action="/admin/cost-policies/${p.id()}" class="inline"><button class="btn btn-ghost btn-sm">저장</button></form>
+                                    <form id="${formId}" method="post" action="/admin/cost-policies/${p.id()}" class="inline"><button class="${Seed.button("ghost", "xsmall")}">저장</button></form>
                                     <form method="post" action="/admin/cost-policies/${p.id()}/delete" class="inline" hx-confirm="${p.getApplyYear()}년 ${p.getType().label()} 정책을 삭제할까요?">
-                                        <button class="btn btn-danger-ghost btn-sm" aria-label="삭제">${Icons.of("trash", "size-4")}</button>
+                                        <button class="${Seed.button("ghost", "xsmall")} text-fg-critical" aria-label="삭제">${Icons.of("trash", "size-4")}</button>
                                     </form>
                                 </td>
                             </tr>
@@ -62,7 +63,7 @@
                     <label for="sgaPercent" class="label">판관비율 (%)</label>
                     <input id="sgaPercent" name="sgaPercent" type="number" step="0.01" min="0" max="100" class="input" value="5" required>
                 </div>
-                <button type="submit" class="btn btn-primary col-span-2">${Icons.of("plus", "size-4")} 추가</button>
+                <button type="submit" class="${Seed.button("brandSolid")} col-span-2">${Icons.of("plus", "size-4")} 추가</button>
             </form>
         </section>
     </div>

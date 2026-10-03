@@ -2,8 +2,10 @@
 @import kr.co.abacus.abms.common.web.Icons
 @param FormErrors errors
 @if(errors.global() != null)
-    <div class="mb-4 flex items-start gap-2 rounded-lg bg-rose-50 px-3.5 py-3 text-sm text-rose-700 ring-1 ring-rose-200">
-        ${Icons.of("warning", "mt-0.5 size-4 shrink-0")}
-        <span>${errors.global()}</span>
+    <div role="alert" class="seed-callout__root seed-callout__root--tone_critical mb-x4">
+        ${Icons.of("warning", "size-4 shrink-0 text-fg-critical")}
+        <div class="seed-callout__content">
+            <p class="seed-callout__description seed-callout__description--tone_critical">${errors.global()}</p>
+        </div>
     </div>
 @endif

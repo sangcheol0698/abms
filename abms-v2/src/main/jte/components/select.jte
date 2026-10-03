@@ -9,7 +9,7 @@
 @param boolean required = false
 @param String emptyLabel = null
 <div>
-    <label for="${name}" class="label">${label}@if(required)<span class="ml-0.5 text-rose-500">*</span>@endif</label>
+    <label for="${name}" class="label">${label}@if(required)<span class="required-mark">*</span>@endif</label>
     <select id="${name}" name="${name}" required="${required}" class="select ${errors.has(name) ? "input-error" : ""}">
         @if(emptyLabel != null)
             <option value="">${emptyLabel}</option>

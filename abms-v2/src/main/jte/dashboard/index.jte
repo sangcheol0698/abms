@@ -6,6 +6,7 @@
 @import kr.co.abacus.abms.dashboard.DashboardService.UpcomingRevenue
 @import kr.co.abacus.abms.project.ProjectStatus
 @import kr.co.abacus.abms.summary.ProfitRow
+@import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param Dashboard dashboard
 @param List<Integer> years
@@ -22,7 +23,7 @@
                 </select>
             </form>
             @if(ctx.can(kr.co.abacus.abms.access.PermissionCode.DASHBOARD_READ))
-                <a href="/summary" class="btn btn-secondary">${Icons.of("chart", "size-4")} 월별 손익</a>
+                <a href="/summary" class="${Seed.button("neutralWeak")}">${Icons.of("chart", "size-4")} 월별 손익</a>
             @endif
         `)
 
@@ -47,16 +48,16 @@
             <div class="card-body space-y-3">
                 @for(ProjectStatus status : ProjectStatus.values())
                     !{long count = dashboard.projectStatusCounts().getOrDefault(status, 0L);}
-                    <a href="/projects?status=${status.name()}" class="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-slate-50">
+                    <a href="/projects?status=${status.name()}" class="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-bg-neutral-muted">
                         <span class="${Ui.badge(status)}">${status.label()}</span>
-                        <span class="text-sm font-semibold text-slate-900 tabular-nums">${count}</span>
+                        <span class="text-sm font-semibold text-fg-neutral tabular-nums">${count}</span>
                     </a>
                 @endfor
                 @if(dashboard.unallocatedCost() != null)
-                    <div class="mt-4 rounded-lg bg-amber-50 p-3 ring-1 ring-amber-200">
-                        <p class="text-xs font-medium text-amber-800">미배분 정직원 비용 (${dashboard.year()}년 누적)</p>
-                        <p class="mt-1 text-lg font-semibold text-amber-900 tabular-nums">${Ui.won(dashboard.unallocatedCost())}원</p>
-                        <p class="mt-0.5 text-xs text-amber-700">프로젝트에 투입되지 않은 정직원 원가입니다.</p>
+                    <div class="mt-4 rounded-lg bg-bg-warning-weak p-3 ring-1 ring-stroke-warning-weak">
+                        <p class="text-xs font-medium text-fg-warning-contrast">미배분 정직원 비용 (${dashboard.year()}년 누적)</p>
+                        <p class="mt-1 text-lg font-semibold text-fg-warning-contrast tabular-nums">${Ui.won(dashboard.unallocatedCost())}원</p>
+                        <p class="mt-0.5 text-xs text-fg-warning">프로젝트에 투입되지 않은 정직원 원가입니다.</p>
                     </div>
                 @endif
             </div>
@@ -72,10 +73,10 @@
                 <div class="overflow-x-auto">
                     <table class="table">
                         <thead><tr><th>프로젝트</th><th class="num">매출</th><th class="num">비용</th><th class="num">이익</th></tr></thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-stroke-neutral-subtle">
                         @for(ProfitRow row : dashboard.topProjects())
                             <tr>
-                                <td><a class="link" href="/projects/${row.id()}">${row.name()}</a><p class="text-xs text-slate-400">${row.code()}</p></td>
+                                <td><a class="link" href="/projects/${row.id()}">${row.name()}</a><p class="text-xs text-fg-placeholder">${row.code()}</p></td>
                                 <td class="num">${row.revenue().compact()}</td>
                                 <td class="num">${row.cost().compact()}</td>
                                 <td class="num font-semibold ${Ui.signClass(row.profit())}">${row.profit().compact()}</td>
@@ -94,7 +95,7 @@
                 <div class="overflow-x-auto">
                     <table class="table">
                         <thead><tr><th>부서</th><th class="num">매출</th><th class="num">비용</th><th class="num">이익</th><th class="num">이익률</th></tr></thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-stroke-neutral-subtle">
                         @for(ProfitRow row : dashboard.departments())
                             <tr>
                                 <td><a class="link" href="/departments?selected=${row.id()}">${row.name()}</a></td>
@@ -114,23 +115,23 @@
     <section class="card mt-4 overflow-hidden">
         <div class="card-header">
             <h2 class="card-title">청구 예정 · 미발행 매출</h2>
-            <span class="text-xs text-slate-500">지난 30일 ~ 향후 60일</span>
+            <span class="text-xs text-fg-neutral-subtle">지난 30일 ~ 향후 60일</span>
         </div>
         @if(dashboard.upcomingRevenues().isEmpty())
             @template.components.empty(message = "예정된 청구가 없습니다.", icon = "money")
         @else
-            <ul class="divide-y divide-slate-100">
+            <ul class="divide-y divide-stroke-neutral-subtle">
                 @for(UpcomingRevenue item : dashboard.upcomingRevenues())
                     <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                         <div class="min-w-0">
                             <a href="/projects/${item.project().id()}" class="link">${item.project().getName()}</a>
-                            <p class="text-xs text-slate-500">${item.plan().getSequence()}차 ${item.plan().getType().label()} · 청구일 ${Ui.date(item.plan().getRevenueDate())}</p>
+                            <p class="text-xs text-fg-neutral-subtle">${item.plan().getSequence()}차 ${item.plan().getType().label()} · 청구일 ${Ui.date(item.plan().getRevenueDate())}</p>
                         </div>
                         <div class="flex items-center gap-3">
                             @if(item.overdue())
-                                <span class="badge badge-red">기한 경과</span>
+                                <span class="${Seed.badge("critical")}">기한 경과</span>
                             @else
-                                <span class="badge badge-gray">예정</span>
+                                <span class="${Seed.badge("neutral")}">예정</span>
                             @endif
                             <span class="text-sm font-semibold tabular-nums">${Ui.won(item.plan().getAmount())}원</span>
                         </div>

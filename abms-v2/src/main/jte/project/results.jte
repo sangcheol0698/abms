@@ -12,10 +12,10 @@
     <div class="overflow-x-auto">
         <table class="table">
             <thead><tr><th>프로젝트</th><th>협력사</th><th>주관 부서</th><th>상태</th><th>기간</th><th class="num">계약금액</th></tr></thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-stroke-neutral-subtle">
             @for(Project p : page.content())
                 <tr>
-                    <td><a href="/projects/${p.id()}" class="link">${p.getName()}</a><p class="text-xs text-slate-400">${p.getCode()}</p></td>
+                    <td><a href="/projects/${p.id()}" class="link">${p.getName()}</a><p class="text-xs text-fg-placeholder">${p.getCode()}</p></td>
                     <td>${partyNames.getOrDefault(p.getPartyId(), "-")}</td>
                     <td>${tree.nameOf(p.getLeadDepartmentId())}</td>
                     <td><span class="${Ui.badge(p.getStatus())}">${p.getStatus().label()}</span></td>

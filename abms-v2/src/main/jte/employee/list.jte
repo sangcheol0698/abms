@@ -11,6 +11,7 @@
 @import kr.co.abacus.abms.employee.EmployeeSearchForm
 @import kr.co.abacus.abms.employee.EmployeeStatus
 @import kr.co.abacus.abms.employee.EmployeeType
+@import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param PageView<Employee> page
 @param DepartmentTree tree
@@ -19,19 +20,19 @@
 @template.layout.app(ctx = ctx, title = "직원", content = @`
     @template.components.pageHeader(title = "직원", subtitle = "임직원 디렉터리 · 상세 정보는 권한 범위 안에서만 조회됩니다.", actions = @`
         @if(ctx.can(PermissionCode.EMPLOYEE_EXPORT))
-            <a href="/employees/export${search.exportQuery()}" hx-boost="false" class="btn btn-secondary">${Icons.of("download", "size-4")} CSV 내보내기</a>
+            <a href="/employees/export${search.exportQuery()}" hx-boost="false" class="${Seed.button("neutralWeak")}">${Icons.of("download", "size-4")} CSV 내보내기</a>
         @endif
         @if(ctx.can(PermissionCode.EMPLOYEE_WRITE))
-            <a href="/employees/new" class="btn btn-primary">${Icons.of("plus", "size-4")} 직원 등록</a>
+            <a href="/employees/new" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 직원 등록</a>
         @endif
     `)
 
     <div class="card">
-        <form class="grid grid-cols-1 gap-3 border-b border-slate-100 p-4 sm:grid-cols-2 lg:grid-cols-6" action="/employees" method="get"
+        <form class="grid grid-cols-1 gap-3 border-b border-stroke-neutral-subtle p-4 sm:grid-cols-2 lg:grid-cols-6" action="/employees" method="get"
               hx-get="/employees" hx-target="#employee-results" hx-push-url="true"
               hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=checkbox], submit">
             <div class="relative lg:col-span-2">
-                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">${Icons.of("search", "size-4")}</span>
+                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-fg-placeholder">${Icons.of("search", "size-4")}</span>
                 <input type="search" name="q" value="${Ui.value(search.q())}" placeholder="이름 또는 이메일 검색" class="input pl-9" aria-label="검색어">
             </div>
             <select name="departmentId" class="select" aria-label="부서">
@@ -59,7 +60,7 @@
                 @endfor
             </select>
             @if(ctx.can(PermissionCode.EMPLOYEE_WRITE))
-                <label class="flex items-center gap-2 text-sm text-slate-600 lg:col-span-6">
+                <label class="flex items-center gap-2 text-sm text-fg-neutral-muted lg:col-span-6">
                     <input type="checkbox" name="deleted" value="true" class="checkbox" checked="${Boolean.TRUE.equals(search.deleted())}">
                     삭제된 직원 보기
                 </label>

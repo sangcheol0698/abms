@@ -2,6 +2,7 @@
 @import kr.co.abacus.abms.common.web.FormErrors
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.employee.Employee
+@import kr.co.abacus.abms.common.web.Seed
 @param List<Employee> candidates
 @param DepartmentTree tree
 @param Long selected = null
@@ -10,7 +11,7 @@
     @template.components.modal(title = "계정 발급", description = "직원 이메일이 아이디가 되며, 임시 비밀번호가 한 번만 표시됩니다.", body = @`
         @template.components.globalError(errors = errors)
         @if(candidates.isEmpty())
-            <p class="text-sm text-slate-500">계정이 없는 재직 직원이 없습니다.</p>
+            <p class="text-sm text-fg-neutral-subtle">계정이 없는 재직 직원이 없습니다.</p>
         @else
             <label for="employeeId" class="label">직원</label>
             <select id="employeeId" name="employeeId" class="select" required>
@@ -22,7 +23,7 @@
             <p class="field-help">발급된 계정에는 기본 권한 그룹(일반 사용자)이 할당됩니다.</p>
         @endif
     `, footer = @`
-        <button type="button" class="btn btn-secondary" data-close-modal>취소</button>
-        <button type="submit" class="btn btn-primary" disabled="${candidates.isEmpty()}">발급</button>
+        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="submit" class="${Seed.button("brandSolid")}" disabled="${candidates.isEmpty()}">발급</button>
     `)
 </form>

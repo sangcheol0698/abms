@@ -103,37 +103,37 @@ public final class Ui {
 
     public static String badge(EmployeeStatus status) {
         return switch (status) {
-            case ACTIVE -> "badge badge-green";
-            case ON_LEAVE -> "badge badge-yellow";
-            case RESIGNED -> "badge badge-gray";
+            case ACTIVE -> Seed.badge("positive");
+            case ON_LEAVE -> Seed.badge("warning");
+            case RESIGNED -> Seed.badge("neutral");
         };
     }
 
     public static String badge(EmployeeType type) {
         return switch (type) {
-            case FULL_TIME -> "badge badge-blue";
-            case FREELANCER -> "badge badge-purple";
-            case OUTSOURCING -> "badge badge-yellow";
-            case PART_TIME -> "badge badge-gray";
+            case FULL_TIME -> Seed.badge("informative");
+            case FREELANCER -> Seed.badge("brand");
+            case OUTSOURCING -> Seed.badge("warning");
+            case PART_TIME -> Seed.badge("neutral");
         };
     }
 
     public static String badge(ProjectStatus status) {
         return switch (status) {
-            case SCHEDULED -> "badge badge-purple";
-            case IN_PROGRESS -> "badge badge-blue";
-            case COMPLETED -> "badge badge-green";
-            case ON_HOLD -> "badge badge-yellow";
-            case CANCELLED -> "badge badge-gray";
+            case SCHEDULED -> Seed.badge("brand");
+            case IN_PROGRESS -> Seed.badge("informative");
+            case COMPLETED -> Seed.badge("positive");
+            case ON_HOLD -> Seed.badge("warning");
+            case CANCELLED -> Seed.badge("neutral");
         };
     }
 
     public static String badge(NotificationType type) {
         return switch (type) {
-            case INFO -> "bg-brand-500";
-            case SUCCESS -> "bg-emerald-500";
-            case WARNING -> "bg-amber-500";
-            case ERROR -> "bg-rose-500";
+            case INFO -> "bg-bg-informative-solid";
+            case SUCCESS -> "bg-bg-positive-solid";
+            case WARNING -> "bg-bg-warning-solid";
+            case ERROR -> "bg-bg-critical-solid";
         };
     }
 

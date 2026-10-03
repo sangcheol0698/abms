@@ -1,4 +1,5 @@
 @import kr.co.abacus.abms.common.web.FormErrors
+@import kr.co.abacus.abms.common.web.Seed
 @param FormErrors errors
 <form hx-post="/admin/permission-groups" hx-target="#modal-body">
     @template.components.modal(title = "권한 그룹 추가", body = @`
@@ -14,7 +15,7 @@
             </div>
         </div>
     `, footer = @`
-        <button type="button" class="btn btn-secondary" data-close-modal>취소</button>
-        <button type="submit" class="btn btn-primary">추가</button>
+        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="submit" class="${Seed.button("brandSolid")}">추가</button>
     `)
 </form>
