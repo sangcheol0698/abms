@@ -14,4 +14,6 @@ public interface RevenueMonthClosingRepository extends JpaRepository<RevenueMont
 
     List<RevenueMonthClosing> findAllByClosedTrueOrderByTargetMonthDesc();
 
+    Optional<RevenueMonthClosing> findFirstByClosedTrueAndTargetMonthBetweenOrderByTargetMonthAsc(LocalDate from, LocalDate to);
+
 }

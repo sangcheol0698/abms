@@ -15,6 +15,7 @@ import kr.co.abacus.abms.employee.EmployeeRepository;
 import kr.co.abacus.abms.notification.NotificationService;
 import kr.co.abacus.abms.notification.NotificationType;
 import kr.co.abacus.abms.security.LoginUser;
+import kr.co.abacus.abms.summary.ClosedMonthGuard;
 
 /**
  * 프로젝트 투입 인력 관리.
@@ -27,13 +28,16 @@ public class ProjectAssignmentService {
     private final ProjectAssignmentRepository assignmentRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
+    private final ClosedMonthGuard closedMonthGuard;
 
     public ProjectAssignmentService(ProjectService projectService, ProjectAssignmentRepository assignmentRepository,
-                                    EmployeeRepository employeeRepository, NotificationService notificationService) {
+                                    EmployeeRepository employeeRepository, NotificationService notificationService,
+                                    ClosedMonthGuard closedMonthGuard) {
         this.projectService = projectService;
         this.assignmentRepository = assignmentRepository;
         this.employeeRepository = employeeRepository;
         this.notificationService = notificationService;
+        this.closedMonthGuard = closedMonthGuard;
     }
 
     @Transactional(readOnly = true)
@@ -58,6 +62,7 @@ public class ProjectAssignmentService {
         Project project = projectService.getForWrite(user, projectId);
         Employee employee = employee(employeeId);
         checkOverlap(employeeId, startDate, endDate, -1L);
+        closedMonthGuard.checkOpen(startDate, endDate, "투입 등록");
         ProjectAssignment assignment = assignmentRepository.save(
                 ProjectAssignment.assign(project, employee, role, ProjectAssignment.periodOf(startDate, endDate)));
         notificationService.notifyEmployee(employeeId, NotificationType.INFO,
@@ -72,12 +77,37 @@ public class ProjectAssignmentService {
         Project project = projectService.getForWrite(user, projectId);
         ProjectAssignment assignment = get(projectId, assignmentId);
         checkOverlap(employeeId, startDate, endDate, assignmentId);
+        checkChangedPeriodOpen(assignment, employeeId, startDate, endDate);
         assignment.update(project, employee(employeeId), role, ProjectAssignment.periodOf(startDate, endDate));
     }
 
     public void delete(LoginUser user, Long projectId, Long assignmentId) {
         projectService.getForWrite(user, projectId);
-        get(projectId, assignmentId).softDelete(user.accountId());
+        ProjectAssignment assignment = get(projectId, assignmentId);
+        closedMonthGuard.checkOpen(assignment.getPeriod().startDate(), assignment.getPeriod().endDate(), "투입 삭제");
+        assignment.softDelete(user.accountId());
+    }
+
+    /** 투입 M/M이 달라지는 구간에 마감된 월이 있으면 막는다. (역할만 바꾸는 것은 허용) */
+    private void checkChangedPeriodOpen(ProjectAssignment assignment, Long employeeId, LocalDate startDate, @Nullable LocalDate endDate) {
+        Period before = assignment.getPeriod();
+        if (!assignment.getEmployeeId().equals(employeeId)) {
+            closedMonthGuard.checkOpen(before.startDate(), before.endDate(), "투입 수정");
+            closedMonthGuard.checkOpen(startDate, endDate, "투입 수정");
+            return;
+        }
+        if (!before.startDate().equals(startDate)) {
+            LocalDate from = before.startDate().isBefore(startDate) ? before.startDate() : startDate;
+            LocalDate to = before.startDate().isBefore(startDate) ? startDate : before.startDate();
+            closedMonthGuard.checkOpen(from, to.minusDays(1), "투입 수정");
+        }
+        LocalDate beforeEnd = before.endDate() == null ? LocalDate.MAX : before.endDate();
+        LocalDate afterEnd = endDate == null ? LocalDate.MAX : endDate;
+        if (!beforeEnd.equals(afterEnd)) {
+            LocalDate earlier = beforeEnd.isBefore(afterEnd) ? beforeEnd : afterEnd;
+            LocalDate later = beforeEnd.isBefore(afterEnd) ? afterEnd : beforeEnd;
+            closedMonthGuard.checkOpen(earlier.plusDays(1), later.equals(LocalDate.MAX) ? null : later, "투입 수정");
+        }
     }
 
     /**
