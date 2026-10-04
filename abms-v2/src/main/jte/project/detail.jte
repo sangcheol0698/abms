@@ -21,6 +21,8 @@
 @param StaffingSection staffing
 @param List<MonthlyRevenueSummary> history
 @param boolean showHistory
+@param kr.co.abacus.abms.project.ProjectPlaceService.ResolvedPlace place
+@param kr.co.abacus.abms.project.ProjectPlaceService.NearestSite nearestSite = null
 @param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, aside = @`
             <dl class="property-list">
@@ -38,6 +40,8 @@
             <dd class="tabular-nums">${Ui.date(project.getPeriod().endDate())}</dd>
             <dt>계약금액</dt>
             <dd class="t4-bold tabular-nums">${Ui.won(project.getContractAmount())}원</dd>
+            <dt>수행 장소</dt>
+            <dd>${place.label()}</dd>
             </dl>
             @if(showHistory && !history.isEmpty())
             !{Money sumRevenue = history.stream().map(MonthlyRevenueSummary::getRevenueAmount).reduce(Money.ZERO, Money::plus);}
@@ -79,6 +83,30 @@
     <div class="min-w-0 space-y-4">
     @if(project.getDescription() != null)
         <p class="t5-regular text-fg-neutral-muted">${project.getDescription()}</p>
+    @endif
+
+    @if(place.workPlace() != null)
+        !{var markers = new java.util.ArrayList<kr.co.abacus.abms.common.web.MapMarker>();}
+        !{var placeMarker = kr.co.abacus.abms.common.web.MapMarker.of(project.getName(), place.location().fullAddress(), place.location(), null);}
+        !{if (placeMarker != null) markers.add(placeMarker);}
+        !{var siteMarker = nearestSite == null || place.workPlace() == kr.co.abacus.abms.project.WorkPlace.OFFICE ? null : kr.co.abacus.abms.common.web.MapMarker.of(nearestSite.site().getName(), nearestSite.site().getLocation().fullAddress(), nearestSite.site().getLocation(), "/sites/" + nearestSite.site().id());}
+        !{if (siteMarker != null) markers.add(siteMarker);}
+        <section>
+            <h2 class="section-title">수행 장소 <span class="section-count">${place.label()}@if(place.source() != null) · ${place.source()}@endif</span></h2>
+            @if(place.location().isEmpty())
+                <div class="list-box">@template.components.empty(message = place.workPlace() == kr.co.abacus.abms.project.WorkPlace.REMOTE ? "원격으로 수행하는 프로젝트입니다." : "수행 장소 주소가 없습니다. 협력사·사업장 주소를 등록하거나 프로젝트에서 직접 입력하세요.", icon = "map-pin")</div>
+            @else
+                @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), height = "h-64", fallbackText = place.location().fullAddress(),
+                        fallbackHref = place.location().kakaoMapLink(project.getName()))
+                <p class="mt-x2 flex flex-wrap items-center gap-x-x3 gap-y-x1 t3-regular text-fg-neutral-subtle">
+                    <span class="inline-flex items-center gap-x1">${Icons.of("map-pin", "size-3.5")}${place.location().fullAddress()}</span>
+                    @if(siteMarker != null)
+                        <span>가장 가까운 사업장 <a class="link" href="/sites/${nearestSite.site().id()}">${nearestSite.site().getName()}</a> ${nearestSite.distanceLabel()}</span>
+                    @endif
+                    <a href="${place.location().kakaoMapLink(project.getName())}" target="_blank" rel="noopener noreferrer" class="link inline-flex items-center gap-x1">카카오맵 ${Icons.of("external", "size-3")}</a>
+                </p>
+            @endif
+        </section>
     @endif
 
     <section class="card" id="revenue-section">

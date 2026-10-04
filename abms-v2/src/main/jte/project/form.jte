@@ -7,6 +7,7 @@
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.project.ProjectForm
 @import kr.co.abacus.abms.project.ProjectStatus
+@import kr.co.abacus.abms.project.WorkPlace
 @import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param ProjectForm form
@@ -56,6 +57,24 @@
                 <div>
                     @template.components.input(name = "endDate", label = "종료일", value = Ui.value(form.endDate()), errors = errors, type = "date", required = true)
                     @if(errors.has("periodValid"))<p class="field-error">${errors.get("periodValid")}</p>@endif
+                </div>
+            </div>
+        </section>
+        <section class="form-section">
+            <div><h2 class="form-section-title">수행 장소</h2><p class="form-section-desc">고객사 상주는 주소를 비우면 협력사 주소를, 자사는 주관 부서의 사업장 주소를 씁니다.</p></div>
+            <div class="grid grid-cols-1 gap-x4" data-work-place>
+                <div class="@xl:w-1/2">
+                    <label for="workPlace" class="label">구분</label>
+                    <select id="workPlace" name="workPlace" class="select" data-work-place-select>
+                        <option value="">미정</option>
+                        @for(var o : Ui.options(WorkPlace.values()))
+                            <option value="${o.value()}" selected="${o.value().equals(Ui.value(form.workPlace()))}">${o.label()}</option>
+                        @endfor
+                    </select>
+                </div>
+                <div data-work-place-address hidden="${form.workPlace() != WorkPlace.OTHER && form.workPlace() != WorkPlace.CLIENT_SITE}">
+                    @template.components.addressField(zipCode = form.zipCode(), address = form.address(), addressDetail = form.addressDetail(),
+                            latitude = form.latitude(), longitude = form.longitude(), errors = errors, mapEnabled = ctx.mapEnabled())
                 </div>
             </div>
         </section>

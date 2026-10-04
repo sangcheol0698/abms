@@ -35,6 +35,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.account.AccountRepository;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.web.FormErrors;
@@ -47,6 +48,7 @@ import kr.co.abacus.abms.department.DepartmentTree;
 import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.project.ProjectAssignment;
 import kr.co.abacus.abms.project.ProjectAssignmentService;
+import kr.co.abacus.abms.project.ProjectPlaceService;
 import kr.co.abacus.abms.project.ProjectRepository;
 import kr.co.abacus.abms.security.LoginUser;
 
@@ -54,7 +56,8 @@ import kr.co.abacus.abms.security.LoginUser;
 @RequestMapping("/employees")
 public class EmployeeController {
 
-    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
+    private final AuditQueryService auditQueryService;
+    private final ProjectPlaceService placeService;
 
     private static final int PAGE_SIZE = 20;
 
@@ -66,9 +69,10 @@ public class EmployeeController {
 
     public EmployeeController(EmployeeService employeeService, DepartmentService departmentService,
                               ProjectAssignmentService assignmentService, ProjectRepository projectRepository,
-                              AccountRepository accountRepository,
-            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+                              AccountRepository accountRepository, AuditQueryService auditQueryService,
+                              ProjectPlaceService placeService) {
         this.auditQueryService = auditQueryService;
+        this.placeService = placeService;
         this.employeeService = employeeService;
         this.departmentService = departmentService;
         this.assignmentService = assignmentService;
@@ -148,6 +152,7 @@ public class EmployeeController {
         model.addAttribute("assignments", visibleAssignments);
         model.addAttribute("insight", EmployeeInsight.of(employee, visibleAssignments, java.time.LocalDate.now()));
         model.addAttribute("projects", projects);
+        model.addAttribute("workplace", placeService.workplaceOf(employee.getDepartmentId(), visibleAssignments, projects, tree, java.time.LocalDate.now()));
         model.addAttribute("payrolls", employeeService.payrolls(id));
         model.addAttribute("positions", employeeService.positionHistories(id));
         model.addAttribute("canWrite", employeeService.canFullWrite(user, employee.getDepartmentId()));

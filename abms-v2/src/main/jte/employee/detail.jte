@@ -21,6 +21,7 @@
 @param List<ProjectAssignment> assignments
 @param Map<Long, Project> projects
 @param List<Payroll> payrolls
+@param kr.co.abacus.abms.project.ProjectPlaceService.Workplace workplace = null
 @param List<PositionHistory> positions
 @param boolean canWrite
 @param boolean canEditOwn
@@ -66,6 +67,15 @@
                 <dd>${employee.getJob() == null ? "-" : employee.getJob().label()}</dd>
                 <dt>근무 형태</dt>
                 <dd>${employee.getWorkType() == null ? "-" : employee.getWorkType().label()}</dd>
+                <dt>근무지</dt>
+                <dd class="whitespace-normal">
+                    @if(workplace != null)
+                        <a class="link" href="${workplace.href()}" title="${workplace.location().fullAddress()}">${workplace.name()}</a>
+                        <span class="t3-regular text-fg-neutral-subtle">${workplace.kind()}</span>
+                    @else
+                        <span class="text-fg-neutral-subtle">-</span>
+                    @endif
+                </dd>
                 <dt>총 경력</dt>
                 <dd>${EmployeeInsight.years(insight.careerMonths())}@if(employee.getCareerStartDate() != null)<span class="ml-x1 t3-regular text-fg-neutral-subtle">${Ui.date(employee.getCareerStartDate())}~</span>@endif</dd>
                 <dt>근속</dt>

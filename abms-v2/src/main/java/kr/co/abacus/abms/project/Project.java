@@ -2,6 +2,7 @@ package kr.co.abacus.abms.project;
 
 import java.util.Objects;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -15,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.Period;
 
@@ -51,6 +53,20 @@ public class Project extends BaseEntity implements Auditable {
     @Embedded
     private Period period;
 
+    /** 수행 장소 구분 (미정이면 null) */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private @Nullable WorkPlace workPlace;
+
+    /** 수행 장소 주소. 별도 장소이거나, 고객사 상주인데 협력사 주소와 다를 때 쓴다. */
+    @Embedded
+    @AttributeOverride(name = "zipCode", column = @Column(name = "work_zip_code", length = 10))
+    @AttributeOverride(name = "address", column = @Column(name = "work_address"))
+    @AttributeOverride(name = "addressDetail", column = @Column(name = "work_address_detail", length = 100))
+    @AttributeOverride(name = "latitude", column = @Column(name = "work_latitude", precision = 10, scale = 7))
+    @AttributeOverride(name = "longitude", column = @Column(name = "work_longitude", precision = 10, scale = 7))
+    private @Nullable Location workLocation;
+
     protected Project() {
     }
 
@@ -66,6 +82,22 @@ public class Project extends BaseEntity implements Auditable {
 
     public void update(ProjectInfo info) {
         apply(info);
+    }
+
+    /** 수행 장소 지정. 원격·자사는 주소를 두지 않는다. (자사는 주관 부서 사업장 주소를 쓴다) */
+    public void assignWorkPlace(@Nullable WorkPlace workPlace, @Nullable Location location) {
+        this.workPlace = workPlace;
+        boolean addressAllowed = workPlace == WorkPlace.OTHER || workPlace == WorkPlace.CLIENT_SITE;
+        this.workLocation = !addressAllowed || location == null || location.isEmpty() ? null : location;
+    }
+
+    public @Nullable WorkPlace getWorkPlace() {
+        return workPlace;
+    }
+
+    /** 직접 입력한 수행 장소 주소. 없으면 빈 위치. */
+    public Location getWorkLocation() {
+        return workLocation == null ? Location.EMPTY : workLocation;
     }
 
     private void apply(ProjectInfo info) {
