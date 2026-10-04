@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
@@ -43,12 +44,15 @@ public class DepartmentController {
     private final AccessService accessService;
     private final kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository;
     private final SiteService siteService;
+    private final AuditQueryService auditQueryService;
 
     public DepartmentController(DepartmentService departmentService, EmployeeService employeeService,
                                 ProjectRepository projectRepository, ProfitQueryService profitQueryService,
                                 AccessService accessService,
                                 kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository,
-                                SiteService siteService) {
+                                SiteService siteService,
+                                AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
         this.siteService = siteService;
         this.assignmentRepository = assignmentRepository;
         this.departmentService = departmentService;
@@ -148,11 +152,8 @@ public class DepartmentController {
     private void addDetail(LoginUser user, Long id, DepartmentTree tree, Model model) {
         Department department = departmentService.get(id);
         Set<Long> subtree = tree.subtreeIds(id);
-        List<Employee> members = departmentService.members(id);
-        java.util.Map<Long, List<Employee>> membersByDepartment = new java.util.HashMap<>();
-        for (Long departmentId : subtree) {
-            membersByDepartment.put(departmentId, departmentId.equals(id) ? members : departmentService.members(departmentId));
-        }
+        java.util.Map<Long, List<Employee>> membersByDepartment = departmentService.membersByDepartment(subtree);
+        List<Employee> members = membersByDepartment.get(id);
         List<Employee> subtreeMembers = membersByDepartment.values().stream().flatMap(List::stream).toList();
         model.addAttribute("department", department);
         model.addAttribute("tree", tree);
@@ -179,6 +180,7 @@ public class DepartmentController {
         List<ProfitQueryService.MonthPoint> trend = showProfit ? profitQueryService.departmentTrend(subtree, Year.now().getValue()) : null;
         model.addAttribute("trend", trend);
         model.addAttribute("trendChart", trend == null ? null : ProfitQueryService.chartJson(trend));
+        model.addAttribute("auditHistory", auditQueryService.history("Department", id, 30));
         model.addAttribute("canWrite", user.has(PermissionCode.DEPARTMENT_WRITE));
         model.addAttribute("site", department.getSiteId() == null ? null : siteService.find(department.getSiteId()));
     }

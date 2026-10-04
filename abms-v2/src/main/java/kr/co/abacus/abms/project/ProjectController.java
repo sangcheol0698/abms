@@ -32,7 +32,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.attachment.AttachmentOwner;
+import kr.co.abacus.abms.attachment.AttachmentSection;
+import kr.co.abacus.abms.attachment.AttachmentService;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.geo.Geocoder;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
 import kr.co.abacus.abms.common.web.PageView;
@@ -49,6 +54,9 @@ import kr.co.abacus.abms.summary.ProfitQueryService;
 @Controller
 @RequestMapping("/projects")
 public class ProjectController {
+    private final ProjectPlaceService placeService;
+    private final Geocoder geocoder;
+    private final AttachmentService attachmentService;
 
     private final ProjectService projectService;
     private final ProjectRevenueService revenueService;
@@ -57,11 +65,17 @@ public class ProjectController {
     private final DepartmentService departmentService;
     private final ProfitQueryService profitQueryService;
     private final ProjectSections sections;
+    private final AuditQueryService auditQueryService;
 
     public ProjectController(ProjectService projectService, ProjectRevenueService revenueService,
                              ProjectAssignmentService assignmentService, PartyService partyService,
                              DepartmentService departmentService, ProfitQueryService profitQueryService,
-                             ProjectSections sections) {
+                             ProjectSections sections, AuditQueryService auditQueryService, ProjectPlaceService placeService,
+                             Geocoder geocoder, AttachmentService attachmentService) {
+        this.attachmentService = attachmentService;
+        this.auditQueryService = auditQueryService;
+        this.placeService = placeService;
+        this.geocoder = geocoder;
         this.projectService = projectService;
         this.revenueService = revenueService;
         this.assignmentService = assignmentService;
@@ -124,7 +138,7 @@ public class ProjectController {
             return form(model, form, FormErrors.of(binding), null);
         }
         try {
-            Project project = projectService.create(user, form.code(), form.toInfo());
+            Project project = projectService.create(user, form.code(), form.toInfo(), form.workPlace(), geocoder.complete(form.toWorkLocation()));
             Toast.success(redirect, project.getName() + " 프로젝트를 등록했습니다.");
             return "redirect:/projects/" + project.id();
         } catch (BusinessException e) {
@@ -139,14 +153,20 @@ public class ProjectController {
         boolean canWrite = projectService.canWrite(user, project);
         model.addAttribute("project", project);
         model.addAttribute("party", partyService.get(project.getPartyId()));
-        model.addAttribute("tree", departmentService.tree());
+        DepartmentTree tree = departmentService.tree();
+        model.addAttribute("tree", tree);
         model.addAttribute("canWrite", canWrite);
+        ProjectPlaceService.ResolvedPlace place = placeService.resolve(project, tree);
+        model.addAttribute("place", place);
+        model.addAttribute("nearestSite", placeService.nearestSite(place.location()).orElse(null));
         model.addAttribute("revenue", sections.revenue(project, canWrite));
         model.addAttribute("staffing", sections.staffing(project, canWrite));
         // 손익 이력은 대시보드(손익) 조회 범위가 이 프로젝트를 포함할 때만 보여준다.
         boolean showHistory = profitQueryService.scope(user).coversProject(project.id(), project.getLeadDepartmentId());
         model.addAttribute("showHistory", showHistory);
         model.addAttribute("history", showHistory ? profitQueryService.projectHistory(id) : List.of());
+        model.addAttribute("auditHistory", auditQueryService.history("Project", id, 30));
+        model.addAttribute("attachments", AttachmentSection.of(attachmentService, user, AttachmentOwner.PROJECT, id));
         return "project/detail";
     }
 
@@ -165,7 +185,7 @@ public class ProjectController {
             return form(model, form, FormErrors.of(binding), project);
         }
         try {
-            projectService.update(user, id, form.toInfo());
+            projectService.update(user, id, form.toInfo(), form.workPlace(), geocoder.complete(form.toWorkLocation()));
             Toast.success(redirect, "프로젝트 정보를 수정했습니다.");
             return "redirect:/projects/" + id;
         } catch (BusinessException e) {

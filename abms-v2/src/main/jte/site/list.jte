@@ -19,10 +19,6 @@
         @endif
     `)
     <div class="space-y-6">
-        @if(!sites.isEmpty())
-            @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), height = "h-72 @3xl:h-96",
-                    fallbackText = markers.isEmpty() ? null : "사업장 " + markers.size() + "곳")
-        @endif
         <section class="min-w-0">
             <h2 class="section-title">전체 <span class="section-count">${sites.size()}</span></h2>
             <div class="list-box">
@@ -48,5 +44,9 @@
                 @endif
             </div>
         </section>
+        @if(!sites.isEmpty())
+            @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), height = "h-72 @3xl:h-96",
+                    fallbackText = markers.isEmpty() ? null : "사업장 " + markers.size() + "곳")
+        @endif
     </div>
 `)

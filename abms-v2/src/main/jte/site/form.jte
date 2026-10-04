@@ -16,7 +16,7 @@
     @template.components.pageHeader(title = title, breadcrumb = @`
         <a href="/sites" class="hover:text-fg-neutral-muted">사업장</a>${Icons.of("chevron-right", "size-3")}<span>${editing ? "수정" : "등록"}</span>
     `)
-    <form method="post" action="${editing ? "/sites/" + site.id() : "/sites"}" class="mx-auto max-w-4xl" novalidate>
+    <form method="post" action="${editing ? "/sites/" + site.id() : "/sites"}" class="mx-auto max-w-4xl" novalidate>${kr.co.abacus.abms.common.web.Csrf.field()}
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">부서 정보에서 근무 사업장으로 연결할 수 있습니다.</p></div>

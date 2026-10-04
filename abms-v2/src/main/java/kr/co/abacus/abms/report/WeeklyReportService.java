@@ -153,11 +153,10 @@ public class WeeklyReportService {
     public WeeklySnapshot snapshot(LoginUser user, LocalDate weekStart) {
         LocalDate weekEnd = weekStart.plusDays(6);
         DataScope scope = accessService.scopeOf(user, PermissionCode.PROJECT_READ);
-        List<Project> projects = projectRepository.findAll().stream()
-                .filter(p -> scope.coversProject(p.id(), p.getLeadDepartmentId()))
-                .toList();
+        List<Project> projects = projectRepository.findAllInScope(scope.all(), scope.departmentIds(), scope.projectIds());
         Map<Long, Project> projectById = projects.stream().collect(Collectors.toMap(Project::id, Function.identity()));
-        Map<Long, String> partyNames = partyRepository.findAll().stream().collect(Collectors.toMap(Party::id, Party::getName));
+        Map<Long, String> partyNames = partyRepository.findAllById(projects.stream().map(Project::getPartyId).collect(Collectors.toSet())).stream()
+                .collect(Collectors.toMap(Party::id, Party::getName));
         DepartmentTree tree = new DepartmentTree(departmentRepository.findAll());
         Map<Long, List<ProjectAssignment>> assignmentsByProject = assignmentRepository.findOverlapping(weekStart, weekEnd).stream()
                 .filter(a -> projectById.containsKey(a.getProjectId()))
@@ -183,7 +182,9 @@ public class WeeklyReportService {
                 .map(r -> toLine(r, projectById)).toList();
 
         List<AssignmentLine> changes = new ArrayList<>();
-        Map<Long, String> employeeNames = employeeRepository.findAll().stream().collect(Collectors.toMap(Employee::id, Employee::getName));
+        Map<Long, String> employeeNames = employeeRepository.findAllById(assignmentsByProject.values().stream().flatMap(List::stream)
+                        .map(ProjectAssignment::getEmployeeId).collect(Collectors.toSet())).stream()
+                .collect(Collectors.toMap(Employee::id, Employee::getName));
         for (ProjectAssignment a : assignmentsByProject.values().stream().flatMap(List::stream).toList()) {
             String projectName = projectById.get(a.getProjectId()).getName();
             String employeeName = employeeNames.getOrDefault(a.getEmployeeId(), "-");

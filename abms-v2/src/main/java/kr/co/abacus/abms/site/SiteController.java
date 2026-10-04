@@ -27,8 +27,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
+import kr.co.abacus.abms.common.geo.Geocoder;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.MapMarker;
 import kr.co.abacus.abms.common.web.Toast;
@@ -53,9 +55,14 @@ public class SiteController {
     private final DepartmentRepository departmentRepository;
     private final DepartmentService departmentService;
     private final PartyService partyService;
+    private final Geocoder geocoder;
+    private final AuditQueryService auditQueryService;
 
     public SiteController(SiteService siteService, DepartmentRepository departmentRepository, DepartmentService departmentService,
-                          PartyService partyService) {
+                          PartyService partyService, Geocoder geocoder,
+                          AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
+        this.geocoder = geocoder;
         this.siteService = siteService;
         this.departmentRepository = departmentRepository;
         this.departmentService = departmentService;
@@ -65,13 +72,16 @@ public class SiteController {
     @GetMapping
     public String list(Model model) {
         List<Site> sites = siteService.all();
-        Map<Long, List<Department>> departments = sites.stream()
-                .collect(Collectors.toMap(Site::id, s -> departmentRepository.findAllBySiteId(s.id())));
+        // 사업장 → 부서 → 인원을 각각 한 번씩만 조회한다.
+        Map<Long, List<Department>> departments = departmentRepository.findAllBySiteIdIsNotNull().stream()
+                .collect(Collectors.groupingBy(Department::getSiteId));
+        Map<Long, List<kr.co.abacus.abms.employee.Employee>> members = departmentService.membersByDepartment(
+                departments.values().stream().flatMap(List::stream).map(Department::id).toList());
         model.addAttribute("sites", sites);
         model.addAttribute("departmentCounts", departments.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size())));
         model.addAttribute("headcounts", departments.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> headcount(e.getValue()))));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream().mapToInt(d -> members.get(d.id()).size()).sum())));
         model.addAttribute("markers", sites.stream()
                 .map(s -> MapMarker.of(s.getName(), s.getLocation().fullAddress(), s.getLocation(), "/sites/" + s.id()))
                 .filter(Objects::nonNull)
@@ -85,14 +95,16 @@ public class SiteController {
         List<Department> departments = departmentRepository.findAllBySiteId(id).stream()
                 .sorted(Comparator.comparing(Department::getName))
                 .toList();
+        Map<Long, Integer> memberCounts = departmentService.membersByDepartment(departments.stream().map(Department::id).toList())
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size()));
         model.addAttribute("site", site);
         model.addAttribute("departments", departments);
-        model.addAttribute("memberCounts", departments.stream()
-                .collect(Collectors.toMap(Department::id, d -> departmentService.members(d.id()).size())));
-        model.addAttribute("headcount", headcount(departments));
+        model.addAttribute("memberCounts", memberCounts);
+        model.addAttribute("headcount", memberCounts.values().stream().mapToInt(Integer::intValue).sum());
         model.addAttribute("nearby", user.has(PermissionCode.PARTY_READ) ? nearby(site.getLocation()) : List.of());
         MapMarker marker = MapMarker.of(site.getName(), site.getLocation().fullAddress(), site.getLocation(), null);
         model.addAttribute("markers", marker == null ? List.of() : List.of(marker));
+        model.addAttribute("auditHistory", auditQueryService.history("Site", id, 30));
         return "site/detail";
     }
 
@@ -111,7 +123,7 @@ public class SiteController {
             return form(model, form, FormErrors.of(binding), null);
         }
         try {
-            Site site = siteService.create(user, form.toInfo());
+            Site site = siteService.create(user, geocoded(form.toInfo()));
             Toast.success(redirect, site.getName() + " 사업장을 등록했습니다.");
             return "redirect:/sites/" + site.id();
         } catch (BusinessException e) {
@@ -137,7 +149,7 @@ public class SiteController {
             return form(model, form, FormErrors.of(binding), site);
         }
         try {
-            siteService.update(user, id, form.toInfo());
+            siteService.update(user, id, geocoded(form.toInfo()));
             Toast.success(redirect, "사업장 정보를 수정했습니다.");
             return "redirect:/sites/" + id;
         } catch (BusinessException e) {
@@ -159,10 +171,6 @@ public class SiteController {
         }
     }
 
-    private int headcount(List<Department> departments) {
-        return departments.stream().mapToInt(d -> departmentService.members(d.id()).size()).sum();
-    }
-
     /** 사업장에서 가까운 협력사 (좌표가 있는 곳만, 가까운 순) */
     private List<NearbyParty> nearby(Location location) {
         if (!location.hasCoordinates()) {
@@ -174,6 +182,11 @@ public class SiteController {
                 .sorted(Comparator.comparingDouble(NearbyParty::distanceKm))
                 .limit(NEARBY_LIMIT)
                 .toList();
+    }
+
+    /** 좌표 변환은 외부 API 호출이라 DB 트랜잭션 밖(여기)에서 한다. */
+    private SiteInfo geocoded(SiteInfo info) {
+        return info.withLocation(geocoder.complete(info.location()));
     }
 
     private String form(Model model, SiteForm form, FormErrors errors, @Nullable Site site) {

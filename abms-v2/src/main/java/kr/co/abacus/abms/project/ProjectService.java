@@ -7,11 +7,13 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.party.PartyRepository;
@@ -109,21 +111,33 @@ public class ProjectService {
     }
 
     public Project create(LoginUser user, String code, ProjectInfo info) {
+        return create(user, code, info, null, null);
+    }
+
+    public Project create(LoginUser user, String code, ProjectInfo info, @Nullable WorkPlace workPlace, @Nullable Location workLocation) {
         checkWriteForDepartment(user, info.leadDepartmentId());
         validateReferences(info);
         if (projectRepository.existsByCode(code.trim())) {
             throw new BusinessException("이미 사용 중인 프로젝트 코드입니다: " + code);
         }
-        return projectRepository.save(Project.create(code, info));
+        Project project = Project.create(code, info);
+        project.assignWorkPlace(workPlace, workLocation);
+        return projectRepository.save(project);
     }
 
     public void update(LoginUser user, Long id, ProjectInfo info) {
+        Project project = getForWrite(user, id);
+        update(user, id, info, project.getWorkPlace(), project.getWorkLocation());
+    }
+
+    public void update(LoginUser user, Long id, ProjectInfo info, @Nullable WorkPlace workPlace, @Nullable Location workLocation) {
         Project project = getForWrite(user, id);
         if (!project.getLeadDepartmentId().equals(info.leadDepartmentId())) {
             checkWriteForDepartment(user, info.leadDepartmentId());
         }
         validateReferences(info);
         project.update(info);
+        project.assignWorkPlace(workPlace, workLocation);
     }
 
     public void complete(LoginUser user, Long id) {

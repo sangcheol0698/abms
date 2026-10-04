@@ -56,3 +56,6 @@ deploy.sh
 node_modules/
 /src/main/resources/static/css/app.css
 /jte-classes/
+
+### 첨부 파일 로컬 저장소 ###
+/data/

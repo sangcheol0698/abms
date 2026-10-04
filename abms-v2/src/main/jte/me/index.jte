@@ -79,7 +79,7 @@
                 @endif
             </div>
         </section>
-        <section class="form-section">
+        <section class="form-section scroll-mt-16" id="my-permissions">
             <div><h2 class="form-section-title">내 권한</h2><p class="form-section-desc">로그인 시점 기준입니다. 변경되면 다시 로그인하세요.</p></div>
             <div class="list-box">
                 @for(Permission p : permissions)

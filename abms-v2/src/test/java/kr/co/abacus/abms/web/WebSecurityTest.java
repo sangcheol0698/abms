@@ -56,6 +56,24 @@ class WebSecurityTest {
     }
 
     @Test
+    void 일반_POST_폼에는_CSRF_hidden_필드가_있어_스크립트_없이도_제출된다() throws Exception {
+        mvc.perform(get("/parties/new").with(user(Fixtures.admin(employee))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.matchesPattern(
+                        "(?s).*<form method=\"post\" action=\"/parties\"[^>]*><input type=\"hidden\" name=\"_csrf\" value=\"[^\"]+\">.*")));
+    }
+
+    @Test
+    void 응답마다_nonce_기반_CSP를_보내고_스크립트_태그에_같은_nonce를_붙인다() throws Exception {
+        var result = mvc.perform(get("/login")).andExpect(status().isOk()).andReturn();
+        String policy = result.getResponse().getHeader("Content-Security-Policy");
+        org.assertj.core.api.Assertions.assertThat(policy).contains("'strict-dynamic'", "object-src 'none'").doesNotContain("unsafe-eval");
+        String nonce = policy.replaceAll("(?s).*'nonce-([^']+)'.*", "$1");
+        org.assertj.core.api.Assertions.assertThat(result.getResponse().getContentAsString())
+                .contains("<script nonce=\"" + nonce + "\"").doesNotContain("onclick=");
+    }
+
+    @Test
     void 비로그인_사용자는_로그인_페이지로_이동한다() throws Exception {
         mvc.perform(get("/employees"))
                 .andExpect(status().is3xxRedirection())
@@ -108,6 +126,24 @@ class WebSecurityTest {
         LoginUser member = Fixtures.user(employee, java.util.Map.of());
         mvc.perform(get("/").with(user(member)))
                 .andExpect(redirectedUrl("/me"));
+    }
+
+    @Test
+    void 화면_안_이동_boost_으로_권한_없는_화면에_가면_화면은_그대로_두고_필요한_권한을_토스트로_알린다() throws Exception {
+        var plain = Fixtures.user(employee, Fixtures.grants(kr.co.abacus.abms.access.PermissionScope.SELF,
+                kr.co.abacus.abms.access.PermissionCode.EMPLOYEE_READ));
+
+        // 보안 필터(URL)에서 막힌 경우
+        mvc.perform(get("/admin/accounts").with(user(plain)).header("HX-Request", "true").header("HX-Boosted", "true"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().string("HX-Reswap", "none"))
+                .andExpect(header().string("HX-Trigger", containsString("toast")));
+
+        // 컨트롤러에서 막힌 경우
+        mvc.perform(get("/sites/new").with(user(plain)).header("HX-Request", "true").header("HX-Boosted", "true"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().string("HX-Reswap", "none"))
+                .andExpect(header().string("HX-Trigger", containsString("toast")));
     }
 
 }

@@ -21,11 +21,13 @@
 @param List<ProjectAssignment> assignments
 @param Map<Long, Project> projects
 @param List<Payroll> payrolls
+@param kr.co.abacus.abms.project.ProjectPlaceService.Workplace workplace = null
 @param List<PositionHistory> positions
 @param boolean canWrite
 @param boolean canEditOwn
 @param Account account = null
 @param EmployeeInsight insight
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, aside = @`
             <div class="mb-x5 flex items-center gap-x3">
                 @template.components.avatar(avatar = employee.getAvatar(), initial = employee.initial(), size = "size-10 text-base")
@@ -65,6 +67,15 @@
                 <dd>${employee.getJob() == null ? "-" : employee.getJob().label()}</dd>
                 <dt>근무 형태</dt>
                 <dd>${employee.getWorkType() == null ? "-" : employee.getWorkType().label()}</dd>
+                <dt>근무지</dt>
+                <dd class="whitespace-normal">
+                    @if(workplace != null)
+                        <a class="link" href="${workplace.href()}" title="${workplace.location().fullAddress()}">${workplace.name()}</a>
+                        <span class="t3-regular text-fg-neutral-subtle">${workplace.kind()}</span>
+                    @else
+                        <span class="text-fg-neutral-subtle">-</span>
+                    @endif
+                </dd>
                 <dt>총 경력</dt>
                 <dd>${EmployeeInsight.years(insight.careerMonths())}@if(employee.getCareerStartDate() != null)<span class="ml-x1 t3-regular text-fg-neutral-subtle">${Ui.date(employee.getCareerStartDate())}~</span>@endif</dd>
                 <dt>근속</dt>
@@ -86,7 +97,7 @@
     `, actions = @`
         @if(employee.isDeleted())
             @if(canWrite)
-                <form method="post" action="/employees/${employee.id()}/restore" hx-confirm="${employee.getName()} 직원을 복구할까요?">
+                <form method="post" action="/employees/${employee.id()}/restore" hx-confirm="${employee.getName()} 직원을 복구할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <button class="${Seed.button("brandSolid")}">${Icons.of("refresh", "size-4")} 복구</button>
                 </form>
             @endif
@@ -103,12 +114,12 @@
                             <button type="button" class="menu-item" hx-get="/employees/${employee.id()}/salary" hx-target="#modal-body">연봉 변경</button>
                         @endif
                         @if(employee.getStatus() == EmployeeStatus.ACTIVE)
-                            <form method="post" action="/employees/${employee.id()}/leave" hx-confirm="휴직 처리할까요?">
+                            <form method="post" action="/employees/${employee.id()}/leave" hx-confirm="휴직 처리할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                                 <button class="menu-item">휴직 처리</button>
                             </form>
                         @endif
                         @if(employee.getStatus() != EmployeeStatus.ACTIVE)
-                            <form method="post" action="/employees/${employee.id()}/activate" hx-confirm="재직 상태로 변경할까요?">
+                            <form method="post" action="/employees/${employee.id()}/activate" hx-confirm="재직 상태로 변경할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                                 <button class="menu-item">${employee.isResigned() ? "재입사 처리" : "복직 처리"}</button>
                             </form>
                         @endif
@@ -116,7 +127,7 @@
                             <button type="button" class="menu-item" hx-get="/employees/${employee.id()}/resign" hx-target="#modal-body">퇴사 처리</button>
                         @endif
                         <div class="my-x1 border-t border-stroke-neutral-subtle"></div>
-                        <form method="post" action="/employees/${employee.id()}/delete" hx-confirm="${employee.getName()} 직원을 삭제할까요? 삭제 후에도 복구할 수 있습니다.">
+                        <form method="post" action="/employees/${employee.id()}/delete" hx-confirm="${employee.getName()} 직원을 삭제할까요? 삭제 후에도 복구할 수 있습니다.">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="menu-item text-fg-critical">삭제</button>
                         </form>
                     </div>
@@ -274,6 +285,9 @@
                     @endif
                 </section>
             </div>
+        @if(auditHistory != null)
+            <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
+        @endif
         </div>
 
 `)

@@ -49,7 +49,7 @@
             new kakao.maps.CustomOverlay({map, position: position(m), content: label, yAnchor: 1});
             bounds.extend(position(m));
         });
-        if (markers.length > 1) map.setBounds(bounds, 40, 40, 40, 40);
+        if (markers.length > 1) map.setBounds(bounds, 80, 48, 32, 48);
         el._map = map;
         return map;
     }
@@ -174,3 +174,10 @@
 
     htmx.onLoad((el) => enhance(el));
 })();
+
+// 프로젝트 수행 장소: 별도 장소·고객사 상주일 때만 주소 입력을 보여준다.
+document.addEventListener('change', (e) => {
+    if (!e.target.matches('[data-work-place-select]')) return;
+    const address = e.target.closest('[data-work-place]').querySelector('[data-work-place-address]');
+    address.hidden = !['OTHER', 'CLIENT_SITE'].includes(e.target.value);
+});

@@ -132,8 +132,16 @@ public class AssistantTools {
         if (!user.has(PermissionCode.PARTY_READ)) {
             return "협력사 조회 권한이 없습니다.";
         }
-        return partyService.search(name, PageRequest.of(0, MAX_RESULTS, Sort.by("name"))).stream()
-                .map(p -> new PartyItem(p.id(), p.getName(), p.getSalesRepName(), partyService.projectCount(p.id()), "/parties/" + p.id()))
+        List<kr.co.abacus.abms.party.Party> parties = partyService.search(name, PageRequest.of(0, MAX_RESULTS, Sort.by("name"))).getContent();
+        List<Long> ids = parties.stream().map(kr.co.abacus.abms.party.Party::id).toList();
+        java.util.Map<Long, kr.co.abacus.abms.party.PartyContact> contacts = partyService.primaryContacts(ids);
+        java.util.Map<Long, Long> counts = partyService.projectCounts(ids);
+        return parties.stream()
+                .map(p -> {
+                    kr.co.abacus.abms.party.PartyContact c = contacts.get(p.id());
+                    return new PartyItem(p.id(), p.getName(), c == null ? null : c.getName() + " (" + c.getRole().label() + ")",
+                            counts.getOrDefault(p.id(), 0L), "/parties/" + p.id());
+                })
                 .toList();
     }
 
@@ -223,7 +231,7 @@ public class AssistantTools {
     public record ProjectDetail(ProjectItem project, @Nullable String description, List<String> revenuePlans, List<String> members) {
     }
 
-    public record PartyItem(Long id, String name, @Nullable String salesRep, long projectCount, String link) {
+    public record PartyItem(Long id, String name, @Nullable String primaryContact, long projectCount, String link) {
     }
 
     public record ProfitSummary(String month, String revenue, String cost, String profit, String margin,

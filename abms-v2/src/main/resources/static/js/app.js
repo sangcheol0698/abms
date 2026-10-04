@@ -12,6 +12,8 @@
         {code: '[45]..', swap: false, error: true}
     ];
     htmx.config.defaultSwapStyle = 'innerHTML';
+    // CSP(unsafe-eval 없음): hx-on·트리거 필터 같은 eval 기능을 쓰지 않는다.
+    htmx.config.allowEval = false;
 
     // GET 검색 폼의 빈 값은 URL 에 남기지 않는다.
     document.body.addEventListener('htmx:configRequest', (e) => {
@@ -605,3 +607,64 @@ window.abmsChat = {
         if (messages) setTimeout(() => messages.scrollTop = messages.scrollHeight, 50);
     }
 };
+
+// ---------------------------------------------------------------------
+// 선언형 동작 (CSP: 인라인 이벤트 핸들러·hx-on 대신 data 속성 + 위임 이벤트)
+// ---------------------------------------------------------------------
+(function () {
+    document.addEventListener('click', (e) => {
+        const target = e.target.closest('[data-history-back], [data-chat-example], [data-demo-username], [data-open-dialog], [data-close-dialog], [data-theme-option], [data-copy-from], [data-print]');
+        if (!target) return;
+        if (target.matches('[data-history-back]')) {
+            history.back();
+        } else if (target.matches('[data-chat-example]')) {
+            const input = document.getElementById('chat-input');
+            if (input) {
+                input.value = target.textContent.trim();
+                input.focus();
+            }
+        } else if (target.matches('[data-demo-username]')) {
+            document.getElementById('username').value = target.dataset.demoUsername;
+            const password = document.getElementById('password');
+            password.value = 'abms1234!';
+            password.focus();
+        } else if (target.matches('[data-open-dialog]')) {
+            document.getElementById(target.dataset.openDialog)?.showModal();
+        } else if (target.matches('[data-close-dialog]')) {
+            target.closest('dialog')?.close();
+        } else if (target.matches('[data-theme-option]')) {
+            window.abmsTheme(target.dataset.themeOption);
+        } else if (target.matches('[data-copy-from]')) {
+            const source = document.getElementById(target.dataset.copyFrom);
+            if (source) navigator.clipboard.writeText(source.textContent).then(() => window.abmsToast('success', target.dataset.copyMessage || '복사했습니다.'));
+        } else if (target.matches('[data-print]')) {
+            window.print();
+        }
+    });
+
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('[data-submit-on-change]')) e.target.form?.requestSubmit();
+    });
+
+    // AI 어시스턴트 입력: Enter 전송(한글 조합 중 제외), Shift+Enter 줄바꿈, 높이 자동 조절
+    document.addEventListener('keydown', (e) => {
+        if (e.target.matches('[data-chat-input]') && e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            e.target.form.requestSubmit();
+        }
+    });
+    document.addEventListener('input', (e) => {
+        if (e.target.matches('[data-chat-input]')) {
+            e.target.style.height = 'auto';
+            e.target.style.height = e.target.scrollHeight + 'px';
+        }
+    });
+
+    document.body.addEventListener('htmx:beforeRequest', (e) => {
+        if (e.target.matches('[data-chat-form]')) window.abmsChat.pending(e.target);
+    });
+    document.body.addEventListener('htmx:afterRequest', (e) => {
+        if (e.target.matches('[data-chat-form]')) window.abmsChat.done(e.target, e);
+        if (e.target.matches('[data-clears-notification-dot]') && e.detail.successful) document.getElementById('notification-dot')?.remove();
+    });
+})();

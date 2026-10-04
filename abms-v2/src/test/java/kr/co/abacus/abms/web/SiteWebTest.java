@@ -97,7 +97,7 @@ class SiteWebTest {
                 Location.of(null, "서울 중구 세종대로 110", null, new BigDecimal("37.5662952"), new BigDecimal("126.9779451")), null)));
         team.relocate(site.id());
         departmentRepository.save(team);
-        partyRepository.save(Party.create(new Party.PartyInfo("근처상사", null, null, null, null, PartyType.CLIENT, null, null, null,
+        partyRepository.save(Party.create(new Party.PartyInfo("근처상사", null, PartyType.CLIENT, null, null, null,
                 Location.of(null, "서울 중구 을지로 1", null, new BigDecimal("37.5660000"), new BigDecimal("126.9800000")), null, null)));
 
         mvc.perform(get("/sites/{id}", site.id()).with(user(admin)))
@@ -154,6 +154,32 @@ class SiteWebTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("서울 영등포구 국제금융로 10")))
                 .andExpect(content().string(containsString("KAKAO_JS_KEY")));
+    }
+
+    @Test
+    void 목록은_사업장별_부서_수와_인원을_집계한다() throws Exception {
+        Site site = siteRepository.save(Site.create(new Site.SiteInfo("집계 사옥", SiteType.BRANCH, null, null, null)));
+        Department other = fixtures.department("집계팀", null);
+        fixtures.employee(other, "집계1");
+        fixtures.employee(other, "집계2");
+        team.relocate(site.id());
+        other.relocate(site.id());
+        departmentRepository.save(team);
+        departmentRepository.save(other);
+
+        mvc.perform(get("/sites").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("부서 2곳")))
+                .andExpect(content().string(containsString("3명")));
+    }
+
+    @Test
+    void 협력사_목록은_협력사별_프로젝트_수를_보여준다() throws Exception {
+        fixtures.project(team, 100_000_000, java.time.LocalDate.of(2026, 1, 1), java.time.LocalDate.of(2026, 12, 31));
+
+        mvc.perform(get("/parties").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("프로젝트 1건")));
     }
 
 }

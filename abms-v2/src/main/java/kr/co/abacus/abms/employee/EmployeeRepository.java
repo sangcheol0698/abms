@@ -19,6 +19,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
 
     List<Employee> findAllByDepartmentIdAndDeletedFalse(Long departmentId);
 
+    long countByStatusAndDeletedFalse(EmployeeStatus status);
+
+    List<Employee> findAllByDepartmentIdInAndDeletedFalse(java.util.Collection<Long> departmentIds);
+
     List<Employee> findAllByStatusAndDeletedFalse(EmployeeStatus status);
 
     List<Employee> findAllByDeletedFalseOrderByNameAsc();

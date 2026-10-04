@@ -32,8 +32,8 @@
                                     <span class="w-28 shrink-0"><input form="${formId}" name="sgaPercent" type="number" step="0.01" min="0" max="100" class="input filter-input w-24 tabular-nums" value="${p.getSgaRate().movePointRight(2).stripTrailingZeros().toPlainString()}" aria-label="${year}년 ${p.getType().label()} 판관비율"></span>
                                     <span class="w-20 shrink-0 text-right tabular-nums text-fg-neutral-muted">× ${java.math.BigDecimal.ONE.add(p.getOverheadRate()).add(p.getSgaRate()).stripTrailingZeros().toPlainString()}</span>
                                     <span class="flex w-24 shrink-0 justify-end gap-x1">
-                                        <form id="${formId}" method="post" action="/admin/cost-policies/${p.id()}"><button class="${Seed.button("neutralOutline", "xsmall")}">저장</button></form>
-                                        <form method="post" action="/admin/cost-policies/${p.id()}/delete" hx-confirm="${p.getApplyYear()}년 ${p.getType().label()} 정책을 삭제할까요?">
+                                        <form id="${formId}" method="post" action="/admin/cost-policies/${p.id()}">${kr.co.abacus.abms.common.web.Csrf.field()}<button class="${Seed.button("neutralOutline", "xsmall")}">저장</button></form>
+                                        <form method="post" action="/admin/cost-policies/${p.id()}/delete" hx-confirm="${p.getApplyYear()}년 ${p.getType().label()} 정책을 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                                             <button class="${Seed.iconButton("ghost", "xsmall")} text-fg-critical" aria-label="${year}년 ${p.getType().label()} 정책 삭제" title="삭제">${Icons.of("trash", "size-4")}</button>
                                         </form>
                                     </span>
@@ -49,7 +49,7 @@
         <aside>
             <div class="@5xl:sticky @5xl:top-[calc(var(--sticky-top)+16px)]">
                 <h2 class="section-title">정책 추가</h2>
-                <form method="post" action="/admin/cost-policies" class="list-box grid grid-cols-2 gap-x3 p-x4">
+                <form method="post" action="/admin/cost-policies" class="list-box grid grid-cols-2 gap-x3 p-x4">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <div>
                         <label for="year" class="label">연도</label>
                         <input id="year" name="year" type="number" class="input" value="${currentYear + 1}" required>

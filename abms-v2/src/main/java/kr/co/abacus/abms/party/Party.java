@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
@@ -20,7 +21,7 @@ import kr.co.abacus.abms.common.domain.Location;
 @Entity
 @Table(name = "tb_party")
 @SQLRestriction("deleted = false")
-public class Party extends BaseEntity {
+public class Party extends BaseEntity implements Auditable {
 
     @Column(nullable = false, length = 50)
     private String name;
@@ -48,12 +49,6 @@ public class Party extends BaseEntity {
 
     private @Nullable String ceoName;
 
-    private @Nullable String salesRepName;
-
-    private @Nullable String salesRepPhone;
-
-    private @Nullable String salesRepEmail;
-
     protected Party() {
     }
 
@@ -74,9 +69,6 @@ public class Party extends BaseEntity {
         }
         this.name = trimmed;
         this.ceoName = blankToNull(info.ceoName());
-        this.salesRepName = blankToNull(info.salesRepName());
-        this.salesRepPhone = blankToNull(info.salesRepPhone());
-        this.salesRepEmail = blankToNull(info.salesRepEmail());
         this.partyType = info.partyType() == null ? PartyType.CLIENT : info.partyType();
         this.businessNumber = normalizeBusinessNumber(info.businessNumber());
         this.industry = blankToNull(info.industry());
@@ -118,18 +110,6 @@ public class Party extends BaseEntity {
         return ceoName;
     }
 
-    public @Nullable String getSalesRepName() {
-        return salesRepName;
-    }
-
-    public @Nullable String getSalesRepPhone() {
-        return salesRepPhone;
-    }
-
-    public @Nullable String getSalesRepEmail() {
-        return salesRepEmail;
-    }
-
     public PartyType getPartyType() {
         return partyType;
     }
@@ -159,12 +139,10 @@ public class Party extends BaseEntity {
         return memo;
     }
 
+    /** 담당자는 {@link PartyContact} 로 따로 관리한다. */
     public record PartyInfo(
             String name,
             @Nullable String ceoName,
-            @Nullable String salesRepName,
-            @Nullable String salesRepPhone,
-            @Nullable String salesRepEmail,
             @Nullable PartyType partyType,
             @Nullable String businessNumber,
             @Nullable String industry,
@@ -174,17 +152,25 @@ public class Party extends BaseEntity {
             @Nullable String memo
     ) {
 
+        /** 이름만으로 만드는 정보 (구분은 고객사) */
+        public PartyInfo(String name) {
+            this(name, null, PartyType.CLIENT, null, null, null, null, null, null);
+        }
+
         public PartyInfo withLocation(Location location) {
-            return new PartyInfo(name, ceoName, salesRepName, salesRepPhone, salesRepEmail, partyType, businessNumber, industry, phone,
-                    location, website, memo);
+            return new PartyInfo(name, ceoName, partyType, businessNumber, industry, phone, location, website, memo);
         }
 
-        /** 이름·대표자·영업 담당자만으로 만드는 정보 (구분은 고객사) */
-        public PartyInfo(String name, @Nullable String ceoName, @Nullable String salesRepName,
-                         @Nullable String salesRepPhone, @Nullable String salesRepEmail) {
-            this(name, ceoName, salesRepName, salesRepPhone, salesRepEmail, PartyType.CLIENT, null, null, null, null, null, null);
-        }
+    }
 
+    @Override
+    public String auditLabel() {
+        return "협력사";
+    }
+
+    @Override
+    public String auditName() {
+        return name;
     }
 
 }

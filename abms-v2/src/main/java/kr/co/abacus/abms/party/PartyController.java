@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -30,8 +29,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.attachment.AttachmentOwner;
+import kr.co.abacus.abms.attachment.AttachmentSection;
+import kr.co.abacus.abms.attachment.AttachmentService;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
+import kr.co.abacus.abms.common.geo.Geocoder;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
 import kr.co.abacus.abms.common.web.MapMarker;
@@ -52,9 +56,17 @@ public class PartyController {
     private final ProjectService projectService;
     private final DepartmentService departmentService;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
+    private final Geocoder geocoder;
+    private final AttachmentService attachmentService;
+    private final AuditQueryService auditQueryService;
 
     public PartyController(PartyService partyService, ProjectService projectService, DepartmentService departmentService,
-                           ProjectRevenuePlanRepository revenuePlanRepository) {
+                           ProjectRevenuePlanRepository revenuePlanRepository, Geocoder geocoder,
+                           AuditQueryService auditQueryService,
+                           AttachmentService attachmentService) {
+        this.attachmentService = attachmentService;
+        this.auditQueryService = auditQueryService;
+        this.geocoder = geocoder;
         this.revenuePlanRepository = revenuePlanRepository;
         this.partyService = partyService;
         this.projectService = projectService;
@@ -69,8 +81,9 @@ public class PartyController {
         String baseUrl = UriComponentsBuilder.fromPath("/parties").query(request.getQueryString()).build().toUriString();
         model.addAttribute("page", PageView.of(result, baseUrl));
         model.addAttribute("q", q);
-        model.addAttribute("projectCounts", result.getContent().stream()
-                .collect(java.util.stream.Collectors.toMap(Party::id, p -> partyService.projectCount(p.id()))));
+        java.util.List<Long> partyIds = result.getContent().stream().map(Party::id).toList();
+        model.addAttribute("projectCounts", partyService.projectCounts(partyIds));
+        model.addAttribute("primaryContacts", partyService.primaryContacts(partyIds));
         if (Htmx.targets(request, "party-results")) {
             return "party/results";
         }
@@ -92,7 +105,7 @@ public class PartyController {
             return form(model, form, FormErrors.of(binding), null);
         }
         try {
-            Party party = partyService.create(form.toInfo());
+            Party party = partyService.create(geocoded(form.toInfo()));
             Toast.success(redirect, party.getName() + " 협력사를 등록했습니다.");
             return "redirect:/parties/" + party.id();
         } catch (BusinessException e) {
@@ -106,6 +119,7 @@ public class PartyController {
         require(user, PermissionCode.PARTY_READ);
         Party party = partyService.get(id);
         model.addAttribute("party", party);
+        model.addAttribute("contacts", partyService.contacts(id));
         java.util.List<Project> projects = user.has(PermissionCode.PROJECT_READ)
                 ? projectService.byParty(id).stream().filter(p -> projectService.canRead(user, p)).toList()
                 : java.util.List.<Project>of();
@@ -117,6 +131,8 @@ public class PartyController {
         model.addAttribute("tree", departmentService.tree());
         MapMarker marker = MapMarker.of(party.getName(), party.getLocation().fullAddress(), party.getLocation(), null);
         model.addAttribute("markers", marker == null ? java.util.List.of() : java.util.List.of(marker));
+        model.addAttribute("auditHistory", auditQueryService.history("Party", id, 30));
+        model.addAttribute("attachments", AttachmentSection.of(attachmentService, user, AttachmentOwner.PARTY, id));
         return "party/detail";
     }
 
@@ -137,7 +153,7 @@ public class PartyController {
             return form(model, form, FormErrors.of(binding), party);
         }
         try {
-            partyService.update(id, form.toInfo());
+            partyService.update(id, geocoded(form.toInfo()));
             Toast.success(redirect, "협력사 정보를 수정했습니다.");
             return "redirect:/parties/" + id;
         } catch (BusinessException e) {
@@ -152,6 +168,11 @@ public class PartyController {
         partyService.delete(id, user.accountId());
         Toast.success(redirect, "협력사를 삭제했습니다.");
         return "redirect:/parties";
+    }
+
+    /** 좌표 변환은 외부 API 호출이라 DB 트랜잭션 밖(여기)에서 한다. */
+    private PartyInfo geocoded(PartyInfo info) {
+        return info.withLocation(geocoder.complete(info.location()));
     }
 
     private String form(Model model, PartyForm form, FormErrors errors, @Nullable Party party) {
@@ -170,9 +191,6 @@ public class PartyController {
     public record PartyForm(
             @NotBlank(message = "협력사명을 입력하세요.") @Size(max = 50, message = "50자 이하로 입력하세요.") @Nullable String name,
             @Size(max = 30, message = "30자 이하로 입력하세요.") @Nullable String ceoName,
-            @Size(max = 30, message = "30자 이하로 입력하세요.") @Nullable String salesRepName,
-            @Size(max = 20, message = "20자 이하로 입력하세요.") @Nullable String salesRepPhone,
-            @Email(message = "이메일 형식이 올바르지 않습니다.") @Size(max = 100) @Nullable String salesRepEmail,
             @Nullable PartyType partyType,
             @Pattern(regexp = "^$|^[0-9]{3}-?[0-9]{2}-?[0-9]{5}$", message = "사업자등록번호는 000-00-00000 형식으로 입력하세요.") @Nullable String businessNumber,
             @Size(max = 50, message = "50자 이하로 입력하세요.") @Nullable String industry,
@@ -187,19 +205,17 @@ public class PartyController {
     ) {
 
         static PartyForm empty() {
-            return new PartyForm(null, null, null, null, null, PartyType.CLIENT, null, null, null, null, null, null, null, null, null, null);
+            return new PartyForm(null, null, PartyType.CLIENT, null, null, null, null, null, null, null, null, null, null);
         }
 
         static PartyForm of(Party p) {
             Location l = p.getLocation();
-            return new PartyForm(p.getName(), p.getCeoName(), p.getSalesRepName(), p.getSalesRepPhone(), p.getSalesRepEmail(),
-                    p.getPartyType(), p.getBusinessNumber(), p.getIndustry(), p.getPhone(),
+            return new PartyForm(p.getName(), p.getCeoName(), p.getPartyType(), p.getBusinessNumber(), p.getIndustry(), p.getPhone(),
                     l.zipCode(), l.address(), l.addressDetail(), l.latitude(), l.longitude(), p.getWebsite(), p.getMemo());
         }
 
         PartyInfo toInfo() {
-            return new PartyInfo(name == null ? "" : name, ceoName, salesRepName, salesRepPhone, salesRepEmail,
-                    partyType, businessNumber, industry, phone, Location.of(zipCode, address, addressDetail, latitude, longitude), website, memo);
+            return new PartyInfo(name == null ? "" : name, ceoName, partyType, businessNumber, industry, phone, Location.of(zipCode, address, addressDetail, latitude, longitude), website, memo);
         }
 
     }

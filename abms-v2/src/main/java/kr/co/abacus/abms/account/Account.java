@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 
 /**
@@ -18,7 +19,7 @@ import kr.co.abacus.abms.common.domain.BaseEntity;
 @Entity
 @Table(name = "tb_account")
 @SQLRestriction("deleted = false")
-public class Account extends BaseEntity {
+public class Account extends BaseEntity implements Auditable {
 
     public static final int MAX_LOGIN_FAILURES = 5;
 
@@ -112,6 +113,16 @@ public class Account extends BaseEntity {
 
     public @Nullable LocalDateTime getLastLoginAt() {
         return lastLoginAt;
+    }
+
+    @Override
+    public String auditLabel() {
+        return "계정";
+    }
+
+    @Override
+    public String auditName() {
+        return username;
     }
 
 }

@@ -1,8 +1,11 @@
 package kr.co.abacus.abms.project;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -10,6 +13,7 @@ import jakarta.validation.constraints.Size;
 
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.Period;
 import kr.co.abacus.abms.project.Project.ProjectInfo;
@@ -26,22 +30,35 @@ public record ProjectForm(
         @NotNull(message = "계약금액을 입력하세요.") @PositiveOrZero(message = "계약금액은 0 이상이어야 합니다.") @Nullable Long contractAmount,
         @NotNull(message = "시작일을 입력하세요.") @Nullable LocalDate startDate,
         @NotNull(message = "종료일을 입력하세요.") @Nullable LocalDate endDate,
-        @Size(max = 1000, message = "1000자 이하로 입력하세요.") @Nullable String description
+        @Size(max = 1000, message = "1000자 이하로 입력하세요.") @Nullable String description,
+        @Nullable WorkPlace workPlace,
+        @Size(max = 7, message = "7자 이하로 입력하세요.") @Nullable String zipCode,
+        @Size(max = 255, message = "255자 이하로 입력하세요.") @Nullable String address,
+        @Size(max = 100, message = "100자 이하로 입력하세요.") @Nullable String addressDetail,
+        @DecimalMin("-90") @DecimalMax("90") @Nullable BigDecimal latitude,
+        @DecimalMin("-180") @DecimalMax("180") @Nullable BigDecimal longitude
 ) {
 
     public static ProjectForm empty(String suggestedCode) {
         LocalDate start = LocalDate.now().withDayOfMonth(1);
-        return new ProjectForm(suggestedCode, null, null, null, ProjectStatus.SCHEDULED, null, start, start.plusMonths(6).minusDays(1), null);
+        return new ProjectForm(suggestedCode, null, null, null, ProjectStatus.SCHEDULED, null, start, start.plusMonths(6).minusDays(1), null,
+                null, null, null, null, null, null);
     }
 
     public static ProjectForm of(Project p) {
+        Location l = p.getWorkLocation();
         return new ProjectForm(p.getCode(), p.getName(), p.getPartyId(), p.getLeadDepartmentId(), p.getStatus(),
-                p.getContractAmount().longValue(), p.getPeriod().startDate(), p.getPeriod().endDate(), p.getDescription());
+                p.getContractAmount().longValue(), p.getPeriod().startDate(), p.getPeriod().endDate(), p.getDescription(),
+                p.getWorkPlace(), l.zipCode(), l.address(), l.addressDetail(), l.latitude(), l.longitude());
     }
 
     @AssertTrue(message = "종료일은 시작일 이후여야 합니다.")
     public boolean isPeriodValid() {
         return startDate == null || endDate == null || !endDate.isBefore(startDate);
+    }
+
+    public Location toWorkLocation() {
+        return Location.of(zipCode, address, addressDetail, latitude, longitude);
     }
 
     public ProjectInfo toInfo() {

@@ -18,7 +18,8 @@
         <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/admin/accounts/issue${issueEmployeeId == null ? "" : "?employeeId=" + issueEmployeeId}" hx-target="#modal-body"
                 hx-trigger="click${issueEmployeeId == null ? "" : ", load"}">${Icons.of("plus", "size-4")} 계정 발급</button>
     `)
-    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8" hx-get="/admin/accounts" hx-trigger="accountsChanged from:body" hx-select="#account-table" hx-target="#account-table" hx-swap="outerHTML">
+    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8" hx-get="/admin/accounts" hx-trigger="accountsChanged from:body" hx-select="#account-table" hx-target="#account-table" hx-swap="outerHTML"
+         hx-disinherit="*">
         <div id="account-table" class="overflow-x-auto @5xl:overflow-visible">
             <div class="min-w-[880px] @5xl:min-w-0">
                 <div class="list-head sm:px-x6 lg:px-x8">
@@ -66,12 +67,12 @@
                                     <button type="button" class="menu-item"
                                             hx-post="/admin/accounts/${a.id()}/reset-password" hx-target="#modal-body" hx-confirm="${a.getUsername()} 비밀번호를 초기화할까요?">${Icons.of("key", "size-4 text-fg-neutral-subtle")} 비밀번호 초기화</button>
                                     @if(a.isLocked())
-                                        <form method="post" action="/admin/accounts/${a.id()}/unlock"><button class="menu-item">${Icons.of("lock", "size-4 text-fg-neutral-subtle")} 잠금 해제</button></form>
+                                        <form method="post" action="/admin/accounts/${a.id()}/unlock">${kr.co.abacus.abms.common.web.Csrf.field()}<button class="menu-item">${Icons.of("lock", "size-4 text-fg-neutral-subtle")} 잠금 해제</button></form>
                                     @endif
                                     @if(a.isEnabled())
-                                        <form method="post" action="/admin/accounts/${a.id()}/disable" hx-confirm="계정을 비활성화할까요? 해당 사용자는 로그인할 수 없습니다."><button class="menu-item text-fg-critical">${Icons.of("x", "size-4")} 비활성화</button></form>
+                                        <form method="post" action="/admin/accounts/${a.id()}/disable" hx-confirm="계정을 비활성화할까요? 해당 사용자는 로그인할 수 없습니다.">${kr.co.abacus.abms.common.web.Csrf.field()}<button class="menu-item text-fg-critical">${Icons.of("x", "size-4")} 비활성화</button></form>
                                     @else
-                                        <form method="post" action="/admin/accounts/${a.id()}/enable"><button class="menu-item">${Icons.of("check", "size-4 text-fg-neutral-subtle")} 활성화</button></form>
+                                        <form method="post" action="/admin/accounts/${a.id()}/enable">${kr.co.abacus.abms.common.web.Csrf.field()}<button class="menu-item">${Icons.of("check", "size-4 text-fg-neutral-subtle")} 활성화</button></form>
                                     @endif
                                 </div>
                             </details>

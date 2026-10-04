@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 
@@ -20,7 +21,7 @@ import kr.co.abacus.abms.common.domain.BusinessException;
 @Entity
 @Table(name = "tb_department")
 @SQLRestriction("deleted = false")
-public class Department extends BaseEntity {
+public class Department extends BaseEntity implements Auditable {
 
     @Column(nullable = false, length = 32, unique = true)
     private String code;
@@ -115,6 +116,16 @@ public class Department extends BaseEntity {
 
     public @Nullable Long getLeaderEmployeeId() {
         return leaderEmployeeId;
+    }
+
+    @Override
+    public String auditLabel() {
+        return "부서";
+    }
+
+    @Override
+    public String auditName() {
+        return name;
     }
 
 }

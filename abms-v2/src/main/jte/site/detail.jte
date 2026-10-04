@@ -16,6 +16,7 @@
 @param int headcount
 @param List<NearbyParty> nearby
 @param List<MapMarker> markers
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, aside = @`
     <dl class="property-list">
         <dt>유형</dt>
@@ -38,7 +39,7 @@
         @if(ctx.can(PermissionCode.DEPARTMENT_WRITE))
             <a href="/sites/${site.id()}/edit" class="${Seed.button("neutralOutline")}">${Icons.of("pencil", "size-4")} 수정</a>
             @if(departments.isEmpty())
-                <form method="post" action="/sites/${site.id()}/delete" hx-confirm="${site.getName()} 사업장을 삭제할까요?">
+                <form method="post" action="/sites/${site.id()}/delete" hx-confirm="${site.getName()} 사업장을 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <button class="${Seed.button("neutralOutline")} text-fg-critical">${Icons.of("trash", "size-4")} 삭제</button>
                 </form>
             @endif
@@ -52,19 +53,6 @@
                 <span class="inline-flex items-center gap-x1 t3-regular text-fg-neutral-subtle">${Icons.of("map-pin", "size-3.5")}${site.getLocation().fullAddress()}</span>
             @endif
         </div>
-
-        <section class="min-w-0">
-            <h2 class="section-title">위치</h2>
-            @if(site.getLocation().isEmpty())
-                <div class="list-box">@template.components.empty(message = "주소가 등록되지 않았습니다.", icon = "map-pin")</div>
-            @else
-                @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), height = "h-72", fallbackText = site.getLocation().fullAddress(),
-                        fallbackHref = site.getLocation().kakaoMapLink(site.getName()))
-                <p class="mt-x2 flex flex-wrap items-center gap-x3 t3-regular text-fg-neutral-subtle">
-                    <a href="${site.getLocation().kakaoMapLink(site.getName())}" target="_blank" rel="noopener noreferrer" class="link inline-flex items-center gap-x1">카카오맵에서 길찾기 ${Icons.of("external", "size-3")}</a>
-                </p>
-            @endif
-        </section>
 
         <div class="grid grid-cols-1 gap-6 @4xl:grid-cols-2">
             <section class="min-w-0">
@@ -111,5 +99,21 @@
                 <p class="rounded-r2 bg-bg-neutral-muted p-x3 t4-regular whitespace-pre-line text-fg-neutral-muted">${site.getMemo()}</p>
             </section>
         @endif
+        @if(auditHistory != null)
+            <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
+        @endif
+        <section class="min-w-0">
+            <h2 class="section-title">위치</h2>
+            @if(site.getLocation().isEmpty())
+                <div class="list-box">@template.components.empty(message = "주소가 등록되지 않았습니다.", icon = "map-pin")</div>
+            @else
+                @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), height = "h-72", fallbackText = site.getLocation().fullAddress(),
+                        fallbackHref = site.getLocation().kakaoMapLink(site.getName()))
+                <p class="mt-x2 flex flex-wrap items-center gap-x3 t3-regular text-fg-neutral-subtle">
+                    <a href="${site.getLocation().kakaoMapLink(site.getName())}" target="_blank" rel="noopener noreferrer" class="link inline-flex items-center gap-x1">카카오맵에서 길찾기 ${Icons.of("external", "size-3")}</a>
+                </p>
+            @endif
+        </section>
+
     </div>
 `)

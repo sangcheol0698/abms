@@ -15,18 +15,18 @@
     @template.components.pageHeader(title = "손익 현황", subtitle = "프로젝트 주관 부서 기준 월 손익 · 청구(발행) 기준 매출, 투입 M/M 기준 비용", actions = @`
         @if(canManage)
             @if(!report.closed())
-                <form method="post" action="/summary/recalculate" hx-disabled-elt="find button">
+                <form method="post" action="/summary/recalculate" hx-disabled-elt="find button">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <input type="hidden" name="month" value="${month}">
                     <button class="${Seed.button("brandSolid")}">${Icons.of("refresh", "size-4")} 재집계</button>
                 </form>
                 @if(isPast)
-                    <form method="post" action="/summary/close" hx-confirm="${month} 손익을 최신 값으로 재집계한 뒤 마감할까요? 마감된 월은 자동 재집계되지 않습니다.">
+                    <form method="post" action="/summary/close" hx-confirm="${month} 손익을 최신 값으로 재집계한 뒤 마감할까요? 마감된 월은 자동 재집계되지 않습니다.">${kr.co.abacus.abms.common.web.Csrf.field()}
                         <input type="hidden" name="month" value="${month}">
                         <button class="${Seed.button("neutralOutline")}">${Icons.of("lock", "size-4")} 마감</button>
                     </form>
                 @endif
             @else
-                <form method="post" action="/summary/reopen" hx-confirm="${month} 마감을 해제할까요?">
+                <form method="post" action="/summary/reopen" hx-confirm="${month} 마감을 해제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <input type="hidden" name="month" value="${month}">
                     <button class="${Seed.button("neutralOutline")}">마감 해제</button>
                 </form>
@@ -40,7 +40,7 @@
             <div class="flex items-center rounded-r2 border border-stroke-neutral-subtle">
                 <a href="/summary?month=${report.month().minusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>
                 <form action="/summary" method="get" class="border-x border-stroke-neutral-subtle">
-                    <input type="month" name="month" value="${month}" class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" onchange="this.form.requestSubmit()" aria-label="조회 월">
+                    <input type="month" name="month" value="${month}" class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" data-submit-on-change aria-label="조회 월">
                 </form>
                 <a href="/summary?month=${report.month().plusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-l-none" aria-label="다음 달" title="다음 달">${Icons.of("chevron-right", "size-4")}</a>
             </div>

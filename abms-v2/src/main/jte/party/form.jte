@@ -16,7 +16,7 @@
     @template.components.pageHeader(title = title, breadcrumb = @`
         <a href="/parties" class="hover:text-fg-neutral-muted">협력사</a>${Icons.of("chevron-right", "size-3")}<span>${editing ? "수정" : "등록"}</span>
     `)
-    <form method="post" action="${editing ? "/parties/" + party.id() : "/parties"}" class="mx-auto max-w-4xl" novalidate>
+    <form method="post" action="${editing ? "/parties/" + party.id() : "/parties"}" class="mx-auto max-w-4xl" novalidate>${kr.co.abacus.abms.common.web.Csrf.field()}
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">구분에 따라 고객사(발주처)와 협력사(외주·파트너)를 함께 관리합니다.</p></div>
@@ -35,14 +35,6 @@
                 @template.components.input(name = "website", label = "웹사이트", value = Ui.value(form.website()), errors = errors, placeholder = "example.com")
                 <div class="@xl:col-span-2">@template.components.addressField(zipCode = form.zipCode(), address = form.address(), addressDetail = form.addressDetail(),
                         latitude = form.latitude(), longitude = form.longitude(), errors = errors, mapEnabled = ctx.mapEnabled())</div>
-            </div>
-        </section>
-        <section class="form-section">
-            <div><h2 class="form-section-title">영업 담당자</h2><p class="form-section-desc">청구·계약 연락 창구입니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
-                @template.components.input(name = "salesRepName", label = "이름", value = Ui.value(form.salesRepName()), errors = errors)
-                @template.components.input(name = "salesRepPhone", label = "연락처", value = Ui.value(form.salesRepPhone()), errors = errors, type = "tel", placeholder = "010-0000-0000")
-                <div class="@xl:col-span-2">@template.components.input(name = "salesRepEmail", label = "이메일", value = Ui.value(form.salesRepEmail()), errors = errors, type = "email")</div>
             </div>
         </section>
         <section class="form-section">

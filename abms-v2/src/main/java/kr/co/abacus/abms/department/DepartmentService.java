@@ -20,6 +20,9 @@ import kr.co.abacus.abms.site.SiteRepository;
 @Transactional
 public class DepartmentService {
 
+    private static final java.util.Comparator<Employee> MEMBER_ORDER =
+            java.util.Comparator.comparingInt((Employee e) -> e.getPosition().level()).reversed().thenComparing(Employee::getName);
+
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
     private final ProjectRepository projectRepository;
@@ -48,9 +51,22 @@ public class DepartmentService {
     @Transactional(readOnly = true)
     public List<Employee> members(Long departmentId) {
         return employeeRepository.findAllByDepartmentIdAndDeletedFalse(departmentId).stream()
-                .sorted(java.util.Comparator.comparingInt((Employee e) -> e.getPosition().level()).reversed()
-                        .thenComparing(Employee::getName))
+                .sorted(MEMBER_ORDER)
                 .toList();
+    }
+
+    /** 여러 부서의 소속 직원을 한 번에 조회한다. 부서마다 members() 와 같은 순서(직위 높은 순 → 이름). */
+    @Transactional(readOnly = true)
+    public java.util.Map<Long, List<Employee>> membersByDepartment(java.util.Collection<Long> departmentIds) {
+        java.util.Map<Long, List<Employee>> result = new java.util.HashMap<>();
+        departmentIds.forEach(id -> result.put(id, new java.util.ArrayList<>()));
+        if (departmentIds.isEmpty()) {
+            return result;
+        }
+        employeeRepository.findAllByDepartmentIdInAndDeletedFalse(departmentIds).stream()
+                .sorted(MEMBER_ORDER)
+                .forEach(e -> result.get(e.getDepartmentId()).add(e));
+        return result;
     }
 
     public Department create(LoginUser user, String code, String name, DepartmentType type, @Nullable Long parentId,

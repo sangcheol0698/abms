@@ -56,13 +56,13 @@
                     <p class="truncate t3-regular text-fg-neutral-subtle">${ctx.requireUser().getUsername()}</p>
                 </div>
                 <a href="/me" class="menu-item">${Icons.of("user", "size-4 text-fg-neutral-subtle")} 내 정보</a>
-                <button type="button" class="menu-item" onclick="document.getElementById('shortcuts').showModal()">${Icons.of("command", "size-4 text-fg-neutral-subtle")} 키보드 단축키</button>
+                <button type="button" class="menu-item" data-open-dialog="shortcuts">${Icons.of("command", "size-4 text-fg-neutral-subtle")} 키보드 단축키</button>
                 <div class="my-x1 border-t border-stroke-neutral-subtle"></div>
                 <p class="px-x2 pt-x1 pb-x1_5 t3-medium text-fg-neutral-subtle">테마</p>
                 <div class="grid grid-cols-3 gap-x1 px-x1 pb-x1" role="group" aria-label="테마">
-                    <button type="button" class="theme-option" data-theme-option="system" onclick="abmsTheme('system')">${Icons.of("monitor", "size-4")}<span>시스템</span></button>
-                    <button type="button" class="theme-option" data-theme-option="light" onclick="abmsTheme('light')">${Icons.of("sun", "size-4")}<span>라이트</span></button>
-                    <button type="button" class="theme-option" data-theme-option="dark" onclick="abmsTheme('dark')">${Icons.of("moon", "size-4")}<span>다크</span></button>
+                    <button type="button" class="theme-option" data-theme-option="system">${Icons.of("monitor", "size-4")}<span>시스템</span></button>
+                    <button type="button" class="theme-option" data-theme-option="light">${Icons.of("sun", "size-4")}<span>라이트</span></button>
+                    <button type="button" class="theme-option" data-theme-option="dark">${Icons.of("moon", "size-4")}<span>다크</span></button>
                 </div>
                 <div class="my-x1 border-t border-stroke-neutral-subtle"></div>
                 <form method="post" action="/logout" hx-boost="false">
@@ -118,6 +118,9 @@
                     @endif
                     @if(ctx.can(PermissionCode.SUMMARY_MANAGE))
                         @template.layout.navItem(href = "/admin/cost-policies", label = "원가 정책", icon = "calculator", current = ctx.active("/admin/cost-policies"))
+                    @endif
+                    @if(ctx.can(PermissionCode.ACCOUNT_MANAGE))
+                        @template.layout.navItem(href = "/admin/audit-logs", label = "변경 이력", icon = "refresh", current = ctx.active("/admin/audit-logs"))
                     @endif
                 </div>
             @endif
@@ -180,7 +183,7 @@
 <dialog id="shortcuts" class="m-auto w-[calc(100%-32px)] max-w-md rounded-r5 bg-bg-layer-floating p-0 shadow-s3" aria-label="키보드 단축키">
     <div class="flex items-center justify-between border-b border-stroke-neutral-subtle px-x5 py-x3">
         <h2 class="t5-bold text-fg-neutral">키보드 단축키</h2>
-        <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" onclick="this.closest('dialog').close()" aria-label="닫기">${Icons.of("x", "size-4")}</button>
+        <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" data-close-dialog aria-label="닫기">${Icons.of("x", "size-4")}</button>
     </div>
     <dl class="grid grid-cols-[1fr_auto] gap-x-x4 gap-y-x2_5 px-x5 py-x4 t4-regular">
         <dt class="text-fg-neutral-muted">명령 팔레트</dt><dd class="flex gap-x1"><span class="kbd">⌘</span><span class="kbd">K</span></dd>

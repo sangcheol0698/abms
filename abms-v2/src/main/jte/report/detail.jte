@@ -26,10 +26,10 @@
     @template.components.pageHeader(title = report.getTitle(), subtitle = Ui.date(report.getWeekStart()) + " ~ " + Ui.date(report.getWeekEnd()) + " · 작성 " + author, breadcrumb = @`
         <a href="/reports" class="hover:text-fg-neutral-muted">주간 보고서</a>${Icons.of("chevron-right", "size-3")}<span>보고서</span>
     `, actions = @`
-        <button type="button" class="${Seed.button("neutralOutline")}" title="마크다운 복사" onclick="navigator.clipboard.writeText(document.getElementById('report-source').textContent).then(() => abmsToast('success', '마크다운을 복사했습니다.'))">복사</button>
-        <button type="button" class="${Seed.button("neutralOutline")}" onclick="window.print()">인쇄</button>
+        <button type="button" class="${Seed.button("neutralOutline")}" title="마크다운 복사" data-copy-from="report-source" data-copy-message="마크다운을 복사했습니다.">복사</button>
+        <button type="button" class="${Seed.button("neutralOutline")}" data-print>인쇄</button>
         <a href="/reports/${report.id()}/edit" class="${Seed.button("neutralOutline")}">${Icons.of("pencil", "size-4")} 편집</a>
-        <form method="post" action="/reports/${report.id()}/delete" hx-confirm="보고서를 삭제할까요?">
+        <form method="post" action="/reports/${report.id()}/delete" hx-confirm="보고서를 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
             <button class="${Seed.iconButton("neutralOutline", "small")} text-fg-critical" aria-label="보고서 삭제" title="삭제">${Icons.of("trash", "size-4")}</button>
         </form>
     `)

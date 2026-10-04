@@ -24,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import kr.co.abacus.abms.account.Account;
 import kr.co.abacus.abms.account.AccountService;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
@@ -42,9 +43,12 @@ public class PermissionGroupController {
     private final PermissionGroupService groupService;
     private final AccountService accountService;
     private final EmployeeRepository employeeRepository;
+    private final AuditQueryService auditQueryService;
 
     public PermissionGroupController(PermissionGroupService groupService, AccountService accountService,
-                                     EmployeeRepository employeeRepository) {
+                                     EmployeeRepository employeeRepository,
+                                     AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
         this.groupService = groupService;
         this.accountService = accountService;
         this.employeeRepository = employeeRepository;
@@ -95,6 +99,7 @@ public class PermissionGroupController {
         model.addAttribute("members", accounts.stream().filter(a -> memberIds.contains(a.id())).toList());
         model.addAttribute("candidates", accounts.stream().filter(a -> !memberIds.contains(a.id())).toList());
         model.addAttribute("employees", employees);
+        model.addAttribute("auditHistory", auditQueryService.history("PermissionGroup", id, 30));
         return "admin/permissionGroup";
     }
 

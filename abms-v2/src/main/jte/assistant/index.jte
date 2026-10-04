@@ -39,11 +39,11 @@
                 </div>
                 @if(current != null)
                     <div class="flex items-center gap-x0_5">
-                        <form method="post" action="/assistant/${current.id()}/favorite">
+                        <form method="post" action="/assistant/${current.id()}/favorite">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="${Seed.iconButton("ghost", "xsmall")}" aria-label="즐겨찾기" title="즐겨찾기">${Icons.of("star", current.isFavorite() ? "size-4 fill-palette-yellow-400 text-palette-yellow-400" : "size-4")}</button>
                         </form>
                         <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" hx-post="/assistant/${current.id()}/rename" hx-prompt="새 대화 제목" aria-label="제목 변경" title="제목 변경">${Icons.of("pencil", "size-4")}</button>
-                        <form method="post" action="/assistant/${current.id()}/delete" hx-confirm="이 대화를 삭제할까요?">
+                        <form method="post" action="/assistant/${current.id()}/delete" hx-confirm="이 대화를 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="${Seed.iconButton("ghost", "xsmall")} text-fg-critical" aria-label="삭제" title="삭제">${Icons.of("trash", "size-4")}</button>
                         </form>
                     </div>
@@ -64,8 +64,7 @@
                         <p class="mt-x1 t4-regular text-fg-neutral-subtle">직원, 부서, 프로젝트, 월별 손익을 자연어로 물어보세요. 내 권한 범위 안의 데이터만 조회합니다.</p>
                         <div class="mt-x6 grid grid-cols-1 gap-x2 text-left @xl:grid-cols-2">
                             @for(String example : List.of("진행 중인 프로젝트 목록을 보여줘", "지난달 손익이 가장 좋은 프로젝트는?", "AI/Data사업담당 조직 구성을 알려줘", "결제 시스템 고도화 투입 인력은?"))
-                                <button type="button" class="flex cursor-pointer items-center gap-x2 rounded-r3 border border-stroke-neutral-subtle px-x3 py-x2_5 text-left t4-regular text-fg-neutral-muted transition-colors hover:bg-bg-transparent-pressed hover:text-fg-neutral"
-                                        onclick="const t = document.getElementById('chat-input'); t.value = this.textContent.trim(); t.focus();">${example}</button>
+                                <button type="button" class="flex cursor-pointer items-center gap-x2 rounded-r3 border border-stroke-neutral-subtle px-x3 py-x2_5 text-left t4-regular text-fg-neutral-muted transition-colors hover:bg-bg-transparent-pressed hover:text-fg-neutral" data-chat-example>${example}</button>
                             @endfor
                         </div>
                     </div>
@@ -81,12 +80,10 @@
                   hx-post="${current == null ? "/assistant" : "/assistant/" + current.id() + "/messages"}"
                   hx-target="${current == null ? null : "#messages"}" hx-swap="${current == null ? null : "beforeend"}"
                   hx-disabled-elt="find textarea, find button"
-                  hx-on::before-request="abmsChat.pending(this)" hx-on::after-request="abmsChat.done(this, event)">
+                  data-chat-form>
                 <div class="mx-auto flex max-w-3xl items-end gap-x2 rounded-r4 border border-stroke-neutral-weak bg-bg-layer-default p-x2 shadow-s1 transition-shadow focus-within:border-stroke-brand-solid focus-within:shadow-[0_0_0_3px_var(--seed-color-bg-brand-weak)]">
                     <textarea id="chat-input" name="message" rows="1" required maxlength="2000" placeholder="메시지를 입력하세요 (Enter 전송, Shift+Enter 줄바꿈)"
-                              class="max-h-40 min-h-9 flex-1 resize-none border-0 bg-transparent px-x2 py-x1_5 t4-regular text-fg-neutral placeholder:text-fg-placeholder focus:outline-none"
-                              onkeydown="if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); this.form.requestSubmit(); }"
-                              oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                              class="max-h-40 min-h-9 flex-1 resize-none border-0 bg-transparent px-x2 py-x1_5 t4-regular text-fg-neutral placeholder:text-fg-placeholder focus:outline-none" data-chat-input></textarea>
                     <button type="submit" class="${Seed.iconButton("brandSolid", "small")}" aria-label="전송" title="전송 (Enter)">${Icons.of("send", "size-4")}</button>
                 </div>
                 <p class="mx-auto mt-x2 max-w-3xl text-center t2-regular text-fg-neutral-subtle">AI 답변은 부정확할 수 있습니다. 중요한 수치는 원본 화면에서 확인하세요.</p>

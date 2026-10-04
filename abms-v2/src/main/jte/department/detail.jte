@@ -22,6 +22,7 @@
 @param boolean canWrite
 @param DepartmentInsight insight
 @param String trendChart = null
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 <div>
     <div class="min-w-0 space-y-6">
         <div class="flex flex-wrap items-start justify-between gap-x3">
@@ -43,7 +44,7 @@
                     <button type="button" class="${Seed.button("neutralOutline", "xsmall")}" hx-get="/departments/new?parentId=${department.id()}" hx-target="#modal-body">${Icons.of("plus", "size-4")} 하위 부서</button>
                     <button type="button" class="${Seed.button("neutralOutline", "xsmall")}" hx-get="/departments/${department.id()}/edit" hx-target="#modal-body">${Icons.of("pencil", "size-4")} 수정</button>
                     <button type="button" class="${Seed.button("neutralOutline", "xsmall")}" hx-get="/departments/${department.id()}/leader" hx-target="#modal-body">${Icons.of("user", "size-4")} 부서장</button>
-                    <form method="post" action="/departments/${department.id()}/delete" hx-confirm="${department.getName()} 부서를 삭제할까요?">
+                    <form method="post" action="/departments/${department.id()}/delete" hx-confirm="${department.getName()} 부서를 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                         <button class="${Seed.iconButton("ghost", "xsmall")} text-fg-critical" aria-label="부서 삭제" title="부서 삭제">${Icons.of("trash", "size-4")}</button>
                     </form>
                 </div>
@@ -155,6 +156,9 @@
                     @endfor
                 </div>
             </section>
+        @endif
+        @if(auditHistory != null)
+            <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
         @endif
     </div>
 

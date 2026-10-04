@@ -45,6 +45,11 @@ public class GlobalExceptionHandler {
         return respond(request, response, HttpStatus.UNPROCESSABLE_CONTENT, e.getMessage());
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ModelAndView tooLarge(HttpServletRequest request, HttpServletResponse response) {
+        return respond(request, response, HttpStatus.CONTENT_TOO_LARGE, "파일은 20MB 이하만 첨부할 수 있습니다.");
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ModelAndView accessDenied(AccessDeniedException e, HttpServletRequest request, HttpServletResponse response) {
         return respond(request, response, HttpStatus.FORBIDDEN, e.getMessage() == null ? "권한이 없습니다." : e.getMessage());
@@ -56,8 +61,12 @@ public class GlobalExceptionHandler {
         return respond(request, response, HttpStatus.CONFLICT, "다른 데이터와 충돌해 저장하지 못했습니다. (중복 또는 참조 중인 데이터)");
     }
 
+    /**
+     * HTMX 요청(boost 이동 포함)은 현재 화면을 그대로 두고 토스트로 사유를 알린다.
+     * boost 이동의 4xx 응답은 htmx 가 화면에 넣지 않으므로, 오류 페이지를 보내면 아무 반응이 없는 것처럼 보인다.
+     */
     private ModelAndView respond(HttpServletRequest request, HttpServletResponse response, HttpStatus status, String message) {
-        if (Htmx.isHtmx(request)) {
+        if (Htmx.isAnyHtmx(request)) {
             Htmx.toast(response, Htmx.ToastType.ERROR, message);
             response.setHeader("HX-Reswap", "none");
             ModelAndView empty = new ModelAndView("fragments/empty");

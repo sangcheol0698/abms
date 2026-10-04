@@ -15,7 +15,7 @@
         <a href="/employees" class="hover:text-fg-neutral-muted">직원</a>${Icons.of("chevron-right", "size-3")}
         <a href="/employees/${employee.id()}" class="hover:text-fg-neutral-muted">${employee.getName()}</a>${Icons.of("chevron-right", "size-3")}<span>수정</span>
     `)
-    <form method="post" action="/employees/${employee.id()}/profile" class="mx-auto max-w-4xl" novalidate>
+    <form method="post" action="/employees/${employee.id()}/profile" class="mx-auto max-w-4xl" novalidate>${kr.co.abacus.abms.common.web.Csrf.field()}
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">그 밖의 정보는 인사 담당자에게 요청하세요.</p></div>

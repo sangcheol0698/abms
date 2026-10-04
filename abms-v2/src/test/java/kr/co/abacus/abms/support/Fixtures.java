@@ -90,7 +90,7 @@ public class Fixtures {
     }
 
     public Party party(String name) {
-        return partyRepository.save(Party.create(new Party.PartyInfo(name, null, null, null, null)));
+        return partyRepository.save(Party.create(new Party.PartyInfo(name)));
     }
 
     public Project project(Department leadDepartment, long contractAmount, LocalDate start, LocalDate end) {

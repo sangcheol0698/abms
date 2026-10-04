@@ -16,7 +16,7 @@
         subtitle = dashboard.year() + "년 손익 현황 · " + (dashboard.companyWide() ? "전사 기준" : "내 권한 범위 기준"),
         actions = @`
             <form action="/" method="get" class="flex items-center gap-x2">
-                <select name="year" class="select filter-select" onchange="this.form.requestSubmit()" aria-label="연도">
+                <select name="year" class="select filter-select" data-submit-on-change aria-label="연도">
                     @for(Integer y : years)
                         <option value="${y}" selected="${y == dashboard.year()}">${y}년</option>
                     @endfor

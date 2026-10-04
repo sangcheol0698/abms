@@ -65,6 +65,20 @@ public final class DepartmentTree {
         return result;
     }
 
+    /** 부서의 근무 사업장. 부서에 지정이 없으면 가장 가까운 상위 부서의 사업장을 따른다. */
+    public @Nullable Long siteIdOf(@Nullable Long departmentId) {
+        if (departmentId == null || get(departmentId) == null) {
+            return null;
+        }
+        List<Department> path = path(departmentId);
+        for (int i = path.size() - 1; i >= 0; i--) {
+            if (path.get(i).getSiteId() != null) {
+                return path.get(i).getSiteId();
+            }
+        }
+        return null;
+    }
+
     /** 루트부터 해당 부서까지의 경로 */
     public List<Department> path(Long departmentId) {
         List<Department> path = new ArrayList<>();

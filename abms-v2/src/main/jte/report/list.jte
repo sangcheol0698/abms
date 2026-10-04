@@ -45,7 +45,7 @@
         <aside>
             <div class="@5xl:sticky @5xl:top-[calc(var(--sticky-top)+16px)]">
                 <h2 class="section-title">새 보고서</h2>
-                <form method="post" action="/reports" class="list-box space-y-3 p-x4" hx-disabled-elt="find button">
+                <form method="post" action="/reports" class="list-box space-y-3 p-x4" hx-disabled-elt="find button">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <div>
                         <label for="date" class="label">보고 주간 (해당 주의 아무 날짜)</label>
                         <input id="date" name="date" type="date" class="input" value="${defaultDate.toString()}" max="${LocalDate.now().toString()}" required>
