@@ -153,18 +153,18 @@ public class EmployeeService {
         }
     }
 
-    public void updateOwnProfile(LoginUser user, Long id, String name, LocalDate birthDate, EmployeeAvatar avatar) {
+    public void updateOwnProfile(LoginUser user, Long id, String name, LocalDate birthDate) {
         Employee employee = get(id);
         if (!canWriteOwnProfile(user, employee) && !canFullWrite(user, employee.getDepartmentId())) {
             throw new AccessDeniedException("본인 정보만 수정할 수 있습니다.");
         }
-        employee.updateOwnProfile(name, birthDate, avatar);
+        employee.updateOwnProfile(name, birthDate);
     }
 
     /** 본인 정보와 연락처·보유 기술을 함께 수정한다. */
-    public void updateOwnProfile(LoginUser user, Long id, String name, LocalDate birthDate, EmployeeAvatar avatar,
+    public void updateOwnProfile(LoginUser user, Long id, String name, LocalDate birthDate,
                                  @Nullable String phone, @Nullable String skills) {
-        updateOwnProfile(user, id, name, birthDate, avatar);
+        updateOwnProfile(user, id, name, birthDate);
         get(id).updateOwnContact(phone, skills);
     }
 

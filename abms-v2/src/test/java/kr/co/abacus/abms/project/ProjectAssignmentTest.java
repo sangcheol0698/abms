@@ -14,7 +14,6 @@ import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.Period;
 import kr.co.abacus.abms.employee.Employee;
-import kr.co.abacus.abms.employee.EmployeeAvatar;
 import kr.co.abacus.abms.employee.EmployeeGrade;
 import kr.co.abacus.abms.employee.EmployeePosition;
 import kr.co.abacus.abms.employee.EmployeeProfile;
@@ -27,7 +26,7 @@ class ProjectAssignmentTest {
 
     private final Employee employee = withId(Employee.create(new EmployeeProfile(1L, "개발자", "dev@test.co",
             LocalDate.of(2020, 1, 1), LocalDate.of(1990, 1, 1), EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME,
-            EmployeeGrade.JUNIOR, EmployeeAvatar.SKY_GLOW, null)), 20L);
+            EmployeeGrade.JUNIOR, null)), 20L);
 
     @Test
     void 월_총일수_대비_투입일수로_MM을_계산한다() {

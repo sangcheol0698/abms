@@ -37,7 +37,7 @@
                         <span class="min-w-0 flex-1">
                             @if(e != null)
                                 <a href="/employees/${e.id()}" class="flex min-w-0 items-center gap-x2 hover:underline">
-                                    @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-6 text-[11px]")
+                                    @template.components.avatar(photoUrl = e.photoUrl(), name = e.getName(), size = "size-6")
                                     <span class="truncate t4-medium">${e.getName()}</span>
                                     <span class="truncate t3-regular text-fg-neutral-subtle">${tree.nameOf(e.getDepartmentId())}</span>
                                 </a>

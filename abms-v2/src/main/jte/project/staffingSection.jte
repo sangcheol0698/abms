@@ -27,7 +27,7 @@
                     <td>
                         @if(row.employee() != null)
                             <a href="/employees/${row.employee().id()}" class="flex items-center gap-2.5">
-                                @template.components.avatar(avatar = row.employee().getAvatar(), initial = row.employee().initial(), size = "size-7 text-xs")
+                                @template.components.avatar(photoUrl = row.employee().photoUrl(), name = row.employee().getName(), size = "size-7")
                                 <span class="font-medium text-fg-neutral hover:text-fg-brand">${row.employee().getName()}</span>
                                 <span class="text-xs text-fg-placeholder">${row.employee().getPosition().label()}</span>
                             </a>

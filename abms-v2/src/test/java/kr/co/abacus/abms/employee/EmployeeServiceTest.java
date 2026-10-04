@@ -79,12 +79,12 @@ class EmployeeServiceTest {
     void 본인_범위는_자기_프로필만_수정할_수_있다() {
         LoginUser self = Fixtures.user(teamMember, Fixtures.grants(PermissionScope.SELF, PermissionCode.EMPLOYEE_READ, PermissionCode.EMPLOYEE_WRITE));
 
-        employeeService.updateOwnProfile(self, teamMember.id(), "새이름", LocalDate.of(1991, 2, 3), EmployeeAvatar.GOLDEN_RAY);
+        employeeService.updateOwnProfile(self, teamMember.id(), "새이름", LocalDate.of(1991, 2, 3));
         assertThat(teamMember.getName()).isEqualTo("새이름");
 
         assertThatThrownBy(() -> employeeService.update(self, teamMember.id(), profileOf(teamMember, team.id())))
                 .isInstanceOf(AccessDeniedException.class);
-        assertThatThrownBy(() -> employeeService.updateOwnProfile(self, manager.id(), "x", LocalDate.of(1990, 1, 1), EmployeeAvatar.SKY_GLOW))
+        assertThatThrownBy(() -> employeeService.updateOwnProfile(self, manager.id(), "x", LocalDate.of(1990, 1, 1)))
                 .isInstanceOf(AccessDeniedException.class);
         assertThatThrownBy(() -> employeeService.getForRead(self, manager.id())).isInstanceOf(AccessDeniedException.class);
     }
@@ -94,7 +94,7 @@ class EmployeeServiceTest {
         LoginUser admin = Fixtures.admin(manager);
         Employee created = employeeService.create(admin, new EmployeeProfile(team.id(), "신입", "new@test.co",
                 LocalDate.of(2026, 3, 2), LocalDate.of(2000, 1, 1), EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME,
-                EmployeeGrade.JUNIOR, EmployeeAvatar.AQUA_SPLASH, null), Money.wons(45_000_000));
+                EmployeeGrade.JUNIOR, null), Money.wons(45_000_000));
 
         assertThat(positionHistoryRepository.findAllByEmployeeIdOrderByPeriodStartDateDesc(created.id())).hasSize(1);
         assertThat(payrollRepository.findEffective(created.id(), LocalDate.of(2026, 3, 2)))
@@ -153,14 +153,14 @@ class EmployeeServiceTest {
         LoginUser admin = Fixtures.admin(manager);
         Employee dev = employeeService.create(admin, new EmployeeProfile(team.id(), "개발자", "dev2@test.co",
                 LocalDate.of(2024, 3, 4), LocalDate.of(1995, 1, 1), EmployeePosition.SENIOR_ASSOCIATE, EmployeeType.FULL_TIME,
-                EmployeeGrade.MID_LEVEL, EmployeeAvatar.AQUA_SPLASH, null, "010-1111-2222", LocalDate.of(2020, 3, 2),
+                EmployeeGrade.MID_LEVEL, null, "010-1111-2222", LocalDate.of(2020, 3, 2),
                 EmployeeJob.DEVELOPMENT, "Kotlin, Spring", WorkType.CLIENT_SITE), null);
 
         assertThat(employeeService.search(admin, new EmployeeSearch("kotlin", null, null, null, null, false),
                 org.springframework.data.domain.Pageable.unpaged())).containsExactly(dev);
 
         LoginUser self = Fixtures.user(dev, Fixtures.grants(PermissionScope.SELF, PermissionCode.EMPLOYEE_READ, PermissionCode.EMPLOYEE_WRITE));
-        employeeService.updateOwnProfile(self, dev.id(), "개발자", LocalDate.of(1995, 1, 1), EmployeeAvatar.AQUA_SPLASH,
+        employeeService.updateOwnProfile(self, dev.id(), "개발자", LocalDate.of(1995, 1, 1),
                 "010-3333-4444", "Kotlin, Spring, Kafka");
 
         assertThat(dev.getPhone()).isEqualTo("010-3333-4444");
@@ -170,7 +170,7 @@ class EmployeeServiceTest {
 
     private static EmployeeProfile profileOf(Employee e, Long departmentId) {
         return new EmployeeProfile(departmentId, e.getName(), e.getEmail(), e.getJoinDate(), e.getBirthDate(), e.getPosition(),
-                e.getType(), e.getGrade(), e.getAvatar(), e.getMemo());
+                e.getType(), e.getGrade(), e.getMemo());
     }
 
 }

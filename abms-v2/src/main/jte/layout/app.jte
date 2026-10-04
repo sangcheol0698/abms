@@ -48,7 +48,7 @@
         </button>
         <details class="relative" data-dropdown>
             <summary class="flex cursor-pointer items-center gap-x1_5 rounded-r2 p-x1 transition-colors hover:bg-bg-transparent-pressed" aria-label="사용자 메뉴">
-                @template.components.avatar(avatar = ctx.requireUser().avatar(), initial = ctx.requireUser().initial(), size = "size-6 text-[11px]")
+                @template.components.avatar(photoUrl = ctx.requireUser().photoUrl(), name = ctx.requireUser().name(), size = "size-6")
             </summary>
             <div class="dropdown-panel w-60 p-x1">
                 <div class="px-x2 py-x1_5">

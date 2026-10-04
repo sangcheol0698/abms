@@ -25,17 +25,21 @@
 @param List<PositionHistory> positions
 @param boolean canWrite
 @param boolean canEditOwn
+@param boolean canChangePhoto = false
 @param Account account = null
 @param EmployeeInsight insight
 @param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, aside = @`
             <div class="mb-x5 flex items-center gap-x3">
-                @template.components.avatar(avatar = employee.getAvatar(), initial = employee.initial(), size = "size-10 text-base")
+                @template.components.avatar(photoUrl = employee.photoUrl(), name = employee.getName(), size = "size-10")
                 <div class="min-w-0">
                     <p class="truncate t5-bold text-fg-neutral">${employee.getName()}</p>
                     <p class="truncate t3-regular text-fg-neutral-subtle">${employee.getPosition().label()} · ${employee.getGrade().label()}</p>
                 </div>
             </div>
+            @if(canChangePhoto)
+                <div class="-mt-x3 mb-x5">@template.employee.photoActions(employee = employee)</div>
+            @endif
             <dl class="property-list">
                 <dt>상태</dt>
                 <dd><span class="${Ui.badge(employee.getStatus())}">${employee.getStatus().label()}</span></dd>

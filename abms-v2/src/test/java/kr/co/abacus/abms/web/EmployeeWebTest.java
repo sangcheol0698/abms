@@ -81,7 +81,6 @@ class EmployeeWebTest {
                         .param("position", "ASSOCIATE")
                         .param("type", "FULL_TIME")
                         .param("grade", "JUNIOR")
-                        .param("avatar", "GOLDEN_RAY")
                         .param("annualSalary", "48000000"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("/employees/*"))

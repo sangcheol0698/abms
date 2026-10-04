@@ -21,7 +21,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.access.PermissionScope;
 import kr.co.abacus.abms.department.DepartmentRepository;
-import kr.co.abacus.abms.employee.EmployeeAvatar;
 import kr.co.abacus.abms.project.ProjectAssignmentRepository;
 import kr.co.abacus.abms.support.Fixtures;
 
@@ -30,7 +29,7 @@ class AccessServiceTest {
     private final DepartmentRepository departmentRepository = mock(DepartmentRepository.class);
     private final ProjectAssignmentRepository assignmentRepository = mock(ProjectAssignmentRepository.class);
     private final AccessService accessService = new AccessService(departmentRepository, assignmentRepository);
-    private final LoginUser member = new LoginUser(1L, 10L, 100L, "m@test.co", "참여자", EmployeeAvatar.SKY_GLOW, "{noop}x", true, false,
+    private final LoginUser member = new LoginUser(1L, 10L, 100L, "m@test.co", "참여자", null, "{noop}x", true, false,
             Fixtures.grants(PermissionScope.CURRENT_PARTICIPATION, PermissionCode.PROJECT_READ));
 
     @BeforeEach

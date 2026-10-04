@@ -79,9 +79,9 @@ public class Employee extends BaseEntity implements Auditable {
     @Column(length = 20)
     private @Nullable WorkType workType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 40)
-    private EmployeeAvatar avatar;
+    /** 프로필 사진 저장 경로 (없으면 기본 아바타) */
+    @Column(length = 200)
+    private @Nullable String photoPath;
 
     private @Nullable LocalDate resignationDate;
 
@@ -110,12 +110,18 @@ public class Employee extends BaseEntity implements Auditable {
         this.skills = normalizeSkills(skills);
     }
 
-    /** 본인 정보 수정 (SELF 권한): 이름, 생년월일, 아바타만 변경 가능 */
-    public void updateOwnProfile(String name, LocalDate birthDate, EmployeeAvatar avatar) {
+    /** 본인 정보 수정 (SELF 권한): 이름, 생년월일만 변경 가능 */
+    public void updateOwnProfile(String name, LocalDate birthDate) {
         requireNotResigned("퇴사한 직원은 정보를 수정할 수 없습니다.");
         this.name = requireText(name, "이름");
         this.birthDate = Objects.requireNonNull(birthDate);
-        this.avatar = Objects.requireNonNull(avatar);
+    }
+
+    /** 프로필 사진 교체. 이전 사진 경로를 돌려준다. (파일 정리용) */
+    public @Nullable String changePhoto(@Nullable String photoPath) {
+        String previous = this.photoPath;
+        this.photoPath = photoPath;
+        return previous;
     }
 
     private void apply(EmployeeProfile p) {
@@ -127,7 +133,6 @@ public class Employee extends BaseEntity implements Auditable {
         this.position = Objects.requireNonNull(p.position());
         this.type = Objects.requireNonNull(p.type());
         this.grade = Objects.requireNonNull(p.grade());
-        this.avatar = Objects.requireNonNull(p.avatar());
         this.memo = p.memo() == null || p.memo().isBlank() ? null : p.memo().trim();
         this.phone = normalizePhone(p.phone());
         if (p.careerStartDate() != null && p.careerStartDate().isAfter(this.joinDate)) {
@@ -320,8 +325,20 @@ public class Employee extends BaseEntity implements Auditable {
         return grade;
     }
 
-    public EmployeeAvatar getAvatar() {
-        return avatar;
+    public @Nullable String getPhotoPath() {
+        return photoPath;
+    }
+
+    /**
+     * 프로필 사진 주소 (없으면 null → 기본 아바타). 사진이 바뀌면 주소도 바뀌어 브라우저 캐시를 오래 둘 수 있다.
+     */
+    public @Nullable String photoUrl() {
+        if (photoPath == null || getId() == null) {
+            return null;
+        }
+        String file = photoPath.substring(photoPath.lastIndexOf('/') + 1);
+        String version = file.contains(".") ? file.substring(0, file.indexOf('.')) : file;
+        return "/employees/" + getId() + "/photo?v=" + (version.length() > 12 ? version.substring(0, 12) : version);
     }
 
     public @Nullable LocalDate getResignationDate() {

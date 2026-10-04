@@ -40,7 +40,7 @@
                         !{Employee e = employees.get(a.getEmployeeId());}
                         <div class="list-row">
                             @if(e != null)
-                                @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-6 text-[11px]")
+                                @template.components.avatar(photoUrl = e.photoUrl(), name = e.getName(), size = "size-6")
                             @endif
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate t4-medium">${e == null ? "-" : e.getName()}</span>

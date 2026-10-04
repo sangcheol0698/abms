@@ -16,7 +16,7 @@
     <dt>부서장</dt>
     <dd>
         @if(leader != null)
-            <a href="/employees/${leader.id()}" class="link inline-flex items-center gap-x1_5">@template.components.avatar(avatar = leader.getAvatar(), initial = leader.initial(), size = "size-5 text-[10px]")${leader.getName()}</a>
+            <a href="/employees/${leader.id()}" class="link inline-flex items-center gap-x1_5">@template.components.avatar(photoUrl = leader.photoUrl(), name = leader.getName(), size = "size-5")${leader.getName()}</a>
         @else
             <span class="text-fg-neutral-subtle">미지정</span>
         @endif

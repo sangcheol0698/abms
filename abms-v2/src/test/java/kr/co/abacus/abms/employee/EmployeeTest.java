@@ -14,7 +14,7 @@ class EmployeeTest {
     private static Employee newEmployee() {
         return Employee.create(new EmployeeProfile(1L, "홍길동", "Hong@Test.co", LocalDate.of(2020, 3, 2),
                 LocalDate.of(1990, 1, 1), EmployeePosition.SENIOR_ASSOCIATE, EmployeeType.FULL_TIME,
-                EmployeeGrade.MID_LEVEL, EmployeeAvatar.SKY_GLOW, "  "));
+                EmployeeGrade.MID_LEVEL, "  "));
     }
 
     @Test
@@ -28,7 +28,7 @@ class EmployeeTest {
     @Test
     void 잘못된_이메일은_거부한다() {
         assertThatThrownBy(() -> Employee.create(new EmployeeProfile(1L, "a", "not-email", LocalDate.now(), LocalDate.of(1990, 1, 1),
-                EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR, EmployeeAvatar.SKY_GLOW, null)))
+                EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME, EmployeeGrade.JUNIOR, null)))
                 .isInstanceOf(BusinessException.class);
     }
 
@@ -40,7 +40,7 @@ class EmployeeTest {
         employee.resign(LocalDate.of(2026, 1, 31));
         assertThat(employee.isResigned()).isTrue();
         assertThatThrownBy(() -> employee.promote(EmployeePosition.PRINCIPAL, null)).isInstanceOf(BusinessException.class);
-        assertThatThrownBy(() -> employee.updateOwnProfile("새이름", LocalDate.of(1990, 1, 1), EmployeeAvatar.GOLDEN_RAY))
+        assertThatThrownBy(() -> employee.updateOwnProfile("새이름", LocalDate.of(1990, 1, 1)))
                 .isInstanceOf(BusinessException.class);
 
         employee.activate();
@@ -84,7 +84,7 @@ class EmployeeTest {
 
     private static EmployeeProfile profile(LocalDate joinDate, LocalDate careerStart, String skills, String phone) {
         return new EmployeeProfile(1L, "홍길동", "hong@test.co", joinDate, LocalDate.of(1990, 1, 1), EmployeePosition.SENIOR_ASSOCIATE,
-                EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL, EmployeeAvatar.SKY_GLOW, null, phone, careerStart,
+                EmployeeType.FULL_TIME, EmployeeGrade.MID_LEVEL, null, phone, careerStart,
                 EmployeeJob.DEVELOPMENT, skills, WorkType.CLIENT_SITE);
     }
 

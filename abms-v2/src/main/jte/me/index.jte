@@ -27,12 +27,14 @@
     `)
     <div class="mx-auto max-w-4xl">
         <section class="form-section">
-            <div><h2 class="form-section-title">프로필</h2><p class="form-section-desc">이름·생년월일·아바타는 직원 상세에서 직접 수정할 수 있습니다.</p></div>
+            <div><h2 class="form-section-title">프로필</h2><p class="form-section-desc">프로필 사진은 목록·상세·헤더에 표시됩니다. 이름·생년월일은 직원 상세에서 수정할 수 있습니다.</p></div>
             <div class="flex items-center gap-x4">
-                @template.components.avatar(avatar = employee.getAvatar(), initial = employee.initial(), size = "size-12 text-lg")
+                @template.components.avatar(photoUrl = employee.photoUrl(), name = employee.getName(), size = "size-20")
                 <div class="min-w-0">
                     <p class="t6-bold text-fg-neutral">${employee.getName()}</p>
                     <p class="t4-regular text-fg-neutral-subtle">${tree.nameOf(employee.getDepartmentId())} · ${employee.getPosition().label()}</p>
+                    <div class="mt-x2">@template.employee.photoActions(employee = employee, returnTo = "me", buttonSize = "small")</div>
+                    <p class="mt-x1 t2-regular text-fg-neutral-subtle">JPG·PNG·GIF, 5MB 이하 · 가운데를 정사각형으로 잘라 저장합니다.</p>
                 </div>
             </div>
         </section>

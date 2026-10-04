@@ -18,7 +18,6 @@ import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.department.DepartmentType;
 import kr.co.abacus.abms.employee.Employee;
-import kr.co.abacus.abms.employee.EmployeeAvatar;
 import kr.co.abacus.abms.employee.EmployeeGrade;
 import kr.co.abacus.abms.employee.EmployeePosition;
 import kr.co.abacus.abms.employee.EmployeeProfile;
@@ -82,7 +81,7 @@ public class Fixtures {
     public Employee employee(Department department, String name, EmployeeType type, LocalDate joinDate) {
         return employeeRepository.save(Employee.create(new EmployeeProfile(department.id(), name,
                 "e" + SEQ.incrementAndGet() + "@test.co", joinDate, LocalDate.of(1990, 1, 1),
-                EmployeePosition.SENIOR_ASSOCIATE, type, EmployeeGrade.MID_LEVEL, EmployeeAvatar.SKY_GLOW, null)));
+                EmployeePosition.SENIOR_ASSOCIATE, type, EmployeeGrade.MID_LEVEL, null)));
     }
 
     public Payroll payroll(Employee employee, long annualSalary, LocalDate startDate) {
@@ -115,7 +114,7 @@ public class Fixtures {
 
     public static LoginUser user(Employee employee, Map<PermissionCode, Set<PermissionScope>> grants) {
         return new LoginUser(900_000L + employee.id(), employee.id(), employee.getDepartmentId(), employee.getEmail(),
-                employee.getName(), employee.getAvatar(), "{noop}x", true, false, grants);
+                employee.getName(), employee.photoUrl(), "{noop}x", true, false, grants);
     }
 
     public static LoginUser admin(Employee employee) {

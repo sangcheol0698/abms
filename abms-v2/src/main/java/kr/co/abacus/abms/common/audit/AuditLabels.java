@@ -17,7 +17,7 @@ final class AuditLabels {
             Map.entry("email", "이메일"), Map.entry("phone", "연락처"), Map.entry("joinDate", "입사일"),
             Map.entry("careerStartDate", "경력 시작일"), Map.entry("birthDate", "생년월일"), Map.entry("position", "직급"),
             Map.entry("grade", "등급"), Map.entry("job", "직무"), Map.entry("skills", "보유 기술"),
-            Map.entry("workType", "근무 형태"), Map.entry("avatar", "아바타"), Map.entry("resignationDate", "퇴사일"),
+            Map.entry("workType", "근무 형태"), Map.entry("avatar", "아바타"), Map.entry("photo", "프로필 사진"), Map.entry("resignationDate", "퇴사일"),
             Map.entry("annualSalary", "연봉"), Map.entry("partyType", "구분"), Map.entry("businessNumber", "사업자등록번호"),
             Map.entry("industry", "업종"), Map.entry("location", "주소"), Map.entry("website", "웹사이트"),
             Map.entry("ceoName", "대표자"), Map.entry("salesRepName", "영업 담당자"), Map.entry("salesRepPhone", "영업 담당자 연락처"),

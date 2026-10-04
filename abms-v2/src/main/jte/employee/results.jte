@@ -12,7 +12,7 @@
 @else
     @for(Employee e : page.content())
         <a href="/employees/${e.id()}" class="list-row sm:px-x6 lg:px-x8">
-            @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-6 text-[11px]")
+            @template.components.avatar(photoUrl = e.photoUrl(), name = e.getName(), size = "size-6")
             <span class="flex min-w-0 flex-1 items-baseline gap-x2">
                 <span class="truncate t4-medium">${e.getName()}</span>
                 <span class="hidden truncate t3-regular text-fg-neutral-subtle @xl:inline">${e.isDeleted() ? e.originalEmail() : e.getEmail()}</span>
