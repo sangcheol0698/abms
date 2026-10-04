@@ -201,7 +201,7 @@
     </dl>
 </dialog>
 
-<div id="toasts" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex flex-col items-center gap-x2 px-x4" aria-live="polite"></div>
+<div id="toasts" popover="manual" class="toast-region" aria-live="polite"></div>
 @if(ctx.toast() != null)
     <div id="flash-toast" hidden data-type="${ctx.toast().type()}" data-message="${ctx.toast().message()}"></div>
 @endif

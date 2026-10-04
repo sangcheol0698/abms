@@ -223,6 +223,10 @@
         @apply sticky top-(--sticky-top) z-[1] flex items-center gap-x2 border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x1_5 t3-medium text-fg-neutral-muted;
     }
 
+    .list-box .list-group-header {
+        @apply static;
+    }
+
     .list-row {
         @apply flex min-h-11 items-center gap-x3 border-b border-stroke-neutral-subtle px-x4 py-x1_5 t4-regular text-fg-neutral transition-colors
         last:border-b-0 hover:bg-bg-layer-default-pressed;
@@ -306,6 +310,11 @@
 
     .property-list dd {
         @apply min-w-0 truncate text-fg-neutral;
+    }
+
+    /* 토스트 영역: popover 로 top layer 에 띄운다 (UA 기본 popover 스타일 초기화) */
+    .toast-region {
+        @apply pointer-events-none fixed inset-x-0 top-auto bottom-6 m-0 flex w-auto flex-col items-center gap-x2 overflow-visible border-0 bg-transparent px-x4 py-0;
     }
 
     /* 명령 팔레트 */

@@ -55,6 +55,11 @@
     function showToast(type, message) {
         const container = document.getElementById('toasts');
         if (!container || !message) return;
+        if (container.showPopover) {
+            // 나중에 열린 모달보다도 위에 오도록 top layer 맨 위로 다시 올린다.
+            if (container.matches(':popover-open')) container.hidePopover();
+            container.showPopover();
+        }
         const variant = SNACKBAR_VARIANT[type] || 'default';
         const el = document.createElement('div');
         el.setAttribute('role', variant === 'critical' ? 'alert' : 'status');
@@ -482,10 +487,25 @@
     // 뒤로 가기(popstate) 때는 주소가 먼저 바뀐 뒤 떠나는 화면이 저장되므로, 화면이 열릴 때의 주소를 키로 쓴다.
     const scrollKey = () => 'abms-scroll:' + location.pathname + location.search;
     let pageKey = scrollKey();
-    document.body.addEventListener('htmx:beforeHistorySave', () => {
+    document.body.addEventListener('htmx:beforeHistorySave', (e) => {
         const target = scrollTarget();
-        try { if (target) sessionStorage.setItem(pageKey, String(target.scrollTop)); } catch (e) {}
+        try { if (target) sessionStorage.setItem(pageKey, String(target.scrollTop)); } catch (err) {}
+        cleanTransientState(e.detail.historyElt || document.body);
     });
+
+    // 뒤로 가기로 복원되는 스냅샷에 요청 중 표시·열린 모달/메뉴가 남지 않게 지운다.
+    // (남으면 버튼이 눌리지 않거나, 이전 폼이 다시 보여 요청이 다시 나가는 것처럼 보인다)
+    function cleanTransientState(root) {
+        root.querySelectorAll('[data-loading]').forEach((el) => {
+            delete el.dataset.loading;
+            el.removeAttribute('aria-busy');
+        });
+        root.querySelectorAll('details[data-dropdown][open]').forEach((el) => el.removeAttribute('open'));
+        root.querySelectorAll('dialog[open]').forEach((el) => el.removeAttribute('open'));
+        const modalBody = root.querySelector('#modal-body');
+        if (modalBody) modalBody.innerHTML = '';
+        root.querySelectorAll('[data-scrolled]').forEach((el) => el.removeAttribute('data-scrolled'));
+    }
 
     function restoreScroll() {
         const target = scrollTarget();
@@ -504,6 +524,7 @@
 
     function onPageReady(navigated) {
         pageKey = scrollKey();
+        cleanTransientState(document.body);
         selectRightTab(document.querySelector('[data-right-tab="props"]') ? 'props' : 'notifications');
         bindScroll();
         updateStickyTop();
@@ -529,6 +550,13 @@
     } else {
         onPageReady(false);
     }
+    // 전체 이동(HX-Redirect 등) 후 뒤로 가기는 브라우저 bfcache 가 이전 DOM 을 그대로 되살리므로 같은 정리를 한다.
+    window.addEventListener('pageshow', (e) => {
+        if (!e.persisted) return;
+        document.querySelectorAll('dialog[open]').forEach((d) => d.close());
+        cleanTransientState(document.body);
+        delete root.dataset.drawer;
+    });
     window.addEventListener('resize', updateStickyTop);
     desktop.addEventListener('change', () => {
         delete root.dataset.drawer;
