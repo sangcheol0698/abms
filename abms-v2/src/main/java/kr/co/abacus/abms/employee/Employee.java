@@ -27,6 +27,8 @@ public class Employee extends BaseEntity {
 
     private static final Pattern EMAIL = Pattern.compile("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$");
     private static final String DELETED_EMAIL_PREFIX = "deleted.";
+    private static final Pattern PHONE = Pattern.compile("^[0-9+()\\- ]{7,20}$");
+    private static final int MAX_SKILLS_LENGTH = 500;
 
     @Column(nullable = false)
     private Long departmentId;
@@ -37,8 +39,13 @@ public class Employee extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    private @Nullable String phone;
+
     @Column(nullable = false)
     private LocalDate joinDate;
+
+    /** 경력 시작일 (이전 직장 포함). 없으면 입사일부터 경력으로 본다. */
+    private @Nullable LocalDate careerStartDate;
 
     @Column(nullable = false)
     private LocalDate birthDate;
@@ -58,6 +65,18 @@ public class Employee extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EmployeeGrade grade;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private @Nullable EmployeeJob job;
+
+    /** 보유 기술 (쉼표로 구분, 중복 제거) */
+    @Column(length = 500)
+    private @Nullable String skills;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private @Nullable WorkType workType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
@@ -102,6 +121,63 @@ public class Employee extends BaseEntity {
         this.grade = Objects.requireNonNull(p.grade());
         this.avatar = Objects.requireNonNull(p.avatar());
         this.memo = p.memo() == null || p.memo().isBlank() ? null : p.memo().trim();
+        this.phone = normalizePhone(p.phone());
+        if (p.careerStartDate() != null && p.careerStartDate().isAfter(this.joinDate)) {
+            throw new BusinessException("경력 시작일은 입사일보다 늦을 수 없습니다.");
+        }
+        this.careerStartDate = p.careerStartDate();
+        this.job = p.job();
+        this.skills = normalizeSkills(p.skills());
+        this.workType = p.workType();
+    }
+
+    private static @Nullable String normalizePhone(@Nullable String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String phone = value.trim();
+        if (!PHONE.matcher(phone).matches()) {
+            throw new BusinessException("연락처 형식이 올바르지 않습니다: " + value);
+        }
+        return phone;
+    }
+
+    /** "java, Spring ,java" → "java, Spring" (대소문자 무시 중복 제거, 입력 순서 유지) */
+    static @Nullable String normalizeSkills(@Nullable String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        java.util.Map<String, String> unique = new java.util.LinkedHashMap<>();
+        for (String skill : value.split("[,\\n]")) {
+            String trimmed = skill.trim();
+            if (!trimmed.isEmpty()) {
+                unique.putIfAbsent(trimmed.toLowerCase(java.util.Locale.ROOT), trimmed);
+            }
+        }
+        String joined = String.join(", ", unique.values());
+        if (joined.length() > MAX_SKILLS_LENGTH) {
+            throw new BusinessException("보유 기술은 " + MAX_SKILLS_LENGTH + "자 이하로 입력하세요.");
+        }
+        return joined.isEmpty() ? null : joined;
+    }
+
+    public java.util.List<String> skillList() {
+        return skills == null ? java.util.List.of() : java.util.Arrays.stream(skills.split(", ")).toList();
+    }
+
+    /** 기준일까지의 총 경력 개월 수 (경력 시작일이 없으면 입사일 기준, 퇴사자는 퇴사일까지) */
+    public long careerMonths(LocalDate asOf) {
+        return monthsBetween(careerStartDate != null ? careerStartDate : joinDate, asOf);
+    }
+
+    /** 기준일까지의 근속 개월 수 (퇴사자는 퇴사일까지) */
+    public long tenureMonths(LocalDate asOf) {
+        return monthsBetween(joinDate, asOf);
+    }
+
+    private long monthsBetween(LocalDate from, LocalDate asOf) {
+        LocalDate end = resignationDate != null && resignationDate.isBefore(asOf) ? resignationDate : asOf;
+        return end.isBefore(from) ? 0 : java.time.temporal.ChronoUnit.MONTHS.between(from, end);
     }
 
     public void resign(LocalDate resignationDate) {
@@ -246,6 +322,26 @@ public class Employee extends BaseEntity {
 
     public @Nullable String getMemo() {
         return memo;
+    }
+
+    public @Nullable String getPhone() {
+        return phone;
+    }
+
+    public @Nullable LocalDate getCareerStartDate() {
+        return careerStartDate;
+    }
+
+    public @Nullable EmployeeJob getJob() {
+        return job;
+    }
+
+    public @Nullable String getSkills() {
+        return skills;
+    }
+
+    public @Nullable WorkType getWorkType() {
+        return workType;
     }
 
 }

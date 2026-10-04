@@ -76,7 +76,7 @@ public class DepartmentController {
 
     @GetMapping("/new")
     public String createModal(@RequestParam(required = false) @Nullable Long parentId, Model model) {
-        return formModal(model, null, new DepartmentForm(null, null, DepartmentType.TEAM, parentId), FormErrors.none());
+        return formModal(model, null, new DepartmentForm(null, null, DepartmentType.TEAM, parentId, null), FormErrors.none());
     }
 
     @PostMapping
@@ -84,7 +84,7 @@ public class DepartmentController {
                          HttpServletRequest request, HttpServletResponse response) {
         try {
             form.validate();
-            Department department = departmentService.create(user, form.code(), form.name(), form.type(), form.parentId());
+            Department department = departmentService.create(user, form.code(), form.name(), form.type(), form.parentId(), form.description());
             return Htmx.redirect(request, response, "/departments?selected=" + department.id(),
                     new Toast("success", department.getName() + " 부서를 만들었습니다."));
         } catch (BusinessException e) {
@@ -96,7 +96,7 @@ public class DepartmentController {
     @GetMapping("/{id}/edit")
     public String editModal(@PathVariable Long id, Model model) {
         Department d = departmentService.get(id);
-        return formModal(model, d, new DepartmentForm(d.getCode(), d.getName(), d.getType(), d.getParentId()), FormErrors.none());
+        return formModal(model, d, new DepartmentForm(d.getCode(), d.getName(), d.getType(), d.getParentId(), d.getDescription()), FormErrors.none());
     }
 
     @PostMapping("/{id}")
@@ -105,7 +105,7 @@ public class DepartmentController {
         Department department = departmentService.get(id);
         try {
             form.validateName();
-            departmentService.update(user, id, form.name(), form.type(), form.parentId());
+            departmentService.update(user, id, form.name(), form.type(), form.parentId(), form.description());
             return Htmx.redirect(request, response, "/departments?selected=" + id, new Toast("success", "부서 정보를 수정했습니다."));
         } catch (BusinessException e) {
             response.setStatus(422);
@@ -167,7 +167,8 @@ public class DepartmentController {
         return "department/formModal";
     }
 
-    public record DepartmentForm(@Nullable String code, @Nullable String name, @Nullable DepartmentType type, @Nullable Long parentId) {
+    public record DepartmentForm(@Nullable String code, @Nullable String name, @Nullable DepartmentType type, @Nullable Long parentId,
+                                 @Nullable String description) {
 
         void validate() {
             if (code == null || code.isBlank()) {

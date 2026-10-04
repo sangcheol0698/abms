@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import org.jspecify.annotations.Nullable;
@@ -69,7 +70,7 @@ public class PartyController {
     @GetMapping("/new")
     public String createForm(@AuthenticationPrincipal LoginUser user, Model model) {
         require(user, PermissionCode.PARTY_WRITE);
-        return form(model, new PartyForm(null, null, null, null, null), FormErrors.none(), null);
+        return form(model, PartyForm.empty(), FormErrors.none(), null);
     }
 
     @PostMapping
@@ -155,15 +156,28 @@ public class PartyController {
             @Size(max = 30, message = "30자 이하로 입력하세요.") @Nullable String ceoName,
             @Size(max = 30, message = "30자 이하로 입력하세요.") @Nullable String salesRepName,
             @Size(max = 20, message = "20자 이하로 입력하세요.") @Nullable String salesRepPhone,
-            @Email(message = "이메일 형식이 올바르지 않습니다.") @Size(max = 100) @Nullable String salesRepEmail
+            @Email(message = "이메일 형식이 올바르지 않습니다.") @Size(max = 100) @Nullable String salesRepEmail,
+            @Nullable PartyType partyType,
+            @Pattern(regexp = "^$|^[0-9]{3}-?[0-9]{2}-?[0-9]{5}$", message = "사업자등록번호는 000-00-00000 형식으로 입력하세요.") @Nullable String businessNumber,
+            @Size(max = 50, message = "50자 이하로 입력하세요.") @Nullable String industry,
+            @Size(max = 20, message = "20자 이하로 입력하세요.") @Nullable String phone,
+            @Size(max = 255, message = "255자 이하로 입력하세요.") @Nullable String address,
+            @Size(max = 255, message = "255자 이하로 입력하세요.") @Nullable String website,
+            @Size(max = 2000, message = "메모는 2000자 이하로 입력하세요.") @Nullable String memo
     ) {
 
+        static PartyForm empty() {
+            return new PartyForm(null, null, null, null, null, PartyType.CLIENT, null, null, null, null, null, null);
+        }
+
         static PartyForm of(Party p) {
-            return new PartyForm(p.getName(), p.getCeoName(), p.getSalesRepName(), p.getSalesRepPhone(), p.getSalesRepEmail());
+            return new PartyForm(p.getName(), p.getCeoName(), p.getSalesRepName(), p.getSalesRepPhone(), p.getSalesRepEmail(),
+                    p.getPartyType(), p.getBusinessNumber(), p.getIndustry(), p.getPhone(), p.getAddress(), p.getWebsite(), p.getMemo());
         }
 
         PartyInfo toInfo() {
-            return new PartyInfo(name == null ? "" : name, ceoName, salesRepName, salesRepPhone, salesRepEmail);
+            return new PartyInfo(name == null ? "" : name, ceoName, salesRepName, salesRepPhone, salesRepEmail,
+                    partyType, businessNumber, industry, phone, address, website, memo);
         }
 
     }
