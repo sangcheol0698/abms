@@ -19,7 +19,7 @@
 <head>
     @template.layout.head(title = title)
 </head>
-<body class="app-body" hx-boost="true" hx-headers="${ctx.csrfHeaderJson()}">
+<body class="app-body" hx-boost="true" hx-headers="${ctx.csrfHeaderJson()}" data-map-key="${ctx.mapKey()}">
 <header class="app-header">
     <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" data-toggle-panel="left" aria-controls="left-sidebar" aria-label="왼쪽 사이드바 열기/닫기" title="사이드바 ( [ )">
         ${Icons.of("sidebar-left", "size-4")}
@@ -90,6 +90,7 @@
                 <p class="seed-side-navigation__groupLabel">조직</p>
                 @template.layout.navItem(href = "/employees", label = "직원", icon = "users", current = ctx.active("/employees"))
                 @template.layout.navItem(href = "/departments", label = "부서", icon = "building", current = ctx.active("/departments"))
+                @template.layout.navItem(href = "/sites", label = "사업장", icon = "map-pin", current = ctx.active("/sites"))
             </div>
             <div class="seed-side-navigation__group">
                 <p class="seed-side-navigation__groupLabel">사업</p>

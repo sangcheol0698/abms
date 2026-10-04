@@ -51,7 +51,7 @@ class PageRenderingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/employees", "/employees/new", "/departments", "/parties", "/parties/new", "/projects",
+    @ValueSource(strings = {"/", "/employees", "/employees/new", "/departments", "/departments/new", "/parties", "/parties/new", "/sites", "/sites/new", "/projects",
             "/projects/new", "/summary", "/summary?month=2026-01", "/reports", "/assistant", "/admin/accounts",
             "/admin/permission-groups", "/admin/permission-groups/1", "/admin/cost-policies", "/notifications"})
     void 목록과_폼_화면을_렌더링한다(String path) throws Exception {

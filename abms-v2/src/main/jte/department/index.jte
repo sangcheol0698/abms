@@ -20,8 +20,9 @@
 @param boolean canWrite = false
 @param kr.co.abacus.abms.department.DepartmentInsight insight = null
 @param String trendChart = null
+@param kr.co.abacus.abms.site.Site site = null
 @template.layout.app(ctx = ctx, title = "부서", fill = true, aside = department == null ? null : @`
-    @template.department.properties(department = department, tree = tree, members = members, subtreeMemberCount = subtreeMemberCount, leader = leader)
+    @template.department.properties(department = department, tree = tree, members = members, subtreeMemberCount = subtreeMemberCount, leader = leader, site = site)
 `, content = @`
 <div class="flex flex-col lg:h-full">
     <div class="px-x4 pt-x5 sm:px-x6 lg:px-x8 lg:pt-x6">

@@ -6,10 +6,12 @@
 @import kr.co.abacus.abms.department.DepartmentController.DepartmentForm
 @import kr.co.abacus.abms.department.DepartmentType
 @import kr.co.abacus.abms.common.web.Seed
+@import kr.co.abacus.abms.site.Site
 @param Department department = null
 @param DepartmentForm form
 @param FormErrors errors
 @param List<SelectOption> departmentOptions
+@param List<Site> sites
 !{boolean editing = department != null;}
 <form hx-post="${editing ? "/departments/" + department.id() : "/departments"}" hx-target="#modal-body">
     @template.components.modal(title = editing ? "부서 수정" : "부서 추가", context = editing ? department.getName() : "부서", hint = editing ? "저장" : "추가", body = @`
@@ -25,6 +27,14 @@
                 <select id="type" name="type" class="select">
                     @for(var o : Ui.options(DepartmentType.values()))
                         <option value="${o.value()}" selected="${o.value().equals(Ui.value(form.type()))}">${o.label()}</option>
+                    @endfor
+                </select>
+            `)
+            @template.components.propRow(label = "사업장", forId = "siteId", error = errors.get("siteId"), control = @`
+                <select id="siteId" name="siteId" class="select">
+                    <option value="">(미지정)</option>
+                    @for(Site site : sites)
+                        <option value="${site.id()}" selected="${site.id().toString().equals(Ui.value(form.siteId()))}">${site.getName()} · ${site.getSiteType().label()}</option>
                     @endfor
                 </select>
             `)

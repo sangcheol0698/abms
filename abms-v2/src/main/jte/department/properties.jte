@@ -6,6 +6,7 @@
 @param java.util.List<Employee> members
 @param int subtreeMemberCount
 @param Employee leader = null
+@param kr.co.abacus.abms.site.Site site = null
 !{Department parent = department.getParentId() == null ? null : tree.get(department.getParentId());}
 <dl class="property-list">
     <dt>코드</dt>
@@ -26,6 +27,14 @@
             <a class="link" href="/departments?selected=${parent.id()}">${parent.getName()}</a>
         @else
             <span class="text-fg-neutral-subtle">없음</span>
+        @endif
+    </dd>
+    <dt>사업장</dt>
+    <dd>
+        @if(site != null)
+            <a class="link" href="/sites/${site.id()}" title="${site.getLocation().fullAddress()}">${site.getName()}</a>
+        @else
+            <span class="text-fg-neutral-subtle">미지정</span>
         @endif
     </dd>
     <dt>소속 인원</dt>

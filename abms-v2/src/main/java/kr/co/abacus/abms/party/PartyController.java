@@ -1,8 +1,12 @@
 package kr.co.abacus.abms.party;
 
+import java.math.BigDecimal;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -27,8 +31,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
+import kr.co.abacus.abms.common.web.MapMarker;
 import kr.co.abacus.abms.common.web.PageView;
 import kr.co.abacus.abms.common.web.Toast;
 import kr.co.abacus.abms.department.DepartmentService;
@@ -109,6 +115,8 @@ public class PartyController {
                 java.time.LocalDate.now()));
         model.addAttribute("projectCount", partyService.projectCount(id));
         model.addAttribute("tree", departmentService.tree());
+        MapMarker marker = MapMarker.of(party.getName(), party.getLocation().fullAddress(), party.getLocation(), null);
+        model.addAttribute("markers", marker == null ? java.util.List.of() : java.util.List.of(marker));
         return "party/detail";
     }
 
@@ -169,23 +177,29 @@ public class PartyController {
             @Pattern(regexp = "^$|^[0-9]{3}-?[0-9]{2}-?[0-9]{5}$", message = "사업자등록번호는 000-00-00000 형식으로 입력하세요.") @Nullable String businessNumber,
             @Size(max = 50, message = "50자 이하로 입력하세요.") @Nullable String industry,
             @Size(max = 20, message = "20자 이하로 입력하세요.") @Nullable String phone,
+            @Size(max = 7, message = "7자 이하로 입력하세요.") @Nullable String zipCode,
             @Size(max = 255, message = "255자 이하로 입력하세요.") @Nullable String address,
+            @Size(max = 100, message = "100자 이하로 입력하세요.") @Nullable String addressDetail,
+            @DecimalMin("-90") @DecimalMax("90") @Nullable BigDecimal latitude,
+            @DecimalMin("-180") @DecimalMax("180") @Nullable BigDecimal longitude,
             @Size(max = 255, message = "255자 이하로 입력하세요.") @Nullable String website,
             @Size(max = 2000, message = "메모는 2000자 이하로 입력하세요.") @Nullable String memo
     ) {
 
         static PartyForm empty() {
-            return new PartyForm(null, null, null, null, null, PartyType.CLIENT, null, null, null, null, null, null);
+            return new PartyForm(null, null, null, null, null, PartyType.CLIENT, null, null, null, null, null, null, null, null, null, null);
         }
 
         static PartyForm of(Party p) {
+            Location l = p.getLocation();
             return new PartyForm(p.getName(), p.getCeoName(), p.getSalesRepName(), p.getSalesRepPhone(), p.getSalesRepEmail(),
-                    p.getPartyType(), p.getBusinessNumber(), p.getIndustry(), p.getPhone(), p.getAddress(), p.getWebsite(), p.getMemo());
+                    p.getPartyType(), p.getBusinessNumber(), p.getIndustry(), p.getPhone(),
+                    l.zipCode(), l.address(), l.addressDetail(), l.latitude(), l.longitude(), p.getWebsite(), p.getMemo());
         }
 
         PartyInfo toInfo() {
             return new PartyInfo(name == null ? "" : name, ceoName, salesRepName, salesRepPhone, salesRepEmail,
-                    partyType, businessNumber, industry, phone, address, website, memo);
+                    partyType, businessNumber, industry, phone, Location.of(zipCode, address, addressDetail, latitude, longitude), website, memo);
         }
 
     }

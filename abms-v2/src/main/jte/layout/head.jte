@@ -27,3 +27,4 @@
 <script defer src="/webjars/chart.js/dist/chart.umd.min.js"></script>
 <script defer src="/webjars/marked/lib/marked.umd.js"></script>
 <script defer src="/js/app.js"></script>
+<script defer src="/js/map.js"></script>
