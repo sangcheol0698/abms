@@ -29,6 +29,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.attachment.AttachmentOwner;
+import kr.co.abacus.abms.attachment.AttachmentSection;
+import kr.co.abacus.abms.attachment.AttachmentService;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.common.geo.Geocoder;
@@ -48,19 +52,18 @@ import kr.co.abacus.abms.security.LoginUser;
 @RequestMapping("/parties")
 public class PartyController {
 
-    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
-
     private final PartyService partyService;
     private final ProjectService projectService;
     private final DepartmentService departmentService;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
     private final Geocoder geocoder;
-    private final kr.co.abacus.abms.attachment.AttachmentService attachmentService;
+    private final AttachmentService attachmentService;
+    private final AuditQueryService auditQueryService;
 
     public PartyController(PartyService partyService, ProjectService projectService, DepartmentService departmentService,
                            ProjectRevenuePlanRepository revenuePlanRepository, Geocoder geocoder,
-            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService,
-            kr.co.abacus.abms.attachment.AttachmentService attachmentService) {
+                           AuditQueryService auditQueryService,
+                           AttachmentService attachmentService) {
         this.attachmentService = attachmentService;
         this.auditQueryService = auditQueryService;
         this.geocoder = geocoder;
@@ -129,7 +132,7 @@ public class PartyController {
         MapMarker marker = MapMarker.of(party.getName(), party.getLocation().fullAddress(), party.getLocation(), null);
         model.addAttribute("markers", marker == null ? java.util.List.of() : java.util.List.of(marker));
         model.addAttribute("auditHistory", auditQueryService.history("Party", id, 30));
-        model.addAttribute("attachments", kr.co.abacus.abms.attachment.AttachmentSection.of(attachmentService, user, kr.co.abacus.abms.attachment.AttachmentOwner.PARTY, id));
+        model.addAttribute("attachments", AttachmentSection.of(attachmentService, user, AttachmentOwner.PARTY, id));
         return "party/detail";
     }
 

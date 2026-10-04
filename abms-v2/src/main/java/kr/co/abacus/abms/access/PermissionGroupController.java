@@ -24,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import kr.co.abacus.abms.account.Account;
 import kr.co.abacus.abms.account.AccountService;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
@@ -39,15 +40,14 @@ import kr.co.abacus.abms.security.LoginUser;
 @RequestMapping("/admin/permission-groups")
 public class PermissionGroupController {
 
-    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
-
     private final PermissionGroupService groupService;
     private final AccountService accountService;
     private final EmployeeRepository employeeRepository;
+    private final AuditQueryService auditQueryService;
 
     public PermissionGroupController(PermissionGroupService groupService, AccountService accountService,
                                      EmployeeRepository employeeRepository,
-            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+                                     AuditQueryService auditQueryService) {
         this.auditQueryService = auditQueryService;
         this.groupService = groupService;
         this.accountService = accountService;

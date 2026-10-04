@@ -54,8 +54,6 @@ import kr.co.abacus.abms.summary.ProfitQueryService;
 @Controller
 @RequestMapping("/projects")
 public class ProjectController {
-
-    private final AuditQueryService auditQueryService;
     private final ProjectPlaceService placeService;
     private final Geocoder geocoder;
     private final AttachmentService attachmentService;
@@ -67,6 +65,7 @@ public class ProjectController {
     private final DepartmentService departmentService;
     private final ProfitQueryService profitQueryService;
     private final ProjectSections sections;
+    private final AuditQueryService auditQueryService;
 
     public ProjectController(ProjectService projectService, ProjectRevenueService revenueService,
                              ProjectAssignmentService assignmentService, PartyService partyService,

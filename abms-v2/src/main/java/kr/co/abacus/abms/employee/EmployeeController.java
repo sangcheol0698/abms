@@ -55,8 +55,6 @@ import kr.co.abacus.abms.security.LoginUser;
 @Controller
 @RequestMapping("/employees")
 public class EmployeeController {
-
-    private final AuditQueryService auditQueryService;
     private final ProjectPlaceService placeService;
 
     private static final int PAGE_SIZE = 20;
@@ -66,6 +64,7 @@ public class EmployeeController {
     private final ProjectAssignmentService assignmentService;
     private final ProjectRepository projectRepository;
     private final AccountRepository accountRepository;
+    private final AuditQueryService auditQueryService;
 
     public EmployeeController(EmployeeService employeeService, DepartmentService departmentService,
                               ProjectAssignmentService assignmentService, ProjectRepository projectRepository,

@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.common.geo.Geocoder;
@@ -48,8 +49,6 @@ import kr.co.abacus.abms.site.Site.SiteInfo;
 @RequestMapping("/sites")
 public class SiteController {
 
-    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
-
     private static final int NEARBY_LIMIT = 5;
 
     private final SiteService siteService;
@@ -57,10 +56,11 @@ public class SiteController {
     private final DepartmentService departmentService;
     private final PartyService partyService;
     private final Geocoder geocoder;
+    private final AuditQueryService auditQueryService;
 
     public SiteController(SiteService siteService, DepartmentRepository departmentRepository, DepartmentService departmentService,
                           PartyService partyService, Geocoder geocoder,
-            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+                          AuditQueryService auditQueryService) {
         this.auditQueryService = auditQueryService;
         this.geocoder = geocoder;
         this.siteService = siteService;

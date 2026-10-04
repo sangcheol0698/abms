@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
@@ -36,8 +37,6 @@ import kr.co.abacus.abms.summary.ProfitQueryService;
 @RequestMapping("/departments")
 public class DepartmentController {
 
-    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
-
     private final DepartmentService departmentService;
     private final EmployeeService employeeService;
     private final ProjectRepository projectRepository;
@@ -45,13 +44,14 @@ public class DepartmentController {
     private final AccessService accessService;
     private final kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository;
     private final SiteService siteService;
+    private final AuditQueryService auditQueryService;
 
     public DepartmentController(DepartmentService departmentService, EmployeeService employeeService,
                                 ProjectRepository projectRepository, ProfitQueryService profitQueryService,
                                 AccessService accessService,
                                 kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository,
                                 SiteService siteService,
-            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+                                AuditQueryService auditQueryService) {
         this.auditQueryService = auditQueryService;
         this.siteService = siteService;
         this.assignmentRepository = assignmentRepository;
