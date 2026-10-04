@@ -50,7 +50,8 @@ public class DepartmentService {
                 .toList();
     }
 
-    public Department create(LoginUser user, String code, String name, DepartmentType type, @Nullable Long parentId) {
+    public Department create(LoginUser user, String code, String name, DepartmentType type, @Nullable Long parentId,
+                             @Nullable String description) {
         accessService.require(user, PermissionCode.DEPARTMENT_WRITE);
         if (departmentRepository.existsByCode(code.trim())) {
             throw new BusinessException("이미 사용 중인 부서 코드입니다: " + code);
@@ -61,16 +62,19 @@ public class DepartmentService {
         } else if (!user.scopes(PermissionCode.DEPARTMENT_WRITE).contains(kr.co.abacus.abms.access.PermissionScope.ALL)) {
             throw new org.springframework.security.access.AccessDeniedException("최상위 부서는 전체 권한이 있어야 생성할 수 있습니다.");
         }
-        return departmentRepository.save(Department.create(code, name, type, parentId));
+        Department department = Department.create(code, name, type, parentId);
+        department.describe(description);
+        return departmentRepository.save(department);
     }
 
-    public void update(LoginUser user, Long id, String name, DepartmentType type, @Nullable Long parentId) {
+    public void update(LoginUser user, Long id, String name, DepartmentType type, @Nullable Long parentId, @Nullable String description) {
         Department department = get(id);
         accessService.checkDepartment(user, PermissionCode.DEPARTMENT_WRITE, id);
         if (parentId != null && tree().subtreeIds(id).contains(parentId)) {
             throw new BusinessException("하위 부서를 상위 부서로 지정할 수 없습니다.");
         }
         department.update(name, type, parentId);
+        department.describe(description);
     }
 
     public void assignLeader(LoginUser user, Long id, @Nullable Long leaderEmployeeId) {

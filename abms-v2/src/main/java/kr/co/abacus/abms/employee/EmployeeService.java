@@ -161,6 +161,13 @@ public class EmployeeService {
         employee.updateOwnProfile(name, birthDate, avatar);
     }
 
+    /** 본인 정보와 연락처·보유 기술을 함께 수정한다. */
+    public void updateOwnProfile(LoginUser user, Long id, String name, LocalDate birthDate, EmployeeAvatar avatar,
+                                 @Nullable String phone, @Nullable String skills) {
+        updateOwnProfile(user, id, name, birthDate, avatar);
+        get(id).updateOwnContact(phone, skills);
+    }
+
     public void resign(LoginUser user, Long id, LocalDate resignationDate) {
         Employee employee = getForWrite(user, id);
         checkEmploymentEndChangeOpen(resignationDate);

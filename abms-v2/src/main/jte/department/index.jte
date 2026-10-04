@@ -18,6 +18,8 @@
 @param List<Project> projects = null
 @param List<MonthPoint> trend = null
 @param boolean canWrite = false
+@param kr.co.abacus.abms.department.DepartmentInsight insight = null
+@param String trendChart = null
 @template.layout.app(ctx = ctx, title = "부서", fill = true, aside = department == null ? null : @`
     @template.department.properties(department = department, tree = tree, members = members, subtreeMemberCount = subtreeMemberCount, leader = leader)
 `, content = @`
@@ -50,10 +52,11 @@
                 </ul>
             </div>
         </nav>
-        <div id="department-detail" class="scroll-pane min-w-0 px-x4 py-x5 sm:px-x6 lg:px-x8">
+        <div id="department-detail" class="scroll-pane @container min-w-0 px-x4 py-x5 sm:px-x6 lg:px-x8">
             @if(department != null)
                 @template.department.detail(ctx = ctx, department = department, tree = tree, members = members,
-                    subtreeMemberCount = subtreeMemberCount, leader = leader, projects = projects, trend = trend, canWrite = canWrite)
+                    subtreeMemberCount = subtreeMemberCount, leader = leader, projects = projects, trend = trend, canWrite = canWrite,
+                    insight = insight, trendChart = trendChart)
             @else
                 @template.components.empty(message = "부서가 없습니다.", icon = "building")
             @endif

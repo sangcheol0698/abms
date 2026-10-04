@@ -18,6 +18,7 @@
                 <span class="hidden truncate t3-regular text-fg-neutral-subtle @xl:inline">${e.isDeleted() ? e.originalEmail() : e.getEmail()}</span>
             </span>
             <span class="list-cell-muted hidden w-40 @2xl:block">${tree.nameOf(e.getDepartmentId())}</span>
+            <span class="list-cell-muted hidden w-28 @4xl:block">${e.getJob() == null ? "-" : e.getJob().label()}</span>
             <span class="list-cell-muted hidden w-24 @3xl:block">${e.getPosition().label()} · ${e.getGrade().label()}</span>
             <span class="hidden w-20 @3xl:block"><span class="${Ui.badge(e.getType())}">${e.getType().label()}</span></span>
             <span class="w-16 shrink-0">

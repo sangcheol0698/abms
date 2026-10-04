@@ -85,6 +85,8 @@ spring:
       lifecycle-management: start-only
   flyway:
     locations: classpath:db/migration,classpath:db/demo
+    # 데모 데이터(V100+) 이후에 추가된 스키마 마이그레이션(V3+)도 기존 로컬 DB에 적용한다.
+    out-of-order: true
 
 gg:
   jte:
@@ -106,6 +108,8 @@ spring:
       on-profile: demo
   flyway:
     locations: classpath:db/migration,classpath:db/demo
+    # 데모 데이터(V100+) 이후에 추가된 스키마 마이그레이션(V3+)도 기존 로컬 DB에 적용한다.
+    out-of-order: true
 
 abms:
   demo:

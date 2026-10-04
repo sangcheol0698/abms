@@ -36,6 +36,10 @@ public class Department extends BaseEntity {
 
     private @Nullable Long leaderEmployeeId;
 
+    /** 부서 소개 (역할·담당 업무) */
+    @Column(length = 500)
+    private @Nullable String description;
+
     protected Department() {
     }
 
@@ -57,6 +61,14 @@ public class Department extends BaseEntity {
         this.name = requireText(name, "부서명");
         this.type = Objects.requireNonNull(type);
         this.parentId = parentId;
+    }
+
+    public void describe(@Nullable String description) {
+        String trimmed = description == null || description.isBlank() ? null : description.trim();
+        if (trimmed != null && trimmed.length() > 500) {
+            throw new BusinessException("부서 소개는 500자 이하로 입력하세요.");
+        }
+        this.description = trimmed;
     }
 
     public void assignLeader(@Nullable Long leaderEmployeeId) {
@@ -84,6 +96,10 @@ public class Department extends BaseEntity {
 
     public @Nullable Long getParentId() {
         return parentId;
+    }
+
+    public @Nullable String getDescription() {
+        return description;
     }
 
     public @Nullable Long getLeaderEmployeeId() {

@@ -43,7 +43,7 @@
             <div class="ml-auto flex flex-wrap items-center gap-x2">
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-fg-placeholder">${Icons.of("search", "size-3.5")}</span>
-                    <input type="search" name="q" value="${Ui.value(search.q())}" placeholder="이름 또는 이메일" class="input filter-input w-48 pl-x8" aria-label="검색어">
+                    <input type="search" name="q" value="${Ui.value(search.q())}" placeholder="이름·이메일·기술" class="input filter-input w-48 pl-x8" aria-label="검색어">
                 </div>
                 <select name="departmentId" class="select filter-select" aria-label="부서">
                     <option value="">전체 부서</option>

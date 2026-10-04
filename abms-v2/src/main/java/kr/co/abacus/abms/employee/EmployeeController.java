@@ -92,11 +92,14 @@ public class EmployeeController {
     @GetMapping(value = "/export", produces = "text/csv")
     public ResponseEntity<byte[]> export(@AuthenticationPrincipal LoginUser user, EmployeeSearchForm search) {
         DepartmentTree tree = departmentService.tree();
-        StringBuilder csv = new StringBuilder("﻿이름,이메일,부서,직급,등급,고용유형,상태,입사일,퇴사일\n");
+        StringBuilder csv = new StringBuilder("﻿이름,이메일,연락처,부서,직급,등급,고용유형,상태,직무,근무 형태,보유 기술,입사일,경력 시작일,퇴사일\n");
         for (Employee e : employeeService.exportable(user, search.toSearch())) {
-            csv.append(String.join(",", csvCell(e.getName()), csvCell(e.getEmail()), csvCell(tree.nameOf(e.getDepartmentId())),
-                    e.getPosition().label(), e.getGrade().label(), e.getType().label(), e.getStatus().label(),
-                    e.getJoinDate().toString(), e.getResignationDate() == null ? "" : e.getResignationDate().toString())).append('\n');
+            csv.append(String.join(",", csvCell(e.getName()), csvCell(e.getEmail()), csvCell(e.getPhone() == null ? "" : e.getPhone()),
+                    csvCell(tree.nameOf(e.getDepartmentId())), e.getPosition().label(), e.getGrade().label(), e.getType().label(), e.getStatus().label(),
+                    e.getJob() == null ? "" : csvCell(e.getJob().label()), e.getWorkType() == null ? "" : csvCell(e.getWorkType().label()),
+                    csvCell(e.getSkills() == null ? "" : e.getSkills()), e.getJoinDate().toString(),
+                    e.getCareerStartDate() == null ? "" : e.getCareerStartDate().toString(),
+                    e.getResignationDate() == null ? "" : e.getResignationDate().toString())).append('\n');
         }
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"employees-" + LocalDate.now() + ".csv\"")
@@ -137,7 +140,9 @@ public class EmployeeController {
                 .stream().collect(Collectors.toMap(Project::id, Function.identity()));
         model.addAttribute("employee", employee);
         model.addAttribute("tree", tree);
-        model.addAttribute("assignments", assignments.stream().filter(a -> projects.containsKey(a.getProjectId())).toList());
+        List<ProjectAssignment> visibleAssignments = assignments.stream().filter(a -> projects.containsKey(a.getProjectId())).toList();
+        model.addAttribute("assignments", visibleAssignments);
+        model.addAttribute("insight", EmployeeInsight.of(employee, visibleAssignments, java.time.LocalDate.now()));
         model.addAttribute("projects", projects);
         model.addAttribute("payrolls", employeeService.payrolls(id));
         model.addAttribute("positions", employeeService.positionHistories(id));
@@ -192,7 +197,7 @@ public class EmployeeController {
             model.addAttribute("errors", FormErrors.of(binding));
             return "employee/ownProfile";
         }
-        employeeService.updateOwnProfile(user, id, form.name(), form.birthDate(), form.avatar());
+        employeeService.updateOwnProfile(user, id, form.name(), form.birthDate(), form.avatar(), form.phone(), form.skills());
         Toast.success(redirect, "내 정보를 수정했습니다.");
         return "redirect:/employees/" + id;
     }

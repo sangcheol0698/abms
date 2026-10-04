@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
@@ -27,22 +29,28 @@ public record EmployeeForm(
         @NotNull(message = "등급을 선택하세요.") @Nullable EmployeeGrade grade,
         @Nullable EmployeeAvatar avatar,
         @Size(max = 2000, message = "메모는 2000자 이하로 입력하세요.") @Nullable String memo,
-        @Positive(message = "연봉은 0보다 커야 합니다.") @Nullable Long annualSalary
+        @Positive(message = "연봉은 0보다 커야 합니다.") @Nullable Long annualSalary,
+        @Pattern(regexp = "^$|^[0-9+()\\- ]{7,20}$", message = "연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)") @Nullable String phone,
+        @PastOrPresent(message = "경력 시작일은 오늘 이후일 수 없습니다.") @Nullable LocalDate careerStartDate,
+        @Nullable EmployeeJob job,
+        @Size(max = 500, message = "보유 기술은 500자 이하로 입력하세요.") @Nullable String skills,
+        @Nullable WorkType workType
 ) {
 
     public static EmployeeForm empty() {
         return new EmployeeForm(null, null, null, LocalDate.now(), null, EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME,
-                EmployeeGrade.JUNIOR, EmployeeAvatar.SKY_GLOW, null, null);
+                EmployeeGrade.JUNIOR, EmployeeAvatar.SKY_GLOW, null, null, null, null, EmployeeJob.DEVELOPMENT, null, WorkType.OFFICE);
     }
 
     public static EmployeeForm of(Employee e) {
         return new EmployeeForm(e.getDepartmentId(), e.getName(), e.getEmail(), e.getJoinDate(), e.getBirthDate(),
-                e.getPosition(), e.getType(), e.getGrade(), e.getAvatar(), e.getMemo(), null);
+                e.getPosition(), e.getType(), e.getGrade(), e.getAvatar(), e.getMemo(), null,
+                e.getPhone(), e.getCareerStartDate(), e.getJob(), e.getSkills(), e.getWorkType());
     }
 
     public EmployeeProfile toProfile() {
         return new EmployeeProfile(departmentId, name, email, joinDate, birthDate, position, type, grade,
-                avatar == null ? EmployeeAvatar.SKY_GLOW : avatar, memo);
+                avatar == null ? EmployeeAvatar.SKY_GLOW : avatar, memo, phone, careerStartDate, job, skills, workType);
     }
 
 }

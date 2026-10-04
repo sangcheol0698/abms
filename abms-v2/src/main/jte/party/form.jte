@@ -4,6 +4,7 @@
 @import kr.co.abacus.abms.common.web.ViewContext
 @import kr.co.abacus.abms.party.Party
 @import kr.co.abacus.abms.party.PartyController.PartyForm
+@import kr.co.abacus.abms.party.PartyType
 @import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param PartyForm form
@@ -18,10 +19,21 @@
     <form method="post" action="${editing ? "/parties/" + party.id() : "/parties"}" class="mx-auto max-w-4xl" novalidate>
         @template.components.globalError(errors = errors)
         <section class="form-section">
-            <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">협력사명은 중복될 수 없습니다.</p></div>
+            <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">구분에 따라 고객사(발주처)와 협력사(외주·파트너)를 함께 관리합니다.</p></div>
             <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 <div class="@xl:col-span-2">@template.components.input(name = "name", label = "협력사명", value = Ui.value(form.name()), errors = errors, required = true)</div>
+                @template.components.select(name = "partyType", label = "구분", options = Ui.options(PartyType.values()), value = Ui.value(form.partyType()), errors = errors, required = true)
+                @template.components.input(name = "businessNumber", label = "사업자등록번호", value = Ui.value(form.businessNumber()), errors = errors, placeholder = "000-00-00000")
                 @template.components.input(name = "ceoName", label = "대표자", value = Ui.value(form.ceoName()), errors = errors)
+                @template.components.input(name = "industry", label = "업종", value = Ui.value(form.industry()), errors = errors, placeholder = "예: 금융, 통신, 이커머스")
+            </div>
+        </section>
+        <section class="form-section">
+            <div><h2 class="form-section-title">연락처·주소</h2></div>
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
+                @template.components.input(name = "phone", label = "대표번호", value = Ui.value(form.phone()), errors = errors, type = "tel", placeholder = "02-000-0000")
+                @template.components.input(name = "website", label = "웹사이트", value = Ui.value(form.website()), errors = errors, placeholder = "example.com")
+                <div class="@xl:col-span-2">@template.components.input(name = "address", label = "주소", value = Ui.value(form.address()), errors = errors)</div>
             </div>
         </section>
         <section class="form-section">
@@ -30,6 +42,14 @@
                 @template.components.input(name = "salesRepName", label = "이름", value = Ui.value(form.salesRepName()), errors = errors)
                 @template.components.input(name = "salesRepPhone", label = "연락처", value = Ui.value(form.salesRepPhone()), errors = errors, type = "tel", placeholder = "010-0000-0000")
                 <div class="@xl:col-span-2">@template.components.input(name = "salesRepEmail", label = "이메일", value = Ui.value(form.salesRepEmail()), errors = errors, type = "email")</div>
+            </div>
+        </section>
+        <section class="form-section">
+            <div><h2 class="form-section-title">메모</h2><p class="form-section-desc">거래 조건, 특이 사항 등을 기록합니다.</p></div>
+            <div>
+                <label for="memo" class="sr-only">메모</label>
+                <textarea id="memo" name="memo" rows="3" class="textarea">${Ui.value(form.memo())}</textarea>
+                @if(errors.has("memo"))<p class="field-error">${errors.get("memo")}</p>@endif
             </div>
         </section>
         <div class="form-actions">

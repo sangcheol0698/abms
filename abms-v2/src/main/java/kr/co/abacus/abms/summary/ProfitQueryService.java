@@ -146,6 +146,22 @@ public class ProfitQueryService {
         return result;
     }
 
+    /** Chart.js 월별 손익 차트 데이터 (app.js renderCharts 형식) */
+    public static String chartJson(List<MonthPoint> trend) {
+        StringBuilder labels = new StringBuilder();
+        StringBuilder revenues = new StringBuilder();
+        StringBuilder costs = new StringBuilder();
+        StringBuilder profits = new StringBuilder();
+        for (MonthPoint p : trend) {
+            String sep = labels.isEmpty() ? "" : ",";
+            labels.append(sep).append('"').append(p.month().getMonthValue()).append("월\"");
+            revenues.append(sep).append(p.revenue().amount().toPlainString());
+            costs.append(sep).append(p.cost().amount().toPlainString());
+            profits.append(sep).append(p.profit().amount().toPlainString());
+        }
+        return "{\"labels\":[" + labels + "],\"revenue\":[" + revenues + "],\"cost\":[" + costs + "],\"profit\":[" + profits + "]}";
+    }
+
     public record MonthPoint(YearMonth month, Money revenue, Money cost) {
 
         public Money profit() {

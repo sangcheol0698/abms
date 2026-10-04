@@ -148,6 +148,26 @@ class EmployeeServiceTest {
         assertThat(teamMember.isDeleted()).isFalse();
     }
 
+    @Test
+    void 보유_기술로_직원을_검색하고_본인은_연락처와_기술을_수정할_수_있다() {
+        LoginUser admin = Fixtures.admin(manager);
+        Employee dev = employeeService.create(admin, new EmployeeProfile(team.id(), "개발자", "dev2@test.co",
+                LocalDate.of(2024, 3, 4), LocalDate.of(1995, 1, 1), EmployeePosition.SENIOR_ASSOCIATE, EmployeeType.FULL_TIME,
+                EmployeeGrade.MID_LEVEL, EmployeeAvatar.AQUA_SPLASH, null, "010-1111-2222", LocalDate.of(2020, 3, 2),
+                EmployeeJob.DEVELOPMENT, "Kotlin, Spring", WorkType.CLIENT_SITE), null);
+
+        assertThat(employeeService.search(admin, new EmployeeSearch("kotlin", null, null, null, null, false),
+                org.springframework.data.domain.Pageable.unpaged())).containsExactly(dev);
+
+        LoginUser self = Fixtures.user(dev, Fixtures.grants(PermissionScope.SELF, PermissionCode.EMPLOYEE_READ, PermissionCode.EMPLOYEE_WRITE));
+        employeeService.updateOwnProfile(self, dev.id(), "개발자", LocalDate.of(1995, 1, 1), EmployeeAvatar.AQUA_SPLASH,
+                "010-3333-4444", "Kotlin, Spring, Kafka");
+
+        assertThat(dev.getPhone()).isEqualTo("010-3333-4444");
+        assertThat(dev.skillList()).containsExactly("Kotlin", "Spring", "Kafka");
+        assertThat(dev.getCareerStartDate()).isEqualTo(LocalDate.of(2020, 3, 2));
+    }
+
     private static EmployeeProfile profileOf(Employee e, Long departmentId) {
         return new EmployeeProfile(departmentId, e.getName(), e.getEmail(), e.getJoinDate(), e.getBirthDate(), e.getPosition(),
                 e.getType(), e.getGrade(), e.getAvatar(), e.getMemo());

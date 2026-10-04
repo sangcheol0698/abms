@@ -15,6 +15,8 @@ public interface ProjectRevenuePlanRepository extends JpaRepository<ProjectReven
 
     boolean existsByProjectIdAndIssuedTrue(Long projectId);
 
+    List<ProjectRevenuePlan> findAllByProjectIdIn(java.util.Collection<Long> projectIds);
+
     boolean existsByProjectIdAndSequenceAndIdNot(Long projectId, int sequence, Long id);
 
     @Query("""
