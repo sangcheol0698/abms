@@ -52,9 +52,7 @@ public class DashboardService {
         Money revenue = trend.stream().map(MonthPoint::revenue).reduce(Money.ZERO, Money::plus);
         Money cost = trend.stream().map(MonthPoint::cost).reduce(Money.ZERO, Money::plus);
 
-        List<Project> projects = projectRepository.findAll().stream()
-                .filter(p -> scope.coversProject(p.id(), p.getLeadDepartmentId()))
-                .toList();
+        List<Project> projects = projectRepository.findAllInScope(scope.all(), scope.departmentIds(), scope.projectIds());
         Map<ProjectStatus, Long> statusCounts = new EnumMap<>(ProjectStatus.class);
         for (ProjectStatus status : ProjectStatus.values()) {
             statusCounts.put(status, 0L);
@@ -79,7 +77,7 @@ public class DashboardService {
                     .map(CompanyMonthlyCostSummary::getUnallocatedFullTimeCost)
                     .reduce(Money.ZERO, Money::plus);
         }
-        long activeEmployees = employeeRepository.findAllByStatusAndDeletedFalse(EmployeeStatus.ACTIVE).size();
+        long activeEmployees = employeeRepository.countByStatusAndDeletedFalse(EmployeeStatus.ACTIVE);
 
         List<ProfitRow> topProjects = profitQueryService.yearlyProjects(user, year).stream().limit(5).toList();
         List<ProfitRow> departments = profitQueryService.yearlyDepartments(user, year);
