@@ -101,6 +101,20 @@ class AuditLogTest {
     private org.springframework.test.web.servlet.MockMvc mvc;
 
     @Test
+    void 첨부_파일_이력은_표시명을_쓰고_내부_값은_남기지_않는다() {
+        Project project = fixtures.project(team, 100_000_000, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
+        entityManager.persist(kr.co.abacus.abms.attachment.Attachment.of(kr.co.abacus.abms.attachment.AttachmentOwner.PROJECT, project.id(),
+                kr.co.abacus.abms.attachment.AttachmentCategory.CONTRACT, "계약서.pdf", "2026/10/x.pdf", "application/pdf", 10));
+        entityManager.flush();
+
+        AuditEntry created = auditQueryService.history("Project", project.id(), 10).getFirst();
+
+        assertThat(created.entityLabel()).isEqualTo("첨부 파일");
+        assertThat(created.changes()).extracting(AuditEntry.Change::label).contains("분류", "파일명")
+                .doesNotContain("storedPath", "contentType", "ownerType", "ownerId");
+    }
+
+    @Test
     void 상세_화면과_관리_화면에서_이력을_보여주고_관리_권한이_없으면_막는다() throws Exception {
         Party party = fixtures.party("화면상사");
         entityManager.flush();

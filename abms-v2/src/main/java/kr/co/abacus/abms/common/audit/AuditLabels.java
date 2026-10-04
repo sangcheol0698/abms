@@ -26,7 +26,7 @@ final class AuditLabels {
             Map.entry("overheadRate", "제경비율"), Map.entry("sgaRate", "판관비율"), Map.entry("groupType", "그룹 유형"),
             Map.entry("accountId", "계정"), Map.entry("permissionGroupId", "권한 그룹"), Map.entry("username", "아이디"),
             Map.entry("enabled", "사용 여부"), Map.entry("grants", "권한 구성"), Map.entry("permissionId", "권한"),
-            Map.entry("scope", "범위"), Map.entry("workPlace", "수행 장소"), Map.entry("title", "부서·직책"), Map.entry("primary", "대표 담당자"), Map.entry("workLocation", "수행 장소 주소"), Map.entry("Department.description", "소개"), Map.entry("Party.phone", "대표번호"),
+            Map.entry("scope", "범위"), Map.entry("workPlace", "수행 장소"), Map.entry("title", "부서·직책"), Map.entry("category", "분류"), Map.entry("originalName", "파일명"), Map.entry("size", "크기(바이트)"), Map.entry("primary", "대표 담당자"), Map.entry("workLocation", "수행 장소 주소"), Map.entry("Department.description", "소개"), Map.entry("Party.phone", "대표번호"),
             Map.entry("Site.phone", "대표번호"), Map.entry("Party.name", "협력사명"), Map.entry("Project.name", "프로젝트명"),
             Map.entry("Department.name", "부서명"), Map.entry("Site.name", "사업장명"), Map.entry("PermissionGroup.name", "그룹명"));
 

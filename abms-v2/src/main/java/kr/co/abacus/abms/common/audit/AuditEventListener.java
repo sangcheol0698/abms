@@ -40,7 +40,9 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 
     /** 감사 컬럼·보안 정보·로그인 때마다 바뀌는 값은 이력에서 뺀다. */
     private static final Set<String> IGNORED = Set.of("createdAt", "updatedAt", "createdBy", "updatedBy", "deleted", "deletedAt",
-            "deletedBy", "password", "passwordChangedAt", "loginFailCount", "lastLoginAt");
+            "deletedBy", "password", "passwordChangedAt", "loginFailCount", "lastLoginAt",
+            // 첨부 파일: 저장 위치·형식·소유자는 내부 값이거나 상위 이력으로 드러난다.
+            "storedPath", "contentType", "ownerType", "ownerId");
 
     private final EntityManagerFactory entityManagerFactory;
     private final JdbcTemplate jdbcTemplate;
