@@ -29,11 +29,12 @@
             </div>
         </section>
         <section class="form-section">
-            <div><h2 class="form-section-title">연락처·주소</h2></div>
+            <div><h2 class="form-section-title">연락처·주소</h2><p class="form-section-desc">주소는 선택입니다. 등록하면 상세 화면에 지도가 표시됩니다.</p></div>
             <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @template.components.input(name = "phone", label = "대표번호", value = Ui.value(form.phone()), errors = errors, type = "tel", placeholder = "02-000-0000")
                 @template.components.input(name = "website", label = "웹사이트", value = Ui.value(form.website()), errors = errors, placeholder = "example.com")
-                <div class="@xl:col-span-2">@template.components.input(name = "address", label = "주소", value = Ui.value(form.address()), errors = errors)</div>
+                <div class="@xl:col-span-2">@template.components.addressField(zipCode = form.zipCode(), address = form.address(), addressDetail = form.addressDetail(),
+                        latitude = form.latitude(), longitude = form.longitude(), errors = errors, mapEnabled = ctx.mapEnabled())</div>
             </div>
         </section>
         <section class="form-section">

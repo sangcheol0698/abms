@@ -18,8 +18,11 @@ public class GlobalModelAdvice {
 
     private final NotificationService notificationService;
     private final AssistantProperties assistantProperties;
+    private final MapProperties mapProperties;
 
-    public GlobalModelAdvice(NotificationService notificationService, AssistantProperties assistantProperties) {
+    public GlobalModelAdvice(NotificationService notificationService, AssistantProperties assistantProperties,
+                             MapProperties mapProperties) {
+        this.mapProperties = mapProperties;
         this.notificationService = notificationService;
         this.assistantProperties = assistantProperties;
     }
@@ -30,7 +33,8 @@ public class GlobalModelAdvice {
         CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
         Toast toast = (Toast) model.getAttribute(Toast.ATTRIBUTE);
         long unread = user == null || Htmx.isHtmx(request) ? 0 : notificationService.unreadCount(user.accountId());
-        return new ViewContext(user, csrf, request.getRequestURI(), toast, unread, assistantProperties.isConfigured());
+        return new ViewContext(user, csrf, request.getRequestURI(), toast, unread, assistantProperties.isConfigured(),
+                mapProperties.isConfigured() ? mapProperties.kakaoJsKey() : null);
     }
 
     private static LoginUser currentUser() {

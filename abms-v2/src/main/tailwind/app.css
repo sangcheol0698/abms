@@ -264,6 +264,17 @@
         @apply flex h-1.5 w-full overflow-hidden rounded-full bg-bg-neutral-weak;
     }
 
+    /* 지도 (카카오맵) — 키가 없을 때는 안쪽 대체 내용을 보여준다 */
+    .map-canvas {
+        @apply relative w-full overflow-hidden rounded-r3 border border-stroke-neutral-subtle bg-bg-neutral-weak;
+    }
+    .map-label {
+        @apply block -translate-y-[46px] rounded-r1_5 border border-stroke-neutral-subtle bg-bg-layer-floating px-x2 py-x1 t3-medium whitespace-nowrap text-fg-neutral shadow-s2 no-underline;
+    }
+    a.map-label:hover {
+        @apply text-fg-brand;
+    }
+
     /* 설정형 폼: 왼쪽 섹션 설명 + 오른쪽 입력, 하단 고정 저장 바 */
     .form-section {
         @apply grid gap-x4 border-t border-stroke-neutral-subtle py-x6 first:border-t-0 first:pt-x2 @2xl:grid-cols-[200px_minmax(0,1fr)] @2xl:gap-x8;

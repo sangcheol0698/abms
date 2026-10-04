@@ -6,13 +6,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.party.Party.PartyInfo;
 
 class PartyTest {
 
     private static PartyInfo info(String businessNumber, String website) {
         return new PartyInfo("한빛클라우드", "이한빛", null, null, null, PartyType.BOTH, businessNumber, " 클라우드 ", "02-123-4567",
-                "서울시 중구", website, "  ");
+                Location.of(null, "서울시 중구", null, null, null), website, "  ");
     }
 
     @Test
@@ -37,6 +38,14 @@ class PartyTest {
         Party party = Party.create(new PartyInfo("누리시스템즈", null, null, null, null));
 
         assertThat(party.getPartyType()).isEqualTo(PartyType.CLIENT);
+    }
+
+    @Test
+    void 주소가_없으면_빈_위치를_돌려준다() {
+        Party party = Party.create(new PartyInfo("누리시스템즈", null, null, null, null));
+
+        assertThat(party.getLocation().isEmpty()).isTrue();
+        assertThat(party.getLocation().hasCoordinates()).isFalse();
     }
 
 }

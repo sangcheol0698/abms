@@ -1,6 +1,7 @@
 @import java.util.List
 @import kr.co.abacus.abms.access.PermissionCode
 @import kr.co.abacus.abms.common.web.Icons
+@import kr.co.abacus.abms.common.web.MapMarker
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.common.web.ViewContext
 @import kr.co.abacus.abms.department.DepartmentTree
@@ -15,6 +16,7 @@
 @param long projectCount
 @param DepartmentTree tree
 @param PartyInsight insight
+@param List<MapMarker> markers
 @template.layout.app(ctx = ctx, aside = @`
     <dl class="property-list">
         <dt>구분</dt>
@@ -30,7 +32,7 @@
         <dt>웹사이트</dt>
         <dd>@if(party.getWebsite() != null)<a class="link" href="${party.getWebsite()}" target="_blank" rel="noopener noreferrer" title="${party.getWebsite()}">${party.getWebsite().replaceFirst("^https?://", "")}</a>@else-@endif</dd>
         <dt>주소</dt>
-        <dd class="whitespace-normal">${party.getAddress() == null ? "-" : party.getAddress()}</dd>
+        <dd class="whitespace-normal">${party.getLocation().isEmpty() ? "-" : party.getLocation().fullAddress()}</dd>
         <dt>첫 거래</dt>
         <dd class="tabular-nums">${insight.firstStartDate() == null ? "-" : Ui.date(insight.firstStartDate())}</dd>
     </dl>
@@ -136,6 +138,18 @@
                 @endif
             </div>
         </section>
+
+        @if(!party.getLocation().isEmpty())
+            <section class="min-w-0">
+                <h2 class="section-title">위치</h2>
+                @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), fallbackText = party.getLocation().fullAddress(),
+                        fallbackHref = party.getLocation().kakaoMapLink(party.getName()))
+                <p class="mt-x2 flex flex-wrap items-center gap-x-x3 gap-y-x1 t3-regular text-fg-neutral-subtle">
+                    <span class="inline-flex items-center gap-x1">${Icons.of("map-pin", "size-3.5")}@if(party.getLocation().zipCode() != null)<span class="tabular-nums">(${party.getLocation().zipCode()})</span>@endif ${party.getLocation().fullAddress()}</span>
+                    <a href="${party.getLocation().kakaoMapLink(party.getName())}" target="_blank" rel="noopener noreferrer" class="link inline-flex items-center gap-x1">카카오맵 ${Icons.of("external", "size-3")}</a>
+                </p>
+            </section>
+        @endif
 
         @if(party.getMemo() != null)
             <section>

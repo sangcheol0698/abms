@@ -55,6 +55,9 @@ gg:
 abms:
   ai:
     api-key: ${OPENAI_API_KEY:}
+  map:
+    kakao-js-key: ${KAKAO_JS_KEY:}
+    kakao-rest-key: ${KAKAO_REST_KEY:}
   summary:
     schedule-enabled: true
     cron: "0 0 3 * * *"
@@ -79,6 +82,8 @@ spring:
   config:
     activate:
       on-profile: local
+    # 로컬 비밀값(.env, git 제외)을 환경 변수처럼 읽는다. 예: KAKAO_JS_KEY, KAKAO_REST_KEY
+    import: optional:file:.env[.properties]
   docker:
     compose:
       enabled: true

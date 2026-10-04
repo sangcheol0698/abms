@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
+import kr.co.abacus.abms.common.geo.Geocoder;
 import kr.co.abacus.abms.party.Party.PartyInfo;
 import kr.co.abacus.abms.project.ProjectRepository;
 
@@ -19,8 +20,10 @@ public class PartyService {
 
     private final PartyRepository partyRepository;
     private final ProjectRepository projectRepository;
+    private final Geocoder geocoder;
 
-    public PartyService(PartyRepository partyRepository, ProjectRepository projectRepository) {
+    public PartyService(PartyRepository partyRepository, ProjectRepository projectRepository, Geocoder geocoder) {
+        this.geocoder = geocoder;
         this.partyRepository = partyRepository;
         this.projectRepository = projectRepository;
     }
@@ -49,7 +52,7 @@ public class PartyService {
         if (partyRepository.existsByName(info.name().trim())) {
             throw new BusinessException("이미 등록된 협력사명입니다: " + info.name());
         }
-        return partyRepository.save(Party.create(info));
+        return partyRepository.save(Party.create(info.withLocation(geocoder.complete(info.location()))));
     }
 
     public void update(Long id, PartyInfo info) {
@@ -57,7 +60,7 @@ public class PartyService {
         if (partyRepository.existsByNameAndIdNot(info.name().trim(), id)) {
             throw new BusinessException("이미 등록된 협력사명입니다: " + info.name());
         }
-        party.update(info);
+        party.update(info.withLocation(geocoder.complete(info.location())));
     }
 
     public void delete(Long id, Long accountId) {

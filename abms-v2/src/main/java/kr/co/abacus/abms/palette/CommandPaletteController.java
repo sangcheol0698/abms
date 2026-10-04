@@ -87,6 +87,7 @@ public class CommandPaletteController {
         commands.add(Command.go("AI 어시스턴트", "/assistant", "sparkles", "G A", "assistant ai chat 챗봇"));
         commands.add(Command.go("직원", "/employees", "users", "G E", "employee 인원 사람"));
         commands.add(Command.go("부서", "/departments", "building", "G O", "department 조직도 팀"));
+        commands.add(Command.go("사업장", "/sites", "map-pin", null, "site office 사옥 본사 지사 지도 위치 map"));
         if (user.has(PermissionCode.PROJECT_READ)) {
             commands.add(Command.go("프로젝트", "/projects", "folder", "G P", "project"));
         }
@@ -117,6 +118,9 @@ public class CommandPaletteController {
         }
         if (user.has(PermissionCode.PARTY_WRITE)) {
             commands.add(Command.create("협력사 등록", "/parties/new", "party new 추가 생성"));
+        }
+        if (user.has(PermissionCode.DEPARTMENT_WRITE)) {
+            commands.add(Command.create("사업장 등록", "/sites/new", "site new 사옥 지사 추가 생성"));
         }
         commands.add(Command.action("라이트 테마로 전환", "theme:light", "sun", "theme light 밝게"));
         commands.add(Command.action("다크 테마로 전환", "theme:dark", "moon", "theme dark 어둡게"));

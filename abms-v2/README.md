@@ -29,8 +29,9 @@ Excel로 관리하던 손익 계산(수작업 집계, 귀속 기준 불일치, �
 |---|---|
 | 대시보드 | 연간 누적 매출·비용·이익, 월별 추이 차트, 이익 상위 프로젝트, 부서별 손익, 청구 예정/미발행 매출 |
 | 직원 | 디렉터리 검색(실시간 필터), 등록/수정, 휴직·복직·퇴사, 승진, 연봉 이력, 삭제·복구, CSV 내보내기 |
-| 부서 | 조직도 트리, 구성원, 부서장 지정, 주관 프로젝트, 부서 손익 |
-| 협력사 | 고객사/파트너 관리, 협력사별 프로젝트 |
+| 부서 | 조직도 트리, 구성원, 부서장 지정, 근무 사업장, 주관 프로젝트, 부서 손익 |
+| 사업장 | 본사·지사·연구소 등록, 지도(카카오맵), 근무 부서·인원, 가까운 협력사 |
+| 협력사 | 고객사/파트너 관리, 소재지·지도, 협력사별 프로젝트 |
 | 프로젝트 | 계약·기간·주관 부서 관리, 매출(청구) 계획과 세금계산서 발행 처리, 투입 인력 관리, 월별 손익 이력, CSV 내보내기 |
 | 손익 현황 | 월별 프로젝트·부서 손익, 전사 정직원 비용 배분(미배분 유휴 비용), 수동 재집계, 월 마감/해제 |
 | 주간 보고서 | 프로젝트 현황·청구·인력 변화 스냅샷으로 보고서 초안 생성 (AI 또는 템플릿), 편집 |
@@ -53,8 +54,10 @@ Excel로 관리하던 손익 계산(수작업 집계, 귀속 기준 불일치, �
 | ![명령 팔레트](docs/screenshots/command-palette.png) | ![다크 모드](docs/screenshots/dark-mode.png) |
 | **직원 상세 (투입·경력·기술)** | **협력사 상세 (거래 요약·청구 일정)** |
 | ![직원 상세](docs/screenshots/employee-detail.png) | ![협력사 상세](docs/screenshots/party-detail.png) |
-| **부서 상세 (인원 구성)** | |
-| ![부서 상세](docs/screenshots/department-detail.png) | |
+| **부서 상세 (인원 구성)** | **사업장 (지도 · 근무 부서)** |
+| ![부서 상세](docs/screenshots/department-detail.png) | ![사업장](docs/screenshots/sites.png) |
+| **사업장 상세 (가까운 협력사)** | |
+| ![사업장 상세](docs/screenshots/site-detail.png) | |
 
 ## 핵심 업무 규칙
 
@@ -115,6 +118,7 @@ flowchart LR
   - 색은 역할 토큰만 사용합니다. `linear-theme.css`가 SEED 토큰 값을 Linear 풍(무채색·인디고 강조·13px 밀도)으로 덮어쓰며, 라이트/다크/시스템 테마를 사용자 메뉴에서 전환합니다.
 - **앱 셸 레이아웃**: 상단 헤더 / 왼쪽 사이드바(메뉴) / 본문 패널 / 오른쪽 사이드바(속성·알림). 데스크톱은 문서 대신 본문 패널 안쪽만 스크롤하고, 패널 맨 위에 경로·주요 동작이 있는 툴바가 고정됩니다. 양쪽 사이드바는 `[`, `]`로 열고 닫으며 상태를 기억합니다(모바일은 서랍). 본문 배치는 창 폭이 아니라 본문 폭 기준(CSS 컨테이너 쿼리)으로 바뀌어 사이드바 개폐에 맞춰 재배치됩니다.
 - **키보드 중심 UX**: `⌘K`(Ctrl+K) 명령 팔레트로 화면 이동·생성·테마 전환과 직원/프로젝트/부서/협력사 검색을 합니다(`/palette`, 권한 범위 유지). `G` → `P` 같은 이동 단축키, `/` 검색, `C` 새로 만들기, `?` 도움말을 지원합니다.
+- **위치·지도**: 주소는 선택 입력입니다. `Location` 값 객체(우편번호·주소·상세 주소·위경도)를 협력사·사업장이 함께 씁니다. 주소 검색은 Daum 우편번호 서비스(키 불필요), 지도와 좌표 변환은 카카오맵 JavaScript SDK를 쓰고 브라우저에서 좌표를 못 찾으면 서버가 카카오 로컬 API(`KAKAO_REST_KEY`)로 보정합니다. `KAKAO_JS_KEY`가 없으면 지도 대신 주소와 카카오맵 바로가기 링크를 보여줍니다.
 - **소프트 삭제 + 고유성**: 생성 컬럼(`CASE WHEN deleted = 0 THEN code END`)에 유니크 인덱스를 걸어 삭제 후 같은 코드/이름 재사용을 허용합니다.
 
 ## 실행 방법
@@ -133,6 +137,7 @@ flowchart LR
 
 - `local` 프로필이 기본이며, `compose.yaml`의 MySQL(3308 포트)을 **Spring Boot Docker Compose 지원으로 자동 기동**합니다.
 - Flyway가 스키마와 기준 데이터, 데모 데이터(`db/demo`)를 적용하고, 기동 시 최근 15개월 손익을 집계합니다.
+- `local` 프로필은 저장소 루트의 `.env`(git 제외)를 읽습니다. `.env.example`을 복사해 `KAKAO_JS_KEY` 등 로컬 값을 넣습니다.
 - http://localhost:8080 에 접속해 데모 계정으로 로그인합니다. (비밀번호 `abms1234!`)
 
 | 계정 | 권한 |
@@ -168,6 +173,8 @@ java -jar build/libs/abms.jar --spring.profiles.active=prod
 | `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | MySQL 접속 정보 | `jdbc:mysql://localhost:3308/abms` / `abms` / `abms` |
 | `OPENAI_API_KEY` | AI 어시스턴트·AI 주간 보고서. 미설정 시 어시스턴트는 안내 메시지, 보고서는 템플릿으로 생성 | (없음) |
 | `OPENAI_MODEL` | 사용할 모델 | `gpt-4.1-mini` |
+| `KAKAO_JS_KEY` | 카카오맵 JavaScript 키. 플랫폼 키 설정에 JavaScript SDK 도메인(로컬은 `http://localhost:8080`)을 등록해야 동작. 미설정 시 지도 대신 주소·바로가기 링크 표시 | (없음) |
+| `KAKAO_REST_KEY` | 카카오 REST API 키. 좌표 없이 저장된 주소를 서버에서 좌표로 변환(카카오 로컬 API). 허용 IP를 설정했다면 서버의 공인 IP를 등록 | (없음) |
 | `ABMS_ADMIN_EMAIL` / `ABMS_ADMIN_PASSWORD` | 계정이 하나도 없을 때 생성할 최고 관리자 | (없음) |
 
 | 프로퍼티 | 설명 | 기본값 |
@@ -194,13 +201,14 @@ Docker가 필요합니다. 통합 테스트는 Testcontainers로 MySQL 8.4를 �
 
 ```text
 src/main/java/kr/co/abacus/abms
-├── common          # BaseEntity, Money, Period, HTMX 도우미, 공통 예외/뷰 모델
+├── common          # BaseEntity, Money, Period, Location, HTMX 도우미, 공통 예외/뷰 모델
 ├── security        # Spring Security 설정, LoginUser, 권한 범위 해석(AccessService)
 ├── access          # 권한, 권한 그룹, 그룹 권한/계정 할당
 ├── account         # 계정, 로그인, 내 정보, 계정 관리, 초기 관리자 생성
 ├── department      # 부서, 조직도 트리
 ├── employee        # 직원, 연봉/직급 이력
 ├── party           # 협력사
+├── site            # 사업장 (본사·지사)
 ├── project         # 프로젝트, 매출 계획, 투입 인력
 ├── summary         # 원가 정책, 월 손익 집계/조회, 마감, 스케줄러
 ├── dashboard       # 대시보드
@@ -212,7 +220,7 @@ src/main/tailwind   # Tailwind CSS 소스 (SEED 토큰·컴포넌트 import)
 src/main/resources
 ├── db/migration    # V1 스키마, V2 기준 데이터 (권한, 시스템 그룹, 원가 정책)
 ├── db/demo         # 데모 데이터 (local/demo 프로필)
-└── static/js       # HTMX 확장 동작 (토스트, 모달, 차트, 마크다운)
+└── static/js       # HTMX 확장 동작 (토스트, 모달, 차트, 마크다운), 지도·주소 검색(map.js)
 ```
 
 ## 서드파티 라이선스

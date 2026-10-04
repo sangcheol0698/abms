@@ -29,6 +29,7 @@ import kr.co.abacus.abms.project.ProjectRepository;
 import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.DataScope;
 import kr.co.abacus.abms.security.LoginUser;
+import kr.co.abacus.abms.site.SiteService;
 import kr.co.abacus.abms.summary.ProfitQueryService;
 
 @Controller
@@ -41,11 +42,14 @@ public class DepartmentController {
     private final ProfitQueryService profitQueryService;
     private final AccessService accessService;
     private final kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository;
+    private final SiteService siteService;
 
     public DepartmentController(DepartmentService departmentService, EmployeeService employeeService,
                                 ProjectRepository projectRepository, ProfitQueryService profitQueryService,
                                 AccessService accessService,
-                                kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository) {
+                                kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository,
+                                SiteService siteService) {
+        this.siteService = siteService;
         this.assignmentRepository = assignmentRepository;
         this.departmentService = departmentService;
         this.employeeService = employeeService;
@@ -79,7 +83,7 @@ public class DepartmentController {
 
     @GetMapping("/new")
     public String createModal(@RequestParam(required = false) @Nullable Long parentId, Model model) {
-        return formModal(model, null, new DepartmentForm(null, null, DepartmentType.TEAM, parentId, null), FormErrors.none());
+        return formModal(model, null, new DepartmentForm(null, null, DepartmentType.TEAM, parentId, null, null), FormErrors.none());
     }
 
     @PostMapping
@@ -87,7 +91,7 @@ public class DepartmentController {
                          HttpServletRequest request, HttpServletResponse response) {
         try {
             form.validate();
-            Department department = departmentService.create(user, form.code(), form.name(), form.type(), form.parentId(), form.description());
+            Department department = departmentService.create(user, form.code(), form.name(), form.type(), form.parentId(), form.description(), form.siteId());
             return Htmx.redirect(request, response, "/departments?selected=" + department.id(),
                     new Toast("success", department.getName() + " 부서를 만들었습니다."));
         } catch (BusinessException e) {
@@ -99,7 +103,7 @@ public class DepartmentController {
     @GetMapping("/{id}/edit")
     public String editModal(@PathVariable Long id, Model model) {
         Department d = departmentService.get(id);
-        return formModal(model, d, new DepartmentForm(d.getCode(), d.getName(), d.getType(), d.getParentId(), d.getDescription()), FormErrors.none());
+        return formModal(model, d, new DepartmentForm(d.getCode(), d.getName(), d.getType(), d.getParentId(), d.getDescription(), d.getSiteId()), FormErrors.none());
     }
 
     @PostMapping("/{id}")
@@ -108,7 +112,7 @@ public class DepartmentController {
         Department department = departmentService.get(id);
         try {
             form.validateName();
-            departmentService.update(user, id, form.name(), form.type(), form.parentId(), form.description());
+            departmentService.update(user, id, form.name(), form.type(), form.parentId(), form.description(), form.siteId());
             return Htmx.redirect(request, response, "/departments?selected=" + id, new Toast("success", "부서 정보를 수정했습니다."));
         } catch (BusinessException e) {
             response.setStatus(422);
@@ -176,6 +180,7 @@ public class DepartmentController {
         model.addAttribute("trend", trend);
         model.addAttribute("trendChart", trend == null ? null : ProfitQueryService.chartJson(trend));
         model.addAttribute("canWrite", user.has(PermissionCode.DEPARTMENT_WRITE));
+        model.addAttribute("site", department.getSiteId() == null ? null : siteService.find(department.getSiteId()));
     }
 
     private String formModal(Model model, @Nullable Department department, DepartmentForm form, FormErrors errors) {
@@ -183,11 +188,12 @@ public class DepartmentController {
         model.addAttribute("form", form);
         model.addAttribute("errors", errors);
         model.addAttribute("departmentOptions", DepartmentOptions.of(departmentService.tree()));
+        model.addAttribute("sites", siteService.all());
         return "department/formModal";
     }
 
     public record DepartmentForm(@Nullable String code, @Nullable String name, @Nullable DepartmentType type, @Nullable Long parentId,
-                                 @Nullable String description) {
+                                 @Nullable String description, @Nullable Long siteId) {
 
         void validate() {
             if (code == null || code.isBlank()) {
