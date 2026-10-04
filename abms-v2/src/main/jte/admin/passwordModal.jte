@@ -15,7 +15,7 @@
             <span class="prop-label">임시 비밀번호</span>
             <span class="flex min-h-8 items-center gap-x2">
                 <code id="temp-password" class="rounded-r1_5 bg-bg-neutral-weak px-x2 py-x1 font-mono t5-medium text-fg-neutral">${password}</code>
-                <button type="button" class="${Seed.button("neutralOutline", "xsmall")}" onclick="navigator.clipboard.writeText(document.getElementById('temp-password').textContent).then(() => abmsToast('success', '복사했습니다.'))">${Icons.of("check", "size-3.5")} 복사</button>
+                <button type="button" class="${Seed.button("neutralOutline", "xsmall")}" data-copy-from="temp-password" data-copy-message="복사했습니다.">${Icons.of("check", "size-3.5")} 복사</button>
             </span>
         </div>
     </div>

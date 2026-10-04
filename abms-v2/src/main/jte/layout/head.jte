@@ -2,7 +2,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<script>
+<script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}">
     // 테마 초기화(첫 페인트 전): 저장된 선택(system|light|dark) → SEED data-seed-color-mode, 시스템 설정 → data-seed-user-color-scheme
     (function () {
         try {
@@ -23,8 +23,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="/css/app.css">
-<script defer src="/webjars/htmx.org/dist/htmx.min.js"></script>
-<script defer src="/webjars/chart.js/dist/chart.umd.min.js"></script>
-<script defer src="/webjars/marked/lib/marked.umd.js"></script>
-<script defer src="/js/app.js"></script>
-<script defer src="/js/map.js"></script>
+<script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/webjars/htmx.org/dist/htmx.min.js"></script>
+<script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/webjars/chart.js/dist/chart.umd.min.js"></script>
+<script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/webjars/marked/lib/marked.umd.js"></script>
+<script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/js/app.js"></script>
+<script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/js/map.js"></script>

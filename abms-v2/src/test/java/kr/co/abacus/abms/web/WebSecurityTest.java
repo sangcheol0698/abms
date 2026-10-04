@@ -64,6 +64,16 @@ class WebSecurityTest {
     }
 
     @Test
+    void 응답마다_nonce_기반_CSP를_보내고_스크립트_태그에_같은_nonce를_붙인다() throws Exception {
+        var result = mvc.perform(get("/login")).andExpect(status().isOk()).andReturn();
+        String policy = result.getResponse().getHeader("Content-Security-Policy");
+        org.assertj.core.api.Assertions.assertThat(policy).contains("'strict-dynamic'", "object-src 'none'").doesNotContain("unsafe-eval");
+        String nonce = policy.replaceAll("(?s).*'nonce-([^']+)'.*", "$1");
+        org.assertj.core.api.Assertions.assertThat(result.getResponse().getContentAsString())
+                .contains("<script nonce=\"" + nonce + "\"").doesNotContain("onclick=");
+    }
+
+    @Test
     void 비로그인_사용자는_로그인_페이지로_이동한다() throws Exception {
         mvc.perform(get("/employees"))
                 .andExpect(status().is3xxRedirection())

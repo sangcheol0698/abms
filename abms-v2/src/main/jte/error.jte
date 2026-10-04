@@ -15,7 +15,7 @@
             <h1 class="mt-x1 t7-bold text-fg-neutral">${title}</h1>
             <p class="mt-x2 t4-regular text-fg-neutral-subtle">${detail}</p>
             <div class="mt-x6 flex justify-center gap-x2">
-                <button type="button" class="${Seed.button("neutralOutline")}" onclick="history.back()">이전으로</button>
+                <button type="button" class="${Seed.button("neutralOutline")}" data-history-back>이전으로</button>
                 <a href="/" class="${Seed.button("brandSolid")}">홈으로</a>
             </div>
         </div>

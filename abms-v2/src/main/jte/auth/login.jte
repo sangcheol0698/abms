@@ -33,8 +33,7 @@
                 <p class="mb-x2 t3-medium text-fg-neutral-subtle">데모 계정 · 비밀번호 <code class="rounded-r1 bg-bg-neutral-weak px-x1">abms1234!</code></p>
                 <div class="list-box">
                     @for(String[] demoAccount : new String[][]{{"admin@abms.co", "최고 관리자"}, {"leader@abms.co", "부서장"}, {"member@abms.co", "일반 사용자"}})
-                        <button type="button" class="list-row min-h-9 w-full cursor-pointer text-left"
-                                onclick="document.getElementById('username').value = '${demoAccount[0]}'; document.getElementById('password').value = 'abms1234!'; document.getElementById('password').focus();">
+                        <button type="button" class="list-row min-h-9 w-full cursor-pointer text-left" data-demo-username="${demoAccount[0]}">
                             <span class="flex-1 truncate t3-regular">${demoAccount[0]}</span>
                             <span class="t3-regular text-fg-neutral-subtle">${demoAccount[1]}</span>
                         </button>

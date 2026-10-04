@@ -7,8 +7,7 @@
     <div class="flex items-center justify-between border-b border-stroke-neutral-subtle px-x4 py-x2_5">
         <p class="t4-bold text-fg-neutral">알림 @if(unread > 0)<span class="ml-x1 t4-regular text-fg-neutral-subtle">${unread}</span>@endif</p>
         @if(unread > 0)
-            <button type="button" class="cursor-pointer t3-medium text-fg-neutral-subtle hover:text-fg-neutral" hx-post="/notifications/read-all" hx-target="#notification-panel"
-                    hx-on::after-request="document.getElementById('notification-dot')?.remove()">모두 읽음</button>
+            <button type="button" class="cursor-pointer t3-medium text-fg-neutral-subtle hover:text-fg-neutral" hx-post="/notifications/read-all" hx-target="#notification-panel" data-clears-notification-dot>모두 읽음</button>
         @endif
     </div>
     @if(notifications.isEmpty())
