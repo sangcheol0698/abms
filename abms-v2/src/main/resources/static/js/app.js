@@ -22,34 +22,60 @@
     });
     htmx.config.scrollIntoViewOnBoost = false;
 
+    // 요청 중인 버튼은 SEED Action Button 로딩 상태(data-loading)로 표시하고 중복 클릭을 막는다.
+    const loadingButton = (e) => {
+        const submitter = e.detail.requestConfig && e.detail.requestConfig.triggeringEvent && e.detail.requestConfig.triggeringEvent.submitter;
+        const el = submitter || e.detail.elt;
+        return el && el.classList && el.classList.contains('seed-action-button') ? el : null;
+    };
+    document.body.addEventListener('htmx:beforeRequest', (e) => {
+        const button = loadingButton(e);
+        if (button) {
+            button.dataset.loading = '';
+            button.setAttribute('aria-busy', 'true');
+        }
+    });
+    document.body.addEventListener('htmx:afterRequest', (e) => {
+        const button = loadingButton(e);
+        if (button) {
+            delete button.dataset.loading;
+            button.removeAttribute('aria-busy');
+        }
+    });
+
     // ---------------------------------------------------------------------
-    // 토스트
+    // 토스트 — SEED Snackbar (화면 하단 중앙, data-open 해제 시 퇴장 애니메이션)
     // ---------------------------------------------------------------------
-    const TOAST_STYLE = {
-        success: {ring: 'ring-emerald-200', icon: '✓', iconClass: 'bg-emerald-100 text-emerald-700'},
-        error: {ring: 'ring-rose-200', icon: '!', iconClass: 'bg-rose-100 text-rose-700'},
-        info: {ring: 'ring-slate-200', icon: 'i', iconClass: 'bg-brand-100 text-brand-700'}
+    const SNACKBAR_VARIANT = {success: 'positive', error: 'critical', info: 'default'};
+    const SNACKBAR_ICON = {
+        positive: '<path d="M20 6 9 17l-5-5"/>',
+        critical: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/>'
     };
 
     function showToast(type, message) {
         const container = document.getElementById('toasts');
         if (!container || !message) return;
-        const style = TOAST_STYLE[type] || TOAST_STYLE.info;
+        const variant = SNACKBAR_VARIANT[type] || 'default';
         const el = document.createElement('div');
-        el.setAttribute('role', 'status');
-        el.className = 'pointer-events-auto flex w-80 items-start gap-3 rounded-xl bg-white p-3.5 text-sm shadow-lg ring-1 transition duration-300 translate-y-2 opacity-0 ' + style.ring;
-        const icon = document.createElement('span');
-        icon.className = 'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ' + style.iconClass;
-        icon.textContent = style.icon;
+        el.setAttribute('role', variant === 'critical' ? 'alert' : 'status');
+        el.className = 'seed-snackbar__root pointer-events-auto';
+        el.dataset.open = '';
+        if (SNACKBAR_ICON[variant]) {
+            el.insertAdjacentHTML('beforeend', '<svg class="seed-snackbar__prefixIcon seed-snackbar__prefixIcon--variant_' + variant
+                + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                + SNACKBAR_ICON[variant] + '</svg>');
+        }
+        const content = document.createElement('div');
+        content.className = 'seed-snackbar__content';
         const text = document.createElement('p');
-        text.className = 'flex-1 text-slate-700';
+        text.className = 'seed-snackbar__message';
         text.textContent = message;
-        el.append(icon, text);
+        content.appendChild(text);
+        el.appendChild(content);
         container.appendChild(el);
-        requestAnimationFrame(() => el.classList.remove('translate-y-2', 'opacity-0'));
         setTimeout(() => {
-            el.classList.add('opacity-0');
-            setTimeout(() => el.remove(), 300);
+            delete el.dataset.open;
+            el.addEventListener('animationend', () => el.remove(), {once: true});
         }, type === 'error' ? 6000 : 3500);
     }
 
@@ -107,8 +133,13 @@
         return won(v);
     };
 
+    // 차트 색은 SEED 토큰(CSS 변수)에서 읽는다. (테마가 바뀌어도 토큰만 따라가면 된다)
+    const token = (name) => getComputedStyle(document.documentElement).getPropertyValue('--seed-color-' + name).trim();
+
     function renderCharts(root) {
         if (typeof Chart === 'undefined') return;
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+        Chart.defaults.color = token('fg-neutral-subtle');
         root.querySelectorAll('canvas[data-chart]').forEach((canvas) => {
             if (canvas.dataset.rendered) return;
             canvas.dataset.rendered = 'true';
@@ -117,9 +148,9 @@
                 data: {
                     labels: data.labels,
                     datasets: [
-                        {type: 'line', label: '이익', data: data.profit, borderColor: '#10b981', backgroundColor: '#10b981', cubicInterpolationMode: 'monotone', pointRadius: 3, yAxisID: 'y'},
-                        {type: 'bar', label: '매출', data: data.revenue, backgroundColor: '#3b65f5', borderRadius: 4, maxBarThickness: 22},
-                        {type: 'bar', label: '비용', data: data.cost, backgroundColor: '#cbd5e1', borderRadius: 4, maxBarThickness: 22}
+                        {type: 'line', label: '이익', data: data.profit, borderColor: token('palette-green-600'), backgroundColor: token('palette-green-600'), cubicInterpolationMode: 'monotone', pointRadius: 3, yAxisID: 'y'},
+                        {type: 'bar', label: '매출', data: data.revenue, backgroundColor: token('bg-brand-solid'), borderRadius: 4, maxBarThickness: 22},
+                        {type: 'bar', label: '비용', data: data.cost, backgroundColor: token('palette-gray-400'), borderRadius: 4, maxBarThickness: 22}
                     ]
                 },
                 options: {
@@ -131,7 +162,7 @@
                         tooltip: {callbacks: {label: (ctx) => ctx.dataset.label + ': ' + won(ctx.parsed.y) + '원'}}
                     },
                     scales: {
-                        y: {ticks: {callback: (v) => compact(v)}, grid: {color: '#f1f5f9'}},
+                        y: {ticks: {callback: (v) => compact(v)}, grid: {color: token('stroke-neutral-subtle')}},
                         x: {grid: {display: false}}
                     }
                 }
@@ -192,6 +223,15 @@
     document.body.addEventListener('htmx:afterSettle', showFlash);
 })();
 
+// 모바일 사이드바 열기/닫기 (백드롭 클릭·Esc 로 닫힘)
+window.abmsSidebar = function (open) {
+    document.getElementById('sidebar').classList.toggle('hidden', !open);
+    document.getElementById('sidebar-backdrop').classList.toggle('hidden', !open);
+};
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('sidebar-backdrop')) window.abmsSidebar(false);
+});
+
 // AI 어시스턴트: 전송 즉시 내 메시지와 "답변 생성 중" 표시
 window.abmsChat = {
     pending(form) {
@@ -205,13 +245,13 @@ window.abmsChat = {
         mine.className = 'flex justify-end';
         mine.dataset.pending = 'true';
         const bubble = document.createElement('div');
-        bubble.className = 'max-w-[80%] rounded-2xl rounded-tr-md bg-brand-600 px-4 py-2.5 text-sm whitespace-pre-wrap text-white';
+        bubble.className = 'max-w-[80%] rounded-2xl rounded-tr-md bg-bg-brand-solid px-4 py-2.5 text-sm whitespace-pre-wrap text-white';
         bubble.textContent = input.value.trim();
         mine.appendChild(bubble);
         const typing = document.createElement('div');
         typing.dataset.pending = 'true';
-        typing.className = 'flex items-center gap-2 text-sm text-slate-500';
-        typing.innerHTML = '<span class="flex gap-1"><span class="size-2 animate-bounce rounded-full bg-brand-400"></span><span class="size-2 animate-bounce rounded-full bg-brand-400 [animation-delay:120ms]"></span><span class="size-2 animate-bounce rounded-full bg-brand-400 [animation-delay:240ms]"></span></span> 답변을 생성하고 있어요…';
+        typing.className = 'flex items-center gap-2 text-sm text-fg-neutral-subtle';
+        typing.innerHTML = '<span class="flex gap-1"><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400"></span><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400 [animation-delay:120ms]"></span><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400 [animation-delay:240ms]"></span></span> 답변을 생성하고 있어요…';
         messages.append(mine, typing);
         messages.scrollTop = messages.scrollHeight;
     },

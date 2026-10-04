@@ -9,7 +9,7 @@
 @param String help = null
 @param String extra = null
 <div>
-    <label for="${name}" class="label">${label}@if(required)<span class="ml-0.5 text-rose-500">*</span>@endif</label>
+    <label for="${name}" class="label">${label}@if(required)<span class="required-mark">*</span>@endif</label>
     <input id="${name}" name="${name}" type="${type}" value="${value}" placeholder="${placeholder}" required="${required}"
            class="input ${errors.has(name) ? "input-error" : ""}" step="${"number".equals(type) ? "any" : null}" autocomplete="off">
     @if(errors.has(name))

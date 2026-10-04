@@ -4,6 +4,7 @@
 @import kr.co.abacus.abms.project.ProjectRevenueController.RevenueForm
 @import kr.co.abacus.abms.project.ProjectRevenuePlan
 @import kr.co.abacus.abms.project.RevenueType
+@import kr.co.abacus.abms.common.web.Seed
 @param Project project
 @param ProjectRevenuePlan plan = null
 @param RevenueForm form
@@ -32,7 +33,7 @@
             </div>
         </div>
     `, footer = @`
-        <button type="button" class="btn btn-secondary" data-close-modal>취소</button>
-        <button type="submit" class="btn btn-primary">${editing ? "저장" : "추가"}</button>
+        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="submit" class="${Seed.button("brandSolid")}">${editing ? "저장" : "추가"}</button>
     `)
 </form>

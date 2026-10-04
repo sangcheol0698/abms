@@ -2,6 +2,7 @@
 @import kr.co.abacus.abms.department.Department
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.employee.Employee
+@import kr.co.abacus.abms.common.web.Seed
 @param Department department
 @param List<Employee> employees
 @param DepartmentTree tree
@@ -15,7 +16,7 @@
             @endfor
         </select>
     `, footer = @`
-        <button type="button" class="btn btn-secondary" data-close-modal>취소</button>
-        <button type="submit" class="btn btn-primary">저장</button>
+        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="submit" class="${Seed.button("brandSolid")}">저장</button>
     `)
 </form>

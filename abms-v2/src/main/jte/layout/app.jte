@@ -2,99 +2,111 @@
 @import kr.co.abacus.abms.access.PermissionCode
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param String title
 @param Content content
 <!DOCTYPE html>
-<html lang="ko" class="h-full">
+<html lang="ko" class="h-full" data-seed data-seed-color-mode="light-only">
 <head>
     @template.layout.head(title = title)
 </head>
 <body class="h-full" hx-boost="true" hx-headers="${ctx.csrfHeaderJson()}">
 <div class="flex min-h-full">
-    <%-- 사이드바 --%>
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-slate-900 lg:flex">
-        <div class="flex h-16 shrink-0 items-center gap-2.5 px-5">
-            <div class="flex size-8 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">A</div>
-            <a href="/" class="text-lg font-semibold tracking-tight text-white">ABMS</a>
-            <button type="button" class="ml-auto text-slate-400 lg:hidden" onclick="document.getElementById('sidebar').classList.add('hidden')">
+    <%-- 모바일 메뉴 백드롭 --%>
+    <div id="sidebar-backdrop" class="fixed inset-0 z-[35] hidden bg-bg-overlay-muted lg:hidden" onclick="abmsSidebar(false)"></div>
+    <%-- 사이드바 (SEED Side Navigation) --%>
+    <aside id="sidebar" class="seed-side-navigation__root seed-side-navigation__root--tone_neutral fixed! inset-y-0 left-0 z-40 hidden shadow-s3 lg:flex lg:shadow-none">
+        <div class="seed-side-navigation__header flex items-center gap-x2_5 px-x4">
+            <a href="/" class="flex items-center gap-x2_5">
+                <span class="flex size-x8 items-center justify-center rounded-r2 bg-bg-brand-solid t4-bold text-fg-on-brand-solid">A</span>
+                <span class="t6-bold text-fg-neutral">ABMS</span>
+            </a>
+            <button type="button" class="${Seed.iconButton("ghost", "small")} ml-auto lg:hidden" aria-label="메뉴 닫기"
+                    onclick="abmsSidebar(false)">
                 ${Icons.of("x", "size-5")}
             </button>
         </div>
-        <nav class="flex-1 overflow-y-auto px-3 pb-6">
-            @if(ctx.can(PermissionCode.DASHBOARD_READ))
-                <a href="/" class="nav-link ${ctx.active("/") ? "active" : ""}">${Icons.of("home", "size-5")} 대시보드</a>
-            @endif
-            <p class="nav-section">조직</p>
-            <a href="/employees" class="nav-link ${ctx.active("/employees") ? "active" : ""}">${Icons.of("users", "size-5")} 직원</a>
-            <a href="/departments" class="nav-link ${ctx.active("/departments") ? "active" : ""}">${Icons.of("building", "size-5")} 부서</a>
-
-            <p class="nav-section">사업</p>
-            @if(ctx.can(PermissionCode.PROJECT_READ))
-                <a href="/projects" class="nav-link ${ctx.active("/projects") ? "active" : ""}">${Icons.of("folder", "size-5")} 프로젝트</a>
-            @endif
-            @if(ctx.can(PermissionCode.PARTY_READ))
-                <a href="/parties" class="nav-link ${ctx.active("/parties") ? "active" : ""}">${Icons.of("briefcase", "size-5")} 협력사</a>
-            @endif
-            @if(ctx.can(PermissionCode.DASHBOARD_READ))
-                <a href="/summary" class="nav-link ${ctx.active("/summary") ? "active" : ""}">${Icons.of("chart", "size-5")} 손익 현황</a>
-            @endif
-            @if(ctx.can(PermissionCode.REPORT_READ))
-                <a href="/reports" class="nav-link ${ctx.active("/reports") ? "active" : ""}">${Icons.of("document", "size-5")} 주간 보고서</a>
-            @endif
-            <a href="/assistant" class="nav-link ${ctx.active("/assistant") ? "active" : ""}">${Icons.of("sparkles", "size-5")} AI 어시스턴트</a>
-
+        <nav class="seed-side-navigation__content" aria-label="주 메뉴">
+            <div class="seed-side-navigation__group">
+                @if(ctx.can(PermissionCode.DASHBOARD_READ))
+                    @template.layout.navItem(href = "/", label = "대시보드", icon = "home", current = ctx.active("/"))
+                @endif
+            </div>
+            <div class="seed-side-navigation__group">
+                <p class="seed-side-navigation__groupLabel">조직</p>
+                @template.layout.navItem(href = "/employees", label = "직원", icon = "users", current = ctx.active("/employees"))
+                @template.layout.navItem(href = "/departments", label = "부서", icon = "building", current = ctx.active("/departments"))
+            </div>
+            <div class="seed-side-navigation__group">
+                <p class="seed-side-navigation__groupLabel">사업</p>
+                @if(ctx.can(PermissionCode.PROJECT_READ))
+                    @template.layout.navItem(href = "/projects", label = "프로젝트", icon = "folder", current = ctx.active("/projects"))
+                @endif
+                @if(ctx.can(PermissionCode.PARTY_READ))
+                    @template.layout.navItem(href = "/parties", label = "협력사", icon = "briefcase", current = ctx.active("/parties"))
+                @endif
+                @if(ctx.can(PermissionCode.DASHBOARD_READ))
+                    @template.layout.navItem(href = "/summary", label = "손익 현황", icon = "chart", current = ctx.active("/summary"))
+                @endif
+                @if(ctx.can(PermissionCode.REPORT_READ))
+                    @template.layout.navItem(href = "/reports", label = "주간 보고서", icon = "document", current = ctx.active("/reports"))
+                @endif
+                @template.layout.navItem(href = "/assistant", label = "AI 어시스턴트", icon = "sparkles", current = ctx.active("/assistant"))
+            </div>
             @if(ctx.can(PermissionCode.ACCOUNT_MANAGE) || ctx.can(PermissionCode.PERMISSION_GROUP_MANAGE) || ctx.can(PermissionCode.SUMMARY_MANAGE))
-                <p class="nav-section">관리</p>
-                @if(ctx.can(PermissionCode.ACCOUNT_MANAGE))
-                    <a href="/admin/accounts" class="nav-link ${ctx.active("/admin/accounts") ? "active" : ""}">${Icons.of("key", "size-5")} 계정</a>
-                @endif
-                @if(ctx.can(PermissionCode.PERMISSION_GROUP_MANAGE))
-                    <a href="/admin/permission-groups" class="nav-link ${ctx.active("/admin/permission-groups") ? "active" : ""}">${Icons.of("shield", "size-5")} 권한 그룹</a>
-                @endif
-                @if(ctx.can(PermissionCode.SUMMARY_MANAGE))
-                    <a href="/admin/cost-policies" class="nav-link ${ctx.active("/admin/cost-policies") ? "active" : ""}">${Icons.of("calculator", "size-5")} 원가 정책</a>
-                @endif
+                <div class="seed-side-navigation__group">
+                    <p class="seed-side-navigation__groupLabel">관리</p>
+                    @if(ctx.can(PermissionCode.ACCOUNT_MANAGE))
+                        @template.layout.navItem(href = "/admin/accounts", label = "계정", icon = "key", current = ctx.active("/admin/accounts"))
+                    @endif
+                    @if(ctx.can(PermissionCode.PERMISSION_GROUP_MANAGE))
+                        @template.layout.navItem(href = "/admin/permission-groups", label = "권한 그룹", icon = "shield", current = ctx.active("/admin/permission-groups"))
+                    @endif
+                    @if(ctx.can(PermissionCode.SUMMARY_MANAGE))
+                        @template.layout.navItem(href = "/admin/cost-policies", label = "원가 정책", icon = "calculator", current = ctx.active("/admin/cost-policies"))
+                    @endif
+                </div>
             @endif
         </nav>
     </aside>
 
-    <div class="flex min-w-0 flex-1 flex-col lg:pl-64">
+    <div class="flex min-w-0 flex-1 flex-col lg:pl-[240px]">
         <%-- 상단 바 --%>
-        <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6">
-            <button type="button" class="btn btn-ghost -ml-2 lg:hidden" aria-label="메뉴 열기"
-                    onclick="document.getElementById('sidebar').classList.remove('hidden')">
+        <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x2 border-b border-stroke-neutral-subtle bg-bg-layer-default px-x4 sm:px-x6">
+            <button type="button" class="${Seed.iconButton("ghost", "small")} -ml-x2 lg:hidden" aria-label="메뉴 열기"
+                    onclick="abmsSidebar(true)">
                 ${Icons.of("menu", "size-5")}
             </button>
             <div class="flex-1"></div>
             @if(ctx.loggedIn())
                 <details class="relative" data-dropdown>
-                    <summary class="btn btn-ghost relative !p-2" aria-label="알림"
+                    <summary class="${Seed.iconButton("ghost", "small")} relative" aria-label="알림"
                              hx-get="/notifications" hx-target="#notification-panel" hx-trigger="click">
                         ${Icons.of("bell", "size-5")}
                         @if(ctx.unreadNotifications() > 0)
-                            <span id="notification-dot" class="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-rose-500"></span>
+                            <span id="notification-dot" class="absolute top-x2 right-x2 flex size-x2 rounded-full bg-bg-critical-solid ring-2 ring-bg-layer-default"></span>
                         @endif
                     </summary>
                     <div class="dropdown-panel w-80 sm:w-96">
-                        <div id="notification-panel" class="p-4 text-sm text-slate-500">불러오는 중…</div>
+                        <div id="notification-panel" class="p-x4 t4-regular text-fg-neutral-subtle">불러오는 중…</div>
                     </div>
                 </details>
                 <details class="relative" data-dropdown>
-                    <summary class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-100">
+                    <summary class="flex cursor-pointer items-center gap-x2 rounded-r2 px-x2 py-x1_5 transition-colors hover:bg-bg-transparent-pressed">
                         @template.components.avatar(avatar = ctx.requireUser().avatar(), initial = ctx.requireUser().initial(), size = "size-8 text-sm")
-                        <span class="hidden text-sm font-medium text-slate-700 sm:block">${ctx.requireUser().name()}</span>
-                        ${Icons.of("chevron-down", "size-4 text-slate-400")}
+                        <span class="hidden t4-medium text-fg-neutral sm:block">${ctx.requireUser().name()}</span>
+                        ${Icons.of("chevron-down", "size-4 text-fg-neutral-subtle")}
                     </summary>
-                    <div class="dropdown-panel w-56 py-1.5">
-                        <div class="border-b border-slate-100 px-4 py-2.5">
-                            <p class="text-sm font-medium text-slate-900">${ctx.requireUser().name()}</p>
-                            <p class="truncate text-xs text-slate-500">${ctx.requireUser().getUsername()}</p>
+                    <div class="dropdown-panel w-56 py-x1_5">
+                        <div class="border-b border-stroke-neutral-subtle px-x4 py-x2_5">
+                            <p class="t4-bold text-fg-neutral">${ctx.requireUser().name()}</p>
+                            <p class="truncate t3-regular text-fg-neutral-subtle">${ctx.requireUser().getUsername()}</p>
                         </div>
-                        <a href="/me" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">${Icons.of("user", "size-4")} 내 정보</a>
+                        <a href="/me" class="flex items-center gap-x2 px-x4 py-x2 t4-regular text-fg-neutral hover:bg-bg-layer-floating-pressed">${Icons.of("user", "size-4")} 내 정보</a>
                         <form method="post" action="/logout" hx-boost="false">
                             <input type="hidden" name="${ctx.csrfParameter()}" value="${ctx.csrfToken()}">
-                            <button type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                            <button type="submit" class="flex w-full cursor-pointer items-center gap-x2 px-x4 py-x2 text-left t4-regular text-fg-neutral hover:bg-bg-layer-floating-pressed">
                                 ${Icons.of("logout", "size-4")} 로그아웃
                             </button>
                         </form>
@@ -103,16 +115,16 @@
             @endif
         </header>
 
-        <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main class="mx-auto w-full max-w-[1440px] flex-1 px-x4 py-x6 sm:px-x6 lg:px-x8">
             ${content}
         </main>
     </div>
 </div>
 
-<dialog id="modal" class="m-auto w-full max-w-lg rounded-2xl bg-white p-0 shadow-xl">
+<dialog id="modal" class="m-auto w-full max-w-lg rounded-r6 bg-bg-layer-floating p-0 shadow-s3">
     <div id="modal-body"></div>
 </dialog>
-<div id="toasts" class="pointer-events-none fixed top-4 right-4 z-50 flex flex-col gap-2" aria-live="polite"></div>
+<div id="toasts" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex flex-col items-center gap-x2 px-x4" aria-live="polite"></div>
 @if(ctx.toast() != null)
     <div id="flash-toast" hidden data-type="${ctx.toast().type()}" data-message="${ctx.toast().message()}"></div>
 @endif

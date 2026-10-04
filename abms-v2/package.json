@@ -6,6 +6,8 @@
     "watch:css": "tailwindcss -i ./src/main/tailwind/app.css -o ./src/main/resources/static/css/app.css --watch"
   },
   "devDependencies": {
+    "@seed-design/css": "^3.0.1",
+    "@seed-design/tailwind4-theme": "^3.0.1",
     "@tailwindcss/cli": "^4.1.0",
     "tailwindcss": "^4.1.0"
   }

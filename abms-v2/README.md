@@ -5,7 +5,7 @@
 프로젝트 계약 매출과 인력 투입 비용을 연결해 **프로젝트·부서별 월 손익**을 산출하는 비즈니스 관리 시스템입니다.
 
 `Java 25` `Spring Boot 4.1` `Spring Security 7` `Spring Data JPA` `Flyway` `MySQL 8.4`
-`Spring AI 2.0` `JTE` `HTMX 2` `Tailwind CSS 4` `JUnit 5` `Testcontainers`
+`Spring AI 2.0` `JTE` `HTMX 2` `Tailwind CSS 4` `SEED Design` `JUnit 5` `Testcontainers`
 
 Excel로 관리하던 손익 계산(수작업 집계, 귀속 기준 불일치, 재처리 어려움)을 웹 서비스로 옮긴 프로젝트입니다.
 서버에서 HTML을 렌더링(JTE)하고 HTMX로 부분 갱신하는 **하이퍼미디어 방식**으로, 별도 SPA 빌드 없이 하나의 Spring Boot 애플리케이션으로 동작합니다.
@@ -74,7 +74,7 @@ Excel로 관리하던 손익 계산(수작업 집계, 귀속 기준 불일치, �
 | Framework | Spring Boot 4.1 (Web MVC), Spring Security 7, Spring Data JPA (Hibernate 7), Bean Validation |
 | Database | MySQL 8.4, Flyway (스키마/기준 데이터/데모 데이터 마이그레이션) |
 | AI | Spring AI 2.0 (OpenAI), Tool Calling, JPA 기반 ChatMemoryRepository |
-| View | JTE (컴파일 타임 타입 검사 템플릿), HTMX 2, Tailwind CSS 4, Chart.js, marked |
+| View | JTE (컴파일 타임 타입 검사 템플릿), HTMX 2, Tailwind CSS 4, [SEED Design](https://seed-design.io) (토큰·컴포넌트 CSS), Chart.js, marked |
 | Test | JUnit 5, AssertJ, Spring MockMvc, Spring Security Test, Testcontainers (MySQL) |
 | Build / CI | Gradle (Kotlin DSL), npm(Tailwind CLI), GitHub Actions |
 
@@ -103,6 +103,10 @@ flowchart LR
   - 업무 규칙 위반은 `HX-Trigger` 토스트 이벤트로 알림 (한글은 JSON 유니코드 이스케이프)
   - 세션 만료 시 HTMX 요청에는 `HX-Redirect: /login`으로 응답
 - **JTE 사전 컴파일**: 템플릿이 Java 코드로 생성·컴파일되어 모델 타입 오류를 빌드 시점에 잡습니다.
+- **SEED 디자인 시스템**: `@seed-design/css`의 토큰과 컴포넌트 CSS를 React 없이 사용합니다.
+  - 버튼·뱃지·Callout·Snackbar·Side Navigation은 SEED 레시피 클래스를 그대로 쓰고, 템플릿에서는 `Seed` 헬퍼(`${Seed.button("brandSolid")}`)로 클래스 이름을 만듭니다.
+  - 카드·표·입력 필드처럼 SEED에 없거나 React 상태가 필요한 요소는 `src/main/tailwind/app.css`에서 SEED 토큰(`bg-bg-layer-default`, `text-fg-neutral`, `p-x4`, `t4-bold` …)으로 정의합니다.
+  - 색은 역할 토큰만 사용합니다. 현재는 `data-seed-color-mode="light-only"`이며, 이 값을 `system`으로 바꾸면 다크 모드로 전환할 수 있는 구조입니다.
 - **소프트 삭제 + 고유성**: 생성 컬럼(`CASE WHEN deleted = 0 THEN code END`)에 유니크 인덱스를 걸어 삭제 후 같은 코드/이름 재사용을 허용합니다.
 
 ## 실행 방법
@@ -196,12 +200,17 @@ src/main/java/kr/co/abacus/abms
 ├── assistant       # AI 어시스턴트 (Spring AI)
 └── notification    # 알림
 src/main/jte        # JTE 템플릿 (layout, components, 기능별 화면)
-src/main/tailwind   # Tailwind CSS 소스
+src/main/tailwind   # Tailwind CSS 소스 (SEED 토큰·컴포넌트 import)
 src/main/resources
 ├── db/migration    # V1 스키마, V2 기준 데이터 (권한, 시스템 그룹, 원가 정책)
 ├── db/demo         # 데모 데이터 (local/demo 프로필)
 └── static/js       # HTMX 확장 동작 (토스트, 모달, 차트, 마크다운)
 ```
+
+## 서드파티 라이선스
+
+- UI는 당근의 [SEED Design](https://github.com/daangn/seed-design)(`@seed-design/css`, `@seed-design/tailwind4-theme`, Apache License 2.0)을 사용합니다. 빌드된 `static/css/app.css`에 SEED CSS가 포함되며, 원본 저작권 고지와 라이선스는 각 패키지의 `LICENSE`, `NOTICE`를 따릅니다. 당근 로고·브랜드 자산은 사용하지 않습니다.
+- 아이콘은 [Heroicons](https://heroicons.com)(MIT)를 사용합니다.
 
 ## 문서
 

@@ -2,6 +2,7 @@
 @import kr.co.abacus.abms.employee.Employee
 @import kr.co.abacus.abms.employee.EmployeeGrade
 @import kr.co.abacus.abms.employee.EmployeePosition
+@import kr.co.abacus.abms.common.web.Seed
 @param Employee employee
 @param FormErrors errors
 <form hx-post="/employees/${employee.id()}/promote" hx-target="#modal-body">
@@ -32,7 +33,7 @@
             </div>
         </div>
     `, footer = @`
-        <button type="button" class="btn btn-secondary" data-close-modal>취소</button>
-        <button type="submit" class="btn btn-primary">변경</button>
+        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="submit" class="${Seed.button("brandSolid")}">변경</button>
     `)
 </form>

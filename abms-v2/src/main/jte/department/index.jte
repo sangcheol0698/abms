@@ -7,6 +7,7 @@
 @import kr.co.abacus.abms.employee.Employee
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.summary.ProfitQueryService.MonthPoint
+@import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param DepartmentTree tree
 @param Long selectedId = null
@@ -20,7 +21,7 @@
 @template.layout.app(ctx = ctx, title = "부서", content = @`
     @template.components.pageHeader(title = "부서", subtitle = "조직도와 부서별 구성원·주관 프로젝트를 확인합니다.", actions = @`
         @if(ctx.can(PermissionCode.DEPARTMENT_WRITE))
-            <button type="button" class="btn btn-primary" hx-get="/departments/new${selectedId == null ? "" : "?parentId=" + selectedId}" hx-target="#modal-body">${Icons.of("plus", "size-4")} 부서 추가</button>
+            <button type="button" class="${Seed.button("brandSolid")}" hx-get="/departments/new${selectedId == null ? "" : "?parentId=" + selectedId}" hx-target="#modal-body">${Icons.of("plus", "size-4")} 부서 추가</button>
         @endif
     `)
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-[18rem_1fr]">
@@ -30,14 +31,14 @@
                     <li>
                         <a href="/departments?selected=${node.department().id()}"
                            hx-get="/departments/${node.department().id()}" hx-target="#department-detail" hx-push-url="/departments?selected=${node.department().id()}"
-                           onclick="document.querySelectorAll('[data-dept-link]').forEach(e => e.classList.remove('bg-brand-50','text-brand-700')); this.classList.add('bg-brand-50','text-brand-700')"
+                           onclick="document.querySelectorAll('[data-dept-link]').forEach(e => e.classList.remove('bg-bg-transparent-selected','t4-bold','text-fg-neutral')); this.classList.add('bg-bg-transparent-selected','t4-bold','text-fg-neutral')"
                            data-dept-link
-                           class="flex items-center gap-1.5 rounded-lg py-1.5 pr-2 text-sm hover:bg-slate-50 ${node.department().id().equals(selectedId) ? "bg-brand-50 text-brand-700" : "text-slate-700"}"
+                           class="flex items-center gap-1.5 rounded-r2 py-x1_5 pr-x2 t4-regular hover:bg-bg-transparent-pressed ${node.department().id().equals(selectedId) ? "bg-bg-transparent-selected t4-bold text-fg-neutral" : "text-fg-neutral-muted"}"
                            style="padding-left: ${8 + node.depth() * 14}px">
                             @if(tree.children(node.department().id()).isEmpty())
-                                <span class="size-1.5 rounded-full bg-slate-300"></span>
+                                <span class="size-1.5 rounded-full bg-palette-gray-400"></span>
                             @else
-                                ${Icons.of("chevron-down", "size-3 text-slate-400")}
+                                ${Icons.of("chevron-down", "size-3 text-fg-placeholder")}
                             @endif
                             <span class="truncate ${node.depth() == 0 ? "font-semibold" : ""}">${node.department().getName()}</span>
                         </a>

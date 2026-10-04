@@ -7,6 +7,7 @@
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.project.ProjectForm
 @import kr.co.abacus.abms.project.ProjectStatus
+@import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param ProjectForm form
 @param FormErrors errors
@@ -17,8 +18,8 @@
 !{String title = editing ? project.getName() + " 수정" : "프로젝트 등록";}
 @template.layout.app(ctx = ctx, title = title, content = @`
     @template.components.pageHeader(title = title, breadcrumb = @`
-        <a href="/projects" class="hover:text-slate-700">프로젝트</a>${Icons.of("chevron-right", "size-3")}
-        @if(editing)<a href="/projects/${project.id()}" class="hover:text-slate-700">${project.getName()}</a>${Icons.of("chevron-right", "size-3")}@endif
+        <a href="/projects" class="hover:text-fg-neutral-muted">프로젝트</a>${Icons.of("chevron-right", "size-3")}
+        @if(editing)<a href="/projects/${project.id()}" class="hover:text-fg-neutral-muted">${project.getName()}</a>${Icons.of("chevron-right", "size-3")}@endif
         <span>${editing ? "수정" : "등록"}</span>
     `)
     <form method="post" action="${editing ? "/projects/" + project.id() : "/projects"}" class="card max-w-3xl" novalidate>
@@ -49,11 +50,11 @@
                 <label for="description" class="label">설명</label>
                 <textarea id="description" name="description" rows="3" class="textarea">${Ui.value(form.description())}</textarea>
             </div>
-            <p class="text-xs text-slate-500 sm:col-span-2">손익은 투입 직원의 소속 부서가 아니라 <b>주관 부서</b>에 귀속됩니다.</p>
+            <p class="text-xs text-fg-neutral-subtle sm:col-span-2">손익은 투입 직원의 소속 부서가 아니라 <b>주관 부서</b>에 귀속됩니다.</p>
         </div>
-        <div class="flex justify-end gap-2 rounded-b-xl border-t border-slate-100 bg-slate-50 px-5 py-3.5">
-            <a href="${editing ? "/projects/" + project.id() : "/projects"}" class="btn btn-secondary">취소</a>
-            <button type="submit" class="btn btn-primary">${editing ? "저장" : "등록"}</button>
+        <div class="flex justify-end gap-2 rounded-b-xl border-t border-stroke-neutral-subtle bg-bg-neutral-muted px-5 py-3.5">
+            <a href="${editing ? "/projects/" + project.id() : "/projects"}" class="${Seed.button("neutralWeak")}">취소</a>
+            <button type="submit" class="${Seed.button("brandSolid")}">${editing ? "저장" : "등록"}</button>
         </div>
     </form>
 `)

@@ -5,6 +5,7 @@
 @import kr.co.abacus.abms.department.Department
 @import kr.co.abacus.abms.department.DepartmentController.DepartmentForm
 @import kr.co.abacus.abms.department.DepartmentType
+@import kr.co.abacus.abms.common.web.Seed
 @param Department department = null
 @param DepartmentForm form
 @param FormErrors errors
@@ -28,7 +29,7 @@
             </div>
         </div>
     `, footer = @`
-        <button type="button" class="btn btn-secondary" data-close-modal>취소</button>
-        <button type="submit" class="btn btn-primary">${editing ? "저장" : "추가"}</button>
+        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="submit" class="${Seed.button("brandSolid")}">${editing ? "저장" : "추가"}</button>
     `)
 </form>

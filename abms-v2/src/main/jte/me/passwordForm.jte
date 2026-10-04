@@ -1,11 +1,12 @@
 @import kr.co.abacus.abms.common.web.FormErrors
+@import kr.co.abacus.abms.common.web.Seed
 @param FormErrors errors
 @param boolean done = false
 <div class="card-header"><h2 class="card-title">비밀번호 변경</h2></div>
 <form class="card-body space-y-3" hx-post="/me/password" hx-target="#password-card" hx-disabled-elt="find button">
     @template.components.globalError(errors = errors)
     @if(done)
-        <p class="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 ring-1 ring-emerald-200">비밀번호를 변경했습니다.</p>
+        <p class="rounded-lg bg-bg-positive-weak px-3 py-2 text-sm text-fg-positive ring-1 ring-stroke-positive-weak">비밀번호를 변경했습니다.</p>
     @endif
     <div>
         <label for="currentPassword" class="label">현재 비밀번호</label>
@@ -20,5 +21,5 @@
         <label for="confirmPassword" class="label">새 비밀번호 확인</label>
         <input id="confirmPassword" name="confirmPassword" type="password" class="input" required autocomplete="new-password">
     </div>
-    <button type="submit" class="btn btn-primary w-full">변경</button>
+    <button type="submit" class="${Seed.button("brandSolid")} w-full">변경</button>
 </form>

@@ -10,13 +10,13 @@
     <div class="overflow-x-auto">
         <table class="table">
             <thead><tr><th>협력사</th><th>대표자</th><th>영업 담당</th><th>연락처</th><th class="num">프로젝트</th></tr></thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-stroke-neutral-subtle">
             @for(Party p : page.content())
                 <tr>
                     <td><a href="/parties/${p.id()}" class="link">${p.getName()}</a></td>
                     <td>${Ui.value(p.getCeoName())}</td>
                     <td>${Ui.value(p.getSalesRepName())}</td>
-                    <td class="text-xs text-slate-500">${Ui.value(p.getSalesRepPhone())}<br>${Ui.value(p.getSalesRepEmail())}</td>
+                    <td class="text-xs text-fg-neutral-subtle">${Ui.value(p.getSalesRepPhone())}<br>${Ui.value(p.getSalesRepEmail())}</td>
                     <td class="num">${projectCounts.getOrDefault(p.id(), 0L)}</td>
                 </tr>
             @endfor
