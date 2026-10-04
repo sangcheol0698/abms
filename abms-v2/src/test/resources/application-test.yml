@@ -8,6 +8,9 @@ spring:
 abms:
   ai:
     api-key: ""
+  map:
+    kakao-js-key: ""
+    kakao-rest-key: ""
   summary:
     schedule-enabled: false
   demo:
