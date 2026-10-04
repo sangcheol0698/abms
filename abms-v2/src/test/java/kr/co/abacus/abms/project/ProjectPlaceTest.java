@@ -74,7 +74,7 @@ class ProjectPlaceTest {
         departmentRepository.save(parent);
         project = fixtures.project(team, 100_000_000, LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(3));
         Party party = partyRepository.findById(project.getPartyId()).orElseThrow();
-        party.update(new Party.PartyInfo(party.getName(), null, null, null, null, null, null, null, null, CLIENT, null, null));
+        party.update(new Party.PartyInfo(party.getName(), null, null, null, null, null, CLIENT, null, null));
     }
 
     @Test

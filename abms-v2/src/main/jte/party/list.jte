@@ -10,6 +10,7 @@
 @param PageView<Party> page
 @param String q = null
 @param Map<Long, Long> projectCounts
+@param Map<Long, kr.co.abacus.abms.party.PartyContact> primaryContacts
 @template.layout.app(ctx = ctx, title = "협력사", content = @`
     @template.components.pageHeader(title = "협력사", subtitle = "프로젝트 고객사와 파트너 정보를 관리합니다.", actions = @`
         @if(ctx.can(PermissionCode.PARTY_WRITE))
@@ -25,6 +26,6 @@
             </div>
             <span class="ml-auto t3-regular text-fg-neutral-subtle">총 ${page.totalElements()}곳</span>
         </form>
-        <div id="party-results">@template.party.results(page = page, projectCounts = projectCounts)</div>
+        <div id="party-results">@template.party.results(page = page, projectCounts = projectCounts, primaryContacts = primaryContacts)</div>
     </div>
 `)

@@ -97,7 +97,7 @@ class SiteWebTest {
                 Location.of(null, "서울 중구 세종대로 110", null, new BigDecimal("37.5662952"), new BigDecimal("126.9779451")), null)));
         team.relocate(site.id());
         departmentRepository.save(team);
-        partyRepository.save(Party.create(new Party.PartyInfo("근처상사", null, null, null, null, PartyType.CLIENT, null, null, null,
+        partyRepository.save(Party.create(new Party.PartyInfo("근처상사", null, PartyType.CLIENT, null, null, null,
                 Location.of(null, "서울 중구 을지로 1", null, new BigDecimal("37.5660000"), new BigDecimal("126.9800000")), null, null)));
 
         mvc.perform(get("/sites/{id}", site.id()).with(user(admin)))

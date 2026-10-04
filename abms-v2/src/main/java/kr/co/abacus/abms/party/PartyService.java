@@ -17,10 +17,17 @@ import kr.co.abacus.abms.project.ProjectRepository;
 @Transactional
 public class PartyService {
 
+    private static final java.util.Comparator<PartyContact> CONTACT_ORDER = java.util.Comparator
+            .comparing(PartyContact::isPrimary).reversed()
+            .thenComparing(PartyContact::getRole)
+            .thenComparing(PartyContact::getName);
+
     private final PartyRepository partyRepository;
     private final ProjectRepository projectRepository;
+    private final PartyContactRepository contactRepository;
 
-    public PartyService(PartyRepository partyRepository, ProjectRepository projectRepository) {
+    public PartyService(PartyRepository partyRepository, ProjectRepository projectRepository, PartyContactRepository contactRepository) {
+        this.contactRepository = contactRepository;
         this.partyRepository = partyRepository;
         this.projectRepository = projectRepository;
     }
@@ -53,6 +60,55 @@ public class PartyService {
         }
         return projectRepository.countGroupByPartyId(partyIds).stream()
                 .collect(java.util.stream.Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+    }
+
+    /** 담당자: 대표 담당자 → 역할 → 이름 순 */
+    @Transactional(readOnly = true)
+    public List<PartyContact> contacts(Long partyId) {
+        return contactRepository.findAllByPartyId(partyId).stream().sorted(CONTACT_ORDER).toList();
+    }
+
+    /** 협력사별 대표 담당자 (대표 지정이 없으면 정렬상 첫 번째) */
+    @Transactional(readOnly = true)
+    public java.util.Map<Long, PartyContact> primaryContacts(java.util.Collection<Long> partyIds) {
+        if (partyIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        return contactRepository.findAllByPartyIdIn(partyIds).stream().sorted(CONTACT_ORDER)
+                .collect(java.util.stream.Collectors.toMap(PartyContact::getPartyId, c -> c, (first, other) -> first));
+    }
+
+    @Transactional(readOnly = true)
+    public PartyContact contact(Long partyId, Long contactId) {
+        return contactRepository.findById(contactId).filter(c -> c.getPartyId().equals(partyId))
+                .orElseThrow(() -> NotFoundException.of("담당자", contactId));
+    }
+
+    public PartyContact addContact(Long partyId, PartyContact.ContactInfo info) {
+        get(partyId);
+        PartyContact contact = contactRepository.save(PartyContact.create(partyId, info));
+        applyPrimary(contact, info.primary());
+        return contact;
+    }
+
+    public void updateContact(Long partyId, Long contactId, PartyContact.ContactInfo info) {
+        PartyContact contact = contact(partyId, contactId);
+        contact.update(info);
+        applyPrimary(contact, info.primary());
+    }
+
+    public void deleteContact(Long partyId, Long contactId, Long accountId) {
+        contact(partyId, contactId).softDelete(accountId);
+    }
+
+    /** 대표 담당자는 협력사당 한 명: 새로 지정하면 기존 대표를 해제한다. */
+    private void applyPrimary(PartyContact contact, boolean primary) {
+        if (primary) {
+            contactRepository.findAllByPartyId(contact.getPartyId()).stream()
+                    .filter(c -> c.isPrimary() && !c.id().equals(contact.id()))
+                    .forEach(c -> c.markPrimary(false));
+        }
+        contact.markPrimary(primary);
     }
 
     public Party create(PartyInfo info) {

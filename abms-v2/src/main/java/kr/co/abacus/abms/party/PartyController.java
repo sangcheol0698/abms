@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -76,7 +75,9 @@ public class PartyController {
         String baseUrl = UriComponentsBuilder.fromPath("/parties").query(request.getQueryString()).build().toUriString();
         model.addAttribute("page", PageView.of(result, baseUrl));
         model.addAttribute("q", q);
-        model.addAttribute("projectCounts", partyService.projectCounts(result.getContent().stream().map(Party::id).toList()));
+        java.util.List<Long> partyIds = result.getContent().stream().map(Party::id).toList();
+        model.addAttribute("projectCounts", partyService.projectCounts(partyIds));
+        model.addAttribute("primaryContacts", partyService.primaryContacts(partyIds));
         if (Htmx.targets(request, "party-results")) {
             return "party/results";
         }
@@ -112,6 +113,7 @@ public class PartyController {
         require(user, PermissionCode.PARTY_READ);
         Party party = partyService.get(id);
         model.addAttribute("party", party);
+        model.addAttribute("contacts", partyService.contacts(id));
         java.util.List<Project> projects = user.has(PermissionCode.PROJECT_READ)
                 ? projectService.byParty(id).stream().filter(p -> projectService.canRead(user, p)).toList()
                 : java.util.List.<Project>of();
@@ -182,9 +184,6 @@ public class PartyController {
     public record PartyForm(
             @NotBlank(message = "협력사명을 입력하세요.") @Size(max = 50, message = "50자 이하로 입력하세요.") @Nullable String name,
             @Size(max = 30, message = "30자 이하로 입력하세요.") @Nullable String ceoName,
-            @Size(max = 30, message = "30자 이하로 입력하세요.") @Nullable String salesRepName,
-            @Size(max = 20, message = "20자 이하로 입력하세요.") @Nullable String salesRepPhone,
-            @Email(message = "이메일 형식이 올바르지 않습니다.") @Size(max = 100) @Nullable String salesRepEmail,
             @Nullable PartyType partyType,
             @Pattern(regexp = "^$|^[0-9]{3}-?[0-9]{2}-?[0-9]{5}$", message = "사업자등록번호는 000-00-00000 형식으로 입력하세요.") @Nullable String businessNumber,
             @Size(max = 50, message = "50자 이하로 입력하세요.") @Nullable String industry,
@@ -199,19 +198,17 @@ public class PartyController {
     ) {
 
         static PartyForm empty() {
-            return new PartyForm(null, null, null, null, null, PartyType.CLIENT, null, null, null, null, null, null, null, null, null, null);
+            return new PartyForm(null, null, PartyType.CLIENT, null, null, null, null, null, null, null, null, null, null);
         }
 
         static PartyForm of(Party p) {
             Location l = p.getLocation();
-            return new PartyForm(p.getName(), p.getCeoName(), p.getSalesRepName(), p.getSalesRepPhone(), p.getSalesRepEmail(),
-                    p.getPartyType(), p.getBusinessNumber(), p.getIndustry(), p.getPhone(),
+            return new PartyForm(p.getName(), p.getCeoName(), p.getPartyType(), p.getBusinessNumber(), p.getIndustry(), p.getPhone(),
                     l.zipCode(), l.address(), l.addressDetail(), l.latitude(), l.longitude(), p.getWebsite(), p.getMemo());
         }
 
         PartyInfo toInfo() {
-            return new PartyInfo(name == null ? "" : name, ceoName, salesRepName, salesRepPhone, salesRepEmail,
-                    partyType, businessNumber, industry, phone, Location.of(zipCode, address, addressDetail, latitude, longitude), website, memo);
+            return new PartyInfo(name == null ? "" : name, ceoName, partyType, businessNumber, industry, phone, Location.of(zipCode, address, addressDetail, latitude, longitude), website, memo);
         }
 
     }

@@ -38,14 +38,6 @@
             </div>
         </section>
         <section class="form-section">
-            <div><h2 class="form-section-title">영업 담당자</h2><p class="form-section-desc">청구·계약 연락 창구입니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
-                @template.components.input(name = "salesRepName", label = "이름", value = Ui.value(form.salesRepName()), errors = errors)
-                @template.components.input(name = "salesRepPhone", label = "연락처", value = Ui.value(form.salesRepPhone()), errors = errors, type = "tel", placeholder = "010-0000-0000")
-                <div class="@xl:col-span-2">@template.components.input(name = "salesRepEmail", label = "이메일", value = Ui.value(form.salesRepEmail()), errors = errors, type = "email")</div>
-            </div>
-        </section>
-        <section class="form-section">
             <div><h2 class="form-section-title">메모</h2><p class="form-section-desc">거래 조건, 특이 사항 등을 기록합니다.</p></div>
             <div>
                 <label for="memo" class="sr-only">메모</label>

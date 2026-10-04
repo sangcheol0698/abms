@@ -16,6 +16,7 @@
 @param long projectCount
 @param DepartmentTree tree
 @param PartyInsight insight
+@param List<kr.co.abacus.abms.party.PartyContact> contacts
 @param List<MapMarker> markers
 @param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, aside = @`
@@ -37,16 +38,21 @@
         <dt>첫 거래</dt>
         <dd class="tabular-nums">${insight.firstStartDate() == null ? "-" : Ui.date(insight.firstStartDate())}</dd>
     </dl>
+    !{var primaryContact = contacts.isEmpty() ? null : contacts.getFirst();}
     <div class="mt-x5 border-t border-stroke-neutral-subtle pt-x4">
-        <h3 class="mb-x3 t3-medium text-fg-neutral-subtle">영업 담당자</h3>
-        <dl class="property-list">
-            <dt>이름</dt>
-            <dd>${party.getSalesRepName() == null ? "-" : party.getSalesRepName()}</dd>
-            <dt>연락처</dt>
-            <dd class="tabular-nums">@if(party.getSalesRepPhone() != null)<a class="link" href="tel:${party.getSalesRepPhone()}">${party.getSalesRepPhone()}</a>@else-@endif</dd>
-            <dt>이메일</dt>
-            <dd>@if(party.getSalesRepEmail() != null)<a class="link" href="mailto:${party.getSalesRepEmail()}" title="${party.getSalesRepEmail()}">${party.getSalesRepEmail()}</a>@else-@endif</dd>
-        </dl>
+        <h3 class="mb-x3 t3-medium text-fg-neutral-subtle">대표 담당자</h3>
+        @if(primaryContact == null)
+            <p class="t4-regular text-fg-neutral-subtle">등록된 담당자가 없습니다.</p>
+        @else
+            <dl class="property-list">
+                <dt>이름</dt>
+                <dd>${primaryContact.getName()} <span class="t3-regular text-fg-neutral-subtle">${primaryContact.getRole().label()}</span></dd>
+                <dt>연락처</dt>
+                <dd class="tabular-nums">@if(primaryContact.getPhone() != null)<a class="link" href="tel:${primaryContact.getPhone()}">${primaryContact.getPhone()}</a>@else-@endif</dd>
+                <dt>이메일</dt>
+                <dd>@if(primaryContact.getEmail() != null)<a class="link" href="mailto:${primaryContact.getEmail()}" title="${primaryContact.getEmail()}">${primaryContact.getEmail()}</a>@else-@endif</dd>
+            </dl>
+        @endif
     </div>
 `, title = party.getName(), content = @`
     @template.components.pageHeader(title = party.getName(), breadcrumb = @`
@@ -92,6 +98,44 @@
                 <p class="mt-x0_5 t3-regular text-fg-neutral-subtle">미발행 ${insight.unissuedPlanned().compact()} · 미계획 ${insight.unplanned().compact()}</p>
             </div>
         </div>
+
+        <section class="min-w-0">
+            <div class="mb-x2 flex items-center justify-between">
+                <h2 class="section-title mb-0">담당자 <span class="section-count">${contacts.size()}</span></h2>
+                @if(ctx.can(PermissionCode.PARTY_WRITE))
+                    <button type="button" class="${Seed.button("ghost", "xsmall")}" hx-get="/parties/${party.id()}/contacts/new" hx-target="#modal-body">${Icons.of("plus", "size-4")} 담당자 추가</button>
+                @endif
+            </div>
+            <div class="list-box">
+                @if(contacts.isEmpty())
+                    @template.components.empty(message = "등록된 담당자가 없습니다. 영업·계약·청구·기술 담당자를 역할별로 추가하세요.", icon = "users")
+                @else
+                    @for(var c : contacts)
+                        <div class="list-row">
+                            <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-bg-neutral-weak t3-bold text-fg-neutral-muted">${c.getName().substring(0, 1)}</span>
+                            <span class="flex min-w-0 flex-1 items-center gap-x2">
+                                <span class="truncate t4-medium">${c.getName()}</span>
+                                <span class="${Seed.badge(c.isPrimary() ? "informative" : "neutral", "weak")}">${c.getRole().label()}</span>
+                                @if(c.isPrimary())<span class="t3-regular text-fg-brand">대표</span>@endif
+                                @if(c.getTitle() != null)<span class="hidden truncate t3-regular text-fg-neutral-subtle @xl:inline">${c.getTitle()}</span>@endif
+                            </span>
+                            <span class="list-cell-muted hidden w-32 tabular-nums @2xl:block">@if(c.getPhone() != null)<a class="hover:underline" href="tel:${c.getPhone()}">${c.getPhone()}</a>@else-@endif</span>
+                            <span class="list-cell-muted hidden w-56 truncate @3xl:block">@if(c.getEmail() != null)<a class="hover:underline" href="mailto:${c.getEmail()}">${c.getEmail()}</a>@else-@endif</span>
+                            @if(ctx.can(PermissionCode.PARTY_WRITE))
+                                <span class="flex shrink-0 items-center gap-x1">
+                                    <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" aria-label="${c.getName()} 수정" title="수정"
+                                            hx-get="/parties/${party.id()}/contacts/${c.id()}/edit" hx-target="#modal-body">${Icons.of("pencil", "size-4")}</button>
+                                    <form method="post" action="/parties/${party.id()}/contacts/${c.id()}/delete" hx-confirm="${c.getName()} 담당자를 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
+                                        <button class="${Seed.iconButton("ghost", "xsmall")} text-fg-critical" aria-label="${c.getName()} 삭제" title="삭제">${Icons.of("trash", "size-4")}</button>
+                                    </form>
+                                </span>
+                            @endif
+                        </div>
+                        @if(c.getMemo() != null)<p class="-mt-px border-b border-stroke-neutral-subtle px-x4 pb-x2 pl-12 t3-regular text-fg-neutral-subtle last:border-b-0">${c.getMemo()}</p>@endif
+                    @endfor
+                @endif
+            </div>
+        </section>
 
         <div class="grid grid-cols-1 gap-6 @4xl:grid-cols-2">
             <section class="min-w-0">
