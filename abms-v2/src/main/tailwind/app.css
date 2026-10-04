@@ -638,8 +638,10 @@
             flex-direction: column;
         }
 
+        /* 헤더 드롭다운(사용자 메뉴)이 본문·사이드바 위에 오도록 헤더를 위층으로 둔다 */
         .app-header {
-            position: static;
+            position: relative;
+            z-index: 30;
             flex-shrink: 0;
         }
 
@@ -657,6 +659,8 @@
             transform: none;
             visibility: visible;
             transition: none;
+            /* 모바일 서랍용 z-index 해제 (flex 항목이라 static 이어도 쌓임 순서를 만들어 헤더 메뉴를 가린다) */
+            z-index: auto;
         }
 
         html[data-left="closed"] .app-left {
@@ -696,6 +700,7 @@
             visibility: visible;
             transition: none;
             border-left: 1px solid var(--seed-color-stroke-neutral-subtle);
+            z-index: auto;
         }
 
         html[data-right="closed"] .app-right {
