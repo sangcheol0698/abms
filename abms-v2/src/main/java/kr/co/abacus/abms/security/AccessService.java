@@ -109,7 +109,7 @@ public class AccessService {
 
     public void require(LoginUser user, PermissionCode code) {
         if (!user.has(code)) {
-            throw new AccessDeniedException("권한이 없습니다: " + code.code());
+            throw new AccessDeniedException("'" + code.label() + "' 권한이 없습니다.");
         }
     }
 

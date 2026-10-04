@@ -63,4 +63,10 @@ class AccessServiceTest {
         verify(assignmentRepository, times(2)).findActiveProjectIds(anyLong(), any());
     }
 
+    @Test
+    void 권한이_없으면_권한_코드가_아니라_권한_이름으로_알린다() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> accessService.require(member, PermissionCode.PROJECT_WRITE))
+                .hasMessage("'프로젝트 관리' 권한이 없습니다.");
+    }
+
 }

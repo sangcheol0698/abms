@@ -128,4 +128,22 @@ class WebSecurityTest {
                 .andExpect(redirectedUrl("/me"));
     }
 
+    @Test
+    void 화면_안_이동_boost_으로_권한_없는_화면에_가면_화면은_그대로_두고_필요한_권한을_토스트로_알린다() throws Exception {
+        var plain = Fixtures.user(employee, Fixtures.grants(kr.co.abacus.abms.access.PermissionScope.SELF,
+                kr.co.abacus.abms.access.PermissionCode.EMPLOYEE_READ));
+
+        // 보안 필터(URL)에서 막힌 경우
+        mvc.perform(get("/admin/accounts").with(user(plain)).header("HX-Request", "true").header("HX-Boosted", "true"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().string("HX-Reswap", "none"))
+                .andExpect(header().string("HX-Trigger", containsString("toast")));
+
+        // 컨트롤러에서 막힌 경우
+        mvc.perform(get("/sites/new").with(user(plain)).header("HX-Request", "true").header("HX-Boosted", "true"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().string("HX-Reswap", "none"))
+                .andExpect(header().string("HX-Trigger", containsString("toast")));
+    }
+
 }

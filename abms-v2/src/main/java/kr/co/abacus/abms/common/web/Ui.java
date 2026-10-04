@@ -94,9 +94,10 @@ public final class Ui {
         };
     }
 
-    public static String errorDetail(@Nullable String message) {
-        if (message == null || message.isBlank() || "No message available".equals(message)) {
-            return "잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의하세요.";
+    public static String errorDetail(@Nullable Integer status, @Nullable String message) {
+        if (message == null || message.isBlank() || "No message available".equals(message) || "Forbidden".equals(message)) {
+            return status != null && status == 403 ? "이 화면을 볼 권한이 없습니다."
+                    : "잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의하세요.";
         }
         return message;
     }

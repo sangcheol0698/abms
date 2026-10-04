@@ -20,6 +20,11 @@ public final class Htmx {
         return "true".equals(request.getHeader(HX_REQUEST)) && !"true".equals(request.getHeader(HX_BOOSTED));
     }
 
+    /** boost 이동을 포함한 모든 HTMX 요청 (오류 응답을 토스트로 알릴지 판단할 때 쓴다) */
+    public static boolean isAnyHtmx(HttpServletRequest request) {
+        return "true".equals(request.getHeader(HX_REQUEST));
+    }
+
     public static boolean targets(HttpServletRequest request, String targetId) {
         return isHtmx(request) && targetId.equals(request.getHeader(HX_TARGET));
     }

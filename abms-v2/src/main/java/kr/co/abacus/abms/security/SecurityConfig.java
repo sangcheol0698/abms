@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.common.web.ErrorPageAttributes;
 import kr.co.abacus.abms.common.web.Htmx;
 
 @Configuration
@@ -96,13 +97,27 @@ public class SecurityConfig {
 
     private AccessDeniedHandler htmxAwareAccessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
-            if (Htmx.isHtmx(request)) {
-                Htmx.toast(response, Htmx.ToastType.ERROR, "권한이 없습니다.");
+            String message = deniedMessage(request.getRequestURI());
+            if (Htmx.isAnyHtmx(request)) {
+                Htmx.toast(response, Htmx.ToastType.ERROR, message);
+                response.setHeader("HX-Reswap", "none");
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
+            request.setAttribute(ErrorPageAttributes.MESSAGE, message);
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
         };
+    }
+
+    /** URL 단위로 막힌 화면의 안내 문구: 어떤 권한이 필요한지 알려 준다. */
+    static String deniedMessage(String uri) {
+        PermissionCode required = uri.startsWith("/admin/permission-groups") ? PermissionCode.PERMISSION_GROUP_MANAGE
+                : uri.startsWith("/admin/accounts") ? PermissionCode.ACCOUNT_MANAGE
+                : uri.startsWith("/admin/cost-policies") ? PermissionCode.SUMMARY_MANAGE
+                : uri.startsWith("/reports") ? PermissionCode.REPORT_READ
+                : uri.startsWith("/actuator") ? PermissionCode.PERMISSION_GROUP_MANAGE
+                : null;
+        return required == null ? "이 화면을 볼 권한이 없습니다." : "'" + required.label() + "' 권한이 있어야 볼 수 있는 화면입니다.";
     }
 
 }
