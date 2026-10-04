@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.party;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
@@ -11,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.domain.Location;
 
 /**
  * 협력사(고객사/파트너).
@@ -35,7 +37,9 @@ public class Party extends BaseEntity {
 
     private @Nullable String phone;
 
-    private @Nullable String address;
+    /** 소재지 (선택) */
+    @Embedded
+    private @Nullable Location location;
 
     private @Nullable String website;
 
@@ -77,7 +81,7 @@ public class Party extends BaseEntity {
         this.businessNumber = normalizeBusinessNumber(info.businessNumber());
         this.industry = blankToNull(info.industry());
         this.phone = blankToNull(info.phone());
-        this.address = blankToNull(info.address());
+        this.location = info.location() == null || info.location().isEmpty() ? null : info.location();
         this.website = normalizeWebsite(info.website());
         this.memo = blankToNull(info.memo());
     }
@@ -142,8 +146,9 @@ public class Party extends BaseEntity {
         return phone;
     }
 
-    public @Nullable String getAddress() {
-        return address;
+    /** 소재지. 주소가 없으면 빈 위치를 돌려준다. */
+    public Location getLocation() {
+        return location == null ? Location.EMPTY : location;
     }
 
     public @Nullable String getWebsite() {
@@ -164,10 +169,15 @@ public class Party extends BaseEntity {
             @Nullable String businessNumber,
             @Nullable String industry,
             @Nullable String phone,
-            @Nullable String address,
+            @Nullable Location location,
             @Nullable String website,
             @Nullable String memo
     ) {
+
+        public PartyInfo withLocation(Location location) {
+            return new PartyInfo(name, ceoName, salesRepName, salesRepPhone, salesRepEmail, partyType, businessNumber, industry, phone,
+                    location, website, memo);
+        }
 
         /** 이름·대표자·영업 담당자만으로 만드는 정보 (구분은 고객사) */
         public PartyInfo(String name, @Nullable String ceoName, @Nullable String salesRepName,

@@ -36,6 +36,9 @@ public class Department extends BaseEntity {
 
     private @Nullable Long leaderEmployeeId;
 
+    /** 근무 사업장 (선택) */
+    private @Nullable Long siteId;
+
     /** 부서 소개 (역할·담당 업무) */
     @Column(length = 500)
     private @Nullable String description;
@@ -71,6 +74,10 @@ public class Department extends BaseEntity {
         this.description = trimmed;
     }
 
+    public void relocate(@Nullable Long siteId) {
+        this.siteId = siteId;
+    }
+
     public void assignLeader(@Nullable Long leaderEmployeeId) {
         this.leaderEmployeeId = leaderEmployeeId;
     }
@@ -100,6 +107,10 @@ public class Department extends BaseEntity {
 
     public @Nullable String getDescription() {
         return description;
+    }
+
+    public @Nullable Long getSiteId() {
+        return siteId;
     }
 
     public @Nullable Long getLeaderEmployeeId() {

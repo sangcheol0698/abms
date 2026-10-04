@@ -10,4 +10,8 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     boolean existsByCode(String code);
 
+    List<Department> findAllBySiteId(Long siteId);
+
+    boolean existsBySiteId(Long siteId);
+
 }
