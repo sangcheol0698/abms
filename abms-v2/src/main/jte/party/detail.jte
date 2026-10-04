@@ -13,7 +13,29 @@
 @param List<Project> projects
 @param long projectCount
 @param DepartmentTree tree
-@template.layout.app(ctx = ctx, title = party.getName(), content = @`
+!{Money totalContract = projects.stream().map(Project::getContractAmount).reduce(Money.ZERO, Money::plus);}
+@template.layout.app(ctx = ctx, aside = @`
+            <dl class="property-list">
+                <dt>대표자</dt>
+                <dd>${party.getCeoName() == null ? "-" : party.getCeoName()}</dd>
+                <dt>영업 담당자</dt>
+                <dd>${party.getSalesRepName() == null ? "-" : party.getSalesRepName()}</dd>
+                <dt>연락처</dt>
+                <dd class="tabular-nums">${party.getSalesRepPhone() == null ? "-" : party.getSalesRepPhone()}</dd>
+                <dt>이메일</dt>
+                <dd>
+                    @if(party.getSalesRepEmail() != null)
+                        <a class="link" href="mailto:${party.getSalesRepEmail()}" title="${party.getSalesRepEmail()}">${party.getSalesRepEmail()}</a>
+                    @else
+                        -
+                    @endif
+                </dd>
+                <dt>프로젝트</dt>
+                <dd class="tabular-nums">${projectCount}건</dd>
+                <dt>누적 계약금액</dt>
+                <dd class="t4-bold tabular-nums">${Ui.won(totalContract)}원</dd>
+            </dl>
+`, title = party.getName(), content = @`
     @template.components.pageHeader(title = party.getName(), breadcrumb = @`
         <a href="/parties" class="hover:text-fg-neutral-muted">협력사</a>${Icons.of("chevron-right", "size-3")}<span>${party.getName()}</span>
     `, actions = @`
@@ -26,8 +48,6 @@
             @endif
         @endif
     `)
-    !{Money totalContract = projects.stream().map(Project::getContractAmount).reduce(Money.ZERO, Money::plus);}
-    <div class="grid gap-x6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <section class="min-w-0">
             <h2 class="section-title">프로젝트 <span class="section-count">${projects.size()}</span></h2>
             <div class="list-box">
@@ -41,31 +61,4 @@
             </div>
         </section>
 
-        <%-- 속성 패널 --%>
-        <aside class="order-first lg:order-none">
-            <div class="lg:sticky lg:top-6">
-                <h2 class="mb-x3 t3-medium text-fg-neutral-subtle">속성</h2>
-                <dl class="property-list">
-                    <dt>대표자</dt>
-                    <dd>${party.getCeoName() == null ? "-" : party.getCeoName()}</dd>
-                    <dt>영업 담당자</dt>
-                    <dd>${party.getSalesRepName() == null ? "-" : party.getSalesRepName()}</dd>
-                    <dt>연락처</dt>
-                    <dd class="tabular-nums">${party.getSalesRepPhone() == null ? "-" : party.getSalesRepPhone()}</dd>
-                    <dt>이메일</dt>
-                    <dd>
-                        @if(party.getSalesRepEmail() != null)
-                            <a class="link" href="mailto:${party.getSalesRepEmail()}" title="${party.getSalesRepEmail()}">${party.getSalesRepEmail()}</a>
-                        @else
-                            -
-                        @endif
-                    </dd>
-                    <dt>프로젝트</dt>
-                    <dd class="tabular-nums">${projectCount}건</dd>
-                    <dt>누적 계약금액</dt>
-                    <dd class="t4-bold tabular-nums">${Ui.won(totalContract)}원</dd>
-                </dl>
-            </div>
-        </aside>
-    </div>
 `)

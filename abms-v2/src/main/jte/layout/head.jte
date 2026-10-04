@@ -8,6 +8,8 @@
         try {
             var root = document.documentElement;
             var mode = localStorage.getItem('abms-theme') || 'system';
+            root.dataset.left = localStorage.getItem('abms-left') || 'open';
+            root.dataset.right = localStorage.getItem('abms-right') || (window.innerWidth >= 1440 ? 'open' : 'closed');
             root.dataset.seedColorMode = mode === 'light' ? 'light-only' : mode === 'dark' ? 'dark-only' : 'system';
             var query = window.matchMedia('(prefers-color-scheme: dark)');
             var apply = function () { root.dataset.seedUserColorScheme = query.matches ? 'dark' : 'light'; };

@@ -121,6 +121,8 @@ public class CommandPaletteController {
         commands.add(Command.action("라이트 테마로 전환", "theme:light", "sun", "theme light 밝게"));
         commands.add(Command.action("다크 테마로 전환", "theme:dark", "moon", "theme dark 어둡게"));
         commands.add(Command.action("시스템 테마 따르기", "theme:system", "monitor", "theme system 자동"));
+        commands.add(Command.action("왼쪽 사이드바 열기/닫기", "layout:left", "sidebar-left", "sidebar menu 메뉴 사이드바 layout"));
+        commands.add(Command.action("오른쪽 사이드바 열기/닫기", "layout:right", "sidebar-right", "sidebar panel 속성 알림 패널 layout"));
         commands.add(Command.action("단축키 보기", "shortcuts", "command", "shortcut keyboard 키보드 help 도움말"));
         return commands;
     }

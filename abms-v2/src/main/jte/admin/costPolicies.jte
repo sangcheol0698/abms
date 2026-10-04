@@ -10,7 +10,7 @@
 @template.layout.app(ctx = ctx, title = "원가 정책", content = @`
     @template.components.pageHeader(title = "원가 정책", subtitle = "직원 월 원가 = 월 기본급(연봉 ÷ 12) × (1 + 제경비율 + 판관비율). 해당 연도 정책이 없으면 가장 최근 연도 정책을 적용합니다.")
     !{List<Integer> years = policies.stream().map(EmployeeCostPolicy::getApplyYear).distinct().toList();}
-    <div class="grid gap-x6 xl:grid-cols-[minmax(0,1fr)_300px]">
+    <div class="grid gap-x6 @5xl:grid-cols-[minmax(0,1fr)_300px]">
         <section class="min-w-0">
             <h2 class="section-title">정책 목록 <span class="section-count">${policies.size()}</span></h2>
             <div class="list-box overflow-x-auto">
@@ -47,7 +47,7 @@
 
         <%-- 정책 추가 패널 --%>
         <aside>
-            <div class="xl:sticky xl:top-6">
+            <div class="@5xl:sticky @5xl:top-[calc(var(--sticky-top)+16px)]">
                 <h2 class="section-title">정책 추가</h2>
                 <form method="post" action="/admin/cost-policies" class="list-box grid grid-cols-2 gap-x3 p-x4">
                     <div>

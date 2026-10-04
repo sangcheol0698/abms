@@ -26,7 +26,7 @@
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">코드는 등록 후 바꿀 수 없습니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @if(editing)
                     <div>
                         <label class="label" for="code">프로젝트 코드</label>
@@ -36,14 +36,14 @@
                     @template.components.input(name = "code", label = "프로젝트 코드", value = Ui.value(form.code()), errors = errors, required = true, help = "자동 제안된 코드를 그대로 써도 됩니다.")
                 @endif
                 @template.components.select(name = "status", label = "상태", options = Ui.options(ProjectStatus.values()), value = Ui.value(form.status()), errors = errors, required = true)
-                <div class="sm:col-span-2">
+                <div class="@xl:col-span-2">
                     @template.components.input(name = "name", label = "프로젝트명", value = Ui.value(form.name()), errors = errors, required = true)
                 </div>
             </div>
         </section>
         <section class="form-section">
             <div><h2 class="form-section-title">계약</h2><p class="form-section-desc">손익은 투입 직원의 소속 부서가 아니라 <b>주관 부서</b>에 귀속됩니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @template.components.select(name = "partyId", label = "협력사", options = partyOptions, value = Ui.value(form.partyId()), errors = errors, required = true, emptyLabel = "협력사 선택")
                 @template.components.select(name = "leadDepartmentId", label = "주관 부서", options = departmentOptions, value = Ui.value(form.leadDepartmentId()), errors = errors, required = true, emptyLabel = "주관 부서 선택")
                 @template.components.input(name = "contractAmount", label = "계약금액 (원)", value = Ui.value(form.contractAmount()), errors = errors, type = "number", required = true)
@@ -51,7 +51,7 @@
         </section>
         <section class="form-section">
             <div><h2 class="form-section-title">기간</h2><p class="form-section-desc">투입 인력의 투입 기간은 이 기간 안에 있어야 합니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @template.components.input(name = "startDate", label = "시작일", value = Ui.value(form.startDate()), errors = errors, type = "date", required = true)
                 <div>
                     @template.components.input(name = "endDate", label = "종료일", value = Ui.value(form.endDate()), errors = errors, type = "date", required = true)

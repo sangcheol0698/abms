@@ -6,7 +6,23 @@
 @param ViewContext ctx
 @param WeeklyReport report
 @param String author
-@template.layout.app(ctx = ctx, title = report.getTitle(), content = @`
+@template.layout.app(ctx = ctx, aside = @`
+            <dl class="property-list">
+                <dt>시작일</dt><dd class="tabular-nums">${Ui.date(report.getWeekStart())}</dd>
+                <dt>종료일</dt><dd class="tabular-nums">${Ui.date(report.getWeekEnd())}</dd>
+                <dt>작성자</dt><dd>${author}</dd>
+                <dt>생성 방식</dt>
+                <dd>
+                    @if(report.getGenerator() == WeeklyReport.Generator.AI)
+                        <span class="${Seed.badge("neutral")} bg-bg-magic-weak">${Icons.of("sparkles", "size-3 text-fg-brand")} AI</span>
+                    @else
+                        <span class="${Seed.badge("neutral")}">템플릿</span>
+                    @endif
+                </dd>
+                <dt>편집</dt><dd>${report.isEdited() ? "편집됨" : "원본"}</dd>
+                <dt>생성</dt><dd class="tabular-nums">${Ui.dateTime(report.getCreatedAt())}</dd>
+            </dl>
+`, title = report.getTitle(), content = @`
     @template.components.pageHeader(title = report.getTitle(), subtitle = Ui.date(report.getWeekStart()) + " ~ " + Ui.date(report.getWeekEnd()) + " · 작성 " + author, breadcrumb = @`
         <a href="/reports" class="hover:text-fg-neutral-muted">주간 보고서</a>${Icons.of("chevron-right", "size-3")}<span>보고서</span>
     `, actions = @`
@@ -17,7 +33,6 @@
             <button class="${Seed.iconButton("neutralOutline", "small")} text-fg-critical" aria-label="보고서 삭제" title="삭제">${Icons.of("trash", "size-4")}</button>
         </form>
     `)
-    <div class="grid gap-x8 lg:grid-cols-[minmax(0,1fr)_240px]">
         <article class="min-w-0">
             @if(report.getGenerator() == WeeklyReport.Generator.AI)
                 <div class="mb-x5 flex items-center gap-x2 rounded-r2 bg-bg-magic-weak px-x3 py-x2 t3-regular text-fg-neutral-muted">
@@ -28,26 +43,4 @@
             <template id="report-source">${report.getContent()}</template>
         </article>
 
-        <%-- 속성 패널 --%>
-        <aside class="order-first lg:order-none">
-            <div class="lg:sticky lg:top-6">
-                <h2 class="mb-x3 t3-medium text-fg-neutral-subtle">속성</h2>
-                <dl class="property-list">
-                    <dt>시작일</dt><dd class="tabular-nums">${Ui.date(report.getWeekStart())}</dd>
-                    <dt>종료일</dt><dd class="tabular-nums">${Ui.date(report.getWeekEnd())}</dd>
-                    <dt>작성자</dt><dd>${author}</dd>
-                    <dt>생성 방식</dt>
-                    <dd>
-                        @if(report.getGenerator() == WeeklyReport.Generator.AI)
-                            <span class="${Seed.badge("neutral")} bg-bg-magic-weak">${Icons.of("sparkles", "size-3 text-fg-brand")} AI</span>
-                        @else
-                            <span class="${Seed.badge("neutral")}">템플릿</span>
-                        @endif
-                    </dd>
-                    <dt>편집</dt><dd>${report.isEdited() ? "편집됨" : "원본"}</dd>
-                    <dt>생성</dt><dd class="tabular-nums">${Ui.dateTime(report.getCreatedAt())}</dd>
-                </dl>
-            </div>
-        </aside>
-    </div>
 `)

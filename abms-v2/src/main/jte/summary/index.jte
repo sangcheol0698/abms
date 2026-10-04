@@ -74,7 +74,7 @@
     @else
         <div class="space-y-6">
             <%-- 지표 줄 --%>
-            <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle lg:grid-cols-4 [&>div]:bg-bg-layer-default">
+            <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle @3xl:grid-cols-4 [&>div]:bg-bg-layer-default">
                 <div class="px-x4 py-x3"><p class="stat-label">매출</p><p class="stat-value">${Ui.won(report.revenue())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
                 <div class="px-x4 py-x3"><p class="stat-label">비용</p><p class="stat-value">${Ui.won(report.cost())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
                 <div class="px-x4 py-x3"><p class="stat-label">이익</p><p class="stat-value ${Ui.signClass(report.profit())}">${Ui.won(report.profit())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
@@ -90,7 +90,7 @@
                         <div class="meter" role="img" aria-label="프로젝트 배분 ${allocatedPct}%">
                             <span class="h-full bg-bg-brand-solid" style="width: ${allocatedPct}%"></span>
                         </div>
-                        <dl class="mt-x3 grid grid-cols-1 gap-x3 sm:grid-cols-3">
+                        <dl class="mt-x3 grid grid-cols-1 gap-x3 @xl:grid-cols-3">
                             <div><dt class="stat-label">정직원 총 원가</dt><dd class="mt-x0_5 t5-bold tabular-nums">${Ui.won(company.getTotalFullTimeCost())}원</dd></div>
                             <div><dt class="stat-label flex items-center gap-x1_5"><span class="size-2 rounded-full bg-bg-brand-solid"></span>프로젝트 배분</dt><dd class="mt-x0_5 t5-bold tabular-nums">${Ui.won(company.getAllocatedFullTimeCost())}원</dd></div>
                             <div><dt class="stat-label flex items-center gap-x1_5"><span class="size-2 rounded-full bg-bg-neutral-weak ring-1 ring-stroke-neutral-weak"></span>미배분 (유휴)</dt><dd class="mt-x0_5 t5-bold tabular-nums text-fg-warning">${Ui.won(company.getUnallocatedFullTimeCost())}원</dd></div>
@@ -99,15 +99,15 @@
                 </section>
             @endif
 
-            <div class="grid grid-cols-1 gap-6 2xl:grid-cols-5">
-                <section class="min-w-0 2xl:col-span-3">
+            <div class="grid grid-cols-1 gap-6 @6xl:grid-cols-5">
+                <section class="min-w-0 @6xl:col-span-3">
                     <h2 class="section-title">프로젝트별 손익 <span class="section-count">${report.projects().size()}</span></h2>
                     <div class="list-box overflow-x-auto">
                         <div class="min-w-[560px]">
                             <div class="list-head"><span class="flex-1">프로젝트</span><span class="col-num">매출</span><span class="col-num">비용</span><span class="col-num">이익</span><span class="w-16 shrink-0 text-right">이익률</span></div>
                             @for(ProfitRow row : report.projects())
                                 <a href="/projects/${row.id()}" class="list-row">
-                                    <span class="flex min-w-0 flex-1 items-baseline gap-x2"><span class="truncate t4-medium">${row.name()}</span><span class="hidden t3-regular whitespace-nowrap text-fg-neutral-subtle sm:inline">${row.code()}</span></span>
+                                    <span class="flex min-w-0 flex-1 items-baseline gap-x2"><span class="truncate t4-medium">${row.name()}</span><span class="hidden t3-regular whitespace-nowrap text-fg-neutral-subtle @xl:inline">${row.code()}</span></span>
                                     <span class="col-num">${Ui.won(row.revenue())}</span>
                                     <span class="col-num text-fg-neutral-muted">${Ui.won(row.cost())}</span>
                                     <span class="col-num t4-bold ${Ui.signClass(row.profit())}">${Ui.won(row.profit())}</span>
@@ -117,7 +117,7 @@
                         </div>
                     </div>
                 </section>
-                <section class="min-w-0 2xl:col-span-2">
+                <section class="min-w-0 @6xl:col-span-2">
                     <h2 class="section-title">부서별 손익 <span class="section-count">주관 부서</span></h2>
                     <div class="list-box overflow-x-auto">
                         <div class="min-w-[440px]">

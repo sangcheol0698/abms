@@ -21,7 +21,36 @@
 @param StaffingSection staffing
 @param List<MonthlyRevenueSummary> history
 @param boolean showHistory
-@template.layout.app(ctx = ctx, title = project.getName(), content = @`
+@template.layout.app(ctx = ctx, aside = @`
+            <dl class="property-list">
+            <dt>상태</dt>
+            <dd class="flex items-center gap-x2">@template.components.statusIcon(status = project.getStatus())${project.getStatus().label()}</dd>
+            <dt>코드</dt>
+            <dd class="tabular-nums">${project.getCode()}</dd>
+            <dt>협력사</dt>
+            <dd>@if(ctx.can(PermissionCode.PARTY_READ))<a class="link" href="/parties/${party.id()}">${party.getName()}</a>@else${party.getName()}@endif</dd>
+            <dt>주관 부서</dt>
+            <dd><a class="link" href="/departments?selected=${project.getLeadDepartmentId()}">${tree.nameOf(project.getLeadDepartmentId())}</a></dd>
+            <dt>시작일</dt>
+            <dd class="tabular-nums">${Ui.date(project.getPeriod().startDate())}</dd>
+            <dt>종료일</dt>
+            <dd class="tabular-nums">${Ui.date(project.getPeriod().endDate())}</dd>
+            <dt>계약금액</dt>
+            <dd class="t4-bold tabular-nums">${Ui.won(project.getContractAmount())}원</dd>
+            </dl>
+            @if(showHistory && !history.isEmpty())
+            !{Money sumRevenue = history.stream().map(MonthlyRevenueSummary::getRevenueAmount).reduce(Money.ZERO, Money::plus);}
+            !{Money sumCost = history.stream().map(MonthlyRevenueSummary::getCostAmount).reduce(Money.ZERO, Money::plus);}
+            <div class="mt-x5 border-t border-stroke-neutral-subtle pt-x4">
+                <h2 class="mb-x3 t3-medium text-fg-neutral-subtle">누적 손익</h2>
+                <dl class="property-list">
+                    <dt>매출</dt><dd class="tabular-nums">${Ui.won(sumRevenue)}</dd>
+                    <dt>비용</dt><dd class="tabular-nums">${Ui.won(sumCost)}</dd>
+                    <dt>이익</dt><dd class="t4-bold tabular-nums ${Ui.signClass(sumRevenue.minus(sumCost))}">${Ui.won(sumRevenue.minus(sumCost))}</dd>
+                </dl>
+            </div>
+            @endif
+`, title = project.getName(), content = @`
     @template.components.pageHeader(title = project.getName(), subtitle = project.getCode(), breadcrumb = @`
         <a href="/projects" class="hover:text-fg-neutral-muted">프로젝트</a>${Icons.of("chevron-right", "size-3")}<span>${project.getName()}</span>
     `, actions = @`
@@ -46,7 +75,6 @@
         @endif
     `)
 
-    <div class="grid gap-x6 lg:grid-cols-[minmax(0,1fr)_280px]">
     <div class="min-w-0 space-y-4">
     @if(project.getDescription() != null)
         <p class="t5-regular text-fg-neutral-muted">${project.getDescription()}</p>
@@ -101,39 +129,4 @@
     @endif
     </div>
 
-    <%-- 속성 패널 --%>
-    <aside class="order-first lg:order-none">
-        <div class="lg:sticky lg:top-6">
-            <h2 class="mb-x3 t3-medium text-fg-neutral-subtle">속성</h2>
-            <dl class="property-list">
-                <dt>상태</dt>
-                <dd class="flex items-center gap-x2">@template.components.statusIcon(status = project.getStatus())${project.getStatus().label()}</dd>
-                <dt>코드</dt>
-                <dd class="tabular-nums">${project.getCode()}</dd>
-                <dt>협력사</dt>
-                <dd>@if(ctx.can(PermissionCode.PARTY_READ))<a class="link" href="/parties/${party.id()}">${party.getName()}</a>@else${party.getName()}@endif</dd>
-                <dt>주관 부서</dt>
-                <dd><a class="link" href="/departments?selected=${project.getLeadDepartmentId()}">${tree.nameOf(project.getLeadDepartmentId())}</a></dd>
-                <dt>시작일</dt>
-                <dd class="tabular-nums">${Ui.date(project.getPeriod().startDate())}</dd>
-                <dt>종료일</dt>
-                <dd class="tabular-nums">${Ui.date(project.getPeriod().endDate())}</dd>
-                <dt>계약금액</dt>
-                <dd class="t4-bold tabular-nums">${Ui.won(project.getContractAmount())}원</dd>
-            </dl>
-            @if(showHistory && !history.isEmpty())
-                !{Money sumRevenue = history.stream().map(MonthlyRevenueSummary::getRevenueAmount).reduce(Money.ZERO, Money::plus);}
-                !{Money sumCost = history.stream().map(MonthlyRevenueSummary::getCostAmount).reduce(Money.ZERO, Money::plus);}
-                <div class="mt-x5 border-t border-stroke-neutral-subtle pt-x4">
-                    <h2 class="mb-x3 t3-medium text-fg-neutral-subtle">누적 손익</h2>
-                    <dl class="property-list">
-                        <dt>매출</dt><dd class="tabular-nums">${Ui.won(sumRevenue)}</dd>
-                        <dt>비용</dt><dd class="tabular-nums">${Ui.won(sumCost)}</dd>
-                        <dt>이익</dt><dd class="t4-bold tabular-nums ${Ui.signClass(sumRevenue.minus(sumCost))}">${Ui.won(sumRevenue.minus(sumCost))}</dd>
-                    </dl>
-                </div>
-            @endif
-        </div>
-    </aside>
-    </div>
 `)

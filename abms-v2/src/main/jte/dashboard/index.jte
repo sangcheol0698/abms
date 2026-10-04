@@ -29,14 +29,14 @@
 
     <div class="space-y-6">
         <%-- 지표 줄 --%>
-        <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle lg:grid-cols-4 [&>div]:bg-bg-layer-default">
+        <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle @3xl:grid-cols-4 [&>div]:bg-bg-layer-default">
             <div class="px-x4 py-x3"><p class="stat-label">누적 매출</p><p class="stat-value">${dashboard.revenue().compact()}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p><p class="mt-x0_5 t3-regular text-fg-neutral-subtle tabular-nums">${Ui.won(dashboard.revenue())}원</p></div>
             <div class="px-x4 py-x3"><p class="stat-label">누적 비용</p><p class="stat-value">${dashboard.cost().compact()}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p><p class="mt-x0_5 t3-regular text-fg-neutral-subtle tabular-nums">${Ui.won(dashboard.cost())}원</p></div>
             <div class="px-x4 py-x3"><p class="stat-label">누적 이익</p><p class="stat-value ${Ui.signClass(dashboard.profit())}">${dashboard.profit().compact()}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p><p class="mt-x0_5 t3-regular text-fg-neutral-subtle">이익률 ${Ui.percent(dashboard.margin())}</p></div>
             <div class="px-x4 py-x3"><p class="stat-label">진행 중 프로젝트</p><p class="stat-value">${dashboard.inProgressCount()}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">건</span></p><p class="mt-x0_5 truncate t3-regular text-fg-neutral-subtle">계약 ${dashboard.inProgressContractAmount().compact()}원 · 재직 ${dashboard.activeEmployees()}명</p></div>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div class="grid grid-cols-1 gap-6 @5xl:grid-cols-[minmax(0,1fr)_320px]">
             <section class="min-w-0">
                 <h2 class="section-title">월별 매출 · 비용 · 이익 <span class="section-count">${dashboard.year()}년</span></h2>
                 <div class="list-box p-x4">
@@ -66,7 +66,7 @@
             </section>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 @4xl:grid-cols-2">
             <section class="min-w-0">
                 <h2 class="section-title">이익 상위 프로젝트</h2>
                 <div class="list-box">
@@ -76,7 +76,7 @@
                         <div class="list-head"><span class="flex-1">프로젝트</span><span class="w-20 shrink-0 text-right">매출</span><span class="w-20 shrink-0 text-right">비용</span><span class="w-20 shrink-0 text-right">이익</span></div>
                         @for(ProfitRow row : dashboard.topProjects())
                             <a href="/projects/${row.id()}" class="list-row">
-                                <span class="flex min-w-0 flex-1 items-baseline gap-x2"><span class="truncate t4-medium">${row.name()}</span><span class="hidden t3-regular whitespace-nowrap text-fg-neutral-subtle sm:inline">${row.code()}</span></span>
+                                <span class="flex min-w-0 flex-1 items-baseline gap-x2"><span class="truncate t4-medium">${row.name()}</span><span class="hidden t3-regular whitespace-nowrap text-fg-neutral-subtle @xl:inline">${row.code()}</span></span>
                                 <span class="w-20 shrink-0 text-right tabular-nums">${row.revenue().compact()}</span>
                                 <span class="w-20 shrink-0 text-right tabular-nums text-fg-neutral-muted">${row.cost().compact()}</span>
                                 <span class="w-20 shrink-0 text-right t4-bold tabular-nums ${Ui.signClass(row.profit())}">${row.profit().compact()}</span>
@@ -115,7 +115,7 @@
                         <a href="/projects/${item.project().id()}" class="list-row">
                             <span class="w-24 shrink-0 t3-regular tabular-nums ${item.overdue() ? "text-fg-critical" : "text-fg-neutral-subtle"}">${Ui.date(item.plan().getRevenueDate())}</span>
                             <span class="min-w-0 flex-1 truncate t4-medium">${item.project().getName()}</span>
-                            <span class="list-cell-muted hidden w-28 sm:block">${item.plan().getSequence()}차 ${item.plan().getType().label()}</span>
+                            <span class="list-cell-muted hidden w-28 @xl:block">${item.plan().getSequence()}차 ${item.plan().getType().label()}</span>
                             <span class="w-20 shrink-0">
                                 @if(item.overdue())
                                     <span class="${Seed.badge("critical")}">기한 경과</span>

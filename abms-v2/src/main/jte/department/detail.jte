@@ -18,8 +18,7 @@
 @param List<Project> projects
 @param List<MonthPoint> trend = null
 @param boolean canWrite
-!{Department parent = department.getParentId() == null ? null : tree.get(department.getParentId());}
-<div class="grid gap-x6 xl:grid-cols-[minmax(0,1fr)_240px]">
+<div>
     <div class="min-w-0 space-y-6">
         <div class="flex flex-wrap items-start justify-between gap-x3">
             <div class="min-w-0">
@@ -67,7 +66,7 @@
                         <a href="/employees/${e.id()}" class="list-row">
                             @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-6 text-[11px]")
                             <span class="min-w-0 flex-1 truncate t4-medium">${e.getName()}</span>
-                            <span class="list-cell-muted hidden w-28 sm:block">${e.getPosition().label()} · ${e.getGrade().label()}</span>
+                            <span class="list-cell-muted hidden w-28 @xl:block">${e.getPosition().label()} · ${e.getGrade().label()}</span>
                             <span class="w-14 shrink-0"><span class="${Ui.badge(e.getStatus())}">${e.getStatus().label()}</span></span>
                         </a>
                     @endfor
@@ -87,34 +86,4 @@
         @endif
     </div>
 
-    <%-- 속성 패널 --%>
-    <aside>
-        <h3 class="mb-x3 t3-medium text-fg-neutral-subtle">속성</h3>
-        <dl class="property-list">
-            <dt>코드</dt>
-            <dd class="tabular-nums">${department.getCode()}</dd>
-            <dt>유형</dt>
-            <dd>${department.getType().label()}</dd>
-            <dt>부서장</dt>
-            <dd>
-                @if(leader != null)
-                    <a href="/employees/${leader.id()}" class="link inline-flex items-center gap-x1_5">@template.components.avatar(avatar = leader.getAvatar(), initial = leader.initial(), size = "size-5 text-[10px]")${leader.getName()}</a>
-                @else
-                    <span class="text-fg-neutral-subtle">미지정</span>
-                @endif
-            </dd>
-            <dt>상위 부서</dt>
-            <dd>
-                @if(parent != null)
-                    <a class="link" href="/departments?selected=${parent.id()}">${parent.getName()}</a>
-                @else
-                    <span class="text-fg-neutral-subtle">없음</span>
-                @endif
-            </dd>
-            <dt>소속 인원</dt>
-            <dd class="tabular-nums">${members.size()}명</dd>
-            <dt>하위 포함</dt>
-            <dd class="tabular-nums">${subtreeMemberCount}명</dd>
-        </dl>
-    </aside>
 </div>

@@ -19,17 +19,17 @@
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">협력사명은 중복될 수 없습니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
-                <div class="sm:col-span-2">@template.components.input(name = "name", label = "협력사명", value = Ui.value(form.name()), errors = errors, required = true)</div>
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
+                <div class="@xl:col-span-2">@template.components.input(name = "name", label = "협력사명", value = Ui.value(form.name()), errors = errors, required = true)</div>
                 @template.components.input(name = "ceoName", label = "대표자", value = Ui.value(form.ceoName()), errors = errors)
             </div>
         </section>
         <section class="form-section">
             <div><h2 class="form-section-title">영업 담당자</h2><p class="form-section-desc">청구·계약 연락 창구입니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @template.components.input(name = "salesRepName", label = "이름", value = Ui.value(form.salesRepName()), errors = errors)
                 @template.components.input(name = "salesRepPhone", label = "연락처", value = Ui.value(form.salesRepPhone()), errors = errors, type = "tel", placeholder = "010-0000-0000")
-                <div class="sm:col-span-2">@template.components.input(name = "salesRepEmail", label = "이메일", value = Ui.value(form.salesRepEmail()), errors = errors, type = "email")</div>
+                <div class="@xl:col-span-2">@template.components.input(name = "salesRepEmail", label = "이메일", value = Ui.value(form.salesRepEmail()), errors = errors, type = "email")</div>
             </div>
         </section>
         <div class="form-actions">

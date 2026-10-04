@@ -18,21 +18,24 @@
 @param List<Project> projects = null
 @param List<MonthPoint> trend = null
 @param boolean canWrite = false
-@template.layout.app(ctx = ctx, title = "부서", content = @`
+@template.layout.app(ctx = ctx, title = "부서", fill = true, aside = department == null ? null : @`
+    @template.department.properties(department = department, tree = tree, members = members, subtreeMemberCount = subtreeMemberCount, leader = leader)
+`, content = @`
+<div class="flex flex-col lg:h-full">
+    <div class="px-x4 pt-x5 sm:px-x6 lg:px-x8 lg:pt-x6">
     @template.components.pageHeader(title = "부서", subtitle = "조직도와 부서별 구성원·주관 프로젝트를 확인합니다.", actions = @`
         @if(ctx.can(PermissionCode.DEPARTMENT_WRITE))
             <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/departments/new${selectedId == null ? "" : "?parentId=" + selectedId}" hx-target="#modal-body">${Icons.of("plus", "size-4")} 부서 추가</button>
         @endif
     `)
-    <div class="-mx-4 grid border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <nav class="border-b border-stroke-neutral-subtle p-x2 lg:border-r lg:border-b-0" aria-label="조직도">
-            <div class="max-h-64 overflow-y-auto lg:sticky lg:top-2 lg:max-h-[calc(100vh-120px)]">
+    </div>
+    <div class="grid min-h-0 flex-1 border-t border-stroke-neutral-subtle @3xl:grid-cols-[260px_minmax(0,1fr)]">
+        <nav class="scroll-pane max-h-64 border-b border-stroke-neutral-subtle p-x2 @3xl:max-h-none @3xl:border-r @3xl:border-b-0" aria-label="조직도">
+            <div>
                 <ul class="space-y-px">
                     @for(DepartmentTree.Node node : tree.flatten())
                         <li>
                             <a href="/departments?selected=${node.department().id()}"
-                               hx-get="/departments/${node.department().id()}" hx-target="#department-detail" hx-push-url="/departments?selected=${node.department().id()}"
-                               onclick="document.querySelectorAll('[data-dept-link]').forEach(e => e.removeAttribute('aria-current')); this.setAttribute('aria-current', 'page')"
                                data-dept-link class="tree-item" aria-current="${node.department().id().equals(selectedId) ? "page" : null}"
                                style="padding-left: ${8 + node.depth() * 14}px">
                                 @if(tree.children(node.department().id()).isEmpty())
@@ -47,7 +50,7 @@
                 </ul>
             </div>
         </nav>
-        <div id="department-detail" class="min-w-0 px-x4 py-x5 sm:px-x6 lg:px-x8">
+        <div id="department-detail" class="scroll-pane min-w-0 px-x4 py-x5 sm:px-x6 lg:px-x8">
             @if(department != null)
                 @template.department.detail(ctx = ctx, department = department, tree = tree, members = members,
                     subtreeMemberCount = subtreeMemberCount, leader = leader, projects = projects, trend = trend, canWrite = canWrite)
@@ -56,4 +59,5 @@
             @endif
         </div>
     </div>
+</div>
 `)

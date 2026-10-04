@@ -220,7 +220,7 @@
     }
 
     .list-group-header {
-        @apply sticky top-0 z-[1] flex items-center gap-x2 border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x1_5 t3-medium text-fg-neutral-muted;
+        @apply sticky top-(--sticky-top) z-[1] flex items-center gap-x2 border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x1_5 t3-medium text-fg-neutral-muted;
     }
 
     .list-row {
@@ -241,8 +241,9 @@
         @apply t4-regular text-fg-neutral-subtle tabular-nums;
     }
 
+    /* 리스트 상자는 컨테이너: 안쪽 행의 열 숨김을 상자 폭 기준으로 판단한다 */
     .list-box {
-        @apply overflow-hidden rounded-r3 border border-stroke-neutral-subtle;
+        @apply @container overflow-hidden rounded-r3 border border-stroke-neutral-subtle;
     }
 
     /* 열 머리가 있는 리스트 (숫자 비교가 필요한 목록) */
@@ -261,7 +262,7 @@
 
     /* 설정형 폼: 왼쪽 섹션 설명 + 오른쪽 입력, 하단 고정 저장 바 */
     .form-section {
-        @apply grid gap-x4 border-t border-stroke-neutral-subtle py-x6 first:border-t-0 first:pt-x2 md:grid-cols-[200px_minmax(0,1fr)] md:gap-x8;
+        @apply grid gap-x4 border-t border-stroke-neutral-subtle py-x6 first:border-t-0 first:pt-x2 @2xl:grid-cols-[200px_minmax(0,1fr)] @2xl:gap-x8;
     }
 
     .form-section-title {
@@ -415,11 +416,6 @@
         box-shadow: none;
     }
 
-    .seed-side-navigation__header {
-        min-height: 52px;
-        padding: 8px 12px;
-    }
-
     .seed-side-navigation__content {
         padding: 4px 12px 16px;
         gap: 14px;
@@ -466,5 +462,239 @@
         border-radius: var(--seed-radius-r1);
         font-size: var(--seed-font-size-t3);
         line-height: var(--seed-line-height-t3);
+    }
+}
+
+/*
+ * 앱 셸 레이아웃 — 상단 헤더 / 왼쪽 사이드바 / 본문 패널 / 오른쪽 사이드바
+ * 데스크톱(lg+): 문서는 고정, #app-scroll 과 각 사이드바만 스크롤. html[data-left|data-right="closed"] 로 접는다.
+ * 모바일: 문서 스크롤, 사이드바는 html[data-drawer="left|right"] 일 때 서랍으로 연다.
+ */
+@layer abms-overrides {
+    :root {
+        --app-header-h: 48px;
+        --app-left-w: 240px;
+        --app-right-w: 320px;
+        /* 본문 안 고정 요소의 기준 위치 (JS 가 고정 툴바 높이로 갱신) */
+        --sticky-top: 0px;
+    }
+
+    .app-body {
+        min-height: 100%;
+        background-color: var(--seed-color-bg-layer-basement);
+    }
+
+    .app-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: var(--app-header-h);
+        padding: 0 8px;
+        background-color: var(--seed-color-bg-layer-basement);
+    }
+
+    .app-frame {
+        display: flex;
+    }
+
+    .app-left {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 40;
+        width: 264px;
+        height: 100dvh;
+        background-color: var(--seed-color-bg-layer-basement);
+        box-shadow: var(--seed-shadow-s3);
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform 200ms var(--seed-timing-function-easing), visibility 200ms;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .app-right {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        width: min(var(--app-right-w), 90vw);
+        height: 100dvh;
+        background-color: var(--seed-color-bg-layer-default);
+        box-shadow: var(--seed-shadow-s3);
+        transform: translateX(100%);
+        visibility: hidden;
+        transition: transform 200ms var(--seed-timing-function-easing), visibility 200ms;
+    }
+
+    html[data-drawer="left"] .app-left,
+    html[data-drawer="right"] .app-right {
+        transform: none;
+        visibility: visible;
+    }
+
+    .app-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 35;
+        display: none;
+        background: var(--seed-color-bg-overlay-muted);
+    }
+
+    html[data-drawer] .app-backdrop {
+        display: block;
+    }
+
+    .app-panel {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        background-color: var(--seed-color-bg-layer-default);
+    }
+
+    /* 본문은 컨테이너: 화면 배치는 창 폭이 아니라 본문 폭(사이드바 개폐 반영) 기준으로 바뀐다 */
+    .app-scroll {
+        flex: 1;
+        min-width: 0;
+        outline: none;
+        container-type: inline-size;
+    }
+
+    .right-pane {
+        display: none;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 16px;
+    }
+
+    .right-pane.is-active {
+        display: block;
+    }
+
+    .right-tab {
+        display: inline-flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 10px;
+        border-radius: var(--seed-radius-r2);
+        font-size: var(--seed-font-size-t4);
+        font-weight: var(--seed-font-weight-medium);
+        color: var(--seed-color-fg-neutral-subtle);
+        cursor: pointer;
+    }
+
+    .right-tab:hover {
+        color: var(--seed-color-fg-neutral);
+    }
+
+    .right-tab[aria-selected="true"] {
+        background-color: var(--seed-color-bg-transparent-selected);
+        color: var(--seed-color-fg-neutral);
+    }
+
+    /* 고정 툴바: 본문을 스크롤하면 아래 구분선이 생긴다 */
+    [data-page-toolbar] {
+        transition: border-color 150ms, box-shadow 150ms;
+    }
+
+    [data-page-toolbar][data-scrolled] {
+        border-bottom-color: var(--seed-color-stroke-neutral-subtle);
+    }
+
+    /* D. 스크롤 다듬기: 얇은 테마 스크롤바, 폭 흔들림 방지, 스크롤 전파 차단 */
+    .app-scroll, .app-left, .app-right, .right-pane, .scroll-pane, #palette-results, .dropdown-panel {
+        scrollbar-width: thin;
+        scrollbar-color: var(--seed-color-palette-gray-400) transparent;
+    }
+
+    .scroll-pane, .dropdown-panel {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    @media (min-width: 1024px) {
+        .app-body {
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            position: static;
+            flex-shrink: 0;
+        }
+
+        .app-frame {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .app-left {
+            position: static;
+            width: var(--app-left-w);
+            height: auto;
+            flex-shrink: 0;
+            box-shadow: none;
+            transform: none;
+            visibility: visible;
+            transition: none;
+        }
+
+        html[data-left="closed"] .app-left {
+            display: none;
+        }
+
+        .app-panel {
+            margin: 0 8px 8px 0;
+            border: 1px solid var(--seed-color-stroke-neutral-subtle);
+            border-radius: var(--seed-radius-r3);
+            box-shadow: var(--seed-shadow-s1);
+            overflow: hidden;
+        }
+
+        html[data-left="closed"] .app-panel {
+            margin-left: 8px;
+        }
+
+        .app-scroll {
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            scroll-padding-top: calc(var(--sticky-top) + 8px);
+        }
+
+        .app-scroll-fill {
+            overflow: hidden;
+            scrollbar-gutter: auto;
+        }
+
+        .app-right {
+            position: static;
+            width: var(--app-right-w);
+            height: auto;
+            flex-shrink: 0;
+            box-shadow: none;
+            transform: none;
+            visibility: visible;
+            transition: none;
+            border-left: 1px solid var(--seed-color-stroke-neutral-subtle);
+        }
+
+        html[data-right="closed"] .app-right {
+            display: none;
+        }
+
+        .app-backdrop {
+            display: none !important;
+        }
     }
 }

@@ -12,7 +12,7 @@
 @param LocalDate defaultDate
 @template.layout.app(ctx = ctx, title = "주간 보고서", content = @`
     @template.components.pageHeader(title = "주간 보고서", subtitle = "프로젝트 현황·청구·인력 변화를 바탕으로 주간 운영 보고서 초안을 만듭니다.")
-    <div class="grid gap-x6 xl:grid-cols-[minmax(0,1fr)_300px]">
+    <div class="grid gap-x6 @5xl:grid-cols-[minmax(0,1fr)_300px]">
         <section class="min-w-0">
             <h2 class="section-title">보고서 <span class="section-count">${page.totalElements()}</span></h2>
             <div class="list-box">
@@ -23,8 +23,8 @@
                         <a href="/reports/${r.id()}" class="list-row">
                             ${Icons.of("document", "size-4 shrink-0 text-fg-neutral-subtle")}
                             <span class="min-w-0 flex-1 truncate t4-medium">${r.getTitle()}</span>
-                            <span class="list-cell-muted hidden w-48 tabular-nums md:block">${Ui.date(r.getWeekStart())} ~ ${Ui.date(r.getWeekEnd())}</span>
-                            <span class="list-cell-muted hidden w-20 lg:block">${authors.getOrDefault(r.getAuthorAccountId(), "-")}</span>
+                            <span class="list-cell-muted hidden w-48 tabular-nums @2xl:block">${Ui.date(r.getWeekStart())} ~ ${Ui.date(r.getWeekEnd())}</span>
+                            <span class="list-cell-muted hidden w-20 @3xl:block">${authors.getOrDefault(r.getAuthorAccountId(), "-")}</span>
                             <span class="flex w-28 shrink-0 justify-end gap-x1">
                                 @if(r.isEdited())<span class="${Seed.badge("informative")}">편집됨</span>@endif
                                 @if(r.getGenerator() == WeeklyReport.Generator.AI)
@@ -33,7 +33,7 @@
                                     <span class="${Seed.badge("neutral")}">템플릿</span>
                                 @endif
                             </span>
-                            <span class="list-cell-muted hidden w-16 text-right sm:block">${Ui.relative(r.getCreatedAt())}</span>
+                            <span class="list-cell-muted hidden w-16 text-right @xl:block">${Ui.relative(r.getCreatedAt())}</span>
                         </a>
                     @endfor
                 @endif
@@ -43,7 +43,7 @@
 
         <%-- 새 보고서 생성 패널 --%>
         <aside>
-            <div class="xl:sticky xl:top-6">
+            <div class="@5xl:sticky @5xl:top-[calc(var(--sticky-top)+16px)]">
                 <h2 class="section-title">새 보고서</h2>
                 <form method="post" action="/reports" class="list-box space-y-3 p-x4" hx-disabled-elt="find button">
                     <div>

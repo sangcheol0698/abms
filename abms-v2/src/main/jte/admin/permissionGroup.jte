@@ -17,7 +17,42 @@
 @param List<Account> candidates
 @param Map<Long, Employee> employees
 !{boolean readOnly = group.isSystem();}
-@template.layout.app(ctx = ctx, title = group.getName(), content = @`
+@template.layout.app(ctx = ctx, aside = @`
+            <h2 class="section-title">할당된 계정 <span class="section-count">${members.size()}</span></h2>
+            @if(!candidates.isEmpty())
+                <form method="post" action="/admin/permission-groups/${group.id()}/members" class="mb-x3 flex gap-x2">
+                    <select name="accountId" class="select" required aria-label="추가할 계정">
+                        <option value="">계정 선택</option>
+                        @for(Account a : candidates)
+                            !{Employee e = employees.get(a.getEmployeeId());}
+                            <option value="${a.id()}">${e == null ? a.getUsername() : e.getName() + " (" + a.getUsername() + ")"}</option>
+                        @endfor
+                    </select>
+                    <button class="${Seed.button("neutralOutline")}">추가</button>
+                </form>
+            @endif
+            <div class="list-box">
+                @if(members.isEmpty())
+                    @template.components.empty(message = "할당된 계정이 없습니다.", icon = "users")
+                @else
+                    @for(Account a : members)
+                        !{Employee e = employees.get(a.getEmployeeId());}
+                        <div class="list-row">
+                            @if(e != null)
+                                @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-6 text-[11px]")
+                            @endif
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate t4-medium">${e == null ? "-" : e.getName()}</span>
+                                <span class="block truncate t3-regular text-fg-neutral-subtle">${a.getUsername()}</span>
+                            </span>
+                            <form method="post" action="/admin/permission-groups/${group.id()}/members/${a.id()}/delete" hx-confirm="그룹에서 제외할까요?">
+                                <button class="${Seed.iconButton("ghost", "xsmall")}" aria-label="${a.getUsername()} 제외" title="그룹에서 제외">${Icons.of("x", "size-4")}</button>
+                            </form>
+                        </div>
+                    @endfor
+                @endif
+            </div>
+`, title = group.getName(), content = @`
     @template.components.pageHeader(title = group.getName(), subtitle = readOnly ? "시스템 그룹은 권한 구성을 변경할 수 없고 계정 할당만 가능합니다." : "변경 내용은 해당 사용자가 다시 로그인하면 반영됩니다.", breadcrumb = @`
         <a href="/admin/permission-groups" class="hover:text-fg-neutral-muted">권한 그룹</a>${Icons.of("chevron-right", "size-3")}<span>${group.getName()}</span>
     `, actions = @`
@@ -27,9 +62,8 @@
             </form>
         @endif
     `)
-    <div class="grid gap-x6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <form method="post" action="/admin/permission-groups/${group.id()}" class="min-w-0 space-y-6">
-            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 <div>
                     <label for="name" class="label">그룹명</label>
                     <input id="name" name="name" class="input" value="${group.getName()}" disabled="${readOnly}" required>
@@ -79,44 +113,4 @@
             @endif
         </form>
 
-        <%-- 할당된 계정 패널 --%>
-        <aside>
-            <div class="xl:sticky xl:top-6">
-                <h2 class="section-title">할당된 계정 <span class="section-count">${members.size()}</span></h2>
-                @if(!candidates.isEmpty())
-                    <form method="post" action="/admin/permission-groups/${group.id()}/members" class="mb-x3 flex gap-x2">
-                        <select name="accountId" class="select" required aria-label="추가할 계정">
-                            <option value="">계정 선택</option>
-                            @for(Account a : candidates)
-                                !{Employee e = employees.get(a.getEmployeeId());}
-                                <option value="${a.id()}">${e == null ? a.getUsername() : e.getName() + " (" + a.getUsername() + ")"}</option>
-                            @endfor
-                        </select>
-                        <button class="${Seed.button("neutralOutline")}">추가</button>
-                    </form>
-                @endif
-                <div class="list-box">
-                    @if(members.isEmpty())
-                        @template.components.empty(message = "할당된 계정이 없습니다.", icon = "users")
-                    @else
-                        @for(Account a : members)
-                            !{Employee e = employees.get(a.getEmployeeId());}
-                            <div class="list-row">
-                                @if(e != null)
-                                    @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-6 text-[11px]")
-                                @endif
-                                <span class="min-w-0 flex-1">
-                                    <span class="block truncate t4-medium">${e == null ? "-" : e.getName()}</span>
-                                    <span class="block truncate t3-regular text-fg-neutral-subtle">${a.getUsername()}</span>
-                                </span>
-                                <form method="post" action="/admin/permission-groups/${group.id()}/members/${a.id()}/delete" hx-confirm="그룹에서 제외할까요?">
-                                    <button class="${Seed.iconButton("ghost", "xsmall")}" aria-label="${a.getUsername()} 제외" title="그룹에서 제외">${Icons.of("x", "size-4")}</button>
-                                </form>
-                            </div>
-                        @endfor
-                    @endif
-                </div>
-            </div>
-        </aside>
-    </div>
 `)

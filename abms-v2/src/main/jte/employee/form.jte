@@ -28,7 +28,7 @@
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">이메일은 로그인 아이디로도 쓰입니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @template.components.input(name = "name", label = "이름", value = Ui.value(form.name()), errors = errors, required = true)
                 @template.components.input(name = "email", label = "이메일", value = Ui.value(form.email()), errors = errors, type = "email", required = true)
                 @template.components.input(name = "birthDate", label = "생년월일", value = Ui.value(form.birthDate()), errors = errors, type = "date", required = true)
@@ -37,7 +37,7 @@
         </section>
         <section class="form-section">
             <div><h2 class="form-section-title">인사 정보</h2><p class="form-section-desc">고용유형은 원가 정책 적용 기준입니다.</p></div>
-            <div class="grid grid-cols-1 gap-x4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @template.components.input(name = "joinDate", label = "입사일", value = Ui.value(form.joinDate()), errors = errors, type = "date", required = true)
                 @template.components.select(name = "type", label = "고용유형", options = Ui.options(EmployeeType.values()), value = Ui.value(form.type()), errors = errors, required = true)
                 @template.components.select(name = "position", label = "직급", options = Ui.options(EmployeePosition.values()), value = Ui.value(form.position()), errors = errors, required = true)

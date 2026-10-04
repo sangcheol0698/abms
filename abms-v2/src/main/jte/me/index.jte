@@ -64,7 +64,7 @@
                                     ${projectNames.get(a.getProjectId())}
                                 @endif
                             </span>
-                            <span class="list-cell-muted hidden w-52 tabular-nums md:block">${a.getRole() == null ? "" : a.getRole().label() + " · "}${Ui.period(a.getPeriod().startDate(), a.getPeriod().endDate())}</span>
+                            <span class="list-cell-muted hidden w-52 tabular-nums @2xl:block">${a.getRole() == null ? "" : a.getRole().label() + " · "}${Ui.period(a.getPeriod().startDate(), a.getPeriod().endDate())}</span>
                             <span class="w-16 shrink-0 text-right">
                                 @if(a.isActiveOn(java.time.LocalDate.now()))
                                     <span class="${Seed.badge("informative")}">투입 중</span>

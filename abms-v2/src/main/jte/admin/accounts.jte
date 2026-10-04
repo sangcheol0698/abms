@@ -19,8 +19,8 @@
                 hx-trigger="click${issueEmployeeId == null ? "" : ", load"}">${Icons.of("plus", "size-4")} 계정 발급</button>
     `)
     <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8" hx-get="/admin/accounts" hx-trigger="accountsChanged from:body" hx-select="#account-table" hx-target="#account-table" hx-swap="outerHTML">
-        <div id="account-table" class="overflow-x-auto xl:overflow-visible">
-            <div class="min-w-[880px] xl:min-w-0">
+        <div id="account-table" class="overflow-x-auto @5xl:overflow-visible">
+            <div class="min-w-[880px] @5xl:min-w-0">
                 <div class="list-head sm:px-x6 lg:px-x8">
                     <span class="min-w-0 flex-1">직원</span>
                     <span class="w-48 shrink-0">아이디</span>

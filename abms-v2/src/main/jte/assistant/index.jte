@@ -9,15 +9,15 @@
 @param List<ChatSession> sessions
 @param ChatSession current = null
 @param List<ChatMessage> messages = null
-@template.layout.app(ctx = ctx, title = current == null ? "AI 어시스턴트" : current.getTitle(), content = @`
-    <div class="-mx-4 -my-5 flex h-[calc(100vh-48px)] sm:-mx-6 lg:-mx-8 lg:-my-6 lg:h-[calc(100vh-18px)]">
+@template.layout.app(ctx = ctx, title = current == null ? "AI 어시스턴트" : current.getTitle(), fill = true, content = @`
+    <div class="flex h-[calc(100dvh-48px)] lg:h-full">
         <%-- 대화 목록 --%>
-        <aside class="hidden w-64 shrink-0 flex-col border-r border-stroke-neutral-subtle md:flex">
+        <aside class="hidden w-64 shrink-0 flex-col border-r border-stroke-neutral-subtle @2xl:flex">
             <div class="flex items-center justify-between px-x4 pt-x4 pb-x2">
                 <h1 class="t5-bold text-fg-neutral">AI 어시스턴트</h1>
                 <a href="/assistant" data-shortcut="create" title="새 대화 (C)" aria-label="새 대화" class="${Seed.iconButton("neutralOutline", "xsmall")}">${Icons.of("plus", "size-4")}</a>
             </div>
-            <nav class="flex-1 space-y-px overflow-y-auto px-x2 pb-x3" aria-label="대화 목록">
+            <nav class="scroll-pane flex-1 space-y-px px-x2 pb-x3" aria-label="대화 목록">
                 @if(sessions.isEmpty())
                     <p class="px-x3 py-x6 text-center t3-regular text-fg-neutral-subtle">대화 기록이 없습니다.</p>
                 @endif
@@ -56,13 +56,13 @@
                 </div>
             @endif
 
-            <div id="messages" class="flex-1 space-y-6 overflow-y-auto px-x4 py-x6 sm:px-x6 [&>*]:mx-auto [&>*]:max-w-3xl" data-scroll-bottom>
+            <div id="messages" class="scroll-pane flex-1 space-y-6 px-x4 py-x6 sm:px-x6 [&>*]:mx-auto [&>*]:max-w-3xl" data-scroll-bottom>
                 @if(current == null)
                     <div class="pt-x10">
                         <span class="flex size-10 items-center justify-center rounded-r3 bg-gradient-highlight-magic-[135deg] text-white">${Icons.of("sparkles", "size-5")}</span>
                         <h2 class="mt-x4 t7-bold text-fg-neutral">무엇을 도와드릴까요?</h2>
                         <p class="mt-x1 t4-regular text-fg-neutral-subtle">직원, 부서, 프로젝트, 월별 손익을 자연어로 물어보세요. 내 권한 범위 안의 데이터만 조회합니다.</p>
-                        <div class="mt-x6 grid grid-cols-1 gap-x2 text-left sm:grid-cols-2">
+                        <div class="mt-x6 grid grid-cols-1 gap-x2 text-left @xl:grid-cols-2">
                             @for(String example : List.of("진행 중인 프로젝트 목록을 보여줘", "지난달 손익이 가장 좋은 프로젝트는?", "AI/Data사업담당 조직 구성을 알려줘", "결제 시스템 고도화 투입 인력은?"))
                                 <button type="button" class="flex cursor-pointer items-center gap-x2 rounded-r3 border border-stroke-neutral-subtle px-x3 py-x2_5 text-left t4-regular text-fg-neutral-muted transition-colors hover:bg-bg-transparent-pressed hover:text-fg-neutral"
                                         onclick="const t = document.getElementById('chat-input'); t.value = this.textContent.trim(); t.focus();">${example}</button>

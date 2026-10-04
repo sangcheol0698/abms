@@ -20,8 +20,8 @@
                     <span class="flex items-center gap-x2"><span class="truncate t4-medium">${g.getName()}</span><span class="${Seed.badge(g.isSystem() ? "neutral" : "informative")}">${g.getGroupType().label()}</span></span>
                     <span class="block truncate t3-regular text-fg-neutral-subtle">${g.getDescription()}</span>
                 </span>
-                <span class="list-cell-muted hidden w-24 items-center gap-x1 sm:flex">${Icons.of("users", "size-4")} 계정 ${memberCounts.getOrDefault(g.id(), 0L)}</span>
-                <span class="list-cell-muted hidden w-24 items-center gap-x1 sm:flex">${Icons.of("shield", "size-4")} 권한 ${grantCounts.getOrDefault(g.id(), 0)}</span>
+                <span class="list-cell-muted hidden w-24 items-center gap-x1 @xl:flex">${Icons.of("users", "size-4")} 계정 ${memberCounts.getOrDefault(g.id(), 0L)}</span>
+                <span class="list-cell-muted hidden w-24 items-center gap-x1 @xl:flex">${Icons.of("shield", "size-4")} 권한 ${grantCounts.getOrDefault(g.id(), 0)}</span>
                 ${Icons.of("chevron-right", "size-4 shrink-0 text-fg-neutral-subtle")}
             </a>
         @endfor

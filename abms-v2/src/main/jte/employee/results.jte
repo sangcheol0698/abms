@@ -15,11 +15,11 @@
             @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-6 text-[11px]")
             <span class="flex min-w-0 flex-1 items-baseline gap-x2">
                 <span class="truncate t4-medium">${e.getName()}</span>
-                <span class="hidden truncate t3-regular text-fg-neutral-subtle sm:inline">${e.isDeleted() ? e.originalEmail() : e.getEmail()}</span>
+                <span class="hidden truncate t3-regular text-fg-neutral-subtle @xl:inline">${e.isDeleted() ? e.originalEmail() : e.getEmail()}</span>
             </span>
-            <span class="list-cell-muted hidden w-40 md:block">${tree.nameOf(e.getDepartmentId())}</span>
-            <span class="list-cell-muted hidden w-24 lg:block">${e.getPosition().label()} · ${e.getGrade().label()}</span>
-            <span class="hidden w-20 lg:block"><span class="${Ui.badge(e.getType())}">${e.getType().label()}</span></span>
+            <span class="list-cell-muted hidden w-40 @2xl:block">${tree.nameOf(e.getDepartmentId())}</span>
+            <span class="list-cell-muted hidden w-24 @3xl:block">${e.getPosition().label()} · ${e.getGrade().label()}</span>
+            <span class="hidden w-20 @3xl:block"><span class="${Ui.badge(e.getType())}">${e.getType().label()}</span></span>
             <span class="w-16 shrink-0">
                 @if(e.isDeleted())
                     <span class="${Seed.badge("critical")}">삭제됨</span>
@@ -27,7 +27,7 @@
                     <span class="${Ui.badge(e.getStatus())}">${e.getStatus().label()}</span>
                 @endif
             </span>
-            <span class="list-cell-muted hidden w-24 text-right tabular-nums xl:block">${Ui.date(e.getJoinDate())}</span>
+            <span class="list-cell-muted hidden w-24 text-right tabular-nums @5xl:block">${Ui.date(e.getJoinDate())}</span>
         </a>
     @endfor
 @endif

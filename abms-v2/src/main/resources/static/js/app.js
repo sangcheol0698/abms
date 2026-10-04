@@ -238,7 +238,7 @@
         root.querySelectorAll('[data-scroll-bottom]').forEach((el) => el.scrollTop = el.scrollHeight);
         // 조직도에서 선택된 부서가 스크롤 영역 안에 보이도록 맞춘다.
         root.querySelectorAll('[data-dept-link][aria-current="page"]').forEach((el) => {
-            const box = el.closest('.overflow-y-auto');
+            const box = el.closest('.scroll-pane, .overflow-y-auto');
             if (box) box.scrollTop += el.getBoundingClientRect().top - box.getBoundingClientRect().top - (box.clientHeight - el.offsetHeight) / 2;
         });
     }
@@ -304,6 +304,7 @@
         closePalette();
         if (action.startsWith('theme:')) window.abmsTheme(action.substring(6));
         if (action === 'shortcuts') document.getElementById('shortcuts').showModal();
+        if (action.startsWith('layout:')) window.abmsLayout.toggle(action.substring(7));
     }
 
     window.abmsPalette = {open: openPalette, close: closePalette};
@@ -378,6 +379,12 @@
         } else if (key === 'c') {
             const create = document.querySelector('[data-shortcut="create"]');
             if (create) { e.preventDefault(); create.click(); }
+        } else if (e.key === '[') {
+            e.preventDefault();
+            window.abmsLayout.toggle('left');
+        } else if (e.key === ']') {
+            e.preventDefault();
+            window.abmsLayout.toggle('right');
         } else if (e.key === '?') {
             e.preventDefault();
             document.getElementById('shortcuts').showModal();
@@ -385,14 +392,153 @@
     });
 })();
 
-// 모바일 사이드바 열기/닫기 (백드롭 클릭·Esc 로 닫힘)
-window.abmsSidebar = function (open) {
-    document.getElementById('sidebar').classList.toggle('hidden', !open);
-    document.getElementById('sidebar-backdrop').classList.toggle('hidden', !open);
-};
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.getElementById('sidebar-backdrop')) window.abmsSidebar(false);
-});
+// ---------------------------------------------------------------------
+// 앱 셸: 양쪽 사이드바 열기/닫기 · 오른쪽 사이드바 탭 · 본문 스크롤(고정 툴바, 위치 복원)
+// ---------------------------------------------------------------------
+(function () {
+    'use strict';
+    const root = document.documentElement;
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const scroller = () => document.getElementById('app-scroll');
+    // 데스크톱은 #app-scroll, 모바일은 문서가 스크롤된다.
+    const scrollTarget = () => (desktop.matches ? scroller() : document.scrollingElement);
+
+    function store(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) {}
+    }
+
+    // 데스크톱: 접기/펼치기 상태를 저장, 모바일: 서랍으로 연다.
+    function togglePanel(side, open) {
+        if (desktop.matches) {
+            const attr = side === 'left' ? 'left' : 'right';
+            const next = open === undefined ? (root.dataset[attr] === 'closed' ? 'open' : 'closed') : (open ? 'open' : 'closed');
+            root.dataset[attr] = next;
+            store('abms-' + attr, next);
+            updateStickyTop();
+            return next === 'open';
+        }
+        const opened = open === undefined ? root.dataset.drawer !== side : open;
+        if (opened) root.dataset.drawer = side; else delete root.dataset.drawer;
+        return opened;
+    }
+
+    function selectRightTab(name) {
+        const tabs = Array.from(document.querySelectorAll('[data-right-tab]'));
+        if (!tabs.length) return;
+        if (!tabs.some((t) => t.dataset.rightTab === name)) name = tabs[0].dataset.rightTab;
+        tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.rightTab === name)));
+        document.querySelectorAll('[data-right-pane]').forEach((p) => p.classList.toggle('is-active', p.dataset.rightPane === name));
+    }
+
+    window.abmsLayout = {toggle: togglePanel, tab: selectRightTab};
+
+    document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('[data-toggle-panel]');
+        if (toggle) {
+            togglePanel(toggle.dataset.togglePanel);
+            return;
+        }
+        if (e.target.closest('[data-open-notifications]')) {
+            selectRightTab('notifications');
+            togglePanel('right', true);
+            return;
+        }
+        const tab = e.target.closest('[data-right-tab]');
+        if (tab) selectRightTab(tab.dataset.rightTab);
+        if (e.target.closest('[data-close-panels]')) delete root.dataset.drawer;
+        // 모바일 서랍 안의 링크를 누르면 서랍을 닫는다.
+        if (!desktop.matches && e.target.closest('#left-sidebar a')) delete root.dataset.drawer;
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && root.dataset.drawer && !document.querySelector('dialog[open]')) delete root.dataset.drawer;
+    });
+
+    // 고정 툴바 높이를 --sticky-top 으로 반영 (그룹 헤더 등 다른 고정 요소의 기준)
+    function updateStickyTop() {
+        const toolbar = document.querySelector('[data-page-toolbar]');
+        const header = desktop.matches ? 0 : (document.querySelector('.app-header') || {offsetHeight: 0}).offsetHeight;
+        const height = toolbar && getComputedStyle(toolbar).position === 'sticky' ? toolbar.offsetHeight : 0;
+        root.style.setProperty('--sticky-top', (header + height) + 'px');
+    }
+
+    function syncToolbarBorder() {
+        const toolbar = document.querySelector('[data-page-toolbar]');
+        const target = scrollTarget();
+        if (!toolbar || !target) return;
+        toolbar.toggleAttribute('data-scrolled', target.scrollTop > 0);
+    }
+
+    let scrollBound = null;
+    function bindScroll() {
+        const target = desktop.matches ? scroller() : window;
+        if (scrollBound === target || !target) return;
+        if (scrollBound) scrollBound.removeEventListener('scroll', syncToolbarBorder);
+        target.addEventListener('scroll', syncToolbarBorder, {passive: true});
+        scrollBound = target;
+    }
+
+    // 화면 이동(boost) 시 본문 스크롤은 맨 위로, 뒤로 가기는 이전 위치로 복원한다.
+    // 뒤로 가기(popstate) 때는 주소가 먼저 바뀐 뒤 떠나는 화면이 저장되므로, 화면이 열릴 때의 주소를 키로 쓴다.
+    const scrollKey = () => 'abms-scroll:' + location.pathname + location.search;
+    let pageKey = scrollKey();
+    document.body.addEventListener('htmx:beforeHistorySave', () => {
+        const target = scrollTarget();
+        try { if (target) sessionStorage.setItem(pageKey, String(target.scrollTop)); } catch (e) {}
+    });
+
+    function restoreScroll() {
+        const target = scrollTarget();
+        let y = 0;
+        try { y = Number(sessionStorage.getItem(scrollKey()) || 0); } catch (e) {}
+        if (target) target.scrollTop = y;
+    }
+
+    // boost 링크 이동인지 기억했다가, 화면 교체가 끝나면 맨 위로 보낸다. (뒤로 가기 복원과 구분)
+    let boostedNavigation = false;
+    document.body.addEventListener('htmx:beforeRequest', (e) => {
+        if (e.detail.boosted && e.detail.target === document.body) boostedNavigation = true;
+    });
+    document.body.addEventListener('htmx:historyRestore', () => setTimeout(restoreScroll, 30));
+    document.body.addEventListener('htmx:historyCacheMissLoad', () => setTimeout(restoreScroll, 30));
+
+    function onPageReady(navigated) {
+        pageKey = scrollKey();
+        selectRightTab(document.querySelector('[data-right-tab="props"]') ? 'props' : 'notifications');
+        bindScroll();
+        updateStickyTop();
+        if (navigated) {
+            const target = scrollTarget();
+            if (target) target.scrollTop = 0;
+            // 키보드(Space/PageDown)로 바로 본문을 스크롤할 수 있게 포커스를 둔다.
+            const main = scroller();
+            if (main && desktop.matches && !document.querySelector('dialog[open]') && !main.contains(document.activeElement)) {
+                main.focus({preventScroll: true});
+            }
+        }
+        syncToolbarBorder();
+    }
+
+    document.body.addEventListener('htmx:afterSettle', (e) => {
+        if (e.detail.target !== document.body) return;
+        onPageReady(boostedNavigation);
+        boostedNavigation = false;
+    });
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => onPageReady(false));
+    } else {
+        onPageReady(false);
+    }
+    window.addEventListener('resize', updateStickyTop);
+    desktop.addEventListener('change', () => {
+        delete root.dataset.drawer;
+        bindScroll();
+        updateStickyTop();
+    });
+    if ('ResizeObserver' in window) {
+        new ResizeObserver(updateStickyTop).observe(document.body);
+    }
+})();
 
 // AI 어시스턴트: 전송 즉시 내 메시지와 "답변 생성 중" 표시
 window.abmsChat = {
