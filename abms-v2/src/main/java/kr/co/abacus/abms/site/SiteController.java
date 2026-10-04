@@ -29,6 +29,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
+import kr.co.abacus.abms.common.geo.Geocoder;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.MapMarker;
 import kr.co.abacus.abms.common.web.Toast;
@@ -53,9 +54,11 @@ public class SiteController {
     private final DepartmentRepository departmentRepository;
     private final DepartmentService departmentService;
     private final PartyService partyService;
+    private final Geocoder geocoder;
 
     public SiteController(SiteService siteService, DepartmentRepository departmentRepository, DepartmentService departmentService,
-                          PartyService partyService) {
+                          PartyService partyService, Geocoder geocoder) {
+        this.geocoder = geocoder;
         this.siteService = siteService;
         this.departmentRepository = departmentRepository;
         this.departmentService = departmentService;
@@ -115,7 +118,7 @@ public class SiteController {
             return form(model, form, FormErrors.of(binding), null);
         }
         try {
-            Site site = siteService.create(user, form.toInfo());
+            Site site = siteService.create(user, geocoded(form.toInfo()));
             Toast.success(redirect, site.getName() + " 사업장을 등록했습니다.");
             return "redirect:/sites/" + site.id();
         } catch (BusinessException e) {
@@ -141,7 +144,7 @@ public class SiteController {
             return form(model, form, FormErrors.of(binding), site);
         }
         try {
-            siteService.update(user, id, form.toInfo());
+            siteService.update(user, id, geocoded(form.toInfo()));
             Toast.success(redirect, "사업장 정보를 수정했습니다.");
             return "redirect:/sites/" + id;
         } catch (BusinessException e) {
@@ -174,6 +177,11 @@ public class SiteController {
                 .sorted(Comparator.comparingDouble(NearbyParty::distanceKm))
                 .limit(NEARBY_LIMIT)
                 .toList();
+    }
+
+    /** 좌표 변환은 외부 API 호출이라 DB 트랜잭션 밖(여기)에서 한다. */
+    private SiteInfo geocoded(SiteInfo info) {
+        return info.withLocation(geocoder.complete(info.location()));
     }
 
     private String form(Model model, SiteForm form, FormErrors errors, @Nullable Site site) {

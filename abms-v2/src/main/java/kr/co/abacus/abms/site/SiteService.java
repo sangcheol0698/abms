@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
-import kr.co.abacus.abms.common.geo.Geocoder;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.LoginUser;
@@ -26,11 +25,8 @@ public class SiteService {
     private final SiteRepository siteRepository;
     private final DepartmentRepository departmentRepository;
     private final AccessService accessService;
-    private final Geocoder geocoder;
 
-    public SiteService(SiteRepository siteRepository, DepartmentRepository departmentRepository, AccessService accessService,
-                       Geocoder geocoder) {
-        this.geocoder = geocoder;
+    public SiteService(SiteRepository siteRepository, DepartmentRepository departmentRepository, AccessService accessService) {
         this.siteRepository = siteRepository;
         this.departmentRepository = departmentRepository;
         this.accessService = accessService;
@@ -59,7 +55,7 @@ public class SiteService {
         if (info.name() != null && siteRepository.existsByName(info.name().trim())) {
             throw new BusinessException("이미 등록된 사업장명입니다: " + info.name());
         }
-        return siteRepository.save(Site.create(info.withLocation(geocoder.complete(info.location()))));
+        return siteRepository.save(Site.create(info));
     }
 
     public void update(LoginUser user, Long id, SiteInfo info) {
@@ -68,7 +64,7 @@ public class SiteService {
         if (info.name() != null && siteRepository.existsByNameAndIdNot(info.name().trim(), id)) {
             throw new BusinessException("이미 등록된 사업장명입니다: " + info.name());
         }
-        site.update(info.withLocation(geocoder.complete(info.location())));
+        site.update(info);
     }
 
     public void delete(LoginUser user, Long id) {

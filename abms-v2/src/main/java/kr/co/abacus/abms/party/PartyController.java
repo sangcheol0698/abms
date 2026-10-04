@@ -32,6 +32,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
+import kr.co.abacus.abms.common.geo.Geocoder;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
 import kr.co.abacus.abms.common.web.MapMarker;
@@ -52,9 +53,11 @@ public class PartyController {
     private final ProjectService projectService;
     private final DepartmentService departmentService;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
+    private final Geocoder geocoder;
 
     public PartyController(PartyService partyService, ProjectService projectService, DepartmentService departmentService,
-                           ProjectRevenuePlanRepository revenuePlanRepository) {
+                           ProjectRevenuePlanRepository revenuePlanRepository, Geocoder geocoder) {
+        this.geocoder = geocoder;
         this.revenuePlanRepository = revenuePlanRepository;
         this.partyService = partyService;
         this.projectService = projectService;
@@ -91,7 +94,7 @@ public class PartyController {
             return form(model, form, FormErrors.of(binding), null);
         }
         try {
-            Party party = partyService.create(form.toInfo());
+            Party party = partyService.create(geocoded(form.toInfo()));
             Toast.success(redirect, party.getName() + " 협력사를 등록했습니다.");
             return "redirect:/parties/" + party.id();
         } catch (BusinessException e) {
@@ -136,7 +139,7 @@ public class PartyController {
             return form(model, form, FormErrors.of(binding), party);
         }
         try {
-            partyService.update(id, form.toInfo());
+            partyService.update(id, geocoded(form.toInfo()));
             Toast.success(redirect, "협력사 정보를 수정했습니다.");
             return "redirect:/parties/" + id;
         } catch (BusinessException e) {
@@ -151,6 +154,11 @@ public class PartyController {
         partyService.delete(id, user.accountId());
         Toast.success(redirect, "협력사를 삭제했습니다.");
         return "redirect:/parties";
+    }
+
+    /** 좌표 변환은 외부 API 호출이라 DB 트랜잭션 밖(여기)에서 한다. */
+    private PartyInfo geocoded(PartyInfo info) {
+        return info.withLocation(geocoder.complete(info.location()));
     }
 
     private String form(Model model, PartyForm form, FormErrors errors, @Nullable Party party) {
