@@ -185,18 +185,6 @@
             </div>
         </section>
 
-        @if(!party.getLocation().isEmpty())
-            <section class="min-w-0">
-                <h2 class="section-title">위치</h2>
-                @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), fallbackText = party.getLocation().fullAddress(),
-                        fallbackHref = party.getLocation().kakaoMapLink(party.getName()))
-                <p class="mt-x2 flex flex-wrap items-center gap-x-x3 gap-y-x1 t3-regular text-fg-neutral-subtle">
-                    <span class="inline-flex items-center gap-x1">${Icons.of("map-pin", "size-3.5")}@if(party.getLocation().zipCode() != null)<span class="tabular-nums">(${party.getLocation().zipCode()})</span>@endif ${party.getLocation().fullAddress()}</span>
-                    <a href="${party.getLocation().kakaoMapLink(party.getName())}" target="_blank" rel="noopener noreferrer" class="link inline-flex items-center gap-x1">카카오맵 ${Icons.of("external", "size-3")}</a>
-                </p>
-            </section>
-        @endif
-
         @if(party.getMemo() != null)
             <section>
                 <h2 class="section-title">메모</h2>
@@ -209,5 +197,17 @@
         @if(auditHistory != null)
             <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
         @endif
+        @if(!party.getLocation().isEmpty())
+            <section class="min-w-0">
+                <h2 class="section-title">위치</h2>
+                @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), fallbackText = party.getLocation().fullAddress(),
+                        fallbackHref = party.getLocation().kakaoMapLink(party.getName()))
+                <p class="mt-x2 flex flex-wrap items-center gap-x-x3 gap-y-x1 t3-regular text-fg-neutral-subtle">
+                    <span class="inline-flex items-center gap-x1">${Icons.of("map-pin", "size-3.5")}@if(party.getLocation().zipCode() != null)<span class="tabular-nums">(${party.getLocation().zipCode()})</span>@endif ${party.getLocation().fullAddress()}</span>
+                    <a href="${party.getLocation().kakaoMapLink(party.getName())}" target="_blank" rel="noopener noreferrer" class="link inline-flex items-center gap-x1">카카오맵 ${Icons.of("external", "size-3")}</a>
+                </p>
+            </section>
+        @endif
+
     </div>
 `)

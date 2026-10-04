@@ -54,19 +54,6 @@
             @endif
         </div>
 
-        <section class="min-w-0">
-            <h2 class="section-title">위치</h2>
-            @if(site.getLocation().isEmpty())
-                <div class="list-box">@template.components.empty(message = "주소가 등록되지 않았습니다.", icon = "map-pin")</div>
-            @else
-                @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), height = "h-72", fallbackText = site.getLocation().fullAddress(),
-                        fallbackHref = site.getLocation().kakaoMapLink(site.getName()))
-                <p class="mt-x2 flex flex-wrap items-center gap-x3 t3-regular text-fg-neutral-subtle">
-                    <a href="${site.getLocation().kakaoMapLink(site.getName())}" target="_blank" rel="noopener noreferrer" class="link inline-flex items-center gap-x1">카카오맵에서 길찾기 ${Icons.of("external", "size-3")}</a>
-                </p>
-            @endif
-        </section>
-
         <div class="grid grid-cols-1 gap-6 @4xl:grid-cols-2">
             <section class="min-w-0">
                 <h2 class="section-title">근무 부서 <span class="section-count">${departments.size()}</span></h2>
@@ -115,5 +102,18 @@
         @if(auditHistory != null)
             <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
         @endif
+        <section class="min-w-0">
+            <h2 class="section-title">위치</h2>
+            @if(site.getLocation().isEmpty())
+                <div class="list-box">@template.components.empty(message = "주소가 등록되지 않았습니다.", icon = "map-pin")</div>
+            @else
+                @template.components.map(markers = markers, mapEnabled = ctx.mapEnabled(), height = "h-72", fallbackText = site.getLocation().fullAddress(),
+                        fallbackHref = site.getLocation().kakaoMapLink(site.getName()))
+                <p class="mt-x2 flex flex-wrap items-center gap-x3 t3-regular text-fg-neutral-subtle">
+                    <a href="${site.getLocation().kakaoMapLink(site.getName())}" target="_blank" rel="noopener noreferrer" class="link inline-flex items-center gap-x1">카카오맵에서 길찾기 ${Icons.of("external", "size-3")}</a>
+                </p>
+            @endif
+        </section>
+
     </div>
 `)
