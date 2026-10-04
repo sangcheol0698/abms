@@ -16,7 +16,7 @@
     @template.components.pageHeader(title = title, breadcrumb = @`
         <a href="/parties" class="hover:text-fg-neutral-muted">협력사</a>${Icons.of("chevron-right", "size-3")}<span>${editing ? "수정" : "등록"}</span>
     `)
-    <form method="post" action="${editing ? "/parties/" + party.id() : "/parties"}" class="mx-auto max-w-4xl" novalidate>
+    <form method="post" action="${editing ? "/parties/" + party.id() : "/parties"}" class="mx-auto max-w-4xl" novalidate>${kr.co.abacus.abms.common.web.Csrf.field()}
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">구분에 따라 고객사(발주처)와 협력사(외주·파트너)를 함께 관리합니다.</p></div>

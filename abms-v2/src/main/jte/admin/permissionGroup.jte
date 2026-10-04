@@ -20,7 +20,7 @@
 @template.layout.app(ctx = ctx, aside = @`
             <h2 class="section-title">할당된 계정 <span class="section-count">${members.size()}</span></h2>
             @if(!candidates.isEmpty())
-                <form method="post" action="/admin/permission-groups/${group.id()}/members" class="mb-x3 flex gap-x2">
+                <form method="post" action="/admin/permission-groups/${group.id()}/members" class="mb-x3 flex gap-x2">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <select name="accountId" class="select" required aria-label="추가할 계정">
                         <option value="">계정 선택</option>
                         @for(Account a : candidates)
@@ -45,7 +45,7 @@
                                 <span class="block truncate t4-medium">${e == null ? "-" : e.getName()}</span>
                                 <span class="block truncate t3-regular text-fg-neutral-subtle">${a.getUsername()}</span>
                             </span>
-                            <form method="post" action="/admin/permission-groups/${group.id()}/members/${a.id()}/delete" hx-confirm="그룹에서 제외할까요?">
+                            <form method="post" action="/admin/permission-groups/${group.id()}/members/${a.id()}/delete" hx-confirm="그룹에서 제외할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                                 <button class="${Seed.iconButton("ghost", "xsmall")}" aria-label="${a.getUsername()} 제외" title="그룹에서 제외">${Icons.of("x", "size-4")}</button>
                             </form>
                         </div>
@@ -57,12 +57,12 @@
         <a href="/admin/permission-groups" class="hover:text-fg-neutral-muted">권한 그룹</a>${Icons.of("chevron-right", "size-3")}<span>${group.getName()}</span>
     `, actions = @`
         @if(!readOnly)
-            <form method="post" action="/admin/permission-groups/${group.id()}/delete" hx-confirm="${group.getName()} 그룹을 삭제할까요? 할당된 계정에서 권한이 제거됩니다.">
+            <form method="post" action="/admin/permission-groups/${group.id()}/delete" hx-confirm="${group.getName()} 그룹을 삭제할까요? 할당된 계정에서 권한이 제거됩니다.">${kr.co.abacus.abms.common.web.Csrf.field()}
                 <button class="${Seed.button("neutralOutline")} text-fg-critical">${Icons.of("trash", "size-4")} 그룹 삭제</button>
             </form>
         @endif
     `)
-        <form method="post" action="/admin/permission-groups/${group.id()}" class="min-w-0 space-y-6">
+        <form method="post" action="/admin/permission-groups/${group.id()}" class="min-w-0 space-y-6">${kr.co.abacus.abms.common.web.Csrf.field()}
             <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 <div>
                     <label for="name" class="label">그룹명</label>

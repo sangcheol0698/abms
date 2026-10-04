@@ -60,14 +60,14 @@
                 <summary class="${Seed.button("neutralOutline")}">더보기 ${Icons.of("chevron-down", "size-4")}</summary>
                 <div class="dropdown-panel w-44 p-x1">
                     @if(!project.getStatus().isClosed())
-                        <form method="post" action="/projects/${project.id()}/complete" hx-confirm="프로젝트를 완료 처리할까요?">
+                        <form method="post" action="/projects/${project.id()}/complete" hx-confirm="프로젝트를 완료 처리할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="menu-item">완료 처리</button>
                         </form>
-                        <form method="post" action="/projects/${project.id()}/cancel" hx-confirm="프로젝트를 취소 처리할까요?">
+                        <form method="post" action="/projects/${project.id()}/cancel" hx-confirm="프로젝트를 취소 처리할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="menu-item">취소 처리</button>
                         </form>
                     @endif
-                    <form method="post" action="/projects/${project.id()}/delete" hx-confirm="프로젝트와 매출 계획, 투입 정보를 모두 삭제할까요?">
+                    <form method="post" action="/projects/${project.id()}/delete" hx-confirm="프로젝트와 매출 계획, 투입 정보를 모두 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                         <button class="menu-item text-fg-critical">삭제</button>
                     </form>
                 </div>

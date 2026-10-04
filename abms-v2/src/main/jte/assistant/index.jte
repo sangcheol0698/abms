@@ -39,11 +39,11 @@
                 </div>
                 @if(current != null)
                     <div class="flex items-center gap-x0_5">
-                        <form method="post" action="/assistant/${current.id()}/favorite">
+                        <form method="post" action="/assistant/${current.id()}/favorite">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="${Seed.iconButton("ghost", "xsmall")}" aria-label="즐겨찾기" title="즐겨찾기">${Icons.of("star", current.isFavorite() ? "size-4 fill-palette-yellow-400 text-palette-yellow-400" : "size-4")}</button>
                         </form>
                         <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" hx-post="/assistant/${current.id()}/rename" hx-prompt="새 대화 제목" aria-label="제목 변경" title="제목 변경">${Icons.of("pencil", "size-4")}</button>
-                        <form method="post" action="/assistant/${current.id()}/delete" hx-confirm="이 대화를 삭제할까요?">
+                        <form method="post" action="/assistant/${current.id()}/delete" hx-confirm="이 대화를 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="${Seed.iconButton("ghost", "xsmall")} text-fg-critical" aria-label="삭제" title="삭제">${Icons.of("trash", "size-4")}</button>
                         </form>
                     </div>

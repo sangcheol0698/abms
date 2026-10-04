@@ -26,7 +26,7 @@
         @if(editing)<a href="/employees/${employee.id()}" class="hover:text-fg-neutral-muted">${employee.getName()}</a>${Icons.of("chevron-right", "size-3")}@endif
         <span>${editing ? "수정" : "등록"}</span>
     `)
-    <form method="post" action="${editing ? "/employees/" + employee.id() : "/employees"}" class="mx-auto max-w-4xl" novalidate>
+    <form method="post" action="${editing ? "/employees/" + employee.id() : "/employees"}" class="mx-auto max-w-4xl" novalidate>${kr.co.abacus.abms.common.web.Csrf.field()}
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">이메일은 로그인 아이디로도 쓰입니다.</p></div>

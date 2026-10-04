@@ -56,6 +56,14 @@ class WebSecurityTest {
     }
 
     @Test
+    void 일반_POST_폼에는_CSRF_hidden_필드가_있어_스크립트_없이도_제출된다() throws Exception {
+        mvc.perform(get("/parties/new").with(user(Fixtures.admin(employee))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.matchesPattern(
+                        "(?s).*<form method=\"post\" action=\"/parties\"[^>]*><input type=\"hidden\" name=\"_csrf\" value=\"[^\"]+\">.*")));
+    }
+
+    @Test
     void 비로그인_사용자는_로그인_페이지로_이동한다() throws Exception {
         mvc.perform(get("/employees"))
                 .andExpect(status().is3xxRedirection())

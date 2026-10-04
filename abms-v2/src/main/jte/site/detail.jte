@@ -38,7 +38,7 @@
         @if(ctx.can(PermissionCode.DEPARTMENT_WRITE))
             <a href="/sites/${site.id()}/edit" class="${Seed.button("neutralOutline")}">${Icons.of("pencil", "size-4")} 수정</a>
             @if(departments.isEmpty())
-                <form method="post" action="/sites/${site.id()}/delete" hx-confirm="${site.getName()} 사업장을 삭제할까요?">
+                <form method="post" action="/sites/${site.id()}/delete" hx-confirm="${site.getName()} 사업장을 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <button class="${Seed.button("neutralOutline")} text-fg-critical">${Icons.of("trash", "size-4")} 삭제</button>
                 </form>
             @endif

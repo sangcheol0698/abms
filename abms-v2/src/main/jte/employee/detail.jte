@@ -86,7 +86,7 @@
     `, actions = @`
         @if(employee.isDeleted())
             @if(canWrite)
-                <form method="post" action="/employees/${employee.id()}/restore" hx-confirm="${employee.getName()} 직원을 복구할까요?">
+                <form method="post" action="/employees/${employee.id()}/restore" hx-confirm="${employee.getName()} 직원을 복구할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <button class="${Seed.button("brandSolid")}">${Icons.of("refresh", "size-4")} 복구</button>
                 </form>
             @endif
@@ -103,12 +103,12 @@
                             <button type="button" class="menu-item" hx-get="/employees/${employee.id()}/salary" hx-target="#modal-body">연봉 변경</button>
                         @endif
                         @if(employee.getStatus() == EmployeeStatus.ACTIVE)
-                            <form method="post" action="/employees/${employee.id()}/leave" hx-confirm="휴직 처리할까요?">
+                            <form method="post" action="/employees/${employee.id()}/leave" hx-confirm="휴직 처리할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                                 <button class="menu-item">휴직 처리</button>
                             </form>
                         @endif
                         @if(employee.getStatus() != EmployeeStatus.ACTIVE)
-                            <form method="post" action="/employees/${employee.id()}/activate" hx-confirm="재직 상태로 변경할까요?">
+                            <form method="post" action="/employees/${employee.id()}/activate" hx-confirm="재직 상태로 변경할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                                 <button class="menu-item">${employee.isResigned() ? "재입사 처리" : "복직 처리"}</button>
                             </form>
                         @endif
@@ -116,7 +116,7 @@
                             <button type="button" class="menu-item" hx-get="/employees/${employee.id()}/resign" hx-target="#modal-body">퇴사 처리</button>
                         @endif
                         <div class="my-x1 border-t border-stroke-neutral-subtle"></div>
-                        <form method="post" action="/employees/${employee.id()}/delete" hx-confirm="${employee.getName()} 직원을 삭제할까요? 삭제 후에도 복구할 수 있습니다.">
+                        <form method="post" action="/employees/${employee.id()}/delete" hx-confirm="${employee.getName()} 직원을 삭제할까요? 삭제 후에도 복구할 수 있습니다.">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="menu-item text-fg-critical">삭제</button>
                         </form>
                     </div>

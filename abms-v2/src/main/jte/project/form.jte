@@ -22,7 +22,7 @@
         @if(editing)<a href="/projects/${project.id()}" class="hover:text-fg-neutral-muted">${project.getName()}</a>${Icons.of("chevron-right", "size-3")}@endif
         <span>${editing ? "수정" : "등록"}</span>
     `)
-    <form method="post" action="${editing ? "/projects/" + project.id() : "/projects"}" class="mx-auto max-w-4xl" novalidate>
+    <form method="post" action="${editing ? "/projects/" + project.id() : "/projects"}" class="mx-auto max-w-4xl" novalidate>${kr.co.abacus.abms.common.web.Csrf.field()}
         @template.components.globalError(errors = errors)
         <section class="form-section">
             <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">코드는 등록 후 바꿀 수 없습니다.</p></div>
