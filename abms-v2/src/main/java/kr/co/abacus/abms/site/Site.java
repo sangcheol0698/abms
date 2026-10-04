@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
@@ -20,7 +21,7 @@ import kr.co.abacus.abms.common.domain.Location;
 @Entity
 @Table(name = "tb_site")
 @SQLRestriction("deleted = false")
-public class Site extends BaseEntity {
+public class Site extends BaseEntity implements Auditable {
 
     @Column(nullable = false, length = 50)
     private String name;
@@ -99,6 +100,16 @@ public class Site extends BaseEntity {
             return new SiteInfo(name, siteType, phone, location, memo);
         }
 
+    }
+
+    @Override
+    public String auditLabel() {
+        return "사업장";
+    }
+
+    @Override
+    public String auditName() {
+        return name;
     }
 
 }

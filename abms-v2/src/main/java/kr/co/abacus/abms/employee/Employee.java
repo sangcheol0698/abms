@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 
@@ -23,7 +24,7 @@ import kr.co.abacus.abms.common.domain.BusinessException;
  */
 @Entity
 @Table(name = "tb_employee")
-public class Employee extends BaseEntity {
+public class Employee extends BaseEntity implements Auditable {
 
     private static final Pattern EMAIL = Pattern.compile("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$");
     private static final String DELETED_EMAIL_PREFIX = "deleted.";
@@ -349,6 +350,16 @@ public class Employee extends BaseEntity {
 
     public @Nullable WorkType getWorkType() {
         return workType;
+    }
+
+    @Override
+    public String auditLabel() {
+        return "직원";
+    }
+
+    @Override
+    public String auditName() {
+        return name;
     }
 
 }

@@ -54,6 +54,8 @@ import kr.co.abacus.abms.security.LoginUser;
 @RequestMapping("/employees")
 public class EmployeeController {
 
+    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
+
     private static final int PAGE_SIZE = 20;
 
     private final EmployeeService employeeService;
@@ -64,7 +66,9 @@ public class EmployeeController {
 
     public EmployeeController(EmployeeService employeeService, DepartmentService departmentService,
                               ProjectAssignmentService assignmentService, ProjectRepository projectRepository,
-                              AccountRepository accountRepository) {
+                              AccountRepository accountRepository,
+            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
         this.employeeService = employeeService;
         this.departmentService = departmentService;
         this.assignmentService = assignmentService;
@@ -149,6 +153,7 @@ public class EmployeeController {
         model.addAttribute("canWrite", employeeService.canFullWrite(user, employee.getDepartmentId()));
         model.addAttribute("canEditOwn", employeeService.canWriteOwnProfile(user, employee));
         model.addAttribute("account", accountRepository.findByEmployeeId(id).orElse(null));
+        model.addAttribute("auditHistory", auditQueryService.history("Employee", id, 30));
         return "employee/detail";
     }
 

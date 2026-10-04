@@ -49,6 +49,8 @@ import kr.co.abacus.abms.security.LoginUser;
 @RequestMapping("/parties")
 public class PartyController {
 
+    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
+
     private final PartyService partyService;
     private final ProjectService projectService;
     private final DepartmentService departmentService;
@@ -56,7 +58,9 @@ public class PartyController {
     private final Geocoder geocoder;
 
     public PartyController(PartyService partyService, ProjectService projectService, DepartmentService departmentService,
-                           ProjectRevenuePlanRepository revenuePlanRepository, Geocoder geocoder) {
+                           ProjectRevenuePlanRepository revenuePlanRepository, Geocoder geocoder,
+            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
         this.geocoder = geocoder;
         this.revenuePlanRepository = revenuePlanRepository;
         this.partyService = partyService;
@@ -119,6 +123,7 @@ public class PartyController {
         model.addAttribute("tree", departmentService.tree());
         MapMarker marker = MapMarker.of(party.getName(), party.getLocation().fullAddress(), party.getLocation(), null);
         model.addAttribute("markers", marker == null ? java.util.List.of() : java.util.List.of(marker));
+        model.addAttribute("auditHistory", auditQueryService.history("Party", id, 30));
         return "party/detail";
     }
 

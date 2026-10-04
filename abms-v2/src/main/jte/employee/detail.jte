@@ -26,6 +26,7 @@
 @param boolean canEditOwn
 @param Account account = null
 @param EmployeeInsight insight
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, aside = @`
             <div class="mb-x5 flex items-center gap-x3">
                 @template.components.avatar(avatar = employee.getAvatar(), initial = employee.initial(), size = "size-10 text-base")
@@ -274,6 +275,9 @@
                     @endif
                 </section>
             </div>
+        @if(auditHistory != null)
+            <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
+        @endif
         </div>
 
 `)

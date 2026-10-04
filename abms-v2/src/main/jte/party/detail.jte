@@ -17,6 +17,7 @@
 @param DepartmentTree tree
 @param PartyInsight insight
 @param List<MapMarker> markers
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, aside = @`
     <dl class="property-list">
         <dt>구분</dt>
@@ -156,6 +157,9 @@
                 <h2 class="section-title">메모</h2>
                 <p class="rounded-r2 bg-bg-neutral-muted p-x3 t4-regular whitespace-pre-line text-fg-neutral-muted">${party.getMemo()}</p>
             </section>
+        @endif
+        @if(auditHistory != null)
+            <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
         @endif
     </div>
 `)

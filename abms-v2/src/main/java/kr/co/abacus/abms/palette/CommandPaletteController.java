@@ -109,6 +109,9 @@ public class CommandPaletteController {
         if (user.has(PermissionCode.SUMMARY_MANAGE)) {
             commands.add(Command.go("원가 정책", "/admin/cost-policies", "calculator", null, "cost policy 제경비 판관비"));
         }
+        if (user.has(PermissionCode.ACCOUNT_MANAGE)) {
+            commands.add(Command.go("변경 이력", "/admin/audit-logs", "refresh", null, "audit log history 감사 이력 변경"));
+        }
         commands.add(Command.go("내 정보", "/me", "user", "G M", "me profile 비밀번호 password"));
         if (user.has(PermissionCode.EMPLOYEE_WRITE)) {
             commands.add(Command.create("직원 등록", "/employees/new", "employee new 추가 생성"));

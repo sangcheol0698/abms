@@ -9,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
+import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
@@ -20,7 +21,7 @@ import kr.co.abacus.abms.employee.EmployeeType;
  */
 @Entity
 @Table(name = "tb_employee_cost_policy")
-public class EmployeeCostPolicy extends BaseEntity {
+public class EmployeeCostPolicy extends BaseEntity implements Auditable {
 
     @Column(nullable = false)
     private int applyYear;
@@ -80,6 +81,16 @@ public class EmployeeCostPolicy extends BaseEntity {
     }
 
     public record CostBreakdown(Money monthlySalary, Money overheadCost, Money sgaCost, Money totalCost) {
+    }
+
+    @Override
+    public String auditLabel() {
+        return "원가 정책";
+    }
+
+    @Override
+    public String auditName() {
+        return applyYear + "년 " + type.label();
     }
 
 }

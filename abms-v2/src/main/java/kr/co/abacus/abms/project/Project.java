@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
@@ -23,7 +24,7 @@ import kr.co.abacus.abms.common.domain.Period;
 @Entity
 @Table(name = "tb_project")
 @SQLRestriction("deleted = false")
-public class Project extends BaseEntity {
+public class Project extends BaseEntity implements Auditable {
 
     @Column(nullable = false)
     private Long partyId;
@@ -141,6 +142,16 @@ public class Project extends BaseEntity {
             Money contractAmount,
             Period period
     ) {
+    }
+
+    @Override
+    public String auditLabel() {
+        return "프로젝트";
+    }
+
+    @Override
+    public String auditName() {
+        return code + " " + name;
     }
 
 }

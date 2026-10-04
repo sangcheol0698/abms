@@ -22,6 +22,7 @@
 @param boolean canWrite
 @param DepartmentInsight insight
 @param String trendChart = null
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 <div>
     <div class="min-w-0 space-y-6">
         <div class="flex flex-wrap items-start justify-between gap-x3">
@@ -155,6 +156,9 @@
                     @endfor
                 </div>
             </section>
+        @endif
+        @if(auditHistory != null)
+            <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
         @endif
     </div>
 

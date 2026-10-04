@@ -36,6 +36,8 @@ import kr.co.abacus.abms.summary.ProfitQueryService;
 @RequestMapping("/departments")
 public class DepartmentController {
 
+    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
+
     private final DepartmentService departmentService;
     private final EmployeeService employeeService;
     private final ProjectRepository projectRepository;
@@ -48,7 +50,9 @@ public class DepartmentController {
                                 ProjectRepository projectRepository, ProfitQueryService profitQueryService,
                                 AccessService accessService,
                                 kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository,
-                                SiteService siteService) {
+                                SiteService siteService,
+            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
         this.siteService = siteService;
         this.assignmentRepository = assignmentRepository;
         this.departmentService = departmentService;
@@ -176,6 +180,7 @@ public class DepartmentController {
         List<ProfitQueryService.MonthPoint> trend = showProfit ? profitQueryService.departmentTrend(subtree, Year.now().getValue()) : null;
         model.addAttribute("trend", trend);
         model.addAttribute("trendChart", trend == null ? null : ProfitQueryService.chartJson(trend));
+        model.addAttribute("auditHistory", auditQueryService.history("Department", id, 30));
         model.addAttribute("canWrite", user.has(PermissionCode.DEPARTMENT_WRITE));
         model.addAttribute("site", department.getSiteId() == null ? null : siteService.find(department.getSiteId()));
     }

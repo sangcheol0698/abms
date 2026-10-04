@@ -39,12 +39,16 @@ import kr.co.abacus.abms.security.LoginUser;
 @RequestMapping("/admin/permission-groups")
 public class PermissionGroupController {
 
+    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
+
     private final PermissionGroupService groupService;
     private final AccountService accountService;
     private final EmployeeRepository employeeRepository;
 
     public PermissionGroupController(PermissionGroupService groupService, AccountService accountService,
-                                     EmployeeRepository employeeRepository) {
+                                     EmployeeRepository employeeRepository,
+            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
         this.groupService = groupService;
         this.accountService = accountService;
         this.employeeRepository = employeeRepository;
@@ -95,6 +99,7 @@ public class PermissionGroupController {
         model.addAttribute("members", accounts.stream().filter(a -> memberIds.contains(a.id())).toList());
         model.addAttribute("candidates", accounts.stream().filter(a -> !memberIds.contains(a.id())).toList());
         model.addAttribute("employees", employees);
+        model.addAttribute("auditHistory", auditQueryService.history("PermissionGroup", id, 30));
         return "admin/permissionGroup";
     }
 

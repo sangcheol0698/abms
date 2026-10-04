@@ -21,6 +21,7 @@
 @param kr.co.abacus.abms.department.DepartmentInsight insight = null
 @param String trendChart = null
 @param kr.co.abacus.abms.site.Site site = null
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, title = "부서", fill = true, aside = department == null ? null : @`
     @template.department.properties(department = department, tree = tree, members = members, subtreeMemberCount = subtreeMemberCount, leader = leader, site = site)
 `, content = @`
@@ -57,7 +58,7 @@
             @if(department != null)
                 @template.department.detail(ctx = ctx, department = department, tree = tree, members = members,
                     subtreeMemberCount = subtreeMemberCount, leader = leader, projects = projects, trend = trend, canWrite = canWrite,
-                    insight = insight, trendChart = trendChart)
+                    insight = insight, trendChart = trendChart, auditHistory = auditHistory)
             @else
                 @template.components.empty(message = "부서가 없습니다.", icon = "building")
             @endif

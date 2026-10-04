@@ -119,6 +119,9 @@
                     @if(ctx.can(PermissionCode.SUMMARY_MANAGE))
                         @template.layout.navItem(href = "/admin/cost-policies", label = "원가 정책", icon = "calculator", current = ctx.active("/admin/cost-policies"))
                     @endif
+                    @if(ctx.can(PermissionCode.ACCOUNT_MANAGE))
+                        @template.layout.navItem(href = "/admin/audit-logs", label = "변경 이력", icon = "refresh", current = ctx.active("/admin/audit-logs"))
+                    @endif
                 </div>
             @endif
         </nav>

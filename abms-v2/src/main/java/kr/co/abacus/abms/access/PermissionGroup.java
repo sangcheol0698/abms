@@ -8,6 +8,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.SQLRestriction;
 
+import kr.co.abacus.abms.common.audit.Auditable;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 
@@ -17,7 +18,7 @@ import kr.co.abacus.abms.common.domain.BusinessException;
 @Entity
 @Table(name = "tb_permission_group")
 @SQLRestriction("deleted = false")
-public class PermissionGroup extends BaseEntity {
+public class PermissionGroup extends BaseEntity implements Auditable {
 
     public static final long DEFAULT_GROUP_ID = 1L;
     public static final long ADMIN_GROUP_ID = 2L;
@@ -75,6 +76,16 @@ public class PermissionGroup extends BaseEntity {
 
     public PermissionGroupType getGroupType() {
         return groupType;
+    }
+
+    @Override
+    public String auditLabel() {
+        return "권한 그룹";
+    }
+
+    @Override
+    public String auditName() {
+        return name;
     }
 
 }

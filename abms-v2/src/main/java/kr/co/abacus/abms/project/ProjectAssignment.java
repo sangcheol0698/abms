@@ -15,6 +15,8 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.audit.Auditable;
+import kr.co.abacus.abms.common.audit.Auditable.AuditRef;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Period;
@@ -26,7 +28,7 @@ import kr.co.abacus.abms.employee.Employee;
 @Entity
 @Table(name = "tb_project_assignment")
 @SQLRestriction("deleted = false")
-public class ProjectAssignment extends BaseEntity {
+public class ProjectAssignment extends BaseEntity implements Auditable {
 
     @Column(nullable = false)
     private Long projectId;
@@ -106,6 +108,21 @@ public class ProjectAssignment extends BaseEntity {
 
     public static Period periodOf(LocalDate start, @Nullable LocalDate end) {
         return new Period(Objects.requireNonNull(start, "투입 시작일은 필수입니다."), end);
+    }
+
+    @Override
+    public String auditLabel() {
+        return "투입 인력";
+    }
+
+    @Override
+    public String auditName() {
+        return role == null ? "투입" : role.label();
+    }
+
+    @Override
+    public AuditRef auditParent() {
+        return new AuditRef("Project", projectId);
     }
 
 }

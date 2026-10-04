@@ -16,6 +16,7 @@
 @param List<Account> members
 @param List<Account> candidates
 @param Map<Long, Employee> employees
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 !{boolean readOnly = group.isSystem();}
 @template.layout.app(ctx = ctx, aside = @`
             <h2 class="section-title">할당된 계정 <span class="section-count">${members.size()}</span></h2>
@@ -112,5 +113,8 @@
                 </div>
             @endif
         </form>
+        @if(auditHistory != null)
+            <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
+        @endif
 
 `)

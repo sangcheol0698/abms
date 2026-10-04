@@ -50,6 +50,8 @@ import kr.co.abacus.abms.summary.ProfitQueryService;
 @RequestMapping("/projects")
 public class ProjectController {
 
+    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
+
     private final ProjectService projectService;
     private final ProjectRevenueService revenueService;
     private final ProjectAssignmentService assignmentService;
@@ -61,7 +63,9 @@ public class ProjectController {
     public ProjectController(ProjectService projectService, ProjectRevenueService revenueService,
                              ProjectAssignmentService assignmentService, PartyService partyService,
                              DepartmentService departmentService, ProfitQueryService profitQueryService,
-                             ProjectSections sections) {
+                             ProjectSections sections,
+            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
         this.projectService = projectService;
         this.revenueService = revenueService;
         this.assignmentService = assignmentService;
@@ -147,6 +151,7 @@ public class ProjectController {
         boolean showHistory = profitQueryService.scope(user).coversProject(project.id(), project.getLeadDepartmentId());
         model.addAttribute("showHistory", showHistory);
         model.addAttribute("history", showHistory ? profitQueryService.projectHistory(id) : List.of());
+        model.addAttribute("auditHistory", auditQueryService.history("Project", id, 30));
         return "project/detail";
     }
 

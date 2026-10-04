@@ -10,6 +10,8 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.SQLRestriction;
 
+import kr.co.abacus.abms.common.audit.Auditable;
+import kr.co.abacus.abms.common.audit.Auditable.AuditRef;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
@@ -21,7 +23,7 @@ import kr.co.abacus.abms.common.domain.Period;
 @Entity
 @Table(name = "tb_payroll")
 @SQLRestriction("deleted = false")
-public class Payroll extends BaseEntity {
+public class Payroll extends BaseEntity implements Auditable {
 
     @Column(nullable = false)
     private Long employeeId;
@@ -64,6 +66,21 @@ public class Payroll extends BaseEntity {
 
     public Period getPeriod() {
         return period;
+    }
+
+    @Override
+    public String auditLabel() {
+        return "연봉";
+    }
+
+    @Override
+    public String auditName() {
+        return "연봉";
+    }
+
+    @Override
+    public AuditRef auditParent() {
+        return new AuditRef("Employee", employeeId);
     }
 
 }

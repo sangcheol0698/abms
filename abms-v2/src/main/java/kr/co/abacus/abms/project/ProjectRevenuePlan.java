@@ -12,6 +12,8 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import org.jspecify.annotations.Nullable;
 
+import kr.co.abacus.abms.common.audit.Auditable;
+import kr.co.abacus.abms.common.audit.Auditable.AuditRef;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
@@ -24,7 +26,7 @@ import kr.co.abacus.abms.common.domain.Money;
 @Entity
 @Table(name = "tb_project_revenue_plan")
 @SQLRestriction("deleted = false")
-public class ProjectRevenuePlan extends BaseEntity {
+public class ProjectRevenuePlan extends BaseEntity implements Auditable {
 
     @Column(nullable = false)
     private Long projectId;
@@ -119,6 +121,21 @@ public class ProjectRevenuePlan extends BaseEntity {
     }
 
     public record RevenuePlanInfo(int sequence, LocalDate revenueDate, RevenueType type, Money amount, @Nullable String memo) {
+    }
+
+    @Override
+    public String auditLabel() {
+        return "매출 계획";
+    }
+
+    @Override
+    public String auditName() {
+        return sequence + "차 " + type.label();
+    }
+
+    @Override
+    public AuditRef auditParent() {
+        return new AuditRef("Project", projectId);
     }
 
 }

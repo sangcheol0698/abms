@@ -21,6 +21,7 @@
 @param StaffingSection staffing
 @param List<MonthlyRevenueSummary> history
 @param boolean showHistory
+@param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
 @template.layout.app(ctx = ctx, aside = @`
             <dl class="property-list">
             <dt>상태</dt>
@@ -127,6 +128,9 @@
             @endif
         </section>
     @endif
+        @if(auditHistory != null)
+            <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
+        @endif
     </div>
 
 `)

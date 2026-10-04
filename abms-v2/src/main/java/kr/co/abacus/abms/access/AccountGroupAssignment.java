@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+import kr.co.abacus.abms.common.audit.Auditable;
+import kr.co.abacus.abms.common.audit.Auditable.AuditRef;
 import kr.co.abacus.abms.common.domain.BaseEntity;
 
 /**
@@ -11,7 +13,7 @@ import kr.co.abacus.abms.common.domain.BaseEntity;
  */
 @Entity
 @Table(name = "tb_account_group_assignment")
-public class AccountGroupAssignment extends BaseEntity {
+public class AccountGroupAssignment extends BaseEntity implements Auditable {
 
     @Column(nullable = false)
     private Long accountId;
@@ -35,6 +37,21 @@ public class AccountGroupAssignment extends BaseEntity {
 
     public Long getPermissionGroupId() {
         return permissionGroupId;
+    }
+
+    @Override
+    public String auditLabel() {
+        return "권한 그룹 할당";
+    }
+
+    @Override
+    public String auditName() {
+        return "권한 그룹 할당";
+    }
+
+    @Override
+    public AuditRef auditParent() {
+        return new AuditRef("Account", accountId);
     }
 
 }

@@ -48,6 +48,8 @@ import kr.co.abacus.abms.site.Site.SiteInfo;
 @RequestMapping("/sites")
 public class SiteController {
 
+    private final kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService;
+
     private static final int NEARBY_LIMIT = 5;
 
     private final SiteService siteService;
@@ -57,7 +59,9 @@ public class SiteController {
     private final Geocoder geocoder;
 
     public SiteController(SiteService siteService, DepartmentRepository departmentRepository, DepartmentService departmentService,
-                          PartyService partyService, Geocoder geocoder) {
+                          PartyService partyService, Geocoder geocoder,
+            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
         this.geocoder = geocoder;
         this.siteService = siteService;
         this.departmentRepository = departmentRepository;
@@ -100,6 +104,7 @@ public class SiteController {
         model.addAttribute("nearby", user.has(PermissionCode.PARTY_READ) ? nearby(site.getLocation()) : List.of());
         MapMarker marker = MapMarker.of(site.getName(), site.getLocation().fullAddress(), site.getLocation(), null);
         model.addAttribute("markers", marker == null ? List.of() : List.of(marker));
+        model.addAttribute("auditHistory", auditQueryService.history("Site", id, 30));
         return "site/detail";
     }
 
