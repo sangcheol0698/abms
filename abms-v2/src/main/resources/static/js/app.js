@@ -106,6 +106,17 @@
         }
     });
 
+    // 모달 폼은 ⌘/Ctrl + Enter 로 제출한다.
+    document.addEventListener('keydown', (e) => {
+        const dialog = modal();
+        if (!dialog || !dialog.open || !(e.metaKey || e.ctrlKey) || e.key !== 'Enter') return;
+        const form = dialog.querySelector('form');
+        if (form) {
+            e.preventDefault();
+            form.requestSubmit();
+        }
+    });
+
     document.body.addEventListener('closeModal', () => {
         const dialog = modal();
         if (dialog && dialog.open) dialog.close();

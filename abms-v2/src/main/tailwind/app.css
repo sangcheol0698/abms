@@ -276,6 +276,15 @@
         @apply sticky bottom-4 z-10 mt-x2 flex items-center justify-end gap-x2 rounded-r3 border border-stroke-neutral-subtle bg-bg-layer-floating px-x4 py-x2_5 shadow-s2;
     }
 
+    /* 모달 폼: 라벨 | 값 속성 행 */
+    .prop-form {
+        @apply grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-x3 gap-y-x3;
+    }
+
+    .prop-label {
+        @apply flex min-h-8 items-center t4-regular text-fg-neutral-subtle;
+    }
+
     /* 트리 (조직도) */
     .tree-item {
         @apply flex h-7 items-center gap-x1_5 rounded-r1_5 pr-x2 t4-regular text-fg-neutral-muted transition-colors hover:bg-bg-transparent-pressed;

@@ -3,23 +3,22 @@
 @param String title
 @param String username
 @param String password
-@template.components.modal(title = title, body = @`
-    <div class="space-y-3">
-        <div class="flex items-start gap-2 rounded-lg bg-bg-warning-weak p-3 text-sm text-fg-warning-contrast ring-1 ring-stroke-warning-weak">
-            ${Icons.of("warning", "mt-0.5 size-4 shrink-0")}
+@template.components.modal(title = title, context = "계정 관리", body = @`
+    <div class="space-y-x4">
+        <div class="flex items-start gap-x2 rounded-r2 bg-bg-warning-weak px-x3 py-x2_5 t3-regular text-fg-warning-contrast">
+            ${Icons.of("warning", "mt-x0_5 size-4 shrink-0")}
             <span>임시 비밀번호는 지금 한 번만 표시됩니다. 사용자에게 안전하게 전달하고 첫 로그인 후 변경하도록 안내하세요.</span>
         </div>
-        <dl class="divide-y divide-stroke-neutral-subtle rounded-lg ring-1 ring-stroke-neutral-subtle">
-            <div class="flex justify-between px-4 py-3 text-sm"><dt class="text-fg-neutral-subtle">아이디</dt><dd class="font-medium">${username}</dd></div>
-            <div class="flex items-center justify-between px-4 py-3 text-sm">
-                <dt class="text-fg-neutral-subtle">임시 비밀번호</dt>
-                <dd class="flex items-center gap-2">
-                    <code id="temp-password" class="rounded bg-bg-neutral-weak px-2 py-1 font-mono text-base">${password}</code>
-                    <button type="button" class="${Seed.button("ghost", "xsmall")}" onclick="navigator.clipboard.writeText(document.getElementById('temp-password').textContent).then(() => abmsToast('success', '복사했습니다.'))">복사</button>
-                </dd>
-            </div>
-        </dl>
+        <div class="prop-form">
+            <span class="prop-label">아이디</span>
+            <span class="flex min-h-8 items-center t4-medium text-fg-neutral">${username}</span>
+            <span class="prop-label">임시 비밀번호</span>
+            <span class="flex min-h-8 items-center gap-x2">
+                <code id="temp-password" class="rounded-r1_5 bg-bg-neutral-weak px-x2 py-x1 font-mono t5-medium text-fg-neutral">${password}</code>
+                <button type="button" class="${Seed.button("neutralOutline", "xsmall")}" onclick="navigator.clipboard.writeText(document.getElementById('temp-password').textContent).then(() => abmsToast('success', '복사했습니다.'))">${Icons.of("check", "size-3.5")} 복사</button>
+            </span>
+        </div>
     </div>
 `, footer = @`
-    <button type="button" class="${Seed.button("brandSolid")}" data-close-modal>확인</button>
+    <button type="button" class="${Seed.button("brandSolid")}" data-close-modal autofocus>확인</button>
 `)
