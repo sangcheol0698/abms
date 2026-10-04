@@ -14,7 +14,7 @@
         <button type="button" class="${Seed.button("neutralWeak", "xsmall")}" hx-get="/projects/${projectId}/revenues/new" hx-target="#modal-body">${Icons.of("plus", "size-4")} 매출 계획</button>
     @endif
 </div>
-<div class="grid grid-cols-1 gap-4 border-b border-stroke-neutral-subtle px-5 py-4 sm:grid-cols-3">
+<div class="grid grid-cols-1 gap-4 border-b border-stroke-neutral-subtle px-5 py-4 @xl:grid-cols-3">
     <div>
         <p class="stat-label">발행 / 계약금액</p>
         <p class="mt-1 text-sm font-semibold tabular-nums">${Ui.won(section.issued())} / ${Ui.won(section.project().getContractAmount())}원</p>

@@ -21,7 +21,36 @@
 @param StaffingSection staffing
 @param List<MonthlyRevenueSummary> history
 @param boolean showHistory
-@template.layout.app(ctx = ctx, title = project.getName(), content = @`
+@template.layout.app(ctx = ctx, aside = @`
+            <dl class="property-list">
+            <dt>상태</dt>
+            <dd class="flex items-center gap-x2">@template.components.statusIcon(status = project.getStatus())${project.getStatus().label()}</dd>
+            <dt>코드</dt>
+            <dd class="tabular-nums">${project.getCode()}</dd>
+            <dt>협력사</dt>
+            <dd>@if(ctx.can(PermissionCode.PARTY_READ))<a class="link" href="/parties/${party.id()}">${party.getName()}</a>@else${party.getName()}@endif</dd>
+            <dt>주관 부서</dt>
+            <dd><a class="link" href="/departments?selected=${project.getLeadDepartmentId()}">${tree.nameOf(project.getLeadDepartmentId())}</a></dd>
+            <dt>시작일</dt>
+            <dd class="tabular-nums">${Ui.date(project.getPeriod().startDate())}</dd>
+            <dt>종료일</dt>
+            <dd class="tabular-nums">${Ui.date(project.getPeriod().endDate())}</dd>
+            <dt>계약금액</dt>
+            <dd class="t4-bold tabular-nums">${Ui.won(project.getContractAmount())}원</dd>
+            </dl>
+            @if(showHistory && !history.isEmpty())
+            !{Money sumRevenue = history.stream().map(MonthlyRevenueSummary::getRevenueAmount).reduce(Money.ZERO, Money::plus);}
+            !{Money sumCost = history.stream().map(MonthlyRevenueSummary::getCostAmount).reduce(Money.ZERO, Money::plus);}
+            <div class="mt-x5 border-t border-stroke-neutral-subtle pt-x4">
+                <h2 class="mb-x3 t3-medium text-fg-neutral-subtle">누적 손익</h2>
+                <dl class="property-list">
+                    <dt>매출</dt><dd class="tabular-nums">${Ui.won(sumRevenue)}</dd>
+                    <dt>비용</dt><dd class="tabular-nums">${Ui.won(sumCost)}</dd>
+                    <dt>이익</dt><dd class="t4-bold tabular-nums ${Ui.signClass(sumRevenue.minus(sumCost))}">${Ui.won(sumRevenue.minus(sumCost))}</dd>
+                </dl>
+            </div>
+            @endif
+`, title = project.getName(), content = @`
     @template.components.pageHeader(title = project.getName(), subtitle = project.getCode(), breadcrumb = @`
         <a href="/projects" class="hover:text-fg-neutral-muted">프로젝트</a>${Icons.of("chevron-right", "size-3")}<span>${project.getName()}</span>
     `, actions = @`
@@ -29,48 +58,38 @@
             <a href="/projects/${project.id()}/edit" class="${Seed.button("neutralOutline")}">${Icons.of("pencil", "size-4")} 수정</a>
             <details class="relative" data-dropdown>
                 <summary class="${Seed.button("neutralOutline")}">더보기 ${Icons.of("chevron-down", "size-4")}</summary>
-                <div class="dropdown-panel w-44 py-1.5">
+                <div class="dropdown-panel w-44 p-x1">
                     @if(!project.getStatus().isClosed())
                         <form method="post" action="/projects/${project.id()}/complete" hx-confirm="프로젝트를 완료 처리할까요?">
-                            <button class="block w-full px-4 py-2 text-left text-sm hover:bg-bg-neutral-muted">완료 처리</button>
+                            <button class="menu-item">완료 처리</button>
                         </form>
                         <form method="post" action="/projects/${project.id()}/cancel" hx-confirm="프로젝트를 취소 처리할까요?">
-                            <button class="block w-full px-4 py-2 text-left text-sm hover:bg-bg-neutral-muted">취소 처리</button>
+                            <button class="menu-item">취소 처리</button>
                         </form>
                     @endif
                     <form method="post" action="/projects/${project.id()}/delete" hx-confirm="프로젝트와 매출 계획, 투입 정보를 모두 삭제할까요?">
-                        <button class="block w-full px-4 py-2 text-left text-sm text-fg-critical hover:bg-bg-critical-weak">삭제</button>
+                        <button class="menu-item text-fg-critical">삭제</button>
                     </form>
                 </div>
             </details>
         @endif
     `)
 
-    <section class="card">
-        <dl class="grid grid-cols-2 divide-stroke-neutral-subtle sm:grid-cols-3 lg:grid-cols-6 lg:divide-x">
-            <div class="px-5 py-4"><dt class="stat-label">상태</dt><dd class="mt-1.5"><span class="${Ui.badge(project.getStatus())}">${project.getStatus().label()}</span></dd></div>
-            <div class="px-5 py-4"><dt class="stat-label">협력사</dt><dd class="mt-1 text-sm font-medium">
-                @if(ctx.can(PermissionCode.PARTY_READ))<a class="link" href="/parties/${party.id()}">${party.getName()}</a>@else${party.getName()}@endif
-            </dd></div>
-            <div class="px-5 py-4"><dt class="stat-label">주관 부서</dt><dd class="mt-1 text-sm font-medium"><a class="link" href="/departments?selected=${project.getLeadDepartmentId()}">${tree.nameOf(project.getLeadDepartmentId())}</a></dd></div>
-            <div class="px-5 py-4 lg:col-span-2"><dt class="stat-label">기간</dt><dd class="mt-1 text-sm font-medium tabular-nums">${Ui.period(project.getPeriod().startDate(), project.getPeriod().endDate())}</dd></div>
-            <div class="px-5 py-4"><dt class="stat-label">계약금액</dt><dd class="mt-1 text-sm font-semibold tabular-nums">${Ui.won(project.getContractAmount())}원</dd></div>
-        </dl>
-        @if(project.getDescription() != null)
-            <p class="border-t border-stroke-neutral-subtle px-5 py-3 text-sm text-fg-neutral-muted">${project.getDescription()}</p>
-        @endif
-    </section>
+    <div class="min-w-0 space-y-4">
+    @if(project.getDescription() != null)
+        <p class="t5-regular text-fg-neutral-muted">${project.getDescription()}</p>
+    @endif
 
-    <section class="card mt-4" id="revenue-section">
+    <section class="card" id="revenue-section">
         @template.project.revenueSection(section = revenue)
     </section>
 
-    <section class="card mt-4" id="staffing-section">
+    <section class="card" id="staffing-section">
         @template.project.staffingSection(section = staffing)
     </section>
 
     @if(showHistory)
-        <section class="card mt-4 overflow-hidden">
+        <section class="card overflow-hidden">
             <div class="card-header">
                 <h2 class="card-title">월별 손익 집계</h2>
                 <span class="text-xs text-fg-neutral-subtle">매일 새벽 자동 집계 · 손익 현황에서 재집계할 수 있습니다.</span>
@@ -108,4 +127,6 @@
             @endif
         </section>
     @endif
+    </div>
+
 `)

@@ -15,18 +15,21 @@
         <a href="/employees" class="hover:text-fg-neutral-muted">직원</a>${Icons.of("chevron-right", "size-3")}
         <a href="/employees/${employee.id()}" class="hover:text-fg-neutral-muted">${employee.getName()}</a>${Icons.of("chevron-right", "size-3")}<span>수정</span>
     `)
-    <form method="post" action="/employees/${employee.id()}/profile" class="card max-w-xl" novalidate>
-        <div class="card-body space-y-4">
-            @template.components.globalError(errors = errors)
-            @template.components.input(name = "name", label = "이름", value = Ui.value(form.name()), errors = errors, required = true)
-            @template.components.input(name = "birthDate", label = "생년월일", value = Ui.value(form.birthDate()), errors = errors, type = "date", required = true)
-            <div>
-                <p class="label">아바타</p>
-                @template.employee.avatarPicker(selected = form.avatar() == null ? EmployeeAvatar.SKY_GLOW : form.avatar(), initial = employee.initial())
+    <form method="post" action="/employees/${employee.id()}/profile" class="mx-auto max-w-4xl" novalidate>
+        @template.components.globalError(errors = errors)
+        <section class="form-section">
+            <div><h2 class="form-section-title">기본 정보</h2><p class="form-section-desc">그 밖의 정보는 인사 담당자에게 요청하세요.</p></div>
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
+                @template.components.input(name = "name", label = "이름", value = Ui.value(form.name()), errors = errors, required = true)
+                @template.components.input(name = "birthDate", label = "생년월일", value = Ui.value(form.birthDate()), errors = errors, type = "date", required = true)
             </div>
-        </div>
-        <div class="flex justify-end gap-2 rounded-b-xl border-t border-stroke-neutral-subtle bg-bg-neutral-muted px-5 py-3.5">
-            <a href="/employees/${employee.id()}" class="${Seed.button("neutralWeak")}">취소</a>
+        </section>
+        <section class="form-section">
+            <div><h2 class="form-section-title">아바타</h2></div>
+            <div>@template.employee.avatarPicker(selected = form.avatar() == null ? EmployeeAvatar.SKY_GLOW : form.avatar(), initial = employee.initial())</div>
+        </section>
+        <div class="form-actions">
+            <a href="/employees/${employee.id()}" class="${Seed.button("neutralOutline")}">취소</a>
             <button type="submit" class="${Seed.button("brandSolid")}">저장</button>
         </div>
     </form>

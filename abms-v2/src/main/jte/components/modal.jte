@@ -5,16 +5,26 @@
 @param Content body
 @param Content footer = null
 @param String description = null
-<div class="flex items-start justify-between gap-x4 px-x6 pt-x6 pb-x2">
-    <div>
-        <h2 class="t7-bold text-fg-neutral">${title}</h2>
-        @if(description != null)
-            <p class="mt-x1 t4-regular text-fg-neutral-subtle">${description}</p>
-        @endif
-    </div>
-    <button type="button" class="${Seed.iconButton("ghost", "small")} -mr-x2 -mt-x1" data-close-modal aria-label="닫기">${Icons.of("x", "size-5")}</button>
+@param String context = null
+@param String hint = null
+<%-- Linear 풍 모달: 맥락 › 제목 머리, 속성 행 본문, 단축키 힌트가 있는 바닥 --%>
+<div class="flex h-12 items-center gap-x1_5 border-b border-stroke-neutral-subtle pr-x2 pl-x5">
+    @if(context != null)
+        <span class="max-w-[50%] truncate t4-regular text-fg-neutral-subtle">${context}</span>
+        ${Icons.of("chevron-right", "size-3 shrink-0 text-fg-neutral-subtle")}
+    @endif
+    <h2 class="min-w-0 flex-1 truncate t4-bold text-fg-neutral">${title}</h2>
+    <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" data-close-modal aria-label="닫기" title="닫기 (Esc)">${Icons.of("x", "size-4")}</button>
 </div>
-<div class="px-x6 py-x4">${body}</div>
+@if(description != null)
+    <p class="px-x5 pt-x4 t3-regular text-fg-neutral-subtle">${description}</p>
+@endif
+<div class="px-x5 py-x4">${body}</div>
 @if(footer != null)
-    <div class="flex justify-end gap-x2 px-x6 pt-x2 pb-x6">${footer}</div>
+    <div class="flex items-center gap-x2 border-t border-stroke-neutral-subtle px-x5 py-x3">
+        <span class="mr-auto flex items-center gap-x1 t3-regular text-fg-neutral-subtle">
+            @if(hint != null)<span class="kbd">⌘</span><span class="kbd">↵</span> ${hint}@endif
+        </span>
+        ${footer}
+    </div>
 @endif

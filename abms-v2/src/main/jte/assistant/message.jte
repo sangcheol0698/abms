@@ -3,11 +3,11 @@
 @param ChatMessage message
 @if(message.isUser())
     <div class="flex justify-end">
-        <div class="max-w-[80%] rounded-2xl rounded-tr-md bg-bg-brand-solid px-4 py-2.5 text-sm whitespace-pre-wrap text-white">${message.getContent()}</div>
+        <div class="max-w-[80%] rounded-r4 bg-bg-neutral-weak px-x4 py-x2_5 t4-regular whitespace-pre-wrap text-fg-neutral">${message.getContent()}</div>
     </div>
 @else
-    <div class="flex gap-3">
-        <span class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-highlight-magic-[135deg] text-white">${Icons.of("sparkles", "size-3.5")}</span>
-        <div class="prose-md min-w-0 max-w-[85%] rounded-2xl rounded-tl-md bg-bg-neutral-muted px-4 py-3 ring-1 ring-stroke-neutral-subtle" data-markdown>${message.getContent()}</div>
+    <div class="flex gap-x3">
+        <span class="mt-x0_5 flex size-6 shrink-0 items-center justify-center rounded-r1_5 bg-gradient-highlight-magic-[135deg] text-white">${Icons.of("sparkles", "size-3.5")}</span>
+        <div class="prose-md min-w-0 flex-1" data-markdown>${message.getContent()}</div>
     </div>
 @endif

@@ -15,8 +15,8 @@
         title = "대시보드",
         subtitle = dashboard.year() + "년 손익 현황 · " + (dashboard.companyWide() ? "전사 기준" : "내 권한 범위 기준"),
         actions = @`
-            <form action="/" method="get" class="flex items-center gap-2">
-                <select name="year" class="select !w-auto" onchange="this.form.requestSubmit()" aria-label="연도">
+            <form action="/" method="get" class="flex items-center gap-x2">
+                <select name="year" class="select filter-select" onchange="this.form.requestSubmit()" aria-label="연도">
                     @for(Integer y : years)
                         <option value="${y}" selected="${y == dashboard.year()}">${y}년</option>
                     @endfor
@@ -27,117 +27,107 @@
             @endif
         `)
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        @template.components.stat(label = "누적 매출", value = dashboard.revenue().compact() + "원", sub = Ui.won(dashboard.revenue()) + "원")
-        @template.components.stat(label = "누적 비용", value = dashboard.cost().compact() + "원", sub = Ui.won(dashboard.cost()) + "원")
-        @template.components.stat(label = "누적 이익", value = dashboard.profit().compact() + "원",
-            sub = "이익률 " + Ui.percent(dashboard.margin()), valueClass = Ui.signClass(dashboard.profit()))
-        @template.components.stat(label = "진행 중 프로젝트", value = dashboard.inProgressCount() + "건",
-            sub = "계약 총액 " + dashboard.inProgressContractAmount().compact() + "원 · 재직 " + dashboard.activeEmployees() + "명")
-    </div>
+    <div class="space-y-6">
+        <%-- 지표 줄 --%>
+        <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle @3xl:grid-cols-4 [&>div]:bg-bg-layer-default">
+            <div class="px-x4 py-x3"><p class="stat-label">누적 매출</p><p class="stat-value">${dashboard.revenue().compact()}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p><p class="mt-x0_5 t3-regular text-fg-neutral-subtle tabular-nums">${Ui.won(dashboard.revenue())}원</p></div>
+            <div class="px-x4 py-x3"><p class="stat-label">누적 비용</p><p class="stat-value">${dashboard.cost().compact()}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p><p class="mt-x0_5 t3-regular text-fg-neutral-subtle tabular-nums">${Ui.won(dashboard.cost())}원</p></div>
+            <div class="px-x4 py-x3"><p class="stat-label">누적 이익</p><p class="stat-value ${Ui.signClass(dashboard.profit())}">${dashboard.profit().compact()}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p><p class="mt-x0_5 t3-regular text-fg-neutral-subtle">이익률 ${Ui.percent(dashboard.margin())}</p></div>
+            <div class="px-x4 py-x3"><p class="stat-label">진행 중 프로젝트</p><p class="stat-value">${dashboard.inProgressCount()}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">건</span></p><p class="mt-x0_5 truncate t3-regular text-fg-neutral-subtle">계약 ${dashboard.inProgressContractAmount().compact()}원 · 재직 ${dashboard.activeEmployees()}명</p></div>
+        </div>
 
-    <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <section class="card xl:col-span-2">
-            <div class="card-header"><h2 class="card-title">월별 매출 · 비용 · 이익</h2></div>
-            <div class="card-body">
-                <div class="h-72"><canvas data-chart="${dashboard.chartJson()}" aria-label="월별 손익 차트"></canvas></div>
-            </div>
-        </section>
-        <section class="card">
-            <div class="card-header"><h2 class="card-title">프로젝트 상태</h2></div>
-            <div class="card-body space-y-3">
-                @for(ProjectStatus status : ProjectStatus.values())
-                    !{long count = dashboard.projectStatusCounts().getOrDefault(status, 0L);}
-                    <a href="/projects?status=${status.name()}" class="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-bg-neutral-muted">
-                        <span class="${Ui.badge(status)}">${status.label()}</span>
-                        <span class="text-sm font-semibold text-fg-neutral tabular-nums">${count}</span>
-                    </a>
-                @endfor
+        <div class="grid grid-cols-1 gap-6 @5xl:grid-cols-[minmax(0,1fr)_320px]">
+            <section class="min-w-0">
+                <h2 class="section-title">월별 매출 · 비용 · 이익 <span class="section-count">${dashboard.year()}년</span></h2>
+                <div class="list-box p-x4">
+                    <div class="h-72"><canvas data-chart="${dashboard.chartJson()}" aria-label="월별 손익 차트"></canvas></div>
+                </div>
+            </section>
+            <section>
+                <h2 class="section-title">프로젝트 상태</h2>
+                <div class="list-box">
+                    @for(ProjectStatus status : ProjectStatus.values())
+                        !{long count = dashboard.projectStatusCounts().getOrDefault(status, 0L);}
+                        <a href="/projects?status=${status.name()}" class="list-row">
+                            @template.components.statusIcon(status = status)
+                            <span class="flex-1 t4-medium">${status.label()}</span>
+                            <span class="tabular-nums ${count == 0 ? "text-fg-neutral-subtle" : "t4-bold"}">${count}</span>
+                            ${Icons.of("chevron-right", "size-4 text-fg-neutral-subtle")}
+                        </a>
+                    @endfor
+                </div>
                 @if(dashboard.unallocatedCost() != null)
-                    <div class="mt-4 rounded-lg bg-bg-warning-weak p-3 ring-1 ring-stroke-warning-weak">
-                        <p class="text-xs font-medium text-fg-warning-contrast">미배분 정직원 비용 (${dashboard.year()}년 누적)</p>
-                        <p class="mt-1 text-lg font-semibold text-fg-warning-contrast tabular-nums">${Ui.won(dashboard.unallocatedCost())}원</p>
-                        <p class="mt-0.5 text-xs text-fg-warning">프로젝트에 투입되지 않은 정직원 원가입니다.</p>
-                    </div>
+                    <a href="/summary" class="mt-x3 block rounded-r3 border border-stroke-warning-weak bg-bg-warning-weak px-x4 py-x3 transition-colors hover:border-stroke-warning-solid">
+                        <p class="t3-medium text-fg-warning-contrast">미배분 정직원 비용 · ${dashboard.year()}년 누적</p>
+                        <p class="mt-x1 t6-bold tabular-nums text-fg-warning-contrast">${Ui.won(dashboard.unallocatedCost())}원</p>
+                        <p class="mt-x0_5 t3-regular text-fg-warning">프로젝트에 투입되지 않은 정직원 원가입니다.</p>
+                    </a>
+                @endif
+            </section>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 @4xl:grid-cols-2">
+            <section class="min-w-0">
+                <h2 class="section-title">이익 상위 프로젝트</h2>
+                <div class="list-box">
+                    @if(dashboard.topProjects().isEmpty())
+                        @template.components.empty(message = "집계된 손익이 없습니다.", icon = "chart")
+                    @else
+                        <div class="list-head"><span class="flex-1">프로젝트</span><span class="w-20 shrink-0 text-right">매출</span><span class="w-20 shrink-0 text-right">비용</span><span class="w-20 shrink-0 text-right">이익</span></div>
+                        @for(ProfitRow row : dashboard.topProjects())
+                            <a href="/projects/${row.id()}" class="list-row">
+                                <span class="flex min-w-0 flex-1 items-baseline gap-x2"><span class="truncate t4-medium">${row.name()}</span><span class="hidden t3-regular whitespace-nowrap text-fg-neutral-subtle @xl:inline">${row.code()}</span></span>
+                                <span class="w-20 shrink-0 text-right tabular-nums">${row.revenue().compact()}</span>
+                                <span class="w-20 shrink-0 text-right tabular-nums text-fg-neutral-muted">${row.cost().compact()}</span>
+                                <span class="w-20 shrink-0 text-right t4-bold tabular-nums ${Ui.signClass(row.profit())}">${row.profit().compact()}</span>
+                            </a>
+                        @endfor
+                    @endif
+                </div>
+            </section>
+            <section class="min-w-0">
+                <h2 class="section-title">부서별 손익 <span class="section-count">주관 부서 기준</span></h2>
+                <div class="list-box">
+                    @if(dashboard.departments().isEmpty())
+                        @template.components.empty(message = "집계된 손익이 없습니다.", icon = "building")
+                    @else
+                        <div class="list-head"><span class="flex-1">부서</span><span class="w-20 shrink-0 text-right">매출</span><span class="w-20 shrink-0 text-right">이익</span><span class="w-16 shrink-0 text-right">이익률</span></div>
+                        @for(ProfitRow row : dashboard.departments())
+                            <a href="/departments?selected=${row.id()}" class="list-row">
+                                <span class="min-w-0 flex-1 truncate t4-medium">${row.name()}</span>
+                                <span class="w-20 shrink-0 text-right tabular-nums">${row.revenue().compact()}</span>
+                                <span class="w-20 shrink-0 text-right t4-bold tabular-nums ${Ui.signClass(row.profit())}">${row.profit().compact()}</span>
+                                <span class="w-16 shrink-0 text-right tabular-nums text-fg-neutral-muted">${Ui.percent(row.margin())}</span>
+                            </a>
+                        @endfor
+                    @endif
+                </div>
+            </section>
+        </div>
+
+        <section>
+            <h2 class="section-title">청구 예정 · 미발행 매출 <span class="section-count">지난 30일 ~ 향후 60일</span></h2>
+            <div class="list-box">
+                @if(dashboard.upcomingRevenues().isEmpty())
+                    @template.components.empty(message = "예정된 청구가 없습니다.", icon = "money")
+                @else
+                    @for(UpcomingRevenue item : dashboard.upcomingRevenues())
+                        <a href="/projects/${item.project().id()}" class="list-row">
+                            <span class="w-24 shrink-0 t3-regular tabular-nums ${item.overdue() ? "text-fg-critical" : "text-fg-neutral-subtle"}">${Ui.date(item.plan().getRevenueDate())}</span>
+                            <span class="min-w-0 flex-1 truncate t4-medium">${item.project().getName()}</span>
+                            <span class="list-cell-muted hidden w-28 @xl:block">${item.plan().getSequence()}차 ${item.plan().getType().label()}</span>
+                            <span class="w-20 shrink-0">
+                                @if(item.overdue())
+                                    <span class="${Seed.badge("critical")}">기한 경과</span>
+                                @else
+                                    <span class="${Seed.badge("neutral", "outline")}">예정</span>
+                                @endif
+                            </span>
+                            <span class="w-32 shrink-0 text-right t4-bold tabular-nums">${Ui.won(item.plan().getAmount())}원</span>
+                        </a>
+                    @endfor
                 @endif
             </div>
         </section>
     </div>
-
-    <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <section class="card overflow-hidden">
-            <div class="card-header"><h2 class="card-title">이익 상위 프로젝트</h2></div>
-            @if(dashboard.topProjects().isEmpty())
-                @template.components.empty(message = "집계된 손익이 없습니다.", icon = "chart")
-            @else
-                <div class="overflow-x-auto">
-                    <table class="table">
-                        <thead><tr><th>프로젝트</th><th class="num">매출</th><th class="num">비용</th><th class="num">이익</th></tr></thead>
-                        <tbody class="divide-y divide-stroke-neutral-subtle">
-                        @for(ProfitRow row : dashboard.topProjects())
-                            <tr>
-                                <td><a class="link" href="/projects/${row.id()}">${row.name()}</a><p class="text-xs text-fg-placeholder">${row.code()}</p></td>
-                                <td class="num">${row.revenue().compact()}</td>
-                                <td class="num">${row.cost().compact()}</td>
-                                <td class="num font-semibold ${Ui.signClass(row.profit())}">${row.profit().compact()}</td>
-                            </tr>
-                        @endfor
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </section>
-        <section class="card overflow-hidden">
-            <div class="card-header"><h2 class="card-title">부서별 손익 (주관 부서 기준)</h2></div>
-            @if(dashboard.departments().isEmpty())
-                @template.components.empty(message = "집계된 손익이 없습니다.", icon = "building")
-            @else
-                <div class="overflow-x-auto">
-                    <table class="table">
-                        <thead><tr><th>부서</th><th class="num">매출</th><th class="num">비용</th><th class="num">이익</th><th class="num">이익률</th></tr></thead>
-                        <tbody class="divide-y divide-stroke-neutral-subtle">
-                        @for(ProfitRow row : dashboard.departments())
-                            <tr>
-                                <td><a class="link" href="/departments?selected=${row.id()}">${row.name()}</a></td>
-                                <td class="num">${row.revenue().compact()}</td>
-                                <td class="num">${row.cost().compact()}</td>
-                                <td class="num font-semibold ${Ui.signClass(row.profit())}">${row.profit().compact()}</td>
-                                <td class="num">${Ui.percent(row.margin())}</td>
-                            </tr>
-                        @endfor
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </section>
-    </div>
-
-    <section class="card mt-4 overflow-hidden">
-        <div class="card-header">
-            <h2 class="card-title">청구 예정 · 미발행 매출</h2>
-            <span class="text-xs text-fg-neutral-subtle">지난 30일 ~ 향후 60일</span>
-        </div>
-        @if(dashboard.upcomingRevenues().isEmpty())
-            @template.components.empty(message = "예정된 청구가 없습니다.", icon = "money")
-        @else
-            <ul class="divide-y divide-stroke-neutral-subtle">
-                @for(UpcomingRevenue item : dashboard.upcomingRevenues())
-                    <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
-                        <div class="min-w-0">
-                            <a href="/projects/${item.project().id()}" class="link">${item.project().getName()}</a>
-                            <p class="text-xs text-fg-neutral-subtle">${item.plan().getSequence()}차 ${item.plan().getType().label()} · 청구일 ${Ui.date(item.plan().getRevenueDate())}</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            @if(item.overdue())
-                                <span class="${Seed.badge("critical")}">기한 경과</span>
-                            @else
-                                <span class="${Seed.badge("neutral")}">예정</span>
-                            @endif
-                            <span class="text-sm font-semibold tabular-nums">${Ui.won(item.plan().getAmount())}원</span>
-                        </div>
-                    </li>
-                @endfor
-            </ul>
-        @endif
-    </section>
 `)

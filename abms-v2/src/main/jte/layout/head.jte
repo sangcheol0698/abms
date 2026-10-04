@@ -1,7 +1,23 @@
 @param String title
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
+<script>
+    // 테마 초기화(첫 페인트 전): 저장된 선택(system|light|dark) → SEED data-seed-color-mode, 시스템 설정 → data-seed-user-color-scheme
+    (function () {
+        try {
+            var root = document.documentElement;
+            var mode = localStorage.getItem('abms-theme') || 'system';
+            root.dataset.left = localStorage.getItem('abms-left') || 'open';
+            root.dataset.right = localStorage.getItem('abms-right') || (window.innerWidth >= 1440 ? 'open' : 'closed');
+            root.dataset.seedColorMode = mode === 'light' ? 'light-only' : mode === 'dark' ? 'dark-only' : 'system';
+            var query = window.matchMedia('(prefers-color-scheme: dark)');
+            var apply = function () { root.dataset.seedUserColorScheme = query.matches ? 'dark' : 'light'; };
+            apply();
+            query.addEventListener('change', function () { apply(); window.abmsThemeChanged && window.abmsThemeChanged(); });
+        } catch (e) {}
+    })();
+</script>
 <title>${title} · ABMS</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">

@@ -12,7 +12,7 @@
                     <a class="${Seed.button("ghost", "xsmall")}" href="${page.urlFor(page.page() - 1)}" hx-get="${page.urlFor(page.page() - 1)}">${Icons.of("chevron-left", "size-4")}</a>
                 @endif
                 @for(int number : page.pageNumbers())
-                    <a class="${Seed.button(number == page.page() ? "neutralSolid" : "ghost", "xsmall")} min-w-x8" href="${page.urlFor(number)}" hx-get="${page.urlFor(number)}">${number + 1}</a>
+                    <a class="${Seed.button(number == page.page() ? "neutralSolid" : "ghost", "xsmall")} min-w-8" href="${page.urlFor(number)}" hx-get="${page.urlFor(number)}">${number + 1}</a>
                 @endfor
                 @if(page.hasNext())
                     <a class="${Seed.button("ghost", "xsmall")}" href="${page.urlFor(page.page() + 1)}" hx-get="${page.urlFor(page.page() + 1)}">${Icons.of("chevron-right", "size-4")}</a>

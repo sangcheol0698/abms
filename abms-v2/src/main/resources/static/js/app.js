@@ -106,6 +106,17 @@
         }
     });
 
+    // 모달 폼은 ⌘/Ctrl + Enter 로 제출한다.
+    document.addEventListener('keydown', (e) => {
+        const dialog = modal();
+        if (!dialog || !dialog.open || !(e.metaKey || e.ctrlKey) || e.key !== 'Enter') return;
+        const form = dialog.querySelector('form');
+        if (form) {
+            e.preventDefault();
+            form.requestSubmit();
+        }
+    });
+
     document.body.addEventListener('closeModal', () => {
         const dialog = modal();
         if (dialog && dialog.open) dialog.close();
@@ -144,7 +155,7 @@
             if (canvas.dataset.rendered) return;
             canvas.dataset.rendered = 'true';
             const data = JSON.parse(canvas.dataset.chart);
-            new Chart(canvas, {
+            canvas._chart = new Chart(canvas, {
                 data: {
                     labels: data.labels,
                     datasets: [
@@ -198,10 +209,38 @@
         });
     }
 
+    // 테마가 바뀌면 토큰 색으로 차트를 다시 그린다.
+    window.abmsThemeChanged = () => {
+        document.querySelectorAll('canvas[data-chart]').forEach((canvas) => {
+            if (canvas._chart) canvas._chart.destroy();
+            delete canvas.dataset.rendered;
+        });
+        renderCharts(document);
+        syncThemeOptions();
+    };
+
+    function syncThemeOptions() {
+        let mode = 'system';
+        try { mode = localStorage.getItem('abms-theme') || 'system'; } catch (e) {}
+        document.querySelectorAll('[data-theme-option]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeOption === mode)));
+    }
+
+    window.abmsTheme = (mode) => {
+        try { localStorage.setItem('abms-theme', mode); } catch (e) {}
+        document.documentElement.dataset.seedColorMode = mode === 'light' ? 'light-only' : mode === 'dark' ? 'dark-only' : 'system';
+        window.abmsThemeChanged();
+    };
+
     function enhance(root) {
+        syncThemeOptions();
         renderCharts(root);
         renderMarkdown(root);
         root.querySelectorAll('[data-scroll-bottom]').forEach((el) => el.scrollTop = el.scrollHeight);
+        // 조직도에서 선택된 부서가 스크롤 영역 안에 보이도록 맞춘다.
+        root.querySelectorAll('[data-dept-link][aria-current="page"]').forEach((el) => {
+            const box = el.closest('.scroll-pane, .overflow-y-auto');
+            if (box) box.scrollTop += el.getBoundingClientRect().top - box.getBoundingClientRect().top - (box.clientHeight - el.offsetHeight) / 2;
+        });
     }
 
     htmx.onLoad((el) => enhance(el));
@@ -223,14 +262,283 @@
     document.body.addEventListener('htmx:afterSettle', showFlash);
 })();
 
-// 모바일 사이드바 열기/닫기 (백드롭 클릭·Esc 로 닫힘)
-window.abmsSidebar = function (open) {
-    document.getElementById('sidebar').classList.toggle('hidden', !open);
-    document.getElementById('sidebar-backdrop').classList.toggle('hidden', !open);
-};
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.getElementById('sidebar-backdrop')) window.abmsSidebar(false);
-});
+// ---------------------------------------------------------------------
+// Cmd+K 명령 팔레트 + 키보드 단축키
+// ---------------------------------------------------------------------
+(function () {
+    'use strict';
+    const palette = () => document.getElementById('palette');
+    const items = () => Array.from(document.querySelectorAll('#palette-results [data-palette-item]'));
+    let active = 0;
+
+    function setActive(index) {
+        const list = items();
+        if (!list.length) return;
+        active = (index + list.length) % list.length;
+        list.forEach((el, i) => {
+            if (i === active) {
+                el.dataset.active = '';
+                el.scrollIntoView({block: 'nearest'});
+            } else {
+                delete el.dataset.active;
+            }
+        });
+    }
+
+    function openPalette() {
+        const dialog = palette();
+        if (!dialog || dialog.open) return;
+        const input = document.getElementById('palette-input');
+        input.value = '';
+        dialog.showModal();
+        input.focus();
+        htmx.trigger(input, 'palette-open');
+    }
+
+    function closePalette() {
+        const dialog = palette();
+        if (dialog && dialog.open) dialog.close();
+    }
+
+    function runAction(action) {
+        closePalette();
+        if (action.startsWith('theme:')) window.abmsTheme(action.substring(6));
+        if (action === 'shortcuts') document.getElementById('shortcuts').showModal();
+        if (action.startsWith('layout:')) window.abmsLayout.toggle(action.substring(7));
+    }
+
+    window.abmsPalette = {open: openPalette, close: closePalette};
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('[data-open-palette]')) {
+            e.preventDefault();
+            openPalette();
+            return;
+        }
+        const item = e.target.closest('#palette-results [data-palette-item]');
+        if (!item) return;
+        if (item.dataset.paletteAction) {
+            runAction(item.dataset.paletteAction);
+        } else {
+            closePalette();
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        const item = e.target.closest && e.target.closest('#palette-results [data-palette-item]');
+        if (item) setActive(items().indexOf(item));
+    });
+
+    document.body.addEventListener('htmx:afterSwap', (e) => {
+        if (e.detail.target && e.detail.target.id === 'palette-results') setActive(0);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (palette() && palette().open) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+            if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+            if (e.key === 'Enter' && !e.isComposing) {
+                const item = items()[active];
+                if (item) { e.preventDefault(); item.click(); }
+            }
+        }
+    });
+
+    // 전역 단축키 — 입력 중이거나 다른 대화상자가 열려 있으면 무시한다.
+    const GO = {d: '/', e: '/employees', o: '/departments', p: '/projects', c: '/parties', s: '/summary', r: '/reports', a: '/assistant', m: '/me'};
+    let goPending = false;
+    let goTimer;
+
+    function typing(target) {
+        return target.closest('input, textarea, select, [contenteditable="true"]') !== null;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            palette() && palette().open ? closePalette() : openPalette();
+            return;
+        }
+        if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing || typing(e.target) || document.querySelector('dialog[open]')) return;
+        const key = e.key.toLowerCase();
+        if (goPending) {
+            goPending = false;
+            clearTimeout(goTimer);
+            if (GO[key] && document.querySelector('a[href="' + GO[key] + '"]')) {
+                e.preventDefault();
+                document.querySelector('a[href="' + GO[key] + '"]').click();
+            }
+            return;
+        }
+        if (key === 'g') {
+            goPending = true;
+            goTimer = setTimeout(() => goPending = false, 1200);
+        } else if (key === '/') {
+            const search = document.querySelector('main input[type="search"]');
+            if (search) { e.preventDefault(); search.focus(); search.select(); }
+        } else if (key === 'c') {
+            const create = document.querySelector('[data-shortcut="create"]');
+            if (create) { e.preventDefault(); create.click(); }
+        } else if (e.key === '[') {
+            e.preventDefault();
+            window.abmsLayout.toggle('left');
+        } else if (e.key === ']') {
+            e.preventDefault();
+            window.abmsLayout.toggle('right');
+        } else if (e.key === '?') {
+            e.preventDefault();
+            document.getElementById('shortcuts').showModal();
+        }
+    });
+})();
+
+// ---------------------------------------------------------------------
+// 앱 셸: 양쪽 사이드바 열기/닫기 · 오른쪽 사이드바 탭 · 본문 스크롤(고정 툴바, 위치 복원)
+// ---------------------------------------------------------------------
+(function () {
+    'use strict';
+    const root = document.documentElement;
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const scroller = () => document.getElementById('app-scroll');
+    // 데스크톱은 #app-scroll, 모바일은 문서가 스크롤된다.
+    const scrollTarget = () => (desktop.matches ? scroller() : document.scrollingElement);
+
+    function store(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) {}
+    }
+
+    // 데스크톱: 접기/펼치기 상태를 저장, 모바일: 서랍으로 연다.
+    function togglePanel(side, open) {
+        if (desktop.matches) {
+            const attr = side === 'left' ? 'left' : 'right';
+            const next = open === undefined ? (root.dataset[attr] === 'closed' ? 'open' : 'closed') : (open ? 'open' : 'closed');
+            root.dataset[attr] = next;
+            store('abms-' + attr, next);
+            updateStickyTop();
+            return next === 'open';
+        }
+        const opened = open === undefined ? root.dataset.drawer !== side : open;
+        if (opened) root.dataset.drawer = side; else delete root.dataset.drawer;
+        return opened;
+    }
+
+    function selectRightTab(name) {
+        const tabs = Array.from(document.querySelectorAll('[data-right-tab]'));
+        if (!tabs.length) return;
+        if (!tabs.some((t) => t.dataset.rightTab === name)) name = tabs[0].dataset.rightTab;
+        tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.rightTab === name)));
+        document.querySelectorAll('[data-right-pane]').forEach((p) => p.classList.toggle('is-active', p.dataset.rightPane === name));
+    }
+
+    window.abmsLayout = {toggle: togglePanel, tab: selectRightTab};
+
+    document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('[data-toggle-panel]');
+        if (toggle) {
+            togglePanel(toggle.dataset.togglePanel);
+            return;
+        }
+        if (e.target.closest('[data-open-notifications]')) {
+            selectRightTab('notifications');
+            togglePanel('right', true);
+            return;
+        }
+        const tab = e.target.closest('[data-right-tab]');
+        if (tab) selectRightTab(tab.dataset.rightTab);
+        if (e.target.closest('[data-close-panels]')) delete root.dataset.drawer;
+        // 모바일 서랍 안의 링크를 누르면 서랍을 닫는다.
+        if (!desktop.matches && e.target.closest('#left-sidebar a')) delete root.dataset.drawer;
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && root.dataset.drawer && !document.querySelector('dialog[open]')) delete root.dataset.drawer;
+    });
+
+    // 고정 툴바 높이를 --sticky-top 으로 반영 (그룹 헤더 등 다른 고정 요소의 기준)
+    function updateStickyTop() {
+        const toolbar = document.querySelector('[data-page-toolbar]');
+        const header = desktop.matches ? 0 : (document.querySelector('.app-header') || {offsetHeight: 0}).offsetHeight;
+        const height = toolbar && getComputedStyle(toolbar).position === 'sticky' ? toolbar.offsetHeight : 0;
+        root.style.setProperty('--sticky-top', (header + height) + 'px');
+    }
+
+    function syncToolbarBorder() {
+        const toolbar = document.querySelector('[data-page-toolbar]');
+        const target = scrollTarget();
+        if (!toolbar || !target) return;
+        toolbar.toggleAttribute('data-scrolled', target.scrollTop > 0);
+    }
+
+    let scrollBound = null;
+    function bindScroll() {
+        const target = desktop.matches ? scroller() : window;
+        if (scrollBound === target || !target) return;
+        if (scrollBound) scrollBound.removeEventListener('scroll', syncToolbarBorder);
+        target.addEventListener('scroll', syncToolbarBorder, {passive: true});
+        scrollBound = target;
+    }
+
+    // 화면 이동(boost) 시 본문 스크롤은 맨 위로, 뒤로 가기는 이전 위치로 복원한다.
+    // 뒤로 가기(popstate) 때는 주소가 먼저 바뀐 뒤 떠나는 화면이 저장되므로, 화면이 열릴 때의 주소를 키로 쓴다.
+    const scrollKey = () => 'abms-scroll:' + location.pathname + location.search;
+    let pageKey = scrollKey();
+    document.body.addEventListener('htmx:beforeHistorySave', () => {
+        const target = scrollTarget();
+        try { if (target) sessionStorage.setItem(pageKey, String(target.scrollTop)); } catch (e) {}
+    });
+
+    function restoreScroll() {
+        const target = scrollTarget();
+        let y = 0;
+        try { y = Number(sessionStorage.getItem(scrollKey()) || 0); } catch (e) {}
+        if (target) target.scrollTop = y;
+    }
+
+    // boost 링크 이동인지 기억했다가, 화면 교체가 끝나면 맨 위로 보낸다. (뒤로 가기 복원과 구분)
+    let boostedNavigation = false;
+    document.body.addEventListener('htmx:beforeRequest', (e) => {
+        if (e.detail.boosted && e.detail.target === document.body) boostedNavigation = true;
+    });
+    document.body.addEventListener('htmx:historyRestore', () => setTimeout(restoreScroll, 30));
+    document.body.addEventListener('htmx:historyCacheMissLoad', () => setTimeout(restoreScroll, 30));
+
+    function onPageReady(navigated) {
+        pageKey = scrollKey();
+        selectRightTab(document.querySelector('[data-right-tab="props"]') ? 'props' : 'notifications');
+        bindScroll();
+        updateStickyTop();
+        if (navigated) {
+            const target = scrollTarget();
+            if (target) target.scrollTop = 0;
+            // 키보드(Space/PageDown)로 바로 본문을 스크롤할 수 있게 포커스를 둔다.
+            const main = scroller();
+            if (main && desktop.matches && !document.querySelector('dialog[open]') && !main.contains(document.activeElement)) {
+                main.focus({preventScroll: true});
+            }
+        }
+        syncToolbarBorder();
+    }
+
+    document.body.addEventListener('htmx:afterSettle', (e) => {
+        if (e.detail.target !== document.body) return;
+        onPageReady(boostedNavigation);
+        boostedNavigation = false;
+    });
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => onPageReady(false));
+    } else {
+        onPageReady(false);
+    }
+    window.addEventListener('resize', updateStickyTop);
+    desktop.addEventListener('change', () => {
+        delete root.dataset.drawer;
+        bindScroll();
+        updateStickyTop();
+    });
+    if ('ResizeObserver' in window) {
+        new ResizeObserver(updateStickyTop).observe(document.body);
+    }
+})();
 
 // AI 어시스턴트: 전송 즉시 내 메시지와 "답변 생성 중" 표시
 window.abmsChat = {
@@ -245,12 +553,12 @@ window.abmsChat = {
         mine.className = 'flex justify-end';
         mine.dataset.pending = 'true';
         const bubble = document.createElement('div');
-        bubble.className = 'max-w-[80%] rounded-2xl rounded-tr-md bg-bg-brand-solid px-4 py-2.5 text-sm whitespace-pre-wrap text-white';
+        bubble.className = 'max-w-[80%] rounded-r4 bg-bg-neutral-weak px-x4 py-x2_5 t4-regular whitespace-pre-wrap text-fg-neutral';
         bubble.textContent = input.value.trim();
         mine.appendChild(bubble);
         const typing = document.createElement('div');
         typing.dataset.pending = 'true';
-        typing.className = 'flex items-center gap-2 text-sm text-fg-neutral-subtle';
+        typing.className = 'flex items-center gap-x2 t4-regular text-fg-neutral-subtle';
         typing.innerHTML = '<span class="flex gap-1"><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400"></span><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400 [animation-delay:120ms]"></span><span class="size-2 animate-bounce rounded-full bg-palette-carrot-400 [animation-delay:240ms]"></span></span> 답변을 생성하고 있어요…';
         messages.append(mine, typing);
         messages.scrollTop = messages.scrollHeight;

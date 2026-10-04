@@ -13,13 +13,6 @@
 !{String month = report.month().toString();}
 @template.layout.app(ctx = ctx, title = "손익 현황", content = @`
     @template.components.pageHeader(title = "손익 현황", subtitle = "프로젝트 주관 부서 기준 월 손익 · 청구(발행) 기준 매출, 투입 M/M 기준 비용", actions = @`
-        <div class="flex items-center gap-1">
-            <a href="/summary?month=${report.month().minusMonths(1).toString()}" class="${Seed.button("neutralOutline")} !px-2.5" aria-label="이전 달">${Icons.of("chevron-left", "size-4")}</a>
-            <form action="/summary" method="get">
-                <input type="month" name="month" value="${month}" class="input !w-auto" onchange="this.form.requestSubmit()" aria-label="조회 월">
-            </form>
-            <a href="/summary?month=${report.month().plusMonths(1).toString()}" class="${Seed.button("neutralOutline")} !px-2.5" aria-label="다음 달">${Icons.of("chevron-right", "size-4")}</a>
-        </div>
         @if(canManage)
             @if(!report.closed())
                 <form method="post" action="/summary/recalculate" hx-disabled-elt="find button">
@@ -41,88 +34,106 @@
         @endif
     `)
 
-    <div class="mb-4 flex flex-wrap items-center gap-2 text-sm text-fg-neutral-muted">
-        <span class="font-semibold text-fg-neutral">${Ui.month(report.month())}</span>
-        @if(report.closed())
-            <span class="${Seed.badge("neutral")}">${Icons.of("lock", "size-3")} 마감</span>
-        @else
-            <span class="${Seed.badge("informative")}">집계 중</span>
-        @endif
-        <span class="text-xs text-fg-neutral-subtle">마지막 집계 ${Ui.dateTime(report.calculatedAt())}</span>
+    <%-- 월 이동 · 상태 --%>
+    <div class="-mx-4 mb-x6 sm:-mx-6 lg:-mx-8">
+        <div class="view-bar border-t sm:px-x6 lg:px-x8">
+            <div class="flex items-center rounded-r2 border border-stroke-neutral-subtle">
+                <a href="/summary?month=${report.month().minusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>
+                <form action="/summary" method="get" class="border-x border-stroke-neutral-subtle">
+                    <input type="month" name="month" value="${month}" class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" onchange="this.form.requestSubmit()" aria-label="조회 월">
+                </form>
+                <a href="/summary?month=${report.month().plusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-l-none" aria-label="다음 달" title="다음 달">${Icons.of("chevron-right", "size-4")}</a>
+            </div>
+            @if(report.closed())
+                <span class="${Seed.badge("neutral")}">${Icons.of("lock", "size-3")} 마감</span>
+            @else
+                <span class="${Seed.badge("informative")}">집계 중</span>
+            @endif
+            <span class="ml-auto t3-regular text-fg-neutral-subtle">마지막 집계 ${Ui.dateTime(report.calculatedAt())}</span>
+        </div>
     </div>
 
     @if(calculation != null && !calculation.warnings().isEmpty())
-        <div class="mb-4 rounded-xl bg-bg-warning-weak p-4 text-sm ring-1 ring-stroke-warning-weak">
-            <p class="flex items-center gap-2 font-semibold text-fg-warning-contrast">${Icons.of("warning", "size-4")} 확인이 필요한 항목 ${calculation.warnings().size()}건</p>
-            <ul class="mt-2 list-disc space-y-0.5 pl-6 text-fg-warning-contrast">
-                @for(String warning : calculation.warnings())
-                    <li>${warning}</li>
-                @endfor
-            </ul>
+        <div role="alert" class="seed-callout__root seed-callout__root--tone_warning mb-x6 items-start!">
+            ${Icons.of("warning", "size-4 shrink-0 text-fg-warning")}
+            <div class="seed-callout__content">
+                <p class="seed-callout__title seed-callout__title--tone_warning">확인이 필요한 항목 ${calculation.warnings().size()}건</p>
+                <ul class="seed-callout__description seed-callout__description--tone_warning mt-x1 list-disc pl-x5">
+                    @for(String warning : calculation.warnings())
+                        <li>${warning}</li>
+                    @endfor
+                </ul>
+            </div>
         </div>
     @endif
 
     @if(!report.calculated())
-        <div class="card">
+        <div class="list-box">
             @template.components.empty(message = "이 달은 아직 집계되지 않았습니다." + (canManage ? " [재집계] 버튼으로 집계할 수 있습니다." : " 매일 새벽 자동 집계됩니다."), icon = "chart")
         </div>
     @else
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            @template.components.stat(label = "매출", value = Ui.won(report.revenue()) + "원")
-            @template.components.stat(label = "비용", value = Ui.won(report.cost()) + "원")
-            @template.components.stat(label = "이익", value = Ui.won(report.profit()) + "원", valueClass = Ui.signClass(report.profit()))
-            @template.components.stat(label = "이익률", value = Ui.percent(report.margin()), sub = "프로젝트 " + report.projects().size() + "건")
-        </div>
+        <div class="space-y-6">
+            <%-- 지표 줄 --%>
+            <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle @3xl:grid-cols-4 [&>div]:bg-bg-layer-default">
+                <div class="px-x4 py-x3"><p class="stat-label">매출</p><p class="stat-value">${Ui.won(report.revenue())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
+                <div class="px-x4 py-x3"><p class="stat-label">비용</p><p class="stat-value">${Ui.won(report.cost())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
+                <div class="px-x4 py-x3"><p class="stat-label">이익</p><p class="stat-value ${Ui.signClass(report.profit())}">${Ui.won(report.profit())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
+                <div class="px-x4 py-x3"><p class="stat-label">이익률</p><p class="stat-value">${Ui.percent(report.margin())}</p><p class="mt-x0_5 t3-regular text-fg-neutral-subtle">프로젝트 ${report.projects().size()}건</p></div>
+            </div>
 
-        @if(report.companyCost() != null)
-            <section class="card mt-4">
-                <div class="card-header"><h2 class="card-title">전사 정직원 비용 배분</h2></div>
-                <div class="grid grid-cols-1 divide-y divide-stroke-neutral-subtle sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-                    <div class="px-5 py-4"><p class="stat-label">정직원 총 원가</p><p class="mt-1 text-lg font-semibold tabular-nums">${Ui.won(report.companyCost().getTotalFullTimeCost())}원</p></div>
-                    <div class="px-5 py-4"><p class="stat-label">프로젝트 배분</p><p class="mt-1 text-lg font-semibold tabular-nums">${Ui.won(report.companyCost().getAllocatedFullTimeCost())}원</p></div>
-                    <div class="px-5 py-4"><p class="stat-label">미배분 (유휴)</p><p class="mt-1 text-lg font-semibold tabular-nums text-fg-warning">${Ui.won(report.companyCost().getUnallocatedFullTimeCost())}원</p></div>
-                </div>
-            </section>
-        @endif
+            @if(report.companyCost() != null)
+                !{var company = report.companyCost();}
+                !{int allocatedPct = company.getTotalFullTimeCost().amount().signum() <= 0 ? 0 : Math.max(0, Math.min(100, company.getAllocatedFullTimeCost().amount().multiply(java.math.BigDecimal.valueOf(100)).divide(company.getTotalFullTimeCost().amount(), 0, java.math.RoundingMode.HALF_UP).intValue()));}
+                <section>
+                    <h2 class="section-title">전사 정직원 비용 배분 <span class="section-count">배분 ${allocatedPct}%</span></h2>
+                    <div class="list-box p-x4">
+                        <div class="meter" role="img" aria-label="프로젝트 배분 ${allocatedPct}%">
+                            <span class="h-full bg-bg-brand-solid" style="width: ${allocatedPct}%"></span>
+                        </div>
+                        <dl class="mt-x3 grid grid-cols-1 gap-x3 @xl:grid-cols-3">
+                            <div><dt class="stat-label">정직원 총 원가</dt><dd class="mt-x0_5 t5-bold tabular-nums">${Ui.won(company.getTotalFullTimeCost())}원</dd></div>
+                            <div><dt class="stat-label flex items-center gap-x1_5"><span class="size-2 rounded-full bg-bg-brand-solid"></span>프로젝트 배분</dt><dd class="mt-x0_5 t5-bold tabular-nums">${Ui.won(company.getAllocatedFullTimeCost())}원</dd></div>
+                            <div><dt class="stat-label flex items-center gap-x1_5"><span class="size-2 rounded-full bg-bg-neutral-weak ring-1 ring-stroke-neutral-weak"></span>미배분 (유휴)</dt><dd class="mt-x0_5 t5-bold tabular-nums text-fg-warning">${Ui.won(company.getUnallocatedFullTimeCost())}원</dd></div>
+                        </dl>
+                    </div>
+                </section>
+            @endif
 
-        <div class="mt-4 grid grid-cols-1 gap-4 2xl:grid-cols-5">
-            <section class="card overflow-hidden 2xl:col-span-3">
-                <div class="card-header"><h2 class="card-title">프로젝트별 손익</h2></div>
-                <div class="overflow-x-auto">
-                    <table class="table">
-                        <thead><tr><th>프로젝트</th><th class="num">매출</th><th class="num">비용</th><th class="num">이익</th><th class="num">이익률</th></tr></thead>
-                        <tbody class="divide-y divide-stroke-neutral-subtle">
-                        @for(ProfitRow row : report.projects())
-                            <tr>
-                                <td><a href="/projects/${row.id()}" class="link">${row.name()}</a><p class="text-xs text-fg-placeholder">${row.code()}</p></td>
-                                <td class="num">${Ui.won(row.revenue())}</td>
-                                <td class="num">${Ui.won(row.cost())}</td>
-                                <td class="num font-semibold ${Ui.signClass(row.profit())}">${Ui.won(row.profit())}</td>
-                                <td class="num">${row.revenue().amount().signum() == 0 ? "-" : Ui.percent(row.margin())}</td>
-                            </tr>
-                        @endfor
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-            <section class="card overflow-hidden 2xl:col-span-2">
-                <div class="card-header"><h2 class="card-title">부서별 손익 (주관 부서)</h2></div>
-                <div class="overflow-x-auto">
-                    <table class="table">
-                        <thead><tr><th>부서</th><th class="num">매출</th><th class="num">비용</th><th class="num">이익</th></tr></thead>
-                        <tbody class="divide-y divide-stroke-neutral-subtle">
-                        @for(ProfitRow row : report.departments())
-                            <tr>
-                                <td><a href="/departments?selected=${row.id()}" class="link">${row.name()}</a></td>
-                                <td class="num">${Ui.won(row.revenue())}</td>
-                                <td class="num">${Ui.won(row.cost())}</td>
-                                <td class="num font-semibold ${Ui.signClass(row.profit())}">${Ui.won(row.profit())}</td>
-                            </tr>
-                        @endfor
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <div class="grid grid-cols-1 gap-6 @6xl:grid-cols-5">
+                <section class="min-w-0 @6xl:col-span-3">
+                    <h2 class="section-title">프로젝트별 손익 <span class="section-count">${report.projects().size()}</span></h2>
+                    <div class="list-box overflow-x-auto">
+                        <div class="min-w-[560px]">
+                            <div class="list-head"><span class="flex-1">프로젝트</span><span class="col-num">매출</span><span class="col-num">비용</span><span class="col-num">이익</span><span class="w-16 shrink-0 text-right">이익률</span></div>
+                            @for(ProfitRow row : report.projects())
+                                <a href="/projects/${row.id()}" class="list-row">
+                                    <span class="flex min-w-0 flex-1 items-baseline gap-x2"><span class="truncate t4-medium">${row.name()}</span><span class="hidden t3-regular whitespace-nowrap text-fg-neutral-subtle @xl:inline">${row.code()}</span></span>
+                                    <span class="col-num">${Ui.won(row.revenue())}</span>
+                                    <span class="col-num text-fg-neutral-muted">${Ui.won(row.cost())}</span>
+                                    <span class="col-num t4-bold ${Ui.signClass(row.profit())}">${Ui.won(row.profit())}</span>
+                                    <span class="w-16 shrink-0 text-right tabular-nums text-fg-neutral-muted">${row.revenue().amount().signum() == 0 ? "-" : Ui.percent(row.margin())}</span>
+                                </a>
+                            @endfor
+                        </div>
+                    </div>
+                </section>
+                <section class="min-w-0 @6xl:col-span-2">
+                    <h2 class="section-title">부서별 손익 <span class="section-count">주관 부서</span></h2>
+                    <div class="list-box overflow-x-auto">
+                        <div class="min-w-[440px]">
+                            <div class="list-head"><span class="flex-1">부서</span><span class="col-num">매출</span><span class="col-num">비용</span><span class="col-num">이익</span></div>
+                            @for(ProfitRow row : report.departments())
+                                <a href="/departments?selected=${row.id()}" class="list-row">
+                                    <span class="min-w-0 flex-1 truncate t4-medium">${row.name()}</span>
+                                    <span class="col-num">${Ui.won(row.revenue())}</span>
+                                    <span class="col-num text-fg-neutral-muted">${Ui.won(row.cost())}</span>
+                                    <span class="col-num t4-bold ${Ui.signClass(row.profit())}">${Ui.won(row.profit())}</span>
+                                </a>
+                            @endfor
+                        </div>
+                    </div>
+                </section>
+            </div>
         </div>
     @endif
 `)

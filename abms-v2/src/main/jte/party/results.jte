@@ -7,21 +7,16 @@
 @if(page.isEmpty())
     @template.components.empty(message = "등록된 협력사가 없습니다.", icon = "briefcase")
 @else
-    <div class="overflow-x-auto">
-        <table class="table">
-            <thead><tr><th>협력사</th><th>대표자</th><th>영업 담당</th><th>연락처</th><th class="num">프로젝트</th></tr></thead>
-            <tbody class="divide-y divide-stroke-neutral-subtle">
-            @for(Party p : page.content())
-                <tr>
-                    <td><a href="/parties/${p.id()}" class="link">${p.getName()}</a></td>
-                    <td>${Ui.value(p.getCeoName())}</td>
-                    <td>${Ui.value(p.getSalesRepName())}</td>
-                    <td class="text-xs text-fg-neutral-subtle">${Ui.value(p.getSalesRepPhone())}<br>${Ui.value(p.getSalesRepEmail())}</td>
-                    <td class="num">${projectCounts.getOrDefault(p.id(), 0L)}</td>
-                </tr>
-            @endfor
-            </tbody>
-        </table>
-    </div>
+    @for(Party p : page.content())
+        !{long count = projectCounts.getOrDefault(p.id(), 0L);}
+        <a href="/parties/${p.id()}" class="list-row sm:px-x6 lg:px-x8">
+            <span class="flex size-6 shrink-0 items-center justify-center rounded-r1_5 bg-bg-neutral-weak t3-bold text-fg-neutral-muted">${p.getName().substring(0, 1)}</span>
+            <span class="min-w-0 flex-1 truncate t4-medium">${p.getName()}</span>
+            <span class="list-cell-muted hidden w-28 @2xl:block">${p.getCeoName() == null ? "-" : "대표 " + p.getCeoName()}</span>
+            <span class="list-cell-muted hidden w-32 @3xl:block">${p.getSalesRepName() == null ? "-" : p.getSalesRepName()}</span>
+            <span class="list-cell-muted hidden w-56 @5xl:block">${Ui.value(p.getSalesRepEmail())}</span>
+            <span class="w-24 shrink-0 text-right t3-regular ${count > 0 ? "text-fg-neutral" : "text-fg-neutral-subtle"}">프로젝트 ${count}건</span>
+        </a>
+    @endfor
 @endif
-@template.components.pagination(page = page, target = "#party-results")
+<div class="sm:px-x2 lg:px-x4">@template.components.pagination(page = page, target = "#party-results")</div>

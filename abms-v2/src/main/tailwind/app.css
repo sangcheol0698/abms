@@ -3,10 +3,12 @@
  * - 토큰: @seed-design/css 의 CSS 변수 + @seed-design/tailwind4-theme 유틸리티 (bg-bg-*, text-fg-*, p-x4, rounded-r2, t4-bold …)
  * - 컴포넌트: SEED 레시피 CSS(seed-action-button, seed-badge …)는 그대로 쓰고,
  *   SEED에 없는 데스크톱 요소(카드, 표 등)는 아래 components 레이어에서 SEED 토큰으로 정의한다.
- * - 색은 역할 토큰만 쓴다. (다크 모드 전환 대비: html[data-seed-color-mode] 값만 바꾸면 된다)
+ * - 색은 역할 토큰만 쓴다. 라이트/다크는 html[data-seed-color-mode] 로 전환한다.
+ * - linear-theme.css 가 SEED 토큰 값을 Linear 풍(무채색·인디고·촘촘한 밀도)으로 덮어쓴다.
  */
-@layer theme, base, seed-base, components, seed-components, utilities;
+@layer theme, base, seed-base, abms-theme, components, seed-components, abms-overrides, utilities;
 @import "@seed-design/css/base.layered.css";
+@import "./linear-theme.css";
 @import "@seed-design/css/recipes/action-button.layered.css";
 @import "@seed-design/css/recipes/badge.layered.css";
 @import "@seed-design/css/recipes/callout.layered.css";
@@ -76,15 +78,15 @@
     }
 
     .card-header {
-        @apply flex items-center justify-between gap-x3 border-b border-stroke-neutral-subtle px-x5 py-x3_5;
+        @apply flex min-h-11 items-center justify-between gap-x3 border-b border-stroke-neutral-subtle px-x4 py-x2;
     }
 
     .card-title {
-        @apply t5-bold text-fg-neutral;
+        @apply t4-bold text-fg-neutral;
     }
 
     .card-body {
-        @apply p-x5;
+        @apply p-x4;
     }
 
     /* 폼 필드 (SEED Field / Text Input outline-medium 스펙) */
@@ -93,20 +95,20 @@
     }
 
     .input, .select, .textarea {
-        @apply block min-h-10 w-full rounded-r2 border-0 bg-bg-layer-default px-x3 py-x2 t4-regular text-fg-neutral
+        @apply block min-h-8 w-full rounded-r2 border-0 bg-bg-layer-default px-x2_5 py-x1_5 t4-regular text-fg-neutral
         shadow-[inset_0_0_0_1px_var(--seed-color-stroke-neutral-weak)] transition-shadow duration-100 outline-none
         placeholder:text-fg-placeholder
-        focus:shadow-[inset_0_0_0_2px_var(--seed-color-stroke-neutral-contrast)]
+        focus:shadow-[inset_0_0_0_1px_var(--seed-color-bg-brand-solid),0_0_0_3px_var(--seed-color-bg-brand-weak)]
         disabled:cursor-not-allowed disabled:bg-bg-disabled disabled:text-fg-disabled;
     }
 
     .select {
         @apply appearance-none bg-[length:16px] bg-[right_var(--seed-dimension-x3)_center] bg-no-repeat pr-x9;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555d6d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8f98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     }
 
     .input-error, .input-error:focus {
-        @apply shadow-[inset_0_0_0_2px_var(--seed-color-stroke-critical-solid)];
+        @apply shadow-[inset_0_0_0_1px_var(--seed-color-stroke-critical-solid),0_0_0_3px_var(--seed-color-bg-critical-weak)];
     }
 
     .field-error {
@@ -123,14 +125,14 @@
 
     /* SEED Checkmark (square · medium · brand) 스펙 */
     .checkbox {
-        @apply size-x5 shrink-0 cursor-pointer appearance-none rounded-r1 border border-stroke-neutral-weak bg-bg-layer-default
+        @apply size-4 shrink-0 cursor-pointer appearance-none rounded-r1 border border-stroke-neutral-weak bg-bg-layer-default
         bg-center bg-no-repeat transition-colors duration-100
         checked:border-0 checked:bg-bg-brand-solid
         disabled:cursor-not-allowed disabled:border-stroke-neutral-muted disabled:bg-bg-disabled;
     }
 
     .checkbox:checked {
-        background-size: 14px;
+        background-size: 12px;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
     }
 
@@ -140,11 +142,11 @@
     }
 
     .table thead th {
-        @apply border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x2_5 text-left t3-medium whitespace-nowrap text-fg-neutral-subtle;
+        @apply border-b border-stroke-neutral-subtle px-x4 py-x2 text-left t3-medium whitespace-nowrap text-fg-neutral-subtle;
     }
 
     .table tbody td {
-        @apply border-b border-stroke-neutral-subtle px-x4 py-x3 align-middle whitespace-nowrap text-fg-neutral;
+        @apply border-b border-stroke-neutral-subtle px-x4 py-x2 align-middle whitespace-nowrap text-fg-neutral;
     }
 
     .table tbody tr:last-child td {
@@ -181,7 +183,159 @@
     }
 
     .stat-value {
-        @apply mt-x1 t9-bold text-fg-neutral tabular-nums;
+        @apply mt-x1 t6-bold tracking-tight whitespace-nowrap text-fg-neutral tabular-nums sm:t8-bold;
+    }
+
+    /* 단축키 표시 (Linear 풍 kbd) */
+    .kbd {
+        @apply inline-flex h-x5 min-w-5 items-center justify-center rounded-r1 border border-stroke-neutral-subtle bg-bg-layer-default px-x1 t2-medium text-fg-neutral-subtle;
+    }
+
+    /* Linear 풍 목록: 필터 바 · 칩 · 그룹 헤더 · 행 */
+    .view-bar {
+        @apply flex flex-wrap items-center gap-x2 border-b border-stroke-neutral-subtle px-x4 py-x2;
+    }
+
+    .chip {
+        @apply inline-flex h-7 cursor-pointer items-center gap-x1_5 rounded-r2 border border-transparent px-x2_5 t4-medium whitespace-nowrap text-fg-neutral-subtle
+        transition-colors select-none hover:bg-bg-transparent-pressed hover:text-fg-neutral
+        has-[:checked]:border-stroke-neutral-subtle has-[:checked]:bg-bg-transparent-selected has-[:checked]:text-fg-neutral
+        has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-(--seed-color-stroke-focus-ring);
+    }
+
+    .chip input {
+        @apply sr-only;
+    }
+
+    .chip-count {
+        @apply t3-regular text-fg-neutral-subtle tabular-nums;
+    }
+
+    .filter-input, .filter-select {
+        @apply min-h-7 py-x1 t3-regular;
+    }
+
+    .filter-select {
+        @apply w-auto max-w-44 pr-x8;
+    }
+
+    .list-group-header {
+        @apply sticky top-(--sticky-top) z-[1] flex items-center gap-x2 border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x1_5 t3-medium text-fg-neutral-muted;
+    }
+
+    .list-row {
+        @apply flex min-h-11 items-center gap-x3 border-b border-stroke-neutral-subtle px-x4 py-x1_5 t4-regular text-fg-neutral transition-colors
+        last:border-b-0 hover:bg-bg-layer-default-pressed;
+    }
+
+    .list-cell-muted {
+        @apply truncate t4-regular text-fg-neutral-subtle;
+    }
+
+    /* 섹션 제목 + 테두리 리스트 상자 (상세 화면) */
+    .section-title {
+        @apply mb-x2 flex items-center gap-x2 t4-bold text-fg-neutral;
+    }
+
+    .section-count {
+        @apply t4-regular text-fg-neutral-subtle tabular-nums;
+    }
+
+    /* 리스트 상자는 컨테이너: 안쪽 행의 열 숨김을 상자 폭 기준으로 판단한다 */
+    .list-box {
+        @apply @container overflow-hidden rounded-r3 border border-stroke-neutral-subtle;
+    }
+
+    /* 열 머리가 있는 리스트 (숫자 비교가 필요한 목록) */
+    .list-head {
+        @apply flex h-8 items-center gap-x3 border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 t3-medium whitespace-nowrap text-fg-neutral-subtle;
+    }
+
+    .col-num {
+        @apply w-28 shrink-0 text-right tabular-nums;
+    }
+
+    /* 비율 막대 */
+    .meter {
+        @apply flex h-1.5 w-full overflow-hidden rounded-full bg-bg-neutral-weak;
+    }
+
+    /* 설정형 폼: 왼쪽 섹션 설명 + 오른쪽 입력, 하단 고정 저장 바 */
+    .form-section {
+        @apply grid gap-x4 border-t border-stroke-neutral-subtle py-x6 first:border-t-0 first:pt-x2 @2xl:grid-cols-[200px_minmax(0,1fr)] @2xl:gap-x8;
+    }
+
+    .form-section-title {
+        @apply t4-bold text-fg-neutral;
+    }
+
+    .form-section-desc {
+        @apply mt-x1 t3-regular text-fg-neutral-subtle;
+    }
+
+    .form-actions {
+        @apply sticky bottom-4 z-10 mt-x2 flex items-center justify-end gap-x2 rounded-r3 border border-stroke-neutral-subtle bg-bg-layer-floating px-x4 py-x2_5 shadow-s2;
+    }
+
+    /* 모달 폼: 라벨 | 값 속성 행 */
+    .prop-form {
+        @apply grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-x3 gap-y-x3;
+    }
+
+    .prop-label {
+        @apply flex min-h-8 items-center t4-regular text-fg-neutral-subtle;
+    }
+
+    /* 트리 (조직도) */
+    .tree-item {
+        @apply flex h-7 items-center gap-x1_5 rounded-r1_5 pr-x2 t4-regular text-fg-neutral-muted transition-colors hover:bg-bg-transparent-pressed;
+    }
+
+    .tree-item[aria-current="page"] {
+        @apply bg-bg-transparent-selected t4-medium text-fg-neutral;
+    }
+
+    /* 상세: 오른쪽 속성 패널 */
+    .property-list {
+        @apply grid grid-cols-[96px_1fr] items-center gap-x-x3 gap-y-x3 t4-regular;
+    }
+
+    .property-list dt {
+        @apply t4-regular text-fg-neutral-subtle;
+    }
+
+    .property-list dd {
+        @apply min-w-0 truncate text-fg-neutral;
+    }
+
+    /* 명령 팔레트 */
+    .palette-group {
+        @apply px-x2_5 pt-x2_5 pb-x1 t3-medium text-fg-neutral-subtle;
+    }
+
+    .palette-item {
+        @apply flex h-9 w-full cursor-pointer items-center gap-x2_5 rounded-r2 px-x2_5 text-left t4-regular text-fg-neutral;
+    }
+
+    .palette-item[data-active] {
+        @apply bg-bg-transparent-selected;
+    }
+
+    #palette::backdrop, #shortcuts::backdrop {
+        background: var(--seed-color-bg-overlay-muted);
+    }
+
+    .theme-option {
+        @apply flex cursor-pointer flex-col items-center gap-x1 rounded-r1_5 py-x1_5 t3-regular text-fg-neutral-subtle hover:bg-bg-layer-floating-pressed;
+    }
+
+    .theme-option[aria-pressed="true"] {
+        @apply bg-bg-transparent-selected t3-medium text-fg-neutral;
+    }
+
+    /* 드롭다운 메뉴 항목 */
+    .menu-item {
+        @apply flex w-full cursor-pointer items-center gap-x2 rounded-r1_5 px-x2 py-x1_5 text-left t4-regular text-fg-neutral hover:bg-bg-layer-floating-pressed;
     }
 
     /* 표 셀 기본 색상보다 우선하도록 important 처리 */
@@ -252,5 +406,295 @@
 
     .prose-md > :first-child {
         @apply mt-0;
+    }
+}
+
+/* SEED 레시피 값 조정 (Linear 풍 밀도). seed-components 레이어 이후라 레시피보다 우선한다. */
+@layer abms-overrides {
+    .seed-side-navigation__root--tone_neutral {
+        background-color: transparent;
+        box-shadow: none;
+    }
+
+    .seed-side-navigation__content {
+        padding: 4px 12px 16px;
+        gap: 14px;
+    }
+
+    .seed-side-navigation__groupLabel {
+        padding: 4px 8px;
+        font-size: var(--seed-font-size-t3);
+        line-height: var(--seed-line-height-t3);
+        font-weight: var(--seed-font-weight-medium);
+        color: var(--seed-color-fg-neutral-subtle);
+    }
+
+    .seed-side-navigation-menu-item__root {
+        height: 30px;
+        padding-inline: 8px;
+        border-radius: var(--seed-radius-r2);
+        gap: 8px;
+    }
+
+    .seed-side-navigation-menu-item__root::before {
+        border-radius: var(--seed-radius-r2);
+    }
+
+    .seed-side-navigation-menu-item__root[data-current] {
+        background-color: var(--seed-color-bg-transparent-selected);
+    }
+
+    .seed-side-navigation-menu-item__prefixIcon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .seed-side-navigation-menu-item__label {
+        padding: 0 0 0 24px;
+        font-size: var(--seed-font-size-t4);
+        line-height: var(--seed-line-height-t4);
+    }
+
+    .seed-badge__root--size_large {
+        min-height: 20px;
+        padding-inline: 6px;
+        padding-block: 2px;
+        border-radius: var(--seed-radius-r1);
+        font-size: var(--seed-font-size-t3);
+        line-height: var(--seed-line-height-t3);
+    }
+}
+
+/*
+ * 앱 셸 레이아웃 — 상단 헤더 / 왼쪽 사이드바 / 본문 패널 / 오른쪽 사이드바
+ * 데스크톱(lg+): 문서는 고정, #app-scroll 과 각 사이드바만 스크롤. html[data-left|data-right="closed"] 로 접는다.
+ * 모바일: 문서 스크롤, 사이드바는 html[data-drawer="left|right"] 일 때 서랍으로 연다.
+ */
+@layer abms-overrides {
+    :root {
+        --app-header-h: 48px;
+        --app-left-w: 240px;
+        --app-right-w: 320px;
+        /* 본문 안 고정 요소의 기준 위치 (JS 가 고정 툴바 높이로 갱신) */
+        --sticky-top: 0px;
+    }
+
+    .app-body {
+        min-height: 100%;
+        background-color: var(--seed-color-bg-layer-basement);
+    }
+
+    .app-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: var(--app-header-h);
+        padding: 0 8px;
+        background-color: var(--seed-color-bg-layer-basement);
+    }
+
+    .app-frame {
+        display: flex;
+    }
+
+    .app-left {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 40;
+        width: 264px;
+        height: 100dvh;
+        background-color: var(--seed-color-bg-layer-basement);
+        box-shadow: var(--seed-shadow-s3);
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform 200ms var(--seed-timing-function-easing), visibility 200ms;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .app-right {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        width: min(var(--app-right-w), 90vw);
+        height: 100dvh;
+        background-color: var(--seed-color-bg-layer-default);
+        box-shadow: var(--seed-shadow-s3);
+        transform: translateX(100%);
+        visibility: hidden;
+        transition: transform 200ms var(--seed-timing-function-easing), visibility 200ms;
+    }
+
+    html[data-drawer="left"] .app-left,
+    html[data-drawer="right"] .app-right {
+        transform: none;
+        visibility: visible;
+    }
+
+    .app-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 35;
+        display: none;
+        background: var(--seed-color-bg-overlay-muted);
+    }
+
+    html[data-drawer] .app-backdrop {
+        display: block;
+    }
+
+    .app-panel {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        background-color: var(--seed-color-bg-layer-default);
+    }
+
+    /* 본문은 컨테이너: 화면 배치는 창 폭이 아니라 본문 폭(사이드바 개폐 반영) 기준으로 바뀐다 */
+    .app-scroll {
+        flex: 1;
+        min-width: 0;
+        outline: none;
+        container-type: inline-size;
+    }
+
+    .right-pane {
+        display: none;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 16px;
+    }
+
+    .right-pane.is-active {
+        display: block;
+    }
+
+    .right-tab {
+        display: inline-flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 10px;
+        border-radius: var(--seed-radius-r2);
+        font-size: var(--seed-font-size-t4);
+        font-weight: var(--seed-font-weight-medium);
+        color: var(--seed-color-fg-neutral-subtle);
+        cursor: pointer;
+    }
+
+    .right-tab:hover {
+        color: var(--seed-color-fg-neutral);
+    }
+
+    .right-tab[aria-selected="true"] {
+        background-color: var(--seed-color-bg-transparent-selected);
+        color: var(--seed-color-fg-neutral);
+    }
+
+    /* 고정 툴바: 본문을 스크롤하면 아래 구분선이 생긴다 */
+    [data-page-toolbar] {
+        transition: border-color 150ms, box-shadow 150ms;
+    }
+
+    [data-page-toolbar][data-scrolled] {
+        border-bottom-color: var(--seed-color-stroke-neutral-subtle);
+    }
+
+    /* D. 스크롤 다듬기: 얇은 테마 스크롤바, 폭 흔들림 방지, 스크롤 전파 차단 */
+    .app-scroll, .app-left, .app-right, .right-pane, .scroll-pane, #palette-results, .dropdown-panel {
+        scrollbar-width: thin;
+        scrollbar-color: var(--seed-color-palette-gray-400) transparent;
+    }
+
+    .scroll-pane, .dropdown-panel {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    @media (min-width: 1024px) {
+        .app-body {
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            position: static;
+            flex-shrink: 0;
+        }
+
+        .app-frame {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .app-left {
+            position: static;
+            width: var(--app-left-w);
+            height: auto;
+            flex-shrink: 0;
+            box-shadow: none;
+            transform: none;
+            visibility: visible;
+            transition: none;
+        }
+
+        html[data-left="closed"] .app-left {
+            display: none;
+        }
+
+        .app-panel {
+            margin: 0 8px 8px 0;
+            border: 1px solid var(--seed-color-stroke-neutral-subtle);
+            border-radius: var(--seed-radius-r3);
+            box-shadow: var(--seed-shadow-s1);
+            overflow: hidden;
+        }
+
+        html[data-left="closed"] .app-panel {
+            margin-left: 8px;
+        }
+
+        .app-scroll {
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            scroll-padding-top: calc(var(--sticky-top) + 8px);
+        }
+
+        .app-scroll-fill {
+            overflow: hidden;
+            scrollbar-gutter: auto;
+        }
+
+        .app-right {
+            position: static;
+            width: var(--app-right-w);
+            height: auto;
+            flex-shrink: 0;
+            box-shadow: none;
+            transform: none;
+            visibility: visible;
+            transition: none;
+            border-left: 1px solid var(--seed-color-stroke-neutral-subtle);
+        }
+
+        html[data-right="closed"] .app-right {
+            display: none;
+        }
+
+        .app-backdrop {
+            display: none !important;
+        }
     }
 }

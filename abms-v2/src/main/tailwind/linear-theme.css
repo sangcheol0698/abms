@@ -1,0 +1,97 @@
+/*
+ * ABMS Linear 풍 테마 — SEED 토큰 값만 덮어쓴다. (SEED 컴포넌트·역할 토큰 구조는 그대로)
+ * - 무채색 회색 스케일 + 인디고 단일 강조색 (SEED brand 역할이 쓰는 carrot 팔레트를 인디고로 교체)
+ * - 촘촘한 밀도: 본문 13px, 작은 모서리
+ * 선택자는 @seed-design/css base.css 의 라이트/다크 선택자와 같다.
+ */
+@layer abms-theme {
+    :root {
+        --seed-font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+
+        /* 타이포 스케일을 한 단계 촘촘하게 */
+        --seed-font-size-t2: 0.71875rem;   /* 11.5px */
+        --seed-font-size-t3: 0.75rem;      /* 12px */
+        --seed-font-size-t4: 0.8125rem;    /* 13px — 본문 */
+        --seed-font-size-t5: 0.875rem;     /* 14px */
+        --seed-font-size-t6: 0.9375rem;    /* 15px */
+        --seed-font-size-t7: 1.125rem;     /* 18px — 페이지 제목 */
+        --seed-line-height-t2: 0.9375rem;
+        --seed-line-height-t3: 1rem;
+        --seed-line-height-t4: 1.125rem;
+        --seed-line-height-t5: 1.25rem;
+        --seed-line-height-t6: 1.375rem;
+        --seed-line-height-t7: 1.5rem;
+
+        --seed-radius-r1_5: 5px;
+        --seed-radius-r2: 6px;
+        --seed-radius-r2_5: 7px;
+        --seed-radius-r3: 8px;
+        --seed-radius-r3_5: 9px;
+        --seed-radius-r4: 10px;
+        --seed-radius-r5: 12px;
+        --seed-radius-r6: 12px;
+
+        --seed-shadow-s1: 0 1px 2px 0 #0000000d;
+        --seed-shadow-s2: 0 4px 12px -2px #00000014, 0 0 0 1px #0000000a;
+        --seed-shadow-s3: 0 12px 32px -8px #00000026, 0 0 0 1px #0000000d;
+    }
+
+    :root,
+    :root[data-seed-color-mode="system"][data-seed-user-color-scheme="light"],
+    :root[data-seed-color-mode="light-only"] {
+        --seed-color-palette-gray-00: #ffffff;
+        --seed-color-palette-gray-100: #f9f9fa;
+        --seed-color-palette-gray-200: #f4f4f5;
+        --seed-color-palette-gray-300: #ececee;
+        --seed-color-palette-gray-400: #dfdfe2;
+        --seed-color-palette-gray-500: #c8c9cd;
+        --seed-color-palette-gray-600: #9b9ea5;
+        --seed-color-palette-gray-700: #6b6f76;
+        --seed-color-palette-gray-800: #46494f;
+        --seed-color-palette-gray-900: #26282c;
+        --seed-color-palette-gray-1000: #1b1c1f;
+
+        --seed-color-palette-carrot-100: #f0f1fd;
+        --seed-color-palette-carrot-200: #e2e4fa;
+        --seed-color-palette-carrot-300: #c7cbf3;
+        --seed-color-palette-carrot-400: #a1a8ea;
+        --seed-color-palette-carrot-500: #7e88df;
+        --seed-color-palette-carrot-600: #5e6ad2;
+        --seed-color-palette-carrot-700: #4e59c0;
+        --seed-color-palette-carrot-800: #414aa1;
+        --seed-color-palette-carrot-900: #343b7f;
+        --seed-color-palette-carrot-1000: #262b5c;
+
+        --seed-color-stroke-focus-ring: #5e6ad2;
+    }
+
+    :root[data-seed-color-mode="system"][data-seed-user-color-scheme="dark"],
+    :root[data-seed-color-mode="dark-only"] {
+        --seed-color-palette-gray-00: #08090a;
+        --seed-color-palette-gray-100: #0f1012;
+        --seed-color-palette-gray-200: #17181b;
+        --seed-color-palette-gray-300: #1f2023;
+        --seed-color-palette-gray-400: #2c2e33;
+        --seed-color-palette-gray-500: #3e4047;
+        --seed-color-palette-gray-600: #62656d;
+        --seed-color-palette-gray-700: #8a8f98;
+        --seed-color-palette-gray-800: #b8bcc4;
+        --seed-color-palette-gray-900: #dfe1e5;
+        --seed-color-palette-gray-1000: #f7f8f8;
+
+        --seed-color-palette-carrot-100: #1b1d33;
+        --seed-color-palette-carrot-200: #23264a;
+        --seed-color-palette-carrot-300: #2f3466;
+        --seed-color-palette-carrot-400: #3d4486;
+        --seed-color-palette-carrot-500: #4c55a8;
+        --seed-color-palette-carrot-600: #5e6ad2;
+        --seed-color-palette-carrot-700: #6c78dc;
+        --seed-color-palette-carrot-800: #8b95e6;
+        --seed-color-palette-carrot-900: #c4c9f3;
+        --seed-color-palette-carrot-1000: #eceefc;
+
+        --seed-color-stroke-focus-ring: #6c78dc;
+        --seed-shadow-s2: 0 4px 12px -2px #00000066, 0 0 0 1px #ffffff12;
+        --seed-shadow-s3: 0 12px 32px -8px #00000099, 0 0 0 1px #ffffff14;
+    }
+}

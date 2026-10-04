@@ -12,24 +12,33 @@
 @param List<SelectOption> departmentOptions
 !{boolean editing = department != null;}
 <form hx-post="${editing ? "/departments/" + department.id() : "/departments"}" hx-target="#modal-body">
-    @template.components.modal(title = editing ? "부서 수정" : "부서 추가", body = @`
+    @template.components.modal(title = editing ? "부서 수정" : "부서 추가", context = editing ? department.getName() : "부서", hint = editing ? "저장" : "추가", body = @`
         @template.components.globalError(errors = errors)
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label for="code" class="label">부서 코드</label>
+        <input name="name" value="${Ui.value(form.name())}" required autofocus placeholder="부서명" aria-label="부서명"
+               class="mb-x4 w-full bg-transparent t7-bold text-fg-neutral outline-none placeholder:text-fg-placeholder">
+        @if(errors.has("name"))<p class="field-error -mt-3 mb-x3">${errors.get("name")}</p>@endif
+        <div class="prop-form">
+            @template.components.propRow(label = "부서 코드", forId = "code", required = !editing, error = errors.get("code"), control = @`
                 <input id="code" name="code" class="input" value="${editing ? department.getCode() : Ui.value(form.code())}" required disabled="${editing}" placeholder="ABC1234">
-            </div>
-            @template.components.select(name = "type", label = "유형", options = Ui.options(DepartmentType.values()), value = Ui.value(form.type()), errors = errors)
-            <div class="col-span-2">
-                <label for="name" class="label">부서명</label>
-                <input id="name" name="name" class="input" value="${Ui.value(form.name())}" required>
-            </div>
-            <div class="col-span-2">
-                @template.components.select(name = "parentId", label = "상위 부서", options = departmentOptions, value = Ui.value(form.parentId()), errors = errors, emptyLabel = "(최상위)")
-            </div>
+            `)
+            @template.components.propRow(label = "유형", forId = "type", error = errors.get("type"), control = @`
+                <select id="type" name="type" class="select">
+                    @for(var o : Ui.options(DepartmentType.values()))
+                        <option value="${o.value()}" selected="${o.value().equals(Ui.value(form.type()))}">${o.label()}</option>
+                    @endfor
+                </select>
+            `)
+            @template.components.propRow(label = "상위 부서", forId = "parentId", error = errors.get("parentId"), control = @`
+                <select id="parentId" name="parentId" class="select">
+                    <option value="">(최상위)</option>
+                    @for(SelectOption o : departmentOptions)
+                        <option value="${o.value()}" selected="${o.value().equals(Ui.value(form.parentId()))}">${o.label()}</option>
+                    @endfor
+                </select>
+            `)
         </div>
     `, footer = @`
-        <button type="button" class="${Seed.button("neutralWeak")}" data-close-modal>취소</button>
+        <button type="button" class="${Seed.button("ghost")}" data-close-modal>취소</button>
         <button type="submit" class="${Seed.button("brandSolid")}">${editing ? "저장" : "추가"}</button>
     `)
 </form>
