@@ -69,8 +69,7 @@ public class PartyController {
         String baseUrl = UriComponentsBuilder.fromPath("/parties").query(request.getQueryString()).build().toUriString();
         model.addAttribute("page", PageView.of(result, baseUrl));
         model.addAttribute("q", q);
-        model.addAttribute("projectCounts", result.getContent().stream()
-                .collect(java.util.stream.Collectors.toMap(Party::id, p -> partyService.projectCount(p.id()))));
+        model.addAttribute("projectCounts", partyService.projectCounts(result.getContent().stream().map(Party::id).toList()));
         if (Htmx.targets(request, "party-results")) {
             return "party/results";
         }

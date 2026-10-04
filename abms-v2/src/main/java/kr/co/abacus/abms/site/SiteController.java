@@ -65,13 +65,16 @@ public class SiteController {
     @GetMapping
     public String list(Model model) {
         List<Site> sites = siteService.all();
-        Map<Long, List<Department>> departments = sites.stream()
-                .collect(Collectors.toMap(Site::id, s -> departmentRepository.findAllBySiteId(s.id())));
+        // 사업장 → 부서 → 인원을 각각 한 번씩만 조회한다.
+        Map<Long, List<Department>> departments = departmentRepository.findAllBySiteIdIsNotNull().stream()
+                .collect(Collectors.groupingBy(Department::getSiteId));
+        Map<Long, List<kr.co.abacus.abms.employee.Employee>> members = departmentService.membersByDepartment(
+                departments.values().stream().flatMap(List::stream).map(Department::id).toList());
         model.addAttribute("sites", sites);
         model.addAttribute("departmentCounts", departments.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size())));
         model.addAttribute("headcounts", departments.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> headcount(e.getValue()))));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream().mapToInt(d -> members.get(d.id()).size()).sum())));
         model.addAttribute("markers", sites.stream()
                 .map(s -> MapMarker.of(s.getName(), s.getLocation().fullAddress(), s.getLocation(), "/sites/" + s.id()))
                 .filter(Objects::nonNull)
@@ -85,11 +88,12 @@ public class SiteController {
         List<Department> departments = departmentRepository.findAllBySiteId(id).stream()
                 .sorted(Comparator.comparing(Department::getName))
                 .toList();
+        Map<Long, Integer> memberCounts = departmentService.membersByDepartment(departments.stream().map(Department::id).toList())
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size()));
         model.addAttribute("site", site);
         model.addAttribute("departments", departments);
-        model.addAttribute("memberCounts", departments.stream()
-                .collect(Collectors.toMap(Department::id, d -> departmentService.members(d.id()).size())));
-        model.addAttribute("headcount", headcount(departments));
+        model.addAttribute("memberCounts", memberCounts);
+        model.addAttribute("headcount", memberCounts.values().stream().mapToInt(Integer::intValue).sum());
         model.addAttribute("nearby", user.has(PermissionCode.PARTY_READ) ? nearby(site.getLocation()) : List.of());
         MapMarker marker = MapMarker.of(site.getName(), site.getLocation().fullAddress(), site.getLocation(), null);
         model.addAttribute("markers", marker == null ? List.of() : List.of(marker));
@@ -157,10 +161,6 @@ public class SiteController {
             Toast.error(redirect, e.getMessage());
             return "redirect:/sites/" + id;
         }
-    }
-
-    private int headcount(List<Department> departments) {
-        return departments.stream().mapToInt(d -> departmentService.members(d.id()).size()).sum();
     }
 
     /** 사업장에서 가까운 협력사 (좌표가 있는 곳만, 가까운 순) */

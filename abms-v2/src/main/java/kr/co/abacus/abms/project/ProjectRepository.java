@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project> {
 
@@ -15,6 +16,10 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpec
     boolean existsByPartyId(Long partyId);
 
     long countByPartyId(Long partyId);
+
+    /** 협력사별 프로젝트 수: [partyId, count] */
+    @Query("select p.partyId, count(p) from Project p where p.partyId in :partyIds group by p.partyId")
+    List<Object[]> countGroupByPartyId(@Param("partyIds") Collection<Long> partyIds);
 
     List<Project> findAllByPartyIdOrderByPeriodStartDateDesc(Long partyId);
 

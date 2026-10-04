@@ -48,6 +48,16 @@ public class PartyService {
         return projectRepository.countByPartyId(partyId);
     }
 
+    /** 협력사별 프로젝트 수 (한 번의 집계 쿼리) */
+    @Transactional(readOnly = true)
+    public java.util.Map<Long, Long> projectCounts(java.util.Collection<Long> partyIds) {
+        if (partyIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        return projectRepository.countGroupByPartyId(partyIds).stream()
+                .collect(java.util.stream.Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+    }
+
     public Party create(PartyInfo info) {
         if (partyRepository.existsByName(info.name().trim())) {
             throw new BusinessException("이미 등록된 협력사명입니다: " + info.name());

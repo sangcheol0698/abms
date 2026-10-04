@@ -14,4 +14,6 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     boolean existsBySiteId(Long siteId);
 
+    List<Department> findAllBySiteIdIsNotNull();
+
 }

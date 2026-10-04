@@ -148,11 +148,8 @@ public class DepartmentController {
     private void addDetail(LoginUser user, Long id, DepartmentTree tree, Model model) {
         Department department = departmentService.get(id);
         Set<Long> subtree = tree.subtreeIds(id);
-        List<Employee> members = departmentService.members(id);
-        java.util.Map<Long, List<Employee>> membersByDepartment = new java.util.HashMap<>();
-        for (Long departmentId : subtree) {
-            membersByDepartment.put(departmentId, departmentId.equals(id) ? members : departmentService.members(departmentId));
-        }
+        java.util.Map<Long, List<Employee>> membersByDepartment = departmentService.membersByDepartment(subtree);
+        List<Employee> members = membersByDepartment.get(id);
         List<Employee> subtreeMembers = membersByDepartment.values().stream().flatMap(List::stream).toList();
         model.addAttribute("department", department);
         model.addAttribute("tree", tree);
