@@ -223,6 +223,10 @@
         @apply sticky top-(--sticky-top) z-[1] flex items-center gap-x2 border-b border-stroke-neutral-subtle bg-bg-neutral-muted px-x4 py-x1_5 t3-medium text-fg-neutral-muted;
     }
 
+    .list-box .list-group-header {
+        @apply static;
+    }
+
     .list-row {
         @apply flex min-h-11 items-center gap-x3 border-b border-stroke-neutral-subtle px-x4 py-x1_5 t4-regular text-fg-neutral transition-colors
         last:border-b-0 hover:bg-bg-layer-default-pressed;
@@ -306,6 +310,11 @@
 
     .property-list dd {
         @apply min-w-0 truncate text-fg-neutral;
+    }
+
+    /* 토스트 영역: popover 로 top layer 에 띄운다 (UA 기본 popover 스타일 초기화) */
+    .toast-region {
+        @apply pointer-events-none fixed inset-x-0 top-auto bottom-6 m-0 flex w-auto flex-col items-center gap-x2 overflow-visible border-0 bg-transparent px-x4 py-0;
     }
 
     /* 명령 팔레트 */
@@ -629,8 +638,10 @@
             flex-direction: column;
         }
 
+        /* 헤더 드롭다운(사용자 메뉴)이 본문·사이드바 위에 오도록 헤더를 위층으로 둔다 */
         .app-header {
-            position: static;
+            position: relative;
+            z-index: 30;
             flex-shrink: 0;
         }
 
@@ -648,6 +659,8 @@
             transform: none;
             visibility: visible;
             transition: none;
+            /* 모바일 서랍용 z-index 해제 (flex 항목이라 static 이어도 쌓임 순서를 만들어 헤더 메뉴를 가린다) */
+            z-index: auto;
         }
 
         html[data-left="closed"] .app-left {
@@ -687,6 +700,7 @@
             visibility: visible;
             transition: none;
             border-left: 1px solid var(--seed-color-stroke-neutral-subtle);
+            z-index: auto;
         }
 
         html[data-right="closed"] .app-right {
