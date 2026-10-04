@@ -55,10 +55,13 @@ public class PartyController {
     private final DepartmentService departmentService;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
     private final Geocoder geocoder;
+    private final kr.co.abacus.abms.attachment.AttachmentService attachmentService;
 
     public PartyController(PartyService partyService, ProjectService projectService, DepartmentService departmentService,
                            ProjectRevenuePlanRepository revenuePlanRepository, Geocoder geocoder,
-            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService) {
+            kr.co.abacus.abms.common.audit.AuditQueryService auditQueryService,
+            kr.co.abacus.abms.attachment.AttachmentService attachmentService) {
+        this.attachmentService = attachmentService;
         this.auditQueryService = auditQueryService;
         this.geocoder = geocoder;
         this.revenuePlanRepository = revenuePlanRepository;
@@ -126,6 +129,7 @@ public class PartyController {
         MapMarker marker = MapMarker.of(party.getName(), party.getLocation().fullAddress(), party.getLocation(), null);
         model.addAttribute("markers", marker == null ? java.util.List.of() : java.util.List.of(marker));
         model.addAttribute("auditHistory", auditQueryService.history("Party", id, 30));
+        model.addAttribute("attachments", kr.co.abacus.abms.attachment.AttachmentSection.of(attachmentService, user, kr.co.abacus.abms.attachment.AttachmentOwner.PARTY, id));
         return "party/detail";
     }
 

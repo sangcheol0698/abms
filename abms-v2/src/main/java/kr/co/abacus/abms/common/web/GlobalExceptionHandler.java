@@ -45,6 +45,11 @@ public class GlobalExceptionHandler {
         return respond(request, response, HttpStatus.UNPROCESSABLE_CONTENT, e.getMessage());
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ModelAndView tooLarge(HttpServletRequest request, HttpServletResponse response) {
+        return respond(request, response, HttpStatus.CONTENT_TOO_LARGE, "파일은 20MB 이하만 첨부할 수 있습니다.");
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ModelAndView accessDenied(AccessDeniedException e, HttpServletRequest request, HttpServletResponse response) {
         return respond(request, response, HttpStatus.FORBIDDEN, e.getMessage() == null ? "권한이 없습니다." : e.getMessage());

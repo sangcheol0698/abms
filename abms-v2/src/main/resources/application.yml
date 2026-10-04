@@ -18,6 +18,11 @@ spring:
         default_batch_fetch_size: 100
   flyway:
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      # 첨부 파일 한도는 20MB (AttachmentService), 요청 한도는 여유를 둔다.
+      max-file-size: 25MB
+      max-request-size: 30MB
   docker:
     compose:
       enabled: false
@@ -55,6 +60,9 @@ gg:
 abms:
   ai:
     api-key: ${OPENAI_API_KEY:}
+  storage:
+    # 첨부 파일 저장 위치 (로컬 디스크)
+    path: ${ABMS_STORAGE_PATH:./data/attachments}
   map:
     kakao-js-key: ${KAKAO_JS_KEY:}
     kakao-rest-key: ${KAKAO_REST_KEY:}

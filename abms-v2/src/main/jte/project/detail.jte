@@ -24,6 +24,7 @@
 @param kr.co.abacus.abms.project.ProjectPlaceService.ResolvedPlace place
 @param kr.co.abacus.abms.project.ProjectPlaceService.NearestSite nearestSite = null
 @param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null
+@param kr.co.abacus.abms.attachment.AttachmentSection attachments = null
 @template.layout.app(ctx = ctx, aside = @`
             <dl class="property-list">
             <dt>상태</dt>
@@ -156,6 +157,9 @@
             @endif
         </section>
     @endif
+        @if(attachments != null)
+            <div class="mt-6">@template.attachment.section(section = attachments)</div>
+        @endif
         @if(auditHistory != null)
             <div class="mt-6">@template.components.auditHistory(entries = auditHistory, showTarget = true)</div>
         @endif

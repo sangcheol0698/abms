@@ -32,6 +32,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.attachment.AttachmentOwner;
+import kr.co.abacus.abms.attachment.AttachmentSection;
+import kr.co.abacus.abms.attachment.AttachmentService;
 import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.geo.Geocoder;
@@ -55,6 +58,7 @@ public class ProjectController {
     private final AuditQueryService auditQueryService;
     private final ProjectPlaceService placeService;
     private final Geocoder geocoder;
+    private final AttachmentService attachmentService;
 
     private final ProjectService projectService;
     private final ProjectRevenueService revenueService;
@@ -68,7 +72,8 @@ public class ProjectController {
                              ProjectAssignmentService assignmentService, PartyService partyService,
                              DepartmentService departmentService, ProfitQueryService profitQueryService,
                              ProjectSections sections, AuditQueryService auditQueryService, ProjectPlaceService placeService,
-                             Geocoder geocoder) {
+                             Geocoder geocoder, AttachmentService attachmentService) {
+        this.attachmentService = attachmentService;
         this.auditQueryService = auditQueryService;
         this.placeService = placeService;
         this.geocoder = geocoder;
@@ -162,6 +167,7 @@ public class ProjectController {
         model.addAttribute("showHistory", showHistory);
         model.addAttribute("history", showHistory ? profitQueryService.projectHistory(id) : List.of());
         model.addAttribute("auditHistory", auditQueryService.history("Project", id, 30));
+        model.addAttribute("attachments", AttachmentSection.of(attachmentService, user, AttachmentOwner.PROJECT, id));
         return "project/detail";
     }
 
