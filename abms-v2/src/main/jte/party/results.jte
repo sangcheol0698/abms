@@ -11,7 +11,8 @@
         !{long count = projectCounts.getOrDefault(p.id(), 0L);}
         <a href="/parties/${p.id()}" class="list-row sm:px-x6 lg:px-x8">
             <span class="flex size-6 shrink-0 items-center justify-center rounded-r1_5 bg-bg-neutral-weak t3-bold text-fg-neutral-muted">${p.getName().substring(0, 1)}</span>
-            <span class="min-w-0 flex-1 truncate t4-medium">${p.getName()}</span>
+            <span class="flex min-w-0 flex-1 items-center gap-x2"><span class="truncate t4-medium">${p.getName()}</span><span class="${kr.co.abacus.abms.common.web.Seed.badge(p.getPartyType() == kr.co.abacus.abms.party.PartyType.PARTNER ? "neutral" : "informative", p.getPartyType() == kr.co.abacus.abms.party.PartyType.BOTH ? "outline" : "weak")}">${p.getPartyType().label()}</span></span>
+            <span class="list-cell-muted hidden w-28 @2xl:block">${p.getIndustry() == null ? "-" : p.getIndustry()}</span>
             <span class="list-cell-muted hidden w-28 @2xl:block">${p.getCeoName() == null ? "-" : "대표 " + p.getCeoName()}</span>
             <span class="list-cell-muted hidden w-32 @3xl:block">${p.getSalesRepName() == null ? "-" : p.getSalesRepName()}</span>
             <span class="list-cell-muted hidden w-56 @5xl:block">${Ui.value(p.getSalesRepEmail())}</span>

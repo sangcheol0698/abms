@@ -10,6 +10,8 @@
 @import kr.co.abacus.abms.employee.EmployeeGrade
 @import kr.co.abacus.abms.employee.EmployeePosition
 @import kr.co.abacus.abms.employee.EmployeeType
+@import kr.co.abacus.abms.employee.WorkType
+@import kr.co.abacus.abms.employee.EmployeeJob
 @import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param EmployeeForm form
@@ -33,6 +35,7 @@
                 @template.components.input(name = "email", label = "이메일", value = Ui.value(form.email()), errors = errors, type = "email", required = true)
                 @template.components.input(name = "birthDate", label = "생년월일", value = Ui.value(form.birthDate()), errors = errors, type = "date", required = true)
                 @template.components.select(name = "departmentId", label = "부서", options = departmentOptions, value = Ui.value(form.departmentId()), errors = errors, required = true, emptyLabel = "부서 선택")
+                @template.components.input(name = "phone", label = "연락처", value = Ui.value(form.phone()), errors = errors, type = "tel", placeholder = "010-0000-0000")
             </div>
         </section>
         <section class="form-section">
@@ -45,6 +48,17 @@
                 @if(!editing)
                     @template.components.input(name = "annualSalary", label = "연봉 (원)", value = Ui.value(form.annualSalary()), errors = errors, type = "number", help = "입력하면 입사일부터 적용되는 연봉 이력이 생성됩니다.")
                 @endif
+            </div>
+        </section>
+        <section class="form-section">
+            <div><h2 class="form-section-title">직무·역량</h2><p class="form-section-desc">인력 배치와 검색에 쓰입니다. 총 경력은 경력 시작일부터 계산합니다.</p></div>
+            <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
+                @template.components.select(name = "job", label = "직무", options = Ui.options(EmployeeJob.values()), value = Ui.value(form.job()), errors = errors, emptyLabel = "미지정")
+                @template.components.select(name = "workType", label = "근무 형태", options = Ui.options(WorkType.values()), value = Ui.value(form.workType()), errors = errors, emptyLabel = "미지정")
+                @template.components.input(name = "careerStartDate", label = "경력 시작일", value = Ui.value(form.careerStartDate()), errors = errors, type = "date", help = "이전 직장 경력을 포함한 첫 근무일. 비우면 입사일 기준입니다.")
+                <div class="@xl:col-span-2">
+                    @template.components.input(name = "skills", label = "보유 기술", value = Ui.value(form.skills()), errors = errors, placeholder = "Java, Spring Boot, AWS", help = "쉼표로 구분해 입력하세요. 중복은 자동으로 정리됩니다.")
+                </div>
             </div>
         </section>
         <section class="form-section">

@@ -31,7 +31,8 @@ public record EmployeeSearch(
             predicates.add(cb.equal(root.get("deleted"), deleted));
             if (keyword != null && !keyword.isBlank()) {
                 String like = "%" + keyword.trim().toLowerCase() + "%";
-                predicates.add(cb.or(cb.like(cb.lower(root.get("name")), like), cb.like(cb.lower(root.get("email")), like)));
+                predicates.add(cb.or(cb.like(cb.lower(root.get("name")), like), cb.like(cb.lower(root.get("email")), like),
+                        cb.like(cb.lower(root.get("skills")), like)));
             }
             if (departmentIds != null) {
                 predicates.add(root.get("departmentId").in(departmentIds));

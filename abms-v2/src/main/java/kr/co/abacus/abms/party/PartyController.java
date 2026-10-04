@@ -34,6 +34,7 @@ import kr.co.abacus.abms.common.web.Toast;
 import kr.co.abacus.abms.department.DepartmentService;
 import kr.co.abacus.abms.party.Party.PartyInfo;
 import kr.co.abacus.abms.project.Project;
+import kr.co.abacus.abms.project.ProjectRevenuePlanRepository;
 import kr.co.abacus.abms.project.ProjectService;
 import kr.co.abacus.abms.security.LoginUser;
 
@@ -44,8 +45,11 @@ public class PartyController {
     private final PartyService partyService;
     private final ProjectService projectService;
     private final DepartmentService departmentService;
+    private final ProjectRevenuePlanRepository revenuePlanRepository;
 
-    public PartyController(PartyService partyService, ProjectService projectService, DepartmentService departmentService) {
+    public PartyController(PartyService partyService, ProjectService projectService, DepartmentService departmentService,
+                           ProjectRevenuePlanRepository revenuePlanRepository) {
+        this.revenuePlanRepository = revenuePlanRepository;
         this.partyService = partyService;
         this.projectService = projectService;
         this.departmentService = departmentService;
@@ -96,9 +100,13 @@ public class PartyController {
         require(user, PermissionCode.PARTY_READ);
         Party party = partyService.get(id);
         model.addAttribute("party", party);
-        model.addAttribute("projects", user.has(PermissionCode.PROJECT_READ)
+        java.util.List<Project> projects = user.has(PermissionCode.PROJECT_READ)
                 ? projectService.byParty(id).stream().filter(p -> projectService.canRead(user, p)).toList()
-                : java.util.List.<Project>of());
+                : java.util.List.<Project>of();
+        model.addAttribute("projects", projects);
+        model.addAttribute("insight", PartyInsight.of(projects,
+                projects.isEmpty() ? java.util.List.of() : revenuePlanRepository.findAllByProjectIdIn(projects.stream().map(Project::id).toList()),
+                java.time.LocalDate.now()));
         model.addAttribute("projectCount", partyService.projectCount(id));
         model.addAttribute("tree", departmentService.tree());
         return "party/detail";

@@ -40,10 +40,13 @@ public class DepartmentController {
     private final ProjectRepository projectRepository;
     private final ProfitQueryService profitQueryService;
     private final AccessService accessService;
+    private final kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository;
 
     public DepartmentController(DepartmentService departmentService, EmployeeService employeeService,
                                 ProjectRepository projectRepository, ProfitQueryService profitQueryService,
-                                AccessService accessService) {
+                                AccessService accessService,
+                                kr.co.abacus.abms.project.ProjectAssignmentRepository assignmentRepository) {
+        this.assignmentRepository = assignmentRepository;
         this.departmentService = departmentService;
         this.employeeService = employeeService;
         this.projectRepository = projectRepository;
@@ -142,20 +145,36 @@ public class DepartmentController {
         Department department = departmentService.get(id);
         Set<Long> subtree = tree.subtreeIds(id);
         List<Employee> members = departmentService.members(id);
+        java.util.Map<Long, List<Employee>> membersByDepartment = new java.util.HashMap<>();
+        for (Long departmentId : subtree) {
+            membersByDepartment.put(departmentId, departmentId.equals(id) ? members : departmentService.members(departmentId));
+        }
+        List<Employee> subtreeMembers = membersByDepartment.values().stream().flatMap(List::stream).toList();
         model.addAttribute("department", department);
         model.addAttribute("tree", tree);
         model.addAttribute("members", members);
-        model.addAttribute("subtreeMemberCount", subtree.stream().mapToInt(d -> departmentService.members(d).size()).sum());
+        model.addAttribute("subtreeMemberCount", subtreeMembers.size());
         model.addAttribute("leader", department.getLeaderEmployeeId() == null ? null
                 : employeeService.findAll(Set.of(department.getLeaderEmployeeId())).stream().findFirst().orElse(null));
         // 프로젝트 조회 권한의 범위(주관 부서, 참여 프로젝트) 안에 있는 프로젝트만 보여준다.
         DataScope projectScope = accessService.scopeOf(user, PermissionCode.PROJECT_READ);
-        model.addAttribute("projects", projectRepository.findAllByLeadDepartmentIdInOrderByPeriodStartDateDesc(subtree).stream()
+        List<kr.co.abacus.abms.project.Project> projects = projectRepository.findAllByLeadDepartmentIdInOrderByPeriodStartDateDesc(subtree).stream()
                 .filter(p -> projectScope.coversProject(p.id(), p.getLeadDepartmentId()))
-                .toList());
+                .toList();
+        model.addAttribute("projects", projects);
+        java.time.LocalDate today = java.time.LocalDate.now();
+        Set<Long> assigned = assignmentRepository.findOverlapping(today, today).stream()
+                .map(kr.co.abacus.abms.project.ProjectAssignment::getEmployeeId).collect(java.util.stream.Collectors.toSet());
+        List<DepartmentInsight.ChildDepartment> children = tree.children(id).stream()
+                .map(child -> new DepartmentInsight.ChildDepartment(child, tree.subtreeIds(child.id()).stream()
+                        .mapToInt(d -> membersByDepartment.getOrDefault(d, List.of()).size()).sum()))
+                .toList();
+        model.addAttribute("insight", DepartmentInsight.of(subtreeMembers, assigned, projects, children, today));
         DataScope scope = profitQueryService.scope(user);
         boolean showProfit = scope.all() || scope.departmentIds().containsAll(subtree);
-        model.addAttribute("trend", showProfit ? profitQueryService.departmentTrend(subtree, Year.now().getValue()) : null);
+        List<ProfitQueryService.MonthPoint> trend = showProfit ? profitQueryService.departmentTrend(subtree, Year.now().getValue()) : null;
+        model.addAttribute("trend", trend);
+        model.addAttribute("trendChart", trend == null ? null : ProfitQueryService.chartJson(trend));
         model.addAttribute("canWrite", user.has(PermissionCode.DEPARTMENT_WRITE));
     }
 

@@ -102,6 +102,13 @@ public class Employee extends BaseEntity {
         apply(profile);
     }
 
+    /** 본인 연락처·보유 기술 수정 (SELF 권한) */
+    public void updateOwnContact(@Nullable String phone, @Nullable String skills) {
+        requireNotResigned("퇴사한 직원은 정보를 수정할 수 없습니다.");
+        this.phone = normalizePhone(phone);
+        this.skills = normalizeSkills(skills);
+    }
+
     /** 본인 정보 수정 (SELF 권한): 이름, 생년월일, 아바타만 변경 가능 */
     public void updateOwnProfile(String name, LocalDate birthDate, EmployeeAvatar avatar) {
         requireNotResigned("퇴사한 직원은 정보를 수정할 수 없습니다.");

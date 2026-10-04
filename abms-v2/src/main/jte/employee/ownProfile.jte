@@ -22,7 +22,12 @@
             <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @template.components.input(name = "name", label = "이름", value = Ui.value(form.name()), errors = errors, required = true)
                 @template.components.input(name = "birthDate", label = "생년월일", value = Ui.value(form.birthDate()), errors = errors, type = "date", required = true)
+                @template.components.input(name = "phone", label = "연락처", value = Ui.value(form.phone()), errors = errors, type = "tel", placeholder = "010-0000-0000")
             </div>
+        </section>
+        <section class="form-section">
+            <div><h2 class="form-section-title">보유 기술</h2><p class="form-section-desc">인력 배치와 검색에 쓰입니다.</p></div>
+            <div>@template.components.input(name = "skills", label = "보유 기술", value = Ui.value(form.skills()), errors = errors, placeholder = "Java, Spring Boot, AWS", help = "쉼표로 구분해 입력하세요.")</div>
         </section>
         <section class="form-section">
             <div><h2 class="form-section-title">아바타</h2></div>
