@@ -167,7 +167,7 @@
         ${Icons.of("search", "size-4 shrink-0 text-fg-neutral-subtle")}
         <input id="palette-input" name="q" type="text" autocomplete="off" spellcheck="false" placeholder="이동, 검색, 명령 실행…"
                class="h-12 w-full bg-transparent t5-regular text-fg-neutral outline-none placeholder:text-fg-placeholder"
-               hx-get="/palette" hx-trigger="input changed delay:120ms, palette-open" hx-target="#palette-results" hx-sync="this:replace"
+               hx-get="/palette" hx-trigger="input delay:120ms, palette-open" hx-target="#palette-results" hx-sync="this:replace"
                role="combobox" aria-controls="palette-results" aria-expanded="true">
         <span class="kbd">esc</span>
     </div>

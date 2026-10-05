@@ -277,6 +277,9 @@
     const palette = () => document.getElementById('palette');
     const items = () => Array.from(document.querySelectorAll('#palette-results [data-palette-item]'));
     let active = 0;
+    // 검색어를 바꾼 뒤 새 결과가 오기 전(stale)에 누른 Enter 는 이전 결과를 실행하지 않고, 새 결과가 오면 첫 항목에 적용한다.
+    let stale = false;
+    let enterPending = false;
 
     function setActive(index) {
         const list = items();
@@ -297,6 +300,8 @@
         if (!dialog || dialog.open) return;
         const input = document.getElementById('palette-input');
         input.value = '';
+        stale = true;
+        enterPending = false;
         dialog.showModal();
         input.focus();
         htmx.trigger(input, 'palette-open');
@@ -336,17 +341,38 @@
         if (item) setActive(items().indexOf(item));
     });
 
+    document.addEventListener('input', (e) => {
+        if (e.target.id === 'palette-input') {
+            stale = true;
+            enterPending = false;
+        }
+    });
+
     document.body.addEventListener('htmx:afterSwap', (e) => {
-        if (e.detail.target && e.detail.target.id === 'palette-results') setActive(0);
+        if (!e.detail.target || e.detail.target.id !== 'palette-results') return;
+        // 마지막 입력에 대한 응답만 최신 결과로 본다. (hx-sync=replace 로 이전 요청은 취소된다)
+        stale = false;
+        setActive(0);
+        if (enterPending) {
+            enterPending = false;
+            const item = items()[0];
+            if (item) item.click();
+        }
     });
 
     document.addEventListener('keydown', (e) => {
         if (palette() && palette().open) {
             if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
             if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
-            if (e.key === 'Enter' && !e.isComposing) {
+            // 한글 입력기의 조합 확정 Enter 는 무시한다. (Safari 는 isComposing 대신 keyCode 229 로 알려 준다)
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                if (stale) {
+                    enterPending = true;
+                    return;
+                }
                 const item = items()[active];
-                if (item) { e.preventDefault(); item.click(); }
+                if (item) item.click();
             }
         }
     });

@@ -28,6 +28,8 @@
     `)
 
     <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8">
+        <%-- 필터 바와 열 제목은 상단 툴바 아래에 고정하고, 직원 행만 스크롤한다. (모바일은 필터가 여러 줄이라 고정하지 않음) --%>
+        <div class="z-10 bg-bg-layer-default md:sticky md:top-(--sticky-top)">
         <form class="view-bar sm:px-x6 lg:px-x8" action="/employees" method="get"
               hx-get="/employees" hx-target="#employee-results" hx-push-url="true"
               hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], change from:input[type=checkbox], submit">
@@ -65,6 +67,16 @@
                 </select>
             </div>
         </form>
+        <div class="list-head sm:px-x6 lg:px-x8" aria-hidden="true">
+            <span class="min-w-0 flex-1 pl-9">이름</span>
+            <span class="hidden w-40 @2xl:block">부서</span>
+            <span class="hidden w-28 @4xl:block">직무</span>
+            <span class="hidden w-24 @3xl:block">직급 · 등급</span>
+            <span class="hidden w-20 @3xl:block">고용유형</span>
+            <span class="w-16 shrink-0">상태</span>
+            <span class="hidden w-24 text-right @5xl:block">입사일</span>
+        </div>
+        </div>
         <div id="employee-results">
             @template.employee.results(page = page, tree = tree, search = search)
         </div>
