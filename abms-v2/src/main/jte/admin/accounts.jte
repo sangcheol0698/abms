@@ -13,16 +13,22 @@
 @param Map<Long, List<String>> accountGroups
 @param DepartmentTree tree
 @param Long issueEmployeeId = null
-@template.layout.app(ctx = ctx, title = "계정 관리", content = @`
+@template.layout.app(ctx = ctx, title = "계정 관리", fill = true, content = @`
+<%-- 데스크톱: 페이지는 고정, 목록 본문만 스크롤 (fill 레이아웃). 태블릿·모바일은 문서 스크롤. --%>
+<div class="flex flex-col lg:h-full">
+    <div class="px-x4 pt-x5 sm:px-x6 lg:px-x8 lg:pt-x6">
     @template.components.pageHeader(title = "계정 관리", subtitle = "직원에게 로그인 계정을 발급하고 비밀번호·잠금 상태를 관리합니다.", actions = @`
         <button type="button" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}" hx-get="/admin/accounts/issue${issueEmployeeId == null ? "" : "?employeeId=" + issueEmployeeId}" hx-target="#modal-body"
                 hx-trigger="click${issueEmployeeId == null ? "" : ", load"}">${Icons.of("plus", "size-4")} 계정 발급</button>
     `)
-    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8" hx-get="/admin/accounts" hx-trigger="accountsChanged from:body" hx-select="#account-table" hx-target="#account-table" hx-swap="outerHTML"
+    </div>
+
+    <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle" hx-get="/admin/accounts" hx-trigger="accountsChanged from:body" hx-select="#account-table" hx-target="#account-table" hx-swap="outerHTML"
          hx-disinherit="*">
-        <div id="account-table" class="overflow-x-auto @5xl:overflow-visible">
-            <div class="min-w-[880px] @5xl:min-w-0">
-                <div class="list-head sm:px-x6 lg:px-x8">
+        <%-- 좁은 화면은 가로 스크롤(열 제목도 함께), 데스크톱은 열 제목 고정·행만 세로 스크롤 --%>
+        <div id="account-table" class="flex min-h-0 flex-1 flex-col overflow-x-auto @5xl:overflow-x-visible">
+            <div class="flex min-h-0 min-w-[880px] flex-1 flex-col @5xl:min-w-0">
+                <div class="list-head shrink-0 sm:px-x6 lg:px-x8">
                     <span class="min-w-0 flex-1">직원</span>
                     <span class="w-48 shrink-0">아이디</span>
                     <span class="w-44 shrink-0">권한 그룹</span>
@@ -31,6 +37,7 @@
                     <span class="w-32 shrink-0">비밀번호 변경</span>
                     <span class="w-8 shrink-0"></span>
                 </div>
+                <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
                 @for(Account a : accounts)
                     !{Employee e = employees.get(a.getEmployeeId());}
                     <div class="list-row sm:px-x6 lg:px-x8">
@@ -79,7 +86,9 @@
                         </span>
                     </div>
                 @endfor
+                </div>
             </div>
         </div>
     </div>
+</div>
 `)

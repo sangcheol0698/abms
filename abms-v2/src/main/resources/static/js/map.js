@@ -36,7 +36,8 @@
         const position = (m) => new kakao.maps.LatLng(m.lat, m.lng);
         el._fallback = el.innerHTML;
         el.innerHTML = '';
-        const map = new kakao.maps.Map(el, {center: position(markers[0]), level: level || 3});
+        // 페이지 안의 지도라 휠은 페이지(목록) 스크롤에 양보한다. 확대·축소는 +/− 버튼과 핀치로 한다.
+        const map = new kakao.maps.Map(el, {center: position(markers[0]), level: level || 3, scrollwheel: false});
         map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
         const bounds = new kakao.maps.LatLngBounds();
         markers.forEach((m) => {

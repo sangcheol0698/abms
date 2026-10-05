@@ -4,6 +4,7 @@
 @param List<AuditEntry> entries
 @param boolean showTarget = false
 @param boolean collapsible = true
+@param boolean framed = true
 <%--
   변경 이력. 상세 화면에서는 접힌 섹션(collapsible)으로, 관리 화면에서는 펼친 목록으로 쓴다.
   showTarget: 대상(엔티티 종류·이름)을 함께 보여줄지 — 하위 엔티티 이력이 섞이는 상세 화면과 전체 목록에서 사용
@@ -15,7 +16,7 @@
         <ol class="divide-y divide-stroke-neutral-subtle">
             @for(AuditEntry e : entries)
                 !{int shown = Math.min(e.changes().size(), 6);}
-                <li class="flex gap-x3 px-x4 py-x2_5">
+                <li class="flex gap-x3 py-x2_5 ${framed ? "px-x4" : "px-x4 sm:px-x6 lg:px-x8"}">
                     <span class="mt-1.5 size-1.5 shrink-0 rounded-full ${"DELETE".equals(e.action()) ? "bg-bg-critical-solid" : "CREATE".equals(e.action()) ? "bg-bg-positive-solid" : "bg-bg-brand-solid"}"></span>
                     <div class="min-w-0 flex-1">
                         <p class="flex flex-wrap items-baseline gap-x-x1_5 t4-regular text-fg-neutral">
@@ -58,6 +59,8 @@
         </summary>
         <div class="list-box">${list}</div>
     </details>
-@else
+@elseif(framed)
     <div class="list-box">${list}</div>
+@else
+    ${list}
 @endif

@@ -47,6 +47,9 @@ public class AuditQueryService {
             Map.entry("siteId", "Site"), Map.entry("projectId", "Project"), Map.entry("permissionGroupId", "PermissionGroup"),
             Map.entry("accountId", "Account"));
 
+    /** 내부 값이라 화면에 보이지 않는 속성 (기록 규칙을 바꾸기 전에 남은 이력 포함) */
+    private static final Set<String> HIDDEN = Set.of("storedPath", "contentType", "ownerType", "ownerId", "photoPath");
+
     private final NamedParameterJdbcTemplate jdbc;
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
@@ -109,8 +112,10 @@ public class AuditQueryService {
         jdbc.query("select audit_log_id, field, before_value, after_value from tb_audit_log_change where audit_log_id in (:ids) order by id",
                 new MapSqlParameterSource("ids", rows.stream().map(Row::id).toList()),
                 rs -> {
-                    changes.computeIfAbsent(rs.getLong(1), k -> new ArrayList<>())
-                            .add(new RawChange(rs.getString(2), rs.getString(3), rs.getString(4)));
+                    if (!HIDDEN.contains(rs.getString(2))) {
+                        changes.computeIfAbsent(rs.getLong(1), k -> new ArrayList<>())
+                                .add(new RawChange(rs.getString(2), rs.getString(3), rs.getString(4)));
+                    }
                 });
         Names names = names(changes.values().stream().flatMap(List::stream).toList());
         return rows.stream()
