@@ -108,6 +108,19 @@ class EmployeeWebTest {
     }
 
     @Test
+    void 연봉은_원_단위로_아무_금액이나_입력할_수_있다() throws Exception {
+        // step 이 min 과 어긋나면(예: min=1, step=100000) 브라우저가 300000000 같은 정상 금액을 막는다.
+        mvc.perform(get("/employees/{id}/salary", me.id()).with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"annualSalary\" type=\"number\" min=\"1\" step=\"1\"")));
+
+        mvc.perform(post("/employees/{id}/salary", me.id()).with(user(admin)).with(csrf()).header("HX-Request", "true")
+                        .param("annualSalary", "300000000").param("startDate", "2026-07-01"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("HX-Redirect", "/employees/" + me.id()));
+    }
+
+    @Test
     void 모달_폼_처리_후_HX_Redirect_로_상세로_이동한다() throws Exception {
         Employee target = fixtures.employee(team, "퇴사예정");
         mvc.perform(post("/employees/{id}/resign", target.id()).with(user(admin)).with(csrf())

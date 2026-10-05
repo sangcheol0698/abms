@@ -7,6 +7,7 @@
 @param PageView<Employee> page
 @param DepartmentTree tree
 @param EmployeeSearchForm search
+<div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
 @if(page.isEmpty())
     @template.components.empty(message = "조건에 맞는 직원이 없습니다.", icon = "users")
 @else
@@ -32,4 +33,5 @@
         </a>
     @endfor
 @endif
-<div class="sm:px-x2 lg:px-x4">@template.components.pagination(page = page, target = "#employee-results")</div>
+</div>
+<div class="shrink-0 bg-bg-layer-default sm:px-x2 lg:px-x4">@template.components.pagination(page = page, target = "#employee-results")</div>

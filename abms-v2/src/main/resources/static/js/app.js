@@ -277,6 +277,9 @@
     const palette = () => document.getElementById('palette');
     const items = () => Array.from(document.querySelectorAll('#palette-results [data-palette-item]'));
     let active = 0;
+    // 검색어를 바꾼 뒤 새 결과가 오기 전(stale)에 누른 Enter 는 이전 결과를 실행하지 않고, 새 결과가 오면 첫 항목에 적용한다.
+    let stale = false;
+    let enterPending = false;
 
     function setActive(index) {
         const list = items();
@@ -297,6 +300,8 @@
         if (!dialog || dialog.open) return;
         const input = document.getElementById('palette-input');
         input.value = '';
+        stale = true;
+        enterPending = false;
         dialog.showModal();
         input.focus();
         htmx.trigger(input, 'palette-open');
@@ -336,17 +341,38 @@
         if (item) setActive(items().indexOf(item));
     });
 
+    document.addEventListener('input', (e) => {
+        if (e.target.id === 'palette-input') {
+            stale = true;
+            enterPending = false;
+        }
+    });
+
     document.body.addEventListener('htmx:afterSwap', (e) => {
-        if (e.detail.target && e.detail.target.id === 'palette-results') setActive(0);
+        if (!e.detail.target || e.detail.target.id !== 'palette-results') return;
+        // 마지막 입력에 대한 응답만 최신 결과로 본다. (hx-sync=replace 로 이전 요청은 취소된다)
+        stale = false;
+        setActive(0);
+        if (enterPending) {
+            enterPending = false;
+            const item = items()[0];
+            if (item) item.click();
+        }
     });
 
     document.addEventListener('keydown', (e) => {
         if (palette() && palette().open) {
             if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
             if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
-            if (e.key === 'Enter' && !e.isComposing) {
+            // 한글 입력기의 조합 확정 Enter 는 무시한다. (Safari 는 isComposing 대신 keyCode 229 로 알려 준다)
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                if (stale) {
+                    enterPending = true;
+                    return;
+                }
                 const item = items()[active];
-                if (item) { e.preventDefault(); item.click(); }
+                if (item) item.click();
             }
         }
     });
@@ -406,8 +432,9 @@
     'use strict';
     const root = document.documentElement;
     const desktop = window.matchMedia('(min-width: 1024px)');
-    const scroller = () => document.getElementById('app-scroll');
-    // 데스크톱은 #app-scroll, 모바일은 문서가 스크롤된다.
+    // fill 레이아웃 화면(직원 목록 등)은 본문 안의 [data-fill-scroll] 이 스크롤된다.
+    const scroller = () => document.querySelector('#app-scroll.app-scroll-fill [data-fill-scroll]') || document.getElementById('app-scroll');
+    // 데스크톱은 #app-scroll(또는 fill 화면의 목록), 모바일은 문서가 스크롤된다.
     const scrollTarget = () => (desktop.matches ? scroller() : document.scrollingElement);
 
     function store(key, value) {
@@ -484,6 +511,8 @@
         target.addEventListener('scroll', syncToolbarBorder, {passive: true});
         scrollBound = target;
     }
+    // fill 화면의 목록([data-fill-scroll])은 검색·페이지 이동 때 새로 그려지므로 다시 연결한다.
+    document.body.addEventListener('htmx:afterSwap', () => bindScroll());
 
     // 화면 이동(boost) 시 본문 스크롤은 맨 위로, 뒤로 가기는 이전 위치로 복원한다.
     // 뒤로 가기(popstate) 때는 주소가 먼저 바뀐 뒤 떠나는 화면이 저장되므로, 화면이 열릴 때의 주소를 키로 쓴다.
@@ -668,3 +697,20 @@ window.abmsChat = {
         if (e.target.matches('[data-clears-notification-dot]') && e.detail.successful) document.getElementById('notification-dot')?.remove();
     });
 })();
+
+// ---------------------------------------------------------------------
+// 가벼운 대화상자(명령 팔레트·단축키)는 바깥(배경)을 누르면 닫는다. 입력을 잃을 수 있는 폼 모달은 제외.
+// 누르기 시작한 곳과 뗀 곳이 모두 배경일 때만 닫는다. (안에서 드래그하다 밖에서 놓는 경우 제외)
+// ---------------------------------------------------------------------
+(function () {
+    const LIGHT_DISMISS = ['palette', 'shortcuts'];
+    let downOnBackdrop = null;
+    document.addEventListener('pointerdown', (e) => {
+        downOnBackdrop = e.target instanceof HTMLDialogElement && LIGHT_DISMISS.includes(e.target.id) ? e.target : null;
+    });
+    document.addEventListener('click', (e) => {
+        if (downOnBackdrop && e.target === downOnBackdrop && downOnBackdrop.open) downOnBackdrop.close();
+        downOnBackdrop = null;
+    });
+})();
+

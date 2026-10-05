@@ -167,12 +167,16 @@
         ${Icons.of("search", "size-4 shrink-0 text-fg-neutral-subtle")}
         <input id="palette-input" name="q" type="text" autocomplete="off" spellcheck="false" placeholder="이동, 검색, 명령 실행…"
                class="h-12 w-full bg-transparent t5-regular text-fg-neutral outline-none placeholder:text-fg-placeholder"
-               hx-get="/palette" hx-trigger="input changed delay:120ms, palette-open" hx-target="#palette-results" hx-sync="this:replace"
+               hx-get="/palette" hx-trigger="input delay:120ms, palette-open" hx-target="#palette-results" hx-sync="this:replace"
                role="combobox" aria-controls="palette-results" aria-expanded="true">
-        <span class="kbd">esc</span>
+        <%-- 닫기: 데스크톱은 esc 표시, 모바일(키보드 없음)은 '취소' 버튼 --%>
+        <button type="button" data-close-dialog class="shrink-0 cursor-pointer" aria-label="명령 팔레트 닫기">
+            <span class="kbd hidden sm:inline-flex">esc</span>
+            <span class="t4-medium text-fg-brand sm:hidden">취소</span>
+        </button>
     </div>
     <div id="palette-results" class="max-h-[min(60vh,420px)] overflow-y-auto overscroll-contain p-x1_5" role="listbox"></div>
-    <div class="flex items-center gap-x4 border-t border-stroke-neutral-subtle px-x4 py-x2 t3-regular text-fg-neutral-subtle">
+    <div class="hidden items-center gap-x4 border-t border-stroke-neutral-subtle px-x4 py-x2 t3-regular text-fg-neutral-subtle sm:flex">
         <span class="flex items-center gap-x1"><span class="kbd">↑</span><span class="kbd">↓</span> 이동</span>
         <span class="flex items-center gap-x1"><span class="kbd">↵</span> 선택</span>
         <span class="ml-auto flex items-center gap-x1"><span class="kbd">?</span> 단축키</span>

@@ -17,7 +17,10 @@
 @param DepartmentTree tree
 @param EmployeeSearchForm search
 @param List<SelectOption> departmentOptions
-@template.layout.app(ctx = ctx, title = "직원", content = @`
+@template.layout.app(ctx = ctx, title = "직원", fill = true, content = @`
+<%-- 데스크톱: 페이지는 고정, 표 본문만 스크롤하고 페이징은 아래에 고정 (fill 레이아웃). 태블릿·모바일은 문서 스크롤. --%>
+<div class="flex flex-col lg:h-full">
+    <div class="px-x4 pt-x5 sm:px-x6 lg:px-x8 lg:pt-x6">
     @template.components.pageHeader(title = "직원", subtitle = "임직원 디렉터리 · 상세 정보는 권한 범위 안에서만 조회됩니다.", actions = @`
         @if(ctx.can(PermissionCode.EMPLOYEE_EXPORT))
             <a href="/employees/export${search.exportQuery()}" hx-boost="false" class="${Seed.button("neutralOutline")}">${Icons.of("download", "size-4")} CSV 내보내기</a>
@@ -26,8 +29,11 @@
             <a href="/employees/new" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 직원 등록</a>
         @endif
     `)
+    </div>
 
-    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8">
+    <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
+        <%-- 필터 바와 열 제목: 데스크톱은 목록 위에 고정(목록만 스크롤), 태블릿은 문서 스크롤 중 툴바 아래에 고정, 모바일은 함께 스크롤 --%>
+        <div class="z-10 shrink-0 bg-bg-layer-default md:sticky md:top-(--sticky-top)">
         <form class="view-bar sm:px-x6 lg:px-x8" action="/employees" method="get"
               hx-get="/employees" hx-target="#employee-results" hx-push-url="true"
               hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], change from:input[type=checkbox], submit">
@@ -65,8 +71,19 @@
                 </select>
             </div>
         </form>
-        <div id="employee-results">
+        <div class="list-head sm:px-x6 lg:px-x8" aria-hidden="true">
+            <span class="min-w-0 flex-1 pl-9">이름</span>
+            <span class="hidden w-40 @2xl:block">부서</span>
+            <span class="hidden w-28 @4xl:block">직무</span>
+            <span class="hidden w-24 @3xl:block">직급 · 등급</span>
+            <span class="hidden w-20 @3xl:block">고용유형</span>
+            <span class="w-16 shrink-0">상태</span>
+            <span class="hidden w-24 text-right @5xl:block">입사일</span>
+        </div>
+        </div>
+        <div id="employee-results" class="flex min-h-0 flex-1 flex-col">
             @template.employee.results(page = page, tree = tree, search = search)
         </div>
     </div>
+</div>
 `)

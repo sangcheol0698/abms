@@ -357,6 +357,25 @@ INSERT INTO tb_project (id, party_id, lead_department_id, project_code, project_
 VALUES (3, 5, 112, 'PROJ-2026-SKT', '2026 SKT 빌링 시스템 유지보수', '통신 요금 정산 시스템 연간 운영 및 유지보수', 'IN_PROGRESS', 1200000000,
         '2026-01-01', '2026-12-31', NOW(), NOW(), 1, 1, 0);
 
+-- [Project D~J] 화면 확인용 추가 프로젝트
+INSERT INTO tb_project (id, party_id, lead_department_id, project_code, project_name, project_description,
+                        project_status, contract_amount, start_date, end_date, created_at, updated_at, created_by,
+                        updated_by, deleted)
+VALUES (4, 4, 115, 'PROJ-2026-LGCNS-ERP', '2026 LG CNS ERP 고도화', '경영 플랫폼 기준 ERP 프로세스 개선 및 연동 고도화', 'IN_PROGRESS', 650000000,
+        '2026-03-01', '2026-08-31', NOW(), NOW(), 1, 1, 0),
+       (5, 3, 105, 'PROJ-2026-KAKAO-DATA', '2026 카카오 데이터 레이크 구축', '서비스 로그 통합 적재 및 분석 마트 구축', 'IN_PROGRESS', 720000000,
+        '2026-03-15', '2026-09-30', NOW(), NOW(), 1, 1, 0),
+       (6, 1, 106, 'PROJ-2026-NCP-MLOPS', '2026 네이버클라우드 MLOps 포털', '모델 배포 자동화와 운영 모니터링 포털 구축', 'IN_PROGRESS', 480000000,
+        '2026-04-01', '2026-12-31', NOW(), NOW(), 1, 1, 0),
+       (7, 2, 114, 'PROJ-2026-SDS-SEC', '2026 삼성SDS 보안 포털 구축', '계정 권한 통합 관리와 감사 로그 포털 구축', 'COMPLETED', 350000000,
+        '2026-03-01', '2026-05-31', NOW(), NOW(), 1, 1, 0),
+       (8, 5, 118, 'PROJ-2026-SKT-NMS', '2026 SKT NMS 관제 고도화', '통신망 이벤트 수집 및 장애 예측 대시보드 고도화', 'IN_PROGRESS', 420000000,
+        '2026-05-01', '2026-10-31', NOW(), NOW(), 1, 1, 0),
+       (9, 6, 102, 'PROJ-2026-TOSS-REPORT', '2026 토스 정산 리포팅 자동화', '정산 리포트 생성 자동화 및 대사 오류 탐지', 'IN_PROGRESS', 300000000,
+        '2026-04-01', '2026-07-31', NOW(), NOW(), 1, 1, 0),
+       (10, 3, 109, 'PROJ-2026-KAKAO-UX', '2026 카카오 UX 리뉴얼', '관리자 도구 UX 개선 및 디자인 시스템 반영', 'COMPLETED', 180000000,
+        '2026-03-01', '2026-06-30', NOW(), NOW(), 1, 1, 0);
+
 
 -- ---------------------------------------------------------
 -- 8. 매출 계획 (Project Revenue Plan)
@@ -386,6 +405,31 @@ VALUES (3, 1, '2026-01-31', 'INTERMEDIATE_PAYMENT', 300000000, '1분기 유지�
         0),
        (3, 3, '2026-09-30', 'INTERMEDIATE_PAYMENT', 300000000, '3분기 유지보수료', 0, NOW(), NOW(), 1, 1,
         0);
+
+-- [Project D~J] 추가 프로젝트 매출 계획
+INSERT INTO tb_project_revenue_plan (project_id, plan_sequence, revenue_date, revenue_type, amount, memo, is_issued,
+                                     created_at, updated_at, created_by, updated_by, deleted)
+VALUES (4, 1, '2026-03-15', 'DOWN_PAYMENT', 180000000, 'ERP 고도화 착수금', 1, NOW(), NOW(), 1, 1, 0),
+       (4, 2, '2026-05-31', 'INTERMEDIATE_PAYMENT', 220000000, '1차 구축 중도금', 1, NOW(), NOW(), 1, 1, 0),
+       (4, 3, '2026-08-31', 'BALANCE_PAYMENT', 250000000, '최종 검수 잔금', 0, NOW(), NOW(), 1, 1, 0),
+       (5, 1, '2026-03-31', 'DOWN_PAYMENT', 150000000, '데이터 레이크 착수금', 1, NOW(), NOW(), 1, 1, 0),
+       (5, 2, '2026-06-30', 'INTERMEDIATE_PAYMENT', 250000000, '분석 마트 구축 중도금', 1, NOW(), NOW(), 1, 1, 0),
+       (5, 3, '2026-09-30', 'BALANCE_PAYMENT', 320000000, '운영 전환 잔금', 0, NOW(), NOW(), 1, 1, 0),
+       (6, 1, '2026-04-15', 'DOWN_PAYMENT', 120000000, 'MLOps 포털 착수금', 1, NOW(), NOW(), 1, 1, 0),
+       (6, 2, '2026-08-31', 'INTERMEDIATE_PAYMENT', 180000000, '모델 배포 자동화 중도금', 0, NOW(), NOW(), 1, 1, 0),
+       (6, 3, '2026-12-15', 'BALANCE_PAYMENT', 180000000, '운영 검수 잔금', 0, NOW(), NOW(), 1, 1, 0),
+       (7, 1, '2026-03-31', 'DOWN_PAYMENT', 100000000, '보안 포털 착수금', 1, NOW(), NOW(), 1, 1, 0),
+       (7, 2, '2026-04-30', 'INTERMEDIATE_PAYMENT', 150000000, '감사 로그 연동 중도금', 1, NOW(), NOW(), 1, 1, 0),
+       (7, 3, '2026-05-31', 'BALANCE_PAYMENT', 100000000, '보안 포털 검수 잔금', 1, NOW(), NOW(), 1, 1, 0),
+       (8, 1, '2026-05-15', 'DOWN_PAYMENT', 120000000, 'NMS 고도화 착수금', 1, NOW(), NOW(), 1, 1, 0),
+       (8, 2, '2026-07-31', 'INTERMEDIATE_PAYMENT', 180000000, '장애 예측 중도금', 0, NOW(), NOW(), 1, 1, 0),
+       (8, 3, '2026-10-31', 'BALANCE_PAYMENT', 120000000, '최종 검수 잔금', 0, NOW(), NOW(), 1, 1, 0),
+       (9, 1, '2026-04-20', 'DOWN_PAYMENT', 90000000, '정산 리포팅 착수금', 1, NOW(), NOW(), 1, 1, 0),
+       (9, 2, '2026-06-30', 'INTERMEDIATE_PAYMENT', 110000000, '자동 대사 중도금', 1, NOW(), NOW(), 1, 1, 0),
+       (9, 3, '2026-07-31', 'BALANCE_PAYMENT', 100000000, '검수 완료 잔금', 0, NOW(), NOW(), 1, 1, 0),
+       (10, 1, '2026-03-20', 'DOWN_PAYMENT', 60000000, 'UX 리뉴얼 착수금', 1, NOW(), NOW(), 1, 1, 0),
+       (10, 2, '2026-05-31', 'INTERMEDIATE_PAYMENT', 70000000, '디자인 시스템 적용 중도금', 1, NOW(), NOW(), 1, 1, 0),
+       (10, 3, '2026-06-30', 'BALANCE_PAYMENT', 50000000, 'UX 리뉴얼 검수 잔금', 1, NOW(), NOW(), 1, 1, 0);
 
 
 -- ---------------------------------------------------------
@@ -445,24 +489,135 @@ INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, sta
                                    updated_at, created_by, updated_by, deleted)
 VALUES (3, 43, 'DEV', '2026-07-01', '2026-12-31', NOW(), NOW(), 1, 1, 0);
 
+-- [Project D~J] 추가 프로젝트 투입
+INSERT INTO tb_project_assignment (project_id, employee_id, assignment_role, start_date, end_date, created_at,
+                                   updated_at, created_by, updated_by, deleted)
+VALUES (4, 21, 'PL', '2026-03-01', '2026-08-31', NOW(), NOW(), 1, 1, 0),
+       (4, 30, 'DEV', '2026-03-01', '2026-06-30', NOW(), NOW(), 1, 1, 0),
+       (4, 35, 'DEV', '2026-03-01', '2026-08-31', NOW(), NOW(), 1, 1, 0),
+       (4, 49, 'DEV', '2026-05-01', '2026-08-31', NOW(), NOW(), 1, 1, 0),
+       (5, 11, 'PM', '2026-03-15', '2026-09-30', NOW(), NOW(), 1, 1, 0),
+       (5, 18, 'PL', '2026-03-15', '2026-09-30', NOW(), NOW(), 1, 1, 0),
+       (5, 47, 'DEV', '2026-04-01', '2026-09-30', NOW(), NOW(), 1, 1, 0),
+       (5, 28, 'DEV', '2026-03-15', '2026-06-30', NOW(), NOW(), 1, 1, 0),
+       (6, 13, 'PM', '2026-04-01', '2026-12-31', NOW(), NOW(), 1, 1, 0),
+       (6, 32, 'DEV', '2026-04-01', '2026-12-31', NOW(), NOW(), 1, 1, 0),
+       (6, 33, 'DEV', '2026-04-01', '2026-12-31', NOW(), NOW(), 1, 1, 0),
+       (6, 44, 'DEV', '2026-04-01', '2026-12-31', NOW(), NOW(), 1, 1, 0),
+       (7, 12, 'PM', '2026-03-01', '2026-05-31', NOW(), NOW(), 1, 1, 0),
+       (7, 23, 'PL', '2026-03-01', '2026-05-31', NOW(), NOW(), 1, 1, 0),
+       (7, 39, 'DEV', '2026-03-01', '2026-05-31', NOW(), NOW(), 1, 1, 0),
+       (7, 40, 'DEV', '2026-03-01', '2026-05-31', NOW(), NOW(), 1, 1, 0),
+       (8, 14, 'PM', '2026-05-01', '2026-10-31', NOW(), NOW(), 1, 1, 0),
+       (8, 20, 'PL', '2026-05-01', '2026-10-31', NOW(), NOW(), 1, 1, 0),
+       (8, 25, 'DEV', '2026-05-01', '2026-10-31', NOW(), NOW(), 1, 1, 0),
+       (8, 48, 'DEV', '2026-05-01', '2026-10-31', NOW(), NOW(), 1, 1, 0),
+       (9, 10, 'PM', '2026-04-01', '2026-07-31', NOW(), NOW(), 1, 1, 0),
+       (9, 24, 'PL', '2026-04-01', '2026-07-31', NOW(), NOW(), 1, 1, 0),
+       (9, 34, 'DEV', '2026-04-01', '2026-07-31', NOW(), NOW(), 1, 1, 0),
+       (9, 41, 'DEV', '2026-04-01', '2026-07-31', NOW(), NOW(), 1, 1, 0),
+       (10, 29, 'PL', '2026-03-01', '2026-06-30', NOW(), NOW(), 1, 1, 0),
+       (10, 37, 'DEV', '2026-03-01', '2026-06-30', NOW(), NOW(), 1, 1, 0),
+       (10, 38, 'DEV', '2026-03-01', '2026-06-30', NOW(), NOW(), 1, 1, 0),
+       (10, 42, 'DEV', '2026-03-01', '2026-06-30', NOW(), NOW(), 1, 1, 0);
+
 
 -- ---------------------------------------------------------
 -- 10. 월 매출 집계 (Monthly Revenue Summary)
 -- ---------------------------------------------------------
+-- 2026-02 기준: 발행 완료 매출 계획과 202602 직원 월 원가를 기준으로 계산
+INSERT INTO tb_monthly_revenue_summary (
+    project_id, project_code, project_name, lead_department_id, lead_department_code, lead_department_name,
+    target_month, calculated_at, revenue_amount, cost_amount, profit_amount,
+    created_at, updated_at, created_by, updated_by, deleted
+)
+VALUES (1, 'PROJ-2026-AI', '2026 차세대 AI 플랫폼 구축', 100, 'ABC4101', '플랫폼연구개발팀',
+        '2026-02-01', NOW(), 400000000, 18112500, 381887500, NOW(), NOW(), 1, 1, 0),
+       (2, 'PROJ-2026-TOSS', '2026 토스 결제 시스템 고도화', 102, 'ABC3102', '핀테크사업팀',
+        '2026-02-01', NOW(), 100000000, 17537500, 82462500, NOW(), NOW(), 1, 1, 0),
+       (3, 'PROJ-2026-SKT', '2026 SKT 빌링 시스템 유지보수', 112, 'ABC2103', '빌링시스템팀',
+        '2026-02-01', NOW(), 0, 21562500, -21562500, NOW(), NOW(), 1, 1, 0);
+
+-- 2026-03 ~ 2026-06 기준: 추가 프로젝트와 발행 완료 매출 계획을 반영
+INSERT INTO tb_monthly_revenue_summary (
+    project_id, project_code, project_name, lead_department_id, lead_department_code, lead_department_name,
+    target_month, calculated_at, revenue_amount, cost_amount, profit_amount,
+    created_at, updated_at, created_by, updated_by, deleted
+)
+VALUES (1, 'PROJ-2026-AI', '2026 차세대 AI 플랫폼 구축', 100, 'ABC4101', '플랫폼연구개발팀',
+        '2026-03-01', NOW(), 0, 18112500, -18112500, NOW(), NOW(), 1, 1, 0),
+       (2, 'PROJ-2026-TOSS', '2026 토스 결제 시스템 고도화', 102, 'ABC3102', '핀테크사업팀',
+        '2026-03-01', NOW(), 0, 21466667, -21466667, NOW(), NOW(), 1, 1, 0),
+       (3, 'PROJ-2026-SKT', '2026 SKT 빌링 시스템 유지보수', 112, 'ABC2103', '빌링시스템팀',
+        '2026-03-01', NOW(), 0, 21562500, -21562500, NOW(), NOW(), 1, 1, 0),
+       (4, 'PROJ-2026-LGCNS-ERP', '2026 LG CNS ERP 고도화', 115, 'ABC2201', '경영플랫폼팀',
+        '2026-03-01', NOW(), 180000000, 18400000, 161600000, NOW(), NOW(), 1, 1, 0),
+       (5, 'PROJ-2026-KAKAO-DATA', '2026 카카오 데이터 레이크 구축', 105, 'ABC3201', 'Data플랫폼사업팀',
+        '2026-03-01', NOW(), 150000000, 11619792, 138380208, NOW(), NOW(), 1, 1, 0),
+       (7, 'PROJ-2026-SDS-SEC', '2026 삼성SDS 보안 포털 구축', 114, 'ABC2105', '기반기술팀',
+        '2026-03-01', NOW(), 100000000, 24341667, 75658333, NOW(), NOW(), 1, 1, 0),
+       (10, 'PROJ-2026-KAKAO-UX', '2026 카카오 UX 리뉴얼', 109, 'ABC3205', 'UX STUDIO TF',
+        '2026-03-01', NOW(), 60000000, 19022916, 40977084, NOW(), NOW(), 1, 1, 0),
+       (1, 'PROJ-2026-AI', '2026 차세대 AI 플랫폼 구축', 100, 'ABC4101', '플랫폼연구개발팀',
+        '2026-04-01', NOW(), 0, 18112500, -18112500, NOW(), NOW(), 1, 1, 0),
+       (2, 'PROJ-2026-TOSS', '2026 토스 결제 시스템 고도화', 102, 'ABC3102', '핀테크사업팀',
+        '2026-04-01', NOW(), 0, 21466667, -21466667, NOW(), NOW(), 1, 1, 0),
+       (3, 'PROJ-2026-SKT', '2026 SKT 빌링 시스템 유지보수', 112, 'ABC2103', '빌링시스템팀',
+        '2026-04-01', NOW(), 0, 21562500, -21562500, NOW(), NOW(), 1, 1, 0),
+       (4, 'PROJ-2026-LGCNS-ERP', '2026 LG CNS ERP 고도화', 115, 'ABC2201', '경영플랫폼팀',
+        '2026-04-01', NOW(), 0, 18400000, -18400000, NOW(), NOW(), 1, 1, 0),
+       (5, 'PROJ-2026-KAKAO-DATA', '2026 카카오 데이터 레이크 구축', 105, 'ABC3201', 'Data플랫폼사업팀',
+        '2026-04-01', NOW(), 0, 27552083, -27552083, NOW(), NOW(), 1, 1, 0),
+       (6, 'PROJ-2026-NCP-MLOPS', '2026 네이버클라우드 MLOps 포털', 106, 'ABC3202', '지능플랫폼사업팀',
+        '2026-04-01', NOW(), 120000000, 24437500, 95562500, NOW(), NOW(), 1, 1, 0),
+       (7, 'PROJ-2026-SDS-SEC', '2026 삼성SDS 보안 포털 구축', 114, 'ABC2105', '기반기술팀',
+        '2026-04-01', NOW(), 150000000, 24341667, 125658333, NOW(), NOW(), 1, 1, 0),
+       (9, 'PROJ-2026-TOSS-REPORT', '2026 토스 정산 리포팅 자동화', 102, 'ABC3102', '핀테크사업팀',
+        '2026-04-01', NOW(), 90000000, 26066667, 63933333, NOW(), NOW(), 1, 1, 0),
+       (10, 'PROJ-2026-KAKAO-UX', '2026 카카오 UX 리뉴얼', 109, 'ABC3205', 'UX STUDIO TF',
+        '2026-04-01', NOW(), 0, 19022916, -19022916, NOW(), NOW(), 1, 1, 0),
+       (1, 'PROJ-2026-AI', '2026 차세대 AI 플랫폼 구축', 100, 'ABC4101', '플랫폼연구개발팀',
+        '2026-05-01', NOW(), 0, 12745833, -12745833, NOW(), NOW(), 1, 1, 0),
+       (2, 'PROJ-2026-TOSS', '2026 토스 결제 시스템 고도화', 102, 'ABC3102', '핀테크사업팀',
+        '2026-05-01', NOW(), 0, 21466667, -21466667, NOW(), NOW(), 1, 1, 0),
+       (3, 'PROJ-2026-SKT', '2026 SKT 빌링 시스템 유지보수', 112, 'ABC2103', '빌링시스템팀',
+        '2026-05-01', NOW(), 0, 21562500, -21562500, NOW(), NOW(), 1, 1, 0),
+       (4, 'PROJ-2026-LGCNS-ERP', '2026 LG CNS ERP 고도화', 115, 'ABC2201', '경영플랫폼팀',
+        '2026-05-01', NOW(), 220000000, 23000000, 197000000, NOW(), NOW(), 1, 1, 0),
+       (5, 'PROJ-2026-KAKAO-DATA', '2026 카카오 데이터 레이크 구축', 105, 'ABC3201', 'Data플랫폼사업팀',
+        '2026-05-01', NOW(), 0, 27552083, -27552083, NOW(), NOW(), 1, 1, 0),
+       (6, 'PROJ-2026-NCP-MLOPS', '2026 네이버클라우드 MLOps 포털', 106, 'ABC3202', '지능플랫폼사업팀',
+        '2026-05-01', NOW(), 0, 24437500, -24437500, NOW(), NOW(), 1, 1, 0),
+       (7, 'PROJ-2026-SDS-SEC', '2026 삼성SDS 보안 포털 구축', 114, 'ABC2105', '기반기술팀',
+        '2026-05-01', NOW(), 100000000, 24341667, 75658333, NOW(), NOW(), 1, 1, 0),
+       (8, 'PROJ-2026-SKT-NMS', '2026 SKT NMS 관제 고도화', 118, 'ABC2204', 'NMS사업팀',
+        '2026-05-01', NOW(), 120000000, 27791667, 92208333, NOW(), NOW(), 1, 1, 0),
+       (9, 'PROJ-2026-TOSS-REPORT', '2026 토스 정산 리포팅 자동화', 102, 'ABC3102', '핀테크사업팀',
+        '2026-05-01', NOW(), 0, 26066667, -26066667, NOW(), NOW(), 1, 1, 0),
+       (10, 'PROJ-2026-KAKAO-UX', '2026 카카오 UX 리뉴얼', 109, 'ABC3205', 'UX STUDIO TF',
+        '2026-05-01', NOW(), 70000000, 19022916, 50977084, NOW(), NOW(), 1, 1, 0),
+       (1, 'PROJ-2026-AI', '2026 차세대 AI 플랫폼 구축', 100, 'ABC4101', '플랫폼연구개발팀',
+        '2026-06-01', NOW(), 0, 12745833, -12745833, NOW(), NOW(), 1, 1, 0),
+       (2, 'PROJ-2026-TOSS', '2026 토스 결제 시스템 고도화', 102, 'ABC3102', '핀테크사업팀',
+        '2026-06-01', NOW(), 0, 21466667, -21466667, NOW(), NOW(), 1, 1, 0),
+       (3, 'PROJ-2026-SKT', '2026 SKT 빌링 시스템 유지보수', 112, 'ABC2103', '빌링시스템팀',
+        '2026-06-01', NOW(), 0, 21562500, -21562500, NOW(), NOW(), 1, 1, 0),
+       (4, 'PROJ-2026-LGCNS-ERP', '2026 LG CNS ERP 고도화', 115, 'ABC2201', '경영플랫폼팀',
+        '2026-06-01', NOW(), 0, 23000000, -23000000, NOW(), NOW(), 1, 1, 0),
+       (5, 'PROJ-2026-KAKAO-DATA', '2026 카카오 데이터 레이크 구축', 105, 'ABC3201', 'Data플랫폼사업팀',
+        '2026-06-01', NOW(), 250000000, 27552083, 222447917, NOW(), NOW(), 1, 1, 0),
+       (6, 'PROJ-2026-NCP-MLOPS', '2026 네이버클라우드 MLOps 포털', 106, 'ABC3202', '지능플랫폼사업팀',
+        '2026-06-01', NOW(), 0, 24437500, -24437500, NOW(), NOW(), 1, 1, 0),
+       (8, 'PROJ-2026-SKT-NMS', '2026 SKT NMS 관제 고도화', 118, 'ABC2204', 'NMS사업팀',
+        '2026-06-01', NOW(), 0, 27791667, -27791667, NOW(), NOW(), 1, 1, 0),
+       (9, 'PROJ-2026-TOSS-REPORT', '2026 토스 정산 리포팅 자동화', 102, 'ABC3102', '핀테크사업팀',
+        '2026-06-01', NOW(), 110000000, 26066667, 83933333, NOW(), NOW(), 1, 1, 0),
+       (10, 'PROJ-2026-KAKAO-UX', '2026 카카오 UX 리뉴얼', 109, 'ABC3205', 'UX STUDIO TF',
+        '2026-06-01', NOW(), 50000000, 19022916, 30977084, NOW(), NOW(), 1, 1, 0);
 
 
 -- ---------------------------------------------------------
--- 11. 알림 (Notification)
--- ---------------------------------------------------------
-INSERT INTO tb_notification (id, account_id, notification_title, notification_description, notification_type, is_read,
-                             link_url, created_at, updated_at, created_by, updated_by, deleted)
-VALUES (1, 1, '조직 구조 변경', '부서 목록에서 경영기획실이 신설되었습니다.', 'INFO', 0, '/', NOW(), NOW(), 1, 1, 0),
-       (2, 1, '직원 정보 갱신', '인사팀이 직원 정보를 최신화했습니다.', 'SUCCESS', 0, '/employees', NOW(), NOW(), 1, 1, 0),
-       (3, 1, '근태 정책 안내', '다음 주부터 신규 근태 정책이 적용됩니다.', 'WARNING', 1, NULL, NOW(), NOW(), 1, 1, 0);
-
-
--- ---------------------------------------------------------
--- 12. 월 직원 비용 배치 (Employee Monthly Cost)
+-- 11. 월 직원 비용 배치 (Employee Monthly Cost)
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_employee_monthly_cost (deleted, monthly_salary, overhead_cost, sga_cost, total_cost, cost_month,
                                            created_at, deleted_at, employee_id, updated_at, created_by, deleted_by,
@@ -578,6 +733,46 @@ VALUES (0, 3166667.00, 316667.00, 158333.00, 3641667.00, '202602', NOW(), NULL, 
        (0, 4000000.00, 400000.00, 200000.00, 4600000.00, '202602', NOW(), NULL, 49, NOW(), 1, NULL,
         1);
 
+-- 2026-03 ~ 2026-06 월 원가는 2026-02 기준 인력 원가를 복제한다.
+INSERT INTO abms.tb_employee_monthly_cost (deleted, monthly_salary, overhead_cost, sga_cost, total_cost, cost_month,
+                                           created_at, deleted_at, employee_id, updated_at, created_by, deleted_by,
+                                           updated_by)
+SELECT source.deleted,
+       source.monthly_salary,
+       source.overhead_cost,
+       source.sga_cost,
+       source.total_cost,
+       month_seed.cost_month,
+       NOW(),
+       NULL,
+       source.employee_id,
+       NOW(),
+       source.created_by,
+       NULL,
+       source.updated_by
+FROM abms.tb_employee_monthly_cost source
+CROSS JOIN (
+    SELECT '202603' AS cost_month
+    UNION ALL SELECT '202604'
+    UNION ALL SELECT '202605'
+    UNION ALL SELECT '202606'
+) month_seed
+WHERE source.cost_month = '202602';
+
+-- ---------------------------------------------------------
+-- 12. 회사 월 원가 집계 (Company Monthly Cost Summary)
+-- ---------------------------------------------------------
+INSERT INTO tb_company_monthly_cost_summary (
+    target_month, calculated_at,
+    total_full_time_employee_cost, allocated_full_time_employee_cost, unallocated_full_time_employee_cost,
+    created_at, updated_at, created_by, updated_by, deleted
+)
+VALUES ('2026-02-01', NOW(), 414095832, 57212500, 356883332, NOW(), NOW(), 1, 1, 0),
+       ('2026-03-01', NOW(), 414095832, 134526042, 279569790, NOW(), NOW(), 1, 1, 0),
+       ('2026-04-01', NOW(), 414095832, 200962500, 213133332, NOW(), NOW(), 1, 1, 0),
+       ('2026-05-01', NOW(), 414095832, 227987500, 186108332, NOW(), NOW(), 1, 1, 0),
+       ('2026-06-01', NOW(), 414095832, 203645833, 210449999, NOW(), NOW(), 1, 1, 0);
+
 
 -- ---------------------------------------------------------
 -- 13. 계정
@@ -593,7 +788,17 @@ VALUES (0, 1, 0, NOW(), NULL, 2, NOW(), NOW(), 'test2@iabacus.co.kr', 1, NULL,
 
 
 -- ---------------------------------------------------------
--- 14. 권한
+-- 14. 알림 (Notification)
+-- ---------------------------------------------------------
+INSERT INTO tb_notification (id, account_id, notification_title, notification_description, notification_type, is_read,
+                             link_url, created_at, updated_at, created_by, updated_by, deleted)
+VALUES (1, 1, '조직 구조 변경', '부서 목록에서 경영기획실이 신설되었습니다.', 'INFO', 0, '/', NOW(), NOW(), 1, 1, 0),
+       (2, 1, '직원 정보 갱신', '인사팀이 직원 정보를 최신화했습니다.', 'SUCCESS', 0, '/employees', NOW(), NOW(), 1, 1, 0),
+       (3, 1, '근태 정책 안내', '다음 주부터 신규 근태 정책이 적용됩니다.', 'WARNING', 1, NULL, NOW(), NOW(), 1, 1, 0);
+
+
+-- ---------------------------------------------------------
+-- 15. 권한
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_permission (id, code, name, description, created_at, updated_at, created_by, updated_by,
                                 deleted, deleted_at, deleted_by)
@@ -613,7 +818,7 @@ VALUES (1, 'employee.read', '직원 상세 조회', '직원 상세 정보 조회
 
 
 -- ---------------------------------------------------------
--- 15. 권한 그룹
+-- 16. 권한 그룹
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_permission_group (id, name, description, group_type, created_at, updated_at, created_by, updated_by,
                                       deleted, deleted_at, deleted_by)
@@ -622,7 +827,7 @@ VALUES (1, '일반 그룹', '신규 계정에 기본 부여되는 시스템 권�
 
 
 -- ---------------------------------------------------------
--- 16. 계정-권한 그룹 매핑
+-- 17. 계정-권한 그룹 매핑
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_account_group_assignment (id, account_id, permission_group_id, created_at, updated_at, created_by,
                                               updated_by, deleted, deleted_at, deleted_by)
@@ -631,7 +836,7 @@ VALUES (1, 1, 2, NOW(), NOW(), 1, 1, 0, NULL, NULL),
 
 
 -- ---------------------------------------------------------
--- 17. 권한 그룹-권한 매핑
+-- 18. 권한 그룹-권한 매핑
 -- ---------------------------------------------------------
 INSERT INTO abms.tb_group_permission_grant (id, permission_group_id, permission_id, scope, created_at, updated_at,
                                             created_by, updated_by, deleted, deleted_at, deleted_by)
