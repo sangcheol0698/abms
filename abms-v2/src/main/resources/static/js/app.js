@@ -432,8 +432,9 @@
     'use strict';
     const root = document.documentElement;
     const desktop = window.matchMedia('(min-width: 1024px)');
-    const scroller = () => document.getElementById('app-scroll');
-    // 데스크톱은 #app-scroll, 모바일은 문서가 스크롤된다.
+    // fill 레이아웃 화면(직원 목록 등)은 본문 안의 [data-fill-scroll] 이 스크롤된다.
+    const scroller = () => document.querySelector('#app-scroll.app-scroll-fill [data-fill-scroll]') || document.getElementById('app-scroll');
+    // 데스크톱은 #app-scroll(또는 fill 화면의 목록), 모바일은 문서가 스크롤된다.
     const scrollTarget = () => (desktop.matches ? scroller() : document.scrollingElement);
 
     function store(key, value) {
@@ -510,6 +511,8 @@
         target.addEventListener('scroll', syncToolbarBorder, {passive: true});
         scrollBound = target;
     }
+    // fill 화면의 목록([data-fill-scroll])은 검색·페이지 이동 때 새로 그려지므로 다시 연결한다.
+    document.body.addEventListener('htmx:afterSwap', () => bindScroll());
 
     // 화면 이동(boost) 시 본문 스크롤은 맨 위로, 뒤로 가기는 이전 위치로 복원한다.
     // 뒤로 가기(popstate) 때는 주소가 먼저 바뀐 뒤 떠나는 화면이 저장되므로, 화면이 열릴 때의 주소를 키로 쓴다.
