@@ -137,6 +137,11 @@ class SiteWebTest {
         mvc.perform(get("/sites").with(user(reader)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.not(containsString("사업장 등록"))));
+        Site site = siteRepository.save(Site.create(new Site.SiteInfo("조회 사옥", SiteType.BRANCH, null, null, null)));
+        mvc.perform(get("/sites/{id}", site.id()).with(user(reader)))
+                .andExpect(content().string(containsString("data-read-only")));
+        mvc.perform(get("/sites/{id}", site.id()).with(user(admin)))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("data-read-only"))));
         mvc.perform(get("/sites/new").with(user(reader))).andExpect(status().isForbidden());
         mvc.perform(post("/sites").with(user(reader)).with(csrf()).param("name", "몰래")).andExpect(status().isForbidden());
     }
@@ -171,6 +176,17 @@ class SiteWebTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(">2곳<")))
                 .andExpect(content().string(containsString("3명")));
+    }
+
+    @Test
+    void 인력_찾기는_프로젝트_편집_권한이_있어야_한다() throws Exception {
+        mvc.perform(get("/staffing").with(user(reader))).andExpect(status().isForbidden());
+        mvc.perform(get("/staffing").param("from", "2026-11").param("to", "2027-01").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("위치담당")));
+        mvc.perform(get("/staffing").param("from", "2026-01").param("to", "2027-06").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("최대 12개월")));
     }
 
     @Test

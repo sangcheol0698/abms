@@ -5,10 +5,12 @@
 @param Content breadcrumb = null
 @param Content leading = null
 @param boolean showTitle = true
+@param String readOnly = null
 <%--
   본문 패널 맨 위에 붙는 고정 툴바. 본문을 스크롤해도 경로(또는 제목)와 주요 동작이 남는다.
   - breadcrumb 이 있으면(상세 화면) 툴바에는 경로, 큰 제목은 그 아래 본문에 둔다.
   - 없으면(목록 화면) 툴바에 제목을 둔다.
+  - readOnly: 수정 권한이 없어 편집 버튼이 없는 화면이면 그 이유. '보기 전용' 표시를 띄운다.
 --%>
 <div data-page-toolbar class="sticky top-12 z-20 -mx-4 -mt-5 flex min-h-13 flex-wrap items-center gap-x-x3 gap-y-x2 border-b border-transparent bg-bg-layer-default px-4 py-x2 sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:-mt-6 lg:px-8">
     <div class="min-w-0 flex-1">
@@ -18,6 +20,9 @@
             <h1 class="truncate t5-bold text-fg-neutral">${title}</h1>
         @endif
     </div>
+    @if(readOnly != null)
+        @template.components.readOnly(reason = readOnly)
+    @endif
     @if(actions != null)
         <div class="flex shrink-0 flex-wrap items-center gap-x2">${actions}</div>
     @endif

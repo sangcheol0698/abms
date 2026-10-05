@@ -57,7 +57,7 @@
             </div>
             @endif
 `, title = project.getName(), content = @`
-    @template.components.pageHeader(title = project.getName(), subtitle = project.getCode(), breadcrumb = @`
+    @template.components.pageHeader(readOnly = !canWrite ? "이 프로젝트를 수정할 권한이 없습니다. 주관 부서·PM 범위 안에서만 수정할 수 있습니다." : null, title = project.getName(), subtitle = project.getCode(), breadcrumb = @`
         <a href="/projects" class="hover:text-fg-neutral-muted">프로젝트</a>${Icons.of("chevron-right", "size-3")}<span>${project.getName()}</span>
     `, actions = @`
         @if(canWrite)
