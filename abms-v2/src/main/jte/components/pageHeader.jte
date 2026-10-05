@@ -3,6 +3,7 @@
 @param String subtitle = null
 @param Content actions = null
 @param Content breadcrumb = null
+@param Content leading = null
 <%--
   본문 패널 맨 위에 붙는 고정 툴바. 본문을 스크롤해도 경로(또는 제목)와 주요 동작이 남는다.
   - breadcrumb 이 있으면(상세 화면) 툴바에는 경로, 큰 제목은 그 아래 본문에 둔다.
@@ -22,7 +23,11 @@
 </div>
 <div class="mb-x5 mt-x1">
     @if(breadcrumb != null)
-        <h1 class="t7-bold text-fg-neutral">${title}</h1>
+        @if(leading != null)
+            <div class="flex items-center gap-x3">${leading}<h1 class="min-w-0 truncate t7-bold text-fg-neutral">${title}</h1></div>
+        @else
+            <h1 class="t7-bold text-fg-neutral">${title}</h1>
+        @endif
     @endif
     @if(subtitle != null)
         <p class="mt-x1 t4-regular text-fg-neutral-subtle">${subtitle}</p>

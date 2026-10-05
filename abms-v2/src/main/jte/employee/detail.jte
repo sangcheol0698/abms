@@ -96,7 +96,9 @@
                 @endif
             </dl>
 `, title = employee.getName(), content = @`
-    @template.components.pageHeader(title = employee.getName(), breadcrumb = @`
+    @template.components.pageHeader(title = employee.getName(), leading = @`
+        @template.components.avatar(photoUrl = employee.photoUrl(), name = employee.getName(), size = "size-12")
+    `, breadcrumb = @`
         <a href="/employees" class="hover:text-fg-neutral-muted">직원</a>${Icons.of("chevron-right", "size-3")}<span>${employee.getName()}</span>
     `, actions = @`
         @if(employee.isDeleted())
