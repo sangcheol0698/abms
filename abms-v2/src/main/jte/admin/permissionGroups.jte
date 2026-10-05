@@ -25,7 +25,7 @@
             <span class="hidden w-24 @xl:block">권한</span>
             <span class="w-4 shrink-0"></span>
         </div>
-        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
         @for(PermissionGroup g : groups)
             <a href="/admin/permission-groups/${g.id()}" class="list-row min-h-14 sm:px-x6 lg:px-x8">
                 <span class="flex size-7 shrink-0 items-center justify-center rounded-r1_5 bg-bg-neutral-weak text-fg-neutral-muted">${Icons.of("shield", "size-4")}</span>

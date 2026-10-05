@@ -85,6 +85,7 @@ public class CommandPaletteController {
             commands.add(Command.go("대시보드", "/", "home", "G D", "dashboard home"));
         }
         commands.add(Command.go("AI 어시스턴트", "/assistant", "sparkles", "G A", "assistant ai chat 챗봇"));
+        commands.add(Command.go("공지사항", "/notices", "megaphone", null, "notice 공지 안내 announcement"));
         commands.add(Command.go("직원", "/employees", "users", "G E", "employee 인원 사람"));
         commands.add(Command.go("부서", "/departments", "building", "G O", "department 조직도 팀"));
         commands.add(Command.go("사업장", "/sites", "map-pin", null, "site office 사옥 본사 지사 지도 위치 map"));
@@ -110,6 +111,7 @@ public class CommandPaletteController {
             commands.add(Command.go("원가 정책", "/admin/cost-policies", "calculator", null, "cost policy 제경비 판관비"));
         }
         if (user.has(PermissionCode.ACCOUNT_MANAGE)) {
+            commands.add(Command.create("공지 등록", "/notices/new", "notice new 공지 작성 팝업"));
             commands.add(Command.go("변경 이력", "/admin/audit-logs", "refresh", null, "audit log history 감사 이력 변경"));
         }
         commands.add(Command.go("내 정보", "/me", "user", "G M", "me profile 비밀번호 password"));

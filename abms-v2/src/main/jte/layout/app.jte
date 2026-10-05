@@ -85,6 +85,7 @@
                     @template.layout.navItem(href = "/", label = "대시보드", icon = "home", current = ctx.active("/"))
                 @endif
                 @template.layout.navItem(href = "/assistant", label = "AI 어시스턴트", icon = "sparkles", current = ctx.active("/assistant"))
+                @template.layout.navItem(href = "/notices", label = "공지사항", icon = "megaphone", current = ctx.active("/notices"), badge = ctx.unreadNotices())
             </div>
             <div class="seed-side-navigation__group">
                 <p class="seed-side-navigation__groupLabel">조직</p>
@@ -157,6 +158,9 @@
     </div>
 </div>
 
+@if(ctx.noticePopup())
+    <div hidden hx-get="/notices/popup" hx-trigger="load delay:400ms" hx-target="#modal-body" data-notice-popup-loader></div>
+@endif
 <dialog id="modal" class="m-auto w-full max-w-lg rounded-r5 bg-bg-layer-floating p-0 shadow-s3">
     <div id="modal-body"></div>
 </dialog>
@@ -175,7 +179,7 @@
             <span class="t4-medium text-fg-brand sm:hidden">취소</span>
         </button>
     </div>
-    <div id="palette-results" class="max-h-[min(60vh,420px)] overflow-y-auto overscroll-contain p-x1_5" role="listbox"></div>
+    <div id="palette-results" class="max-h-[min(60vh,420px)] overflow-y-auto overflow-x-hidden overscroll-y-contain p-x1_5" role="listbox"></div>
     <div class="hidden items-center gap-x4 border-t border-stroke-neutral-subtle px-x4 py-x2 t3-regular text-fg-neutral-subtle sm:flex">
         <span class="flex items-center gap-x1"><span class="kbd">↑</span><span class="kbd">↓</span> 이동</span>
         <span class="flex items-center gap-x1"><span class="kbd">↵</span> 선택</span>

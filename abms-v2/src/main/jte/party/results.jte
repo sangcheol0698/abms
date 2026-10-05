@@ -5,7 +5,7 @@
 @param PageView<Party> page
 @param Map<Long, Long> projectCounts
 @param Map<Long, kr.co.abacus.abms.party.PartyContact> primaryContacts
-<div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+<div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
 @if(page.isEmpty())
     @template.components.empty(message = "등록된 협력사가 없습니다.", icon = "briefcase")
 @else

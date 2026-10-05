@@ -16,7 +16,9 @@ public record ViewContext(
         @Nullable Toast toast,
         long unreadNotifications,
         boolean aiEnabled,
-        @Nullable String mapKey
+        @Nullable String mapKey,
+        long unreadNotices,
+        boolean noticePopup
 ) {
 
     /** 카카오 지도 사용 가능 여부 (키가 없으면 주소·바로가기 링크만 보여준다) */

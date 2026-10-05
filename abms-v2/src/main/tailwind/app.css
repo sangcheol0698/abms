@@ -541,7 +541,7 @@
         visibility: hidden;
         transition: transform 200ms var(--seed-timing-function-easing), visibility 200ms;
         overflow-y: auto;
-        overscroll-behavior: contain;
+        overscroll-behavior-y: contain; /* 가로는 막지 않는다: 트랙패드·스와이프 뒤로 가기 */
     }
 
     .app-right {
@@ -599,7 +599,7 @@
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        overscroll-behavior: contain;
+        overscroll-behavior-y: contain; /* 가로는 막지 않는다: 트랙패드·스와이프 뒤로 가기 */
         padding: 16px;
     }
 
@@ -645,17 +645,18 @@
 
     .scroll-pane, .dropdown-panel {
         overflow-y: auto;
+        overflow-x: hidden; /* 세로 스크롤 영역이 가로로 몇 픽셀 밀리며 뒤로 가기 제스처를 가로채지 않게 */
     }
 
     .dropdown-panel {
-        overscroll-behavior: contain;
+        overscroll-behavior-y: contain; /* 가로는 막지 않는다: 트랙패드·스와이프 뒤로 가기 */
     }
 
     /* 열별 스크롤(부서·어시스턴트)은 데스크톱에서만 스크롤을 가둔다.
        모바일은 열이 위아래로 쌓이고 문서가 스크롤되므로, 가두면 열 위에서 쓸어도 페이지가 움직이지 않는다. */
     @media (min-width: 1024px) {
         .scroll-pane {
-            overscroll-behavior: contain;
+            overscroll-behavior-y: contain; /* 가로는 막지 않는다: 트랙패드·스와이프 뒤로 가기 */
         }
     }
 

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import kr.co.abacus.abms.assistant.AssistantProperties;
+import kr.co.abacus.abms.notice.NoticeController;
+import kr.co.abacus.abms.notice.NoticeService;
 import kr.co.abacus.abms.notification.NotificationService;
 import kr.co.abacus.abms.security.LoginUser;
 
@@ -19,9 +21,11 @@ public class GlobalModelAdvice {
     private final NotificationService notificationService;
     private final AssistantProperties assistantProperties;
     private final MapProperties mapProperties;
+    private final NoticeService noticeService;
 
     public GlobalModelAdvice(NotificationService notificationService, AssistantProperties assistantProperties,
-                             MapProperties mapProperties) {
+                             MapProperties mapProperties, NoticeService noticeService) {
+        this.noticeService = noticeService;
         this.mapProperties = mapProperties;
         this.notificationService = notificationService;
         this.assistantProperties = assistantProperties;
@@ -32,9 +36,14 @@ public class GlobalModelAdvice {
         LoginUser user = currentUser();
         CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
         Toast toast = (Toast) model.getAttribute(Toast.ATTRIBUTE);
-        long unread = user == null || Htmx.isHtmx(request) ? 0 : notificationService.unreadCount(user.accountId());
+        boolean fullPage = user != null && !Htmx.isHtmx(request);
+        long unread = fullPage ? notificationService.unreadCount(user.accountId()) : 0;
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        NoticeService.Summary notices = fullPage
+                ? noticeService.summary(user.accountId(), session == null ? java.util.Set.of() : NoticeController.closedPopups(session))
+                : NoticeService.Summary.NONE;
         return new ViewContext(user, csrf, request.getRequestURI(), toast, unread, assistantProperties.isConfigured(),
-                mapProperties.isConfigured() ? mapProperties.kakaoJsKey() : null);
+                mapProperties.isConfigured() ? mapProperties.kakaoJsKey() : null, notices.unread(), notices.popup());
     }
 
     private static LoginUser currentUser() {
