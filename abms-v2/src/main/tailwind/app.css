@@ -251,6 +251,12 @@
         @apply border-(--seed-color-fg-critical);
     }
 
+    /* 제자리 수정 제목 (forms.js) */
+    .inline-title {
+        @apply -mx-1.5 flex max-w-full min-w-0 cursor-text items-center rounded-r1_5 px-x1_5 py-x0_5 text-left hover:bg-bg-transparent-pressed
+        focus-visible:outline-2 focus-visible:outline-(--seed-color-stroke-focus-ring);
+    }
+
     /* 확인창 (confirm.js) */
     .confirm-dialog {
         @apply m-auto w-[calc(100%-2rem)] max-w-sm rounded-r5 bg-bg-layer-floating p-0 shadow-s3;

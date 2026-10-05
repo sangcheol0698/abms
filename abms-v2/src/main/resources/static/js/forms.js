@@ -9,6 +9,7 @@
 //   날짜(2026-03-05), 전화번호(010-1234-5678 · 02-123-4567 · 1588-1234), 사업자등록번호(000-00-00000),
 //   우편번호(5자리), 금액(1,000,000 — 서버에는 숫자만 보낸다).
 // - 숫자 입력: 포커스 중 마우스 휠로 값이 바뀌지 않게 한다.
+// - 제자리 수정([data-inline-edit]): 제목을 누르면 입력칸으로 바뀐다. Enter 저장, Esc 취소, 바깥을 누르면 바뀐 경우만 저장.
 // ---------------------------------------------------------------------
 (function () {
     const pad = (n) => String(n).padStart(2, '0');
@@ -755,6 +756,57 @@
         show();
     }
 
+    // ---------------------------------------------------------------------
+    // 제자리 수정
+    // ---------------------------------------------------------------------
+    function inlineEdit(root) {
+        const form = root.querySelector('[data-inline-edit-form]');
+        const input = form.querySelector('input:not([type=hidden])');
+        const display = root.querySelector('button[data-inline-edit-start]');
+        let original = input.value;
+        let done = false;
+
+        function start() {
+            original = input.value;
+            done = false;
+            display.hidden = true;
+            form.hidden = false;
+            input.focus();
+            input.select();
+        }
+
+        function cancel() {
+            done = true;
+            input.value = original;
+            form.hidden = true;
+            display.hidden = false;
+            display.focus({preventScroll: true});
+        }
+
+        function save() {
+            if (done) return;
+            done = true;
+            if (!input.value.trim() || input.value.trim() === original.trim()) return cancel();
+            form.requestSubmit();
+        }
+
+        // 연필 버튼처럼 바깥에 있는 시작 버튼도 같은 제목을 고친다.
+        const scope = root.closest('header') || root;
+        scope.querySelectorAll('[data-inline-edit-start]').forEach((b) => b.addEventListener('click', start));
+        input.addEventListener('keydown', (e) => {
+            if (e.isComposing) return;
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                save();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                cancel();
+            }
+        });
+        input.addEventListener('blur', save);
+    }
+
     // 숫자 입력: 포커스 중 휠을 굴리면 값 대신 페이지가 스크롤되게 포커스를 뗀다.
     document.addEventListener('wheel', (e) => {
         if (e.target === document.activeElement && e.target.matches('input[type=number]')) e.target.blur();
@@ -776,6 +828,10 @@
         root.querySelectorAll('select[data-combobox]:not([data-ready])').forEach((select) => {
             select.dataset.ready = 'true';
             combobox(select);
+        });
+        root.querySelectorAll('[data-inline-edit]:not([data-ready])').forEach((node) => {
+            node.dataset.ready = 'true';
+            inlineEdit(node);
         });
         root.querySelectorAll('[data-file-drop]:not([data-ready])').forEach((zone) => {
             zone.dataset.ready = 'true';

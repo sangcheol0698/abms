@@ -10,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -61,13 +60,13 @@ public class AssistantController {
 
     @PostMapping("/{id}/rename")
     public String rename(@AuthenticationPrincipal LoginUser user, @PathVariable Long id,
-                         @RequestHeader(value = "HX-Prompt", required = false) @Nullable String title,
-                         HttpServletRequest request, HttpServletResponse response) {
-        if (title == null || title.isBlank()) {
-            return "fragments/empty";
+                         @RequestParam(required = false) @Nullable String title,
+                         org.springframework.web.servlet.mvc.support.RedirectAttributes redirect) {
+        if (title != null && !title.isBlank()) {
+            assistantService.rename(user, id, title);
+            Toast.success(redirect, "제목을 변경했습니다.");
         }
-        assistantService.rename(user, id, title);
-        return Htmx.redirect(request, response, "/assistant/" + id, new Toast("success", "제목을 변경했습니다."));
+        return "redirect:/assistant/" + id;
     }
 
     @PostMapping("/{id}/favorite")
