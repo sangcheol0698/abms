@@ -107,7 +107,8 @@ class EmployeeWebTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data-combobox")))
                 .andExpect(content().string(containsString("name=\"birthDate\" type=\"date\"")))
-                .andExpect(content().string(containsString("/js/forms.js")));
+                .andExpect(content().string(containsString("/js/forms.js")))
+                .andExpect(content().string(containsString("/js/confirm.js")));
     }
 
     @Test

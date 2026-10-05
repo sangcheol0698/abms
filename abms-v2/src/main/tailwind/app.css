@@ -251,6 +251,17 @@
         @apply border-(--seed-color-fg-critical);
     }
 
+    /* 확인창 (confirm.js) */
+    .confirm-dialog {
+        @apply m-auto w-[calc(100%-2rem)] max-w-sm rounded-r5 bg-bg-layer-floating p-0 shadow-s3;
+    }
+    .confirm-icon {
+        @apply flex size-9 shrink-0 items-center justify-center rounded-full bg-bg-neutral-weak text-fg-neutral-muted;
+    }
+    .confirm-icon.is-danger {
+        @apply bg-bg-critical-weak text-fg-critical;
+    }
+
     /* SEED Checkmark (square · medium · brand) 스펙 */
     .checkbox {
         @apply size-4 shrink-0 cursor-pointer appearance-none rounded-r1 border border-stroke-neutral-weak bg-bg-layer-default
