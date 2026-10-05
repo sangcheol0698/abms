@@ -66,6 +66,10 @@ abms:
   map:
     kakao-js-key: ${KAKAO_JS_KEY:}
     kakao-rest-key: ${KAKAO_REST_KEY:}
+  reminder:
+    # 매일 아침 청구일 임박·기한 경과·종료 임박 알림
+    enabled: true
+    cron: "0 30 8 * * *"
   summary:
     schedule-enabled: true
     cron: "0 0 3 * * *"

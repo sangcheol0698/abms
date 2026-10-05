@@ -13,6 +13,8 @@ abms:
   map:
     kakao-js-key: ""
     kakao-rest-key: ""
+  reminder:
+    enabled: false
   summary:
     schedule-enabled: false
   demo:
