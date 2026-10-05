@@ -58,14 +58,16 @@ public class AttachmentService {
         return attachmentRepository.findAllByOwnerTypeAndOwnerIdOrderByIdDesc(owner, ownerId);
     }
 
+    /**
+     * 예외로 판단하지 않는다. 트랜잭션 안에서 던진 AccessDeniedException 을 잡으면
+     * 트랜잭션이 rollback-only 로 남아 화면 전체가 실패한다.
+     */
     @Transactional(readOnly = true)
     public boolean canWrite(LoginUser user, AttachmentOwner owner, Long ownerId) {
-        try {
-            checkWrite(user, owner, ownerId);
-            return true;
-        } catch (AccessDeniedException e) {
-            return false;
-        }
+        return switch (owner) {
+            case PROJECT -> projectService.canWrite(user, projectService.get(ownerId));
+            case PARTY -> user.has(PermissionCode.PARTY_WRITE);
+        };
     }
 
     public Attachment upload(LoginUser user, AttachmentOwner owner, Long ownerId, @Nullable AttachmentCategory category,

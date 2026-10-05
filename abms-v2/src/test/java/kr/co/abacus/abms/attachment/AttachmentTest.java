@@ -23,6 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.access.PermissionScope;
@@ -46,7 +49,13 @@ class AttachmentTest {
     private AttachmentRepository attachmentRepository;
 
     @Autowired
+    private AttachmentService attachmentService;
+
+    @Autowired
     private AttachmentCleanupService cleanupService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @Autowired
     private FileStorage fileStorage;
@@ -89,6 +98,20 @@ class AttachmentTest {
                 .andExpect(header().string("Content-Type", "application/octet-stream"))
                 .andExpect(header().string("Content-Disposition", containsString("filename*=UTF-8''")))
                 .andExpect(content().bytes("PDF-본문".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void 조회만_가능한_사용자도_프로젝트_상세를_열고_첨부는_볼_수만_있다() throws Exception {
+        mvc.perform(get("/projects/{id}", project.id()).with(user(member)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-read-only")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("id=\"attachment-file\""))));
+
+        // 쓰기 권한 확인이 트랜잭션을 rollback-only 로 남기면 실제 요청은 커밋 단계에서 500 이 된다.
+        assertThat(attachmentService.canWrite(member, AttachmentOwner.PROJECT, project.id())).isFalse();
+        TransactionStatus current = transactionManager.getTransaction(TransactionDefinition.withDefaults());
+        assertThat(current.isRollbackOnly()).isFalse();
+        transactionManager.rollback(current);
     }
 
     @Test
