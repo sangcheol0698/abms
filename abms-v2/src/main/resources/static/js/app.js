@@ -714,3 +714,23 @@ window.abmsChat = {
     });
 })();
 
+// ---------------------------------------------------------------------
+// 안내 팝업을 Esc·배경 클릭 등으로 닫아도 '닫기'(이번 로그인 동안 숨김)로 기록한다.
+// 팝업 버튼으로 닫으면 서버가 다음 팝업을 보여주거나 closeModal 로 닫으므로 기록이 이미 되어 있다.
+// ---------------------------------------------------------------------
+(function () {
+    const modal = document.getElementById('modal');
+    if (!modal) return;
+    let dismissedByButton = false;
+    document.body.addEventListener('htmx:beforeRequest', (e) => {
+        if (e.detail.pathInfo && /\/notices\/\d+\/popup\/dismiss/.test(e.detail.pathInfo.requestPath || '')) dismissedByButton = true;
+    });
+    modal.addEventListener('close', () => {
+        const popup = modal.querySelector('[data-notice-popup]');
+        if (popup && !dismissedByButton) {
+            htmx.ajax('POST', '/notices/' + popup.dataset.noticePopup + '/popup/dismiss?mode=close', {swap: 'none'});
+        }
+        dismissedByButton = false;
+    });
+})();
+
