@@ -8,7 +8,7 @@
 @param DepartmentTree tree
 @param Map<Long, String> partyNames
 !{ProjectStatus[] order = {ProjectStatus.IN_PROGRESS, ProjectStatus.SCHEDULED, ProjectStatus.ON_HOLD, ProjectStatus.COMPLETED, ProjectStatus.CANCELLED};}
-<div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+<div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
 @if(page.isEmpty())
     @template.components.empty(message = "조회 가능한 프로젝트가 없습니다.", icon = "folder")
 @else

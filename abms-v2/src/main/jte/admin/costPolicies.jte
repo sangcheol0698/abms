@@ -23,7 +23,7 @@
                 @else
                     <div class="flex min-h-0 min-w-[560px] flex-1 flex-col">
                         <div class="list-head shrink-0 sm:px-x6 lg:px-x8"><span class="flex-1">고용유형 <span class="tabular-nums">${policies.size()}</span></span><span class="w-28 shrink-0">제경비율 (%)</span><span class="w-28 shrink-0">판관비율 (%)</span><span class="w-20 shrink-0 text-right">원가 배수</span><span class="w-24 shrink-0"></span></div>
-                        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+                        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
                         @for(Integer year : years)
                             <h3 class="list-group-header max-lg:static sm:px-x6 lg:px-x8">
                                 ${Icons.of("calendar", "size-3.5")}<span class="text-fg-neutral">${year}년</span>

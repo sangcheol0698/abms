@@ -32,7 +32,7 @@
             @endif
             <span class="w-24 shrink-0 text-right">게시일</span>
         </div>
-        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
             @if(page.isEmpty())
                 @template.components.empty(message = "등록된 공지가 없습니다.", icon = "megaphone")
             @else

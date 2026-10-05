@@ -28,7 +28,7 @@
                 <span class="w-28 shrink-0 text-right">생성 방식</span>
                 <span class="hidden w-16 text-right @xl:block">생성</span>
             </div>
-            <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+            <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
                 @if(page.isEmpty())
                     @template.components.empty(message = "생성된 보고서가 없습니다.", icon = "document")
                 @else

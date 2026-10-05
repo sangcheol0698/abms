@@ -7,7 +7,7 @@
 @param PageView<Employee> page
 @param DepartmentTree tree
 @param EmployeeSearchForm search
-<div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+<div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
 @if(page.isEmpty())
     @template.components.empty(message = "조건에 맞는 직원이 없습니다.", icon = "users")
 @else

@@ -37,7 +37,7 @@
                     <span class="w-32 shrink-0">비밀번호 변경</span>
                     <span class="w-8 shrink-0"></span>
                 </div>
-                <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+                <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
                 @for(Account a : accounts)
                     !{Employee e = employees.get(a.getEmployeeId());}
                     <div class="list-row sm:px-x6 lg:px-x8">

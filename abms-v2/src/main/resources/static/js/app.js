@@ -12,6 +12,10 @@
         {code: '[45]..', swap: false, error: true}
     ];
     htmx.config.defaultSwapStyle = 'innerHTML';
+    // 뒤로·앞으로 가기는 떠날 때 찍은 스냅샷이 아니라 서버의 최신 화면을 보여준다. (읽음 표시·수정 결과 등이 바로 반영되도록)
+    // 복원 요청은 일반 페이지 요청으로 보내 사이드바 배지 등 화면 공통 정보도 새로 계산되게 한다. 스크롤 위치는 따로 복원한다.
+    htmx.config.historyCacheSize = 0;
+    htmx.config.historyRestoreAsHxRequest = false;
     // CSP(unsafe-eval 없음): hx-on·트리거 필터 같은 eval 기능을 쓰지 않는다.
     htmx.config.allowEval = false;
 

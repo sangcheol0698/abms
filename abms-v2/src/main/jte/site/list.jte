@@ -32,7 +32,7 @@
             <span class="w-16 shrink-0 text-right">인원</span>
             @if(ctx.mapEnabled())<span class="w-7 shrink-0"></span>@endif
         </div>
-        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
+        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
             @if(sites.isEmpty())
                 @template.components.empty(message = "등록된 사업장이 없습니다.", icon = "map-pin")
             @else
