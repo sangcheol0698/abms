@@ -70,7 +70,7 @@
             ${Icons.of(c.icon(), "size-4 text-fg-neutral-subtle")}
             <span class="truncate">${c.label()}</span>
             @if(c.shortcut() != null)
-                <span class="ml-auto flex gap-x1">@for(String key : c.shortcut().split(" "))<span class="kbd">${key}</span>@endfor</span>
+                <span class="ml-auto hidden gap-x1 sm:flex">@for(String key : c.shortcut().split(" "))<span class="kbd">${key}</span>@endfor</span>
             @endif
         </a>
     @else

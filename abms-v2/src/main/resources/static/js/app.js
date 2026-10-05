@@ -668,3 +668,20 @@ window.abmsChat = {
         if (e.target.matches('[data-clears-notification-dot]') && e.detail.successful) document.getElementById('notification-dot')?.remove();
     });
 })();
+
+// ---------------------------------------------------------------------
+// 가벼운 대화상자(명령 팔레트·단축키)는 바깥(배경)을 누르면 닫는다. 입력을 잃을 수 있는 폼 모달은 제외.
+// 누르기 시작한 곳과 뗀 곳이 모두 배경일 때만 닫는다. (안에서 드래그하다 밖에서 놓는 경우 제외)
+// ---------------------------------------------------------------------
+(function () {
+    const LIGHT_DISMISS = ['palette', 'shortcuts'];
+    let downOnBackdrop = null;
+    document.addEventListener('pointerdown', (e) => {
+        downOnBackdrop = e.target instanceof HTMLDialogElement && LIGHT_DISMISS.includes(e.target.id) ? e.target : null;
+    });
+    document.addEventListener('click', (e) => {
+        if (downOnBackdrop && e.target === downOnBackdrop && downOnBackdrop.open) downOnBackdrop.close();
+        downOnBackdrop = null;
+    });
+})();
+
