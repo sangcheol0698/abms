@@ -3,13 +3,16 @@
 @import kr.co.abacus.abms.common.web.Seed
 @param Employee employee
 @param FormErrors errors
+@param Long currentSalary = null
 <form hx-post="/employees/${employee.id()}/salary" hx-target="#modal-body">
     @template.components.modal(title = "연봉 변경", context = employee.getName(), hint = "등록",
         description = "새 연봉은 적용일부터 반영되고 이전 연봉은 전날로 종료됩니다.", body = @`
         @template.components.globalError(errors = errors)
         <div class="prop-form">
             @template.components.propRow(label = "연봉 (원)", forId = "annualSalary", required = true, error = errors.get("annualSalary"), control = @`
-                <input id="annualSalary" name="annualSalary" type="number" min="1" step="1" class="input tabular-nums" required autofocus placeholder="60000000">
+                <input id="annualSalary" name="annualSalary" type="number" min="1" step="1" class="input tabular-nums" required autofocus placeholder="60000000"
+                       data-money="연봉" data-money-max="1000000000" data-money-prev="${currentSalary == null ? null : String.valueOf(currentSalary)}">
+                @if(currentSalary != null)<p class="field-help tabular-nums">현재 연봉 ${kr.co.abacus.abms.common.web.Ui.won(kr.co.abacus.abms.common.domain.Money.wons(currentSalary))}원</p>@endif
             `)
             @template.components.propRow(label = "적용일", forId = "startDate", required = true, error = errors.get("startDate"), control = @`
                 <input id="startDate" name="startDate" type="date" class="input" required value="${java.time.LocalDate.now().withDayOfMonth(1).toString()}">

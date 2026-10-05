@@ -738,3 +738,64 @@ window.abmsChat = {
     });
 })();
 
+
+// ---------------------------------------------------------------------
+// 금액 입력 도우미: [data-money] 입력 아래에 '= 1억 1,230만 원' 처럼 읽기 쉬운 금액을 보여주고,
+// data-money-max(상한) 를 넘거나 data-money-prev(이전 값) 의 3배를 넘으면 제출 전에 한 번 더 확인한다. (자릿수 실수 방지)
+// ---------------------------------------------------------------------
+(function () {
+    function korean(value) {
+        if (!/^\d+$/.test(value)) return '';
+        let n = BigInt(value);
+        if (n === 0n) return '0원';
+        const eok = n / 100000000n;
+        const man = (n % 100000000n) / 10000n;
+        const won = n % 10000n;
+        const fmt = (x) => Number(x).toLocaleString('ko-KR');
+        const parts = [eok > 0n ? fmt(eok) + '억' : '', man > 0n ? fmt(man) + '만' : '', won > 0n ? fmt(won) : ''].filter(Boolean).join(' ');
+        return won > 0n ? parts + '원' : parts + ' 원';
+    }
+
+    function hint(input) {
+        let el = input.parentElement.querySelector(':scope > [data-money-text]');
+        if (!el) {
+            el = document.createElement('p');
+            el.className = 'field-help tabular-nums';
+            el.dataset.moneyText = '';
+            el.setAttribute('aria-live', 'polite');
+            input.insertAdjacentElement('afterend', el);
+        }
+        return el;
+    }
+
+    function render(input) {
+        const text = korean(input.value.trim());
+        hint(input).textContent = text ? '= ' + text : '';
+    }
+
+    document.addEventListener('input', (e) => {
+        if (e.target.matches && e.target.matches('[data-money]')) render(e.target);
+    });
+    htmx.onLoad((root) => root.querySelectorAll && root.querySelectorAll('[data-money]').forEach((input) => { if (input.value) render(input); }));
+
+    // htmx 보다 먼저(캡처 단계) 확인해, 취소하면 요청을 보내지 않는다.
+    document.addEventListener('submit', (e) => {
+        const form = e.target;
+        for (const input of form.querySelectorAll('[data-money]')) {
+            const raw = input.value.trim();
+            if (!/^\d+$/.test(raw)) continue;
+            const value = BigInt(raw);
+            const reasons = [];
+            if (input.dataset.moneyMax && value > BigInt(input.dataset.moneyMax)) reasons.push(korean(input.dataset.moneyMax) + '을 넘습니다');
+            if (input.dataset.moneyPrev && BigInt(input.dataset.moneyPrev) > 0n && value > BigInt(input.dataset.moneyPrev) * 3n) {
+                reasons.push('이전 값(' + korean(input.dataset.moneyPrev) + ')의 3배를 넘습니다');
+            }
+            if (reasons.length && !window.confirm(input.dataset.money + ' ' + korean(raw) + ' — ' + reasons.join(', ') + '.\n입력한 금액이 맞나요?')) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                input.focus();
+                return;
+            }
+        }
+    }, true);
+})();

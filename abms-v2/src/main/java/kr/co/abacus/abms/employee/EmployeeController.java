@@ -281,10 +281,16 @@ public class EmployeeController {
         return redirectToDetail(request, response, id, "직급/등급을 변경했습니다.");
     }
 
+    /** 연봉 변경 모달에서 자릿수 실수를 알아채도록 현재 연봉을 함께 보여준다. */
+    private @Nullable Long currentSalary(Long id) {
+        return employeeService.payrolls(id).stream().findFirst().map(p -> p.getAnnualSalary().longValue()).orElse(null);
+    }
+
     @GetMapping("/{id}/salary")
     public String salaryModal(@PathVariable Long id, Model model) {
         model.addAttribute("employee", employeeService.get(id));
         model.addAttribute("errors", FormErrors.none());
+        model.addAttribute("currentSalary", currentSalary(id));
         return "employee/salaryModal";
     }
 
@@ -305,6 +311,7 @@ public class EmployeeController {
             response.setStatus(422);
             model.addAttribute("employee", employeeService.get(id));
             model.addAttribute("errors", FormErrors.global(e.getMessage()));
+            model.addAttribute("currentSalary", currentSalary(id));
             return "employee/salaryModal";
         }
         return redirectToDetail(request, response, id, "연봉을 등록했습니다.");

@@ -45,7 +45,7 @@
                 @template.components.select(name = "position", label = "직급", options = Ui.options(EmployeePosition.values()), value = Ui.value(form.position()), errors = errors, required = true)
                 @template.components.select(name = "grade", label = "등급", options = Ui.options(EmployeeGrade.values()), value = Ui.value(form.grade()), errors = errors, required = true)
                 @if(!editing)
-                    @template.components.input(name = "annualSalary", label = "연봉 (원)", value = Ui.value(form.annualSalary()), errors = errors, type = "number", help = "입력하면 입사일부터 적용되는 연봉 이력이 생성됩니다.")
+                    @template.components.input(name = "annualSalary", label = "연봉 (원)", value = Ui.value(form.annualSalary()), errors = errors, money = true, moneyMax = 1_000_000_000L, type = "number", help = "입력하면 입사일부터 적용되는 연봉 이력이 생성됩니다.")
                 @endif
             </div>
         </section>
