@@ -26,7 +26,8 @@
 @if(section.plans().isEmpty())
     @template.components.empty(message = "등록된 매출 계획이 없습니다.", icon = "money")
 @else
-    <div class="overflow-x-auto">
+    <%-- 넓은 본문: 표 / 좁은 본문(모바일): 카드 목록 (발행 상태·버튼이 가로 스크롤 밖으로 밀리지 않게) --%>
+    <div class="hidden overflow-x-auto @2xl:block">
         <table class="table">
             <thead><tr><th>차수</th><th>유형</th><th>청구일</th><th class="num">금액</th><th>발행</th><th>메모</th>@if(section.canWrite())<th></th>@endif</tr></thead>
             <tbody class="divide-y divide-stroke-neutral-subtle">
@@ -36,32 +37,31 @@
                     <td>${plan.getType().label()}</td>
                     <td class="tabular-nums">${Ui.date(plan.getRevenueDate())}</td>
                     <td class="num font-medium">${Ui.won(plan.getAmount())}</td>
-                    <td>
-                        @if(plan.isIssued())
-                            <span class="${Seed.badge("positive")}">${Icons.of("check", "size-3")} 발행</span>
-                        @elseif(plan.getRevenueDate().isBefore(java.time.LocalDate.now()))
-                            <span class="${Seed.badge("critical")}">미발행 (기한 경과)</span>
-                        @else
-                            <span class="${Seed.badge("neutral")}">미발행</span>
-                        @endif
-                    </td>
+                    <td>@template.project.revenueStatus(plan = plan)</td>
                     <td class="max-w-56 truncate text-xs text-fg-neutral-subtle">${Ui.value(plan.getMemo())}</td>
                     @if(section.canWrite())
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1" hx-target="#revenue-section">
-                                @if(plan.isIssued())
-                                    <button class="${Seed.button("ghost", "xsmall")}" hx-post="/projects/${projectId}/revenues/${plan.id()}/cancel-issue" hx-confirm="${plan.getSequence()}차 매출 발행을 취소할까요?">발행 취소</button>
-                                @else
-                                    <button class="${Seed.button("ghost", "xsmall")} text-fg-brand" hx-post="/projects/${projectId}/revenues/${plan.id()}/issue" hx-confirm="${plan.getSequence()}차 매출을 발행 처리할까요?">발행</button>
-                                    <button class="${Seed.button("ghost", "xsmall")}" hx-get="/projects/${projectId}/revenues/${plan.id()}/edit" hx-target="#modal-body" aria-label="수정">${Icons.of("pencil", "size-4")}</button>
-                                    <button class="${Seed.button("ghost", "xsmall")} text-fg-critical" hx-post="/projects/${projectId}/revenues/${plan.id()}/delete" hx-confirm="${plan.getSequence()}차 매출 계획을 삭제할까요?" aria-label="삭제">${Icons.of("trash", "size-4")}</button>
-                                @endif
-                            </div>
-                        </td>
+                        <td class="text-right">@template.project.revenueActions(plan = plan, projectId = projectId)</td>
                     @endif
                 </tr>
             @endfor
             </tbody>
         </table>
     </div>
+    <ul class="divide-y divide-stroke-neutral-subtle @2xl:hidden">
+        @for(ProjectRevenuePlan plan : section.plans())
+            <li class="px-x4 py-x3">
+                <div class="flex items-center gap-x2">
+                    <span class="t4-bold">${plan.getSequence()}차</span>
+                    <span class="t3-regular text-fg-neutral-subtle">${plan.getType().label()}</span>
+                    <span class="ml-auto t4-bold tabular-nums">${Ui.won(plan.getAmount())}</span>
+                </div>
+                <div class="mt-x1_5 flex flex-wrap items-center gap-x2">
+                    <span class="t3-regular text-fg-neutral-subtle tabular-nums">청구일 ${Ui.date(plan.getRevenueDate())}</span>
+                    @template.project.revenueStatus(plan = plan)
+                    @if(section.canWrite())<div class="ml-auto">@template.project.revenueActions(plan = plan, projectId = projectId)</div>@endif
+                </div>
+                @if(plan.getMemo() != null)<p class="mt-x1 t3-regular text-fg-neutral-subtle">${plan.getMemo()}</p>@endif
+            </li>
+        @endfor
+    </ul>
 @endif
