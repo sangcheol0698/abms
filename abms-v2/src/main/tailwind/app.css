@@ -227,6 +227,13 @@
         @apply static;
     }
 
+    /* fill 화면의 목록 안에서 스크롤할 때는 목록 맨 위에 붙는다. (데스크톱만, 그 아래는 문서 스크롤 기준) */
+    @media (min-width: 1024px) {
+        .app-scroll-fill [data-fill-scroll] .list-group-header {
+            top: 0;
+        }
+    }
+
     .list-row {
         @apply flex min-h-11 items-center gap-x3 border-b border-stroke-neutral-subtle px-x4 py-x1_5 t4-regular text-fg-neutral transition-colors
         last:border-b-0 hover:bg-bg-layer-default-pressed;

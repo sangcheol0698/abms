@@ -5,6 +5,7 @@
 @param PageView<Party> page
 @param Map<Long, Long> projectCounts
 @param Map<Long, kr.co.abacus.abms.party.PartyContact> primaryContacts
+<div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
 @if(page.isEmpty())
     @template.components.empty(message = "등록된 협력사가 없습니다.", icon = "briefcase")
 @else
@@ -22,4 +23,5 @@
         </a>
     @endfor
 @endif
-<div class="sm:px-x2 lg:px-x4">@template.components.pagination(page = page, target = "#party-results")</div>
+</div>
+<div class="shrink-0 bg-bg-layer-default sm:px-x2 lg:px-x4">@template.components.pagination(page = page, target = "#party-results")</div>

@@ -18,7 +18,10 @@
 @param ProjectSearchForm search
 @param List<SelectOption> departmentOptions
 @param List<SelectOption> partyOptions
-@template.layout.app(ctx = ctx, title = "프로젝트", content = @`
+@template.layout.app(ctx = ctx, title = "프로젝트", fill = true, content = @`
+<%-- 데스크톱: 페이지는 고정, 목록 본문만 스크롤하고 페이징은 아래에 고정 (fill 레이아웃). 태블릿·모바일은 문서 스크롤. --%>
+<div class="flex flex-col lg:h-full">
+    <div class="px-x4 pt-x5 sm:px-x6 lg:px-x8 lg:pt-x6">
     @template.components.pageHeader(title = "프로젝트", subtitle = "계약·매출 계획·투입 인력을 관리합니다. 손익은 주관 부서에 귀속됩니다.", actions = @`
         @if(ctx.can(PermissionCode.PROJECT_EXPORT))
             <a href="/projects/export${search.exportQuery()}" hx-boost="false" class="${Seed.button("neutralOutline")}">${Icons.of("download", "size-4")} CSV 내보내기</a>
@@ -27,7 +30,11 @@
             <a href="/projects/new" data-shortcut="create" title="새로 만들기 (C)" class="${Seed.button("brandSolid")}">${Icons.of("plus", "size-4")} 프로젝트 등록</a>
         @endif
     `)
-    <div class="-mx-4 border-t border-stroke-neutral-subtle sm:-mx-6 lg:-mx-8">
+    </div>
+
+    <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
+        <%-- 필터 바와 열 제목: 데스크톱은 목록 위에 고정. 태블릿·모바일은 상태별 그룹 머리가 툴바 아래에 고정되므로 함께 스크롤 --%>
+        <div class="z-10 shrink-0 bg-bg-layer-default">
         <form class="view-bar sm:px-x6 lg:px-x8" action="/projects"
               hx-get="/projects" hx-target="#project-results" hx-push-url="true"
               hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], submit">
@@ -56,6 +63,17 @@
                 </select>
             </div>
         </form>
-        <div id="project-results">@template.project.results(page = page, tree = tree, partyNames = partyNames)</div>
+        <div class="list-head sm:px-x6 lg:px-x8" aria-hidden="true">
+            <span class="hidden w-24 shrink-0 @xl:block">코드</span>
+            <span class="w-3.5 shrink-0"></span>
+            <span class="min-w-0 flex-1">프로젝트</span>
+            <span class="hidden w-36 @2xl:block">협력사</span>
+            <span class="hidden w-40 @3xl:block">주관 부서</span>
+            <span class="hidden w-52 @5xl:block">기간</span>
+            <span class="w-28 shrink-0 text-right">계약금액</span>
+        </div>
+        </div>
+        <div id="project-results" class="flex min-h-0 flex-1 flex-col">@template.project.results(page = page, tree = tree, partyNames = partyNames)</div>
     </div>
+</div>
 `)
