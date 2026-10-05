@@ -7,26 +7,31 @@
 @param ViewContext ctx
 @param List<EmployeeCostPolicy> policies
 @param int currentYear
-@template.layout.app(ctx = ctx, title = "원가 정책", content = @`
+@template.layout.app(ctx = ctx, title = "원가 정책", fill = true, content = @`
+!{List<Integer> years = policies.stream().map(EmployeeCostPolicy::getApplyYear).distinct().toList();}
+<%-- 데스크톱: 페이지는 고정, 왼쪽 정책 목록만 스크롤하고 오른쪽 추가 패널은 고정 (fill 레이아웃). 태블릿·모바일은 문서 스크롤. --%>
+<div class="flex flex-col lg:h-full">
+    <div class="px-x4 pt-x5 sm:px-x6 lg:px-x8 lg:pt-x6">
     @template.components.pageHeader(title = "원가 정책", subtitle = "직원 월 원가 = 월 기본급(연봉 ÷ 12) × (1 + 제경비율 + 판관비율). 해당 연도 정책이 없으면 가장 최근 연도 정책을 적용합니다.")
-    !{List<Integer> years = policies.stream().map(EmployeeCostPolicy::getApplyYear).distinct().toList();}
-    <div class="grid gap-x6 @5xl:grid-cols-[minmax(0,1fr)_300px]">
-        <section class="min-w-0">
-            <h2 class="section-title">정책 목록 <span class="section-count">${policies.size()}</span></h2>
-            <div class="list-box overflow-x-auto">
+    </div>
+
+    <div class="grid min-h-0 flex-1 border-t border-stroke-neutral-subtle @5xl:grid-cols-[minmax(0,1fr)_320px]">
+        <%-- 좁은 화면은 열 제목과 함께 가로 스크롤 --%>
+        <section class="flex min-h-0 min-w-0 flex-col overflow-x-auto @5xl:border-r @5xl:border-stroke-neutral-subtle" aria-label="정책 목록">
                 @if(policies.isEmpty())
                     @template.components.empty(message = "등록된 원가 정책이 없습니다.", icon = "calculator")
                 @else
-                    <div class="min-w-[560px]">
-                        <div class="list-head"><span class="flex-1">고용유형</span><span class="w-28 shrink-0">제경비율 (%)</span><span class="w-28 shrink-0">판관비율 (%)</span><span class="w-20 shrink-0 text-right">원가 배수</span><span class="w-24 shrink-0"></span></div>
+                    <div class="flex min-h-0 min-w-[560px] flex-1 flex-col">
+                        <div class="list-head shrink-0 sm:px-x6 lg:px-x8"><span class="flex-1">고용유형 <span class="tabular-nums">${policies.size()}</span></span><span class="w-28 shrink-0">제경비율 (%)</span><span class="w-28 shrink-0">판관비율 (%)</span><span class="w-20 shrink-0 text-right">원가 배수</span><span class="w-24 shrink-0"></span></div>
+                        <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overscroll-contain" data-fill-scroll>
                         @for(Integer year : years)
-                            <h3 class="list-group-header">
+                            <h3 class="list-group-header max-lg:static sm:px-x6 lg:px-x8">
                                 ${Icons.of("calendar", "size-3.5")}<span class="text-fg-neutral">${year}년</span>
                                 @if(year == currentYear)<span class="${Seed.badge("informative")}">올해</span>@endif
                             </h3>
                             @for(EmployeeCostPolicy p : policies.stream().filter(x -> x.getApplyYear() == year).toList())
                                 !{String formId = "policy-" + p.id();}
-                                <div class="list-row">
+                                <div class="list-row sm:px-x6 lg:px-x8">
                                     <span class="min-w-0 flex-1 truncate t4-medium">${p.getType().label()}</span>
                                     <span class="w-28 shrink-0"><input form="${formId}" name="overheadPercent" type="number" step="0.01" min="0" max="100" class="input filter-input w-24 tabular-nums" value="${p.getOverheadRate().movePointRight(2).stripTrailingZeros().toPlainString()}" aria-label="${year}년 ${p.getType().label()} 제경비율"></span>
                                     <span class="w-28 shrink-0"><input form="${formId}" name="sgaPercent" type="number" step="0.01" min="0" max="100" class="input filter-input w-24 tabular-nums" value="${p.getSgaRate().movePointRight(2).stripTrailingZeros().toPlainString()}" aria-label="${year}년 ${p.getType().label()} 판관비율"></span>
@@ -40,14 +45,14 @@
                                 </div>
                             @endfor
                         @endfor
+                        </div>
                     </div>
                 @endif
-            </div>
         </section>
 
         <%-- 정책 추가 패널 --%>
-        <aside>
-            <div class="@5xl:sticky @5xl:top-[calc(var(--sticky-top)+16px)]">
+        <aside class="border-t border-stroke-neutral-subtle px-x4 py-x5 sm:px-x6 @5xl:border-t-0 @5xl:overflow-y-auto">
+            <div>
                 <h2 class="section-title">정책 추가</h2>
                 <form method="post" action="/admin/cost-policies" class="list-box grid grid-cols-2 gap-x3 p-x4">${kr.co.abacus.abms.common.web.Csrf.field()}
                     <div>
@@ -76,4 +81,5 @@
             </div>
         </aside>
     </div>
+</div>
 `)
