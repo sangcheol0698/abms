@@ -33,7 +33,7 @@
         <dd class="tabular-nums">${headcount}명</dd>
     </dl>
 `, title = site.getName(), content = @`
-    @template.components.pageHeader(title = site.getName(), breadcrumb = @`
+    @template.components.pageHeader(readOnly = !ctx.can(PermissionCode.DEPARTMENT_WRITE) ? "사업장을 수정할 권한이 없습니다." : null, title = site.getName(), breadcrumb = @`
         <a href="/sites" class="hover:text-fg-neutral-muted">사업장</a>${Icons.of("chevron-right", "size-3")}<span>${site.getName()}</span>
     `, actions = @`
         @if(ctx.can(PermissionCode.DEPARTMENT_WRITE))

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.web.Htmx;
 import kr.co.abacus.abms.security.LoginUser;
 
@@ -64,6 +66,32 @@ public class AttachmentController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
                         .filename(attachment.getOriginalName(), StandardCharsets.UTF_8).build().toString())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(attachment.getSize())
+                .body(new InputStreamResource(download.content()));
+    }
+
+    /** 미리보기 모달: PDF 는 iframe, 이미지는 img 로 아래 inline 응답을 띄운다. */
+    @GetMapping("/{id}/view")
+    public String view(@AuthenticationPrincipal LoginUser user, @PathVariable Long id, Model model) {
+        model.addAttribute("attachment", attachmentService.preview(user, id));
+        return "attachment/preview";
+    }
+
+    /**
+     * PDF·이미지만 inline 으로 보낸다. 형식은 확장자로 정한 값으로 고정하고 nosniff 를 붙여
+     * 이름만 바꾼 HTML·SVG 가 페이지로 해석되지 않게 한다.
+     */
+    @GetMapping("/{id}/inline")
+    public ResponseEntity<InputStreamResource> inline(@AuthenticationPrincipal LoginUser user, @PathVariable Long id) {
+        AttachmentService.Download download = attachmentService.download(user, id);
+        Attachment attachment = download.attachment();
+        String type = attachment.previewType().orElseThrow(() -> new BusinessException("미리 볼 수 없는 형식입니다."));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                        .filename(attachment.getOriginalName(), StandardCharsets.UTF_8).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .cacheControl(CacheControl.noStore())
+                .contentType(MediaType.parseMediaType(type))
                 .contentLength(attachment.getSize())
                 .body(new InputStreamResource(download.content()));
     }

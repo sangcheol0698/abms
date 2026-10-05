@@ -11,6 +11,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     long countByAccountIdAndReadFalse(Long accountId);
 
+    boolean existsByAccountIdAndTitleAndLinkAndCreatedAtGreaterThanEqual(Long accountId, String title, String link, java.time.LocalDateTime since);
+
     List<Notification> findAllByAccountIdOrderByCreatedAtDesc(Long accountId, Pageable pageable);
 
     @Modifying

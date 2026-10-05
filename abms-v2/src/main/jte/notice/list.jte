@@ -6,11 +6,14 @@
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.common.web.ViewContext
 @import kr.co.abacus.abms.notice.Notice
+@import kr.co.abacus.abms.notice.NoticeImportance
+@import kr.co.abacus.abms.notice.NoticeSearch
 @param ViewContext ctx
 @param PageView<Notice> page
 @param Set<Long> readIds
 @param boolean canManage
 @param LocalDateTime now
+@param NoticeSearch search
 @template.layout.app(ctx = ctx, title = "공지사항", fill = true, content = @`
 <%-- 데스크톱: 페이지는 고정, 목록 본문만 스크롤 (fill 레이아웃). 태블릿·모바일은 문서 스크롤. --%>
 <div class="flex flex-col lg:h-full">
@@ -23,6 +26,33 @@
     </div>
 
     <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
+        <form class="view-bar shrink-0 sm:px-x6 lg:px-x8" action="/notices" method="get"
+              hx-get="/notices" hx-target="#notice-results" hx-select="#notice-results" hx-swap="outerHTML" hx-push-url="true"
+              hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], change from:input[type=checkbox], submit">
+            <div class="flex flex-wrap items-center gap-x1">
+                @if(canManage)
+                    <div class="flex flex-wrap items-center gap-x1" role="radiogroup" aria-label="게시 상태">
+                        <label class="chip"><input type="radio" name="status" value="" checked="${search.status() == null}">전체</label>
+                        @for(NoticeSearch.Status s : NoticeSearch.Status.values())
+                            <label class="chip"><input type="radio" name="status" value="${s.name()}" checked="${s == search.status()}">${s.label()}</label>
+                        @endfor
+                    </div>
+                @endif
+                <label class="chip"><input type="checkbox" name="unread" value="true" checked="${search.unreadOnly()}">안 읽은 공지만</label>
+            </div>
+            <div class="ml-auto flex flex-wrap items-center gap-x2">
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-fg-placeholder">${Icons.of("search", "size-3.5")}</span>
+                    <input type="search" name="q" value="${Ui.value(search.q())}" placeholder="제목·본문" class="input filter-input w-48 pl-x8" aria-label="검색어">
+                </div>
+                <select name="importance" class="select filter-select" aria-label="중요도">
+                    <option value="">전체 중요도</option>
+                    @for(NoticeImportance i : NoticeImportance.values())
+                        <option value="${i.name()}" selected="${i == search.importance()}">${i.label()}</option>
+                    @endfor
+                </select>
+            </div>
+        </form>
         <div class="list-head shrink-0 sm:px-x6 lg:px-x8" aria-hidden="true">
             <span class="w-2 shrink-0"></span>
             <span class="min-w-0 flex-1">제목</span>
@@ -32,9 +62,10 @@
             @endif
             <span class="w-24 shrink-0 text-right">게시일</span>
         </div>
+        <div id="notice-results" class="flex min-h-0 flex-1 flex-col">
         <div class="min-h-0 flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:overscroll-y-contain" data-fill-scroll>
             @if(page.isEmpty())
-                @template.components.empty(message = "등록된 공지가 없습니다.", icon = "megaphone")
+                @template.components.empty(message = search.isFiltered() ? "조건에 맞는 공지가 없습니다." : "등록된 공지가 없습니다.", icon = "megaphone")
             @else
                 @for(Notice n : page.content())
                     !{boolean unread = !readIds.contains(n.id());}
@@ -56,6 +87,7 @@
             @endif
         </div>
         <div class="shrink-0 bg-bg-layer-default sm:px-x2 lg:px-x4">@template.components.pagination(page = page, target = "body")</div>
+        </div>
     </div>
 </div>
 `)

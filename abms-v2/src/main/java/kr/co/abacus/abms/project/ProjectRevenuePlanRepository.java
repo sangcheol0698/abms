@@ -13,6 +13,8 @@ public interface ProjectRevenuePlanRepository extends JpaRepository<ProjectReven
 
     boolean existsByProjectIdAndSequence(Long projectId, int sequence);
 
+    List<ProjectRevenuePlan> findAllByIssuedFalseAndRevenueDateBetween(LocalDate from, LocalDate to);
+
     boolean existsByProjectIdAndIssuedTrue(Long projectId);
 
     List<ProjectRevenuePlan> findAllByProjectIdIn(java.util.Collection<Long> projectIds);

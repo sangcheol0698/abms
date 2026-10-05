@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.attachment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -11,14 +12,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.access.PermissionScope;
@@ -40,6 +47,21 @@ class AttachmentTest {
 
     @Autowired
     private AttachmentRepository attachmentRepository;
+
+    @Autowired
+    private AttachmentService attachmentService;
+
+    @Autowired
+    private AttachmentCleanupService cleanupService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private FileStorage fileStorage;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     private Project project;
     private Project hidden;
@@ -79,6 +101,20 @@ class AttachmentTest {
     }
 
     @Test
+    void 조회만_가능한_사용자도_프로젝트_상세를_열고_첨부는_볼_수만_있다() throws Exception {
+        mvc.perform(get("/projects/{id}", project.id()).with(user(member)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-read-only")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("id=\"attachment-file\""))));
+
+        // 쓰기 권한 확인이 트랜잭션을 rollback-only 로 남기면 실제 요청은 커밋 단계에서 500 이 된다.
+        assertThat(attachmentService.canWrite(member, AttachmentOwner.PROJECT, project.id())).isFalse();
+        TransactionStatus current = transactionManager.getTransaction(TransactionDefinition.withDefaults());
+        assertThat(current.isRollbackOnly()).isFalse();
+        transactionManager.rollback(current);
+    }
+
+    @Test
     void 허용하지_않는_형식은_거부한다() throws Exception {
         mvc.perform(multipart("/attachments").file(file("악성.html", "<script>")).param("ownerType", "PROJECT")
                         .param("ownerId", String.valueOf(project.id())).with(user(admin)).with(csrf()).header("HX-Request", "true"))
@@ -110,6 +146,55 @@ class AttachmentTest {
                 .andExpect(status().isOk());
 
         assertThat(attachmentRepository.findAllByOwnerTypeAndOwnerIdOrderByIdDesc(AttachmentOwner.PROJECT, project.id())).isEmpty();
+    }
+
+    private Attachment upload(String name, String contentType) throws Exception {
+        mvc.perform(multipart("/attachments").file(new MockMultipartFile("file", name, contentType, "본문".getBytes(StandardCharsets.UTF_8)))
+                .param("ownerType", "PROJECT").param("ownerId", String.valueOf(project.id())).with(user(admin)).with(csrf())
+                .header("HX-Request", "true"));
+        return attachmentRepository.findAllByOwnerTypeAndOwnerIdOrderByIdDesc(AttachmentOwner.PROJECT, project.id()).getFirst();
+    }
+
+    @Test
+    void PDF와_이미지는_확장자로_정한_형식으로_바로_보여준다() throws Exception {
+        Attachment pdf = upload("견적.pdf", "application/pdf");
+        Attachment disguised = upload("사진.png", "text/html");
+
+        mvc.perform(get("/attachments/{id}/view", pdf.id()).with(user(member)).header("HX-Request", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<iframe src=\"/attachments/" + pdf.id() + "/inline\"")));
+        mvc.perform(get("/attachments/{id}/inline", pdf.id()).with(user(member)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().string("Content-Disposition", containsString("inline")))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+        mvc.perform(get("/attachments/{id}/inline", disguised.id()).with(user(member)))
+                .andExpect(header().string("Content-Type", "image/png"));
+    }
+
+    @Test
+    void 미리_볼_수_없는_형식은_inline_으로_보내지_않는다() throws Exception {
+        Attachment zip = upload("자료.zip", "application/zip");
+
+        mvc.perform(get("/attachments/{id}/inline", zip.id()).with(user(admin))).andExpect(status().isUnprocessableContent());
+        mvc.perform(get("/attachments/{id}/view", zip.id()).with(user(admin)).header("HX-Request", "true"))
+                .andExpect(status().isUnprocessableContent());
+    }
+
+    @Test
+    void 보관_기간이_지난_삭제_첨부는_파일_본문까지_정리한다() throws Exception {
+        Attachment old = upload("오래된.pdf", "application/pdf");
+        Attachment recent = upload("최근.pdf", "application/pdf");
+        mvc.perform(post("/attachments/{id}/delete", old.id()).with(user(admin)).with(csrf()).header("HX-Request", "true"));
+        mvc.perform(post("/attachments/{id}/delete", recent.id()).with(user(admin)).with(csrf()).header("HX-Request", "true"));
+        jdbc.update("update tb_attachment set deleted_at = ? where id = ?", LocalDateTime.now().minusDays(40), old.id());
+
+        int purged = cleanupService.purge(LocalDateTime.now().minusDays(30));
+
+        assertThat(purged).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from tb_attachment where id in (?, ?)", Integer.class, old.id(), recent.id())).isEqualTo(1);
+        assertThatThrownBy(() -> fileStorage.open(old.getStoredPath()).close()).isInstanceOf(IOException.class);
+        fileStorage.open(recent.getStoredPath()).close();
     }
 
     @Test

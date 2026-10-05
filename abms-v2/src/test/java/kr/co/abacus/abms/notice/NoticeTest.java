@@ -88,9 +88,47 @@ class NoticeTest {
         notice("종료 공지", true, NoticeImportance.NORMAL, now.minusDays(3), now.minusDays(1));
 
         assertThat(noticeService.nextPopup(member.accountId(), Set.of())).isEmpty();
-        assertThat(noticeService.list(member, org.springframework.data.domain.PageRequest.of(0, 20)).getContent()).isEmpty();
-        assertThat(noticeService.list(admin, org.springframework.data.domain.PageRequest.of(0, 20)).getContent()).hasSize(2);
+        assertThat(noticeService.list(member, NoticeSearch.ALL, org.springframework.data.domain.PageRequest.of(0, 20)).getContent()).isEmpty();
+        assertThat(noticeService.list(admin, NoticeSearch.ALL, org.springframework.data.domain.PageRequest.of(0, 20)).getContent()).hasSize(2);
         assertThatThrownBy(() -> noticeService.open(member, scheduled.id())).isInstanceOf(kr.co.abacus.abms.common.domain.NotFoundException.class);
+    }
+
+    private java.util.List<String> titles(LoginUser user, NoticeSearch search) {
+        return noticeService.list(user, search, org.springframework.data.domain.PageRequest.of(0, 20)).getContent().stream()
+                .map(Notice::getTitle).toList();
+    }
+
+    @Test
+    void 제목_본문_검색과_중요도_안_읽음_상태로_거른다() {
+        LocalDateTime now = LocalDateTime.now();
+        Notice server = notice("서버 점검 안내", false, NoticeImportance.URGENT, null, null);
+        noticeService.create(admin, new NoticeInfo("복지 안내", "100% 지원되는 건강검진", NoticeImportance.NORMAL, false, false, null, null));
+        notice("예약 점검", false, NoticeImportance.NORMAL, now.plusDays(1), null);
+        noticeService.open(member, server.id());
+
+        assertThat(titles(member, new NoticeSearch("점검", null, null, false))).containsExactly("서버 점검 안내");
+        assertThat(titles(member, new NoticeSearch("건강", null, null, false))).containsExactly("복지 안내");
+        assertThat(titles(member, new NoticeSearch("100%", null, null, false))).containsExactly("복지 안내");
+        assertThat(titles(member, new NoticeSearch("0%지", null, null, false))).isEmpty();
+        assertThat(titles(member, new NoticeSearch(null, NoticeImportance.URGENT, null, false))).containsExactly("서버 점검 안내");
+        assertThat(titles(member, new NoticeSearch(null, null, null, true))).containsExactly("복지 안내");
+        // 일반 사용자는 상태 조건을 넘겨도 게시 중인 공지만 본다.
+        assertThat(titles(member, new NoticeSearch(null, null, NoticeSearch.Status.SCHEDULED, false))).doesNotContain("예약 점검").hasSize(2);
+        assertThat(titles(admin, new NoticeSearch("점검", null, NoticeSearch.Status.SCHEDULED, false))).containsExactly("예약 점검");
+    }
+
+    @Test
+    void 목록_화면은_검색_조건을_유지한다() throws Exception {
+        notice("서버 점검 안내", false, NoticeImportance.URGENT, null, null);
+        notice("복지 안내", false, NoticeImportance.NORMAL, null, null);
+
+        mvc.perform(get("/notices").param("q", "점검").with(user(member)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("서버 점검 안내")))
+                .andExpect(content().string(not(containsString("복지 안내"))))
+                .andExpect(content().string(containsString("value=\"점검\"")));
+        mvc.perform(get("/notices").param("q", "없는말").with(user(member)))
+                .andExpect(content().string(containsString("조건에 맞는 공지가 없습니다.")));
     }
 
     @Test

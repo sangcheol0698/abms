@@ -48,6 +48,8 @@
                         <button class="${Seed.iconButton("ghost", "xsmall")} text-fg-critical" aria-label="부서 삭제" title="부서 삭제">${Icons.of("trash", "size-4")}</button>
                     </form>
                 </div>
+            @else
+                @template.components.readOnly(reason = "부서를 수정할 권한이 없습니다.")
             @endif
         </div>
 

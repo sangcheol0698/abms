@@ -96,7 +96,7 @@
                 @endif
             </dl>
 `, title = employee.getName(), content = @`
-    @template.components.pageHeader(title = employee.getName(), leading = @`
+    @template.components.pageHeader(readOnly = !canWrite && !canEditOwn ? "이 직원 정보를 수정할 권한이 없습니다." : null, title = employee.getName(), leading = @`
         @template.components.avatar(photoUrl = employee.photoUrl(), name = employee.getName(), size = "size-12")
     `, breadcrumb = @`
         <a href="/employees" class="hover:text-fg-neutral-muted">직원</a>${Icons.of("chevron-right", "size-3")}<span>${employee.getName()}</span>

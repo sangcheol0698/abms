@@ -742,3 +742,8 @@
         }
     }
 }
+
+/* 첨부 미리보기처럼 넓은 모달 (data-modal-wide). #modal 의 max-w-lg 유틸리티를 이기도록 레이어 밖에 둔다. */
+#modal.modal-wide {
+    max-width: min(64rem, calc(100vw - 2rem));
+}

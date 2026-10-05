@@ -50,8 +50,13 @@ public class NoticeController {
     }
 
     @GetMapping
-    public String list(@AuthenticationPrincipal LoginUser user, @RequestParam(defaultValue = "0") int page, HttpServletRequest request, Model model) {
-        var result = noticeService.list(user, PageRequest.of(Math.max(page, 0), PAGE_SIZE));
+    public String list(@AuthenticationPrincipal LoginUser user, @RequestParam(defaultValue = "0") int page,
+                       @RequestParam(required = false) @Nullable String q, @RequestParam(required = false) @Nullable NoticeImportance importance,
+                       @RequestParam(required = false) NoticeSearch.@Nullable Status status, @RequestParam(defaultValue = "false") boolean unread,
+                       HttpServletRequest request, Model model) {
+        NoticeSearch search = new NoticeSearch(q, importance, status, unread);
+        var result = noticeService.list(user, search, PageRequest.of(Math.max(page, 0), PAGE_SIZE));
+        model.addAttribute("search", search);
         String baseUrl = UriComponentsBuilder.fromPath("/notices").query(request.getQueryString()).build().toUriString();
         model.addAttribute("page", PageView.of(result, baseUrl));
         model.addAttribute("readIds", noticeService.readIds(user.accountId(), result.getContent().stream().map(Notice::id).toList()));

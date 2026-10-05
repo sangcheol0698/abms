@@ -29,7 +29,7 @@
                 <input id="revenueDate" name="revenueDate" type="date" class="input" value="${Ui.value(form.revenueDate())}" required>
             `)
             @template.components.propRow(label = "금액 (원)", forId = "amount", required = true, error = errors.get("amount"), control = @`
-                <input id="amount" name="amount" type="number" min="1" class="input tabular-nums" value="${Ui.value(form.amount())}" required>
+                <input id="amount" name="amount" type="number" min="1" class="input tabular-nums" data-money="매출 금액" value="${Ui.value(form.amount())}" required>
             `)
             @template.components.propRow(label = "메모", forId = "memo", error = errors.get("memo"), control = @`
                 <input id="memo" name="memo" class="input" value="${Ui.value(form.memo())}" maxlength="255" placeholder="선택 입력">

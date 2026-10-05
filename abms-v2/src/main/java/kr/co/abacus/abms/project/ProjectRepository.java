@@ -15,6 +15,8 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpec
 
     boolean existsByPartyId(Long partyId);
 
+    List<Project> findAllByStatusAndPeriodEndDate(ProjectStatus status, LocalDate endDate);
+
     long countByPartyId(Long partyId);
 
     @Query("select p from Project p where p.leadDepartmentId in :departmentIds or p.id in :projectIds")

@@ -92,6 +92,9 @@ public class CommandPaletteController {
         if (user.has(PermissionCode.PROJECT_READ)) {
             commands.add(Command.go("프로젝트", "/projects", "folder", "G P", "project"));
         }
+        if (user.has(PermissionCode.PROJECT_WRITE)) {
+            commands.add(Command.go("인력 찾기", "/staffing", "search", null, "staffing 가용 인력 투입 여유 availability"));
+        }
         if (user.has(PermissionCode.PARTY_READ)) {
             commands.add(Command.go("협력사", "/parties", "briefcase", "G C", "party 고객사 파트너 company"));
         }

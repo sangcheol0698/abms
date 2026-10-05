@@ -58,14 +58,16 @@ public class AttachmentService {
         return attachmentRepository.findAllByOwnerTypeAndOwnerIdOrderByIdDesc(owner, ownerId);
     }
 
+    /**
+     * 예외로 판단하지 않는다. 트랜잭션 안에서 던진 AccessDeniedException 을 잡으면
+     * 트랜잭션이 rollback-only 로 남아 화면 전체가 실패한다.
+     */
     @Transactional(readOnly = true)
     public boolean canWrite(LoginUser user, AttachmentOwner owner, Long ownerId) {
-        try {
-            checkWrite(user, owner, ownerId);
-            return true;
-        } catch (AccessDeniedException e) {
-            return false;
-        }
+        return switch (owner) {
+            case PROJECT -> projectService.canWrite(user, projectService.get(ownerId));
+            case PARTY -> user.has(PermissionCode.PARTY_WRITE);
+        };
     }
 
     public Attachment upload(LoginUser user, AttachmentOwner owner, Long ownerId, @Nullable AttachmentCategory category,
@@ -104,7 +106,17 @@ public class AttachmentService {
         }
     }
 
-    /** 메타데이터만 소프트 삭제한다. (파일 본문은 복구를 위해 남김) */
+    @Transactional(readOnly = true)
+    public Attachment preview(LoginUser user, Long id) {
+        Attachment attachment = get(id);
+        checkRead(user, attachment.getOwnerType(), attachment.getOwnerId());
+        if (attachment.previewType().isEmpty()) {
+            throw new BusinessException("미리 볼 수 없는 형식입니다. 내려받아 확인하세요.");
+        }
+        return attachment;
+    }
+
+    /** 메타데이터만 소프트 삭제한다. 파일 본문은 보관 기간 뒤 {@link AttachmentCleanupService} 가 지운다. */
     public Attachment delete(LoginUser user, Long id) {
         Attachment attachment = get(id);
         checkWrite(user, attachment.getOwnerType(), attachment.getOwnerId());

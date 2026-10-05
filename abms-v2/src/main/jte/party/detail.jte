@@ -56,7 +56,7 @@
         @endif
     </div>
 `, title = party.getName(), content = @`
-    @template.components.pageHeader(title = party.getName(), breadcrumb = @`
+    @template.components.pageHeader(readOnly = !ctx.can(PermissionCode.PARTY_WRITE) ? "협력사를 수정할 권한이 없습니다." : null, title = party.getName(), breadcrumb = @`
         <a href="/parties" class="hover:text-fg-neutral-muted">협력사</a>${Icons.of("chevron-right", "size-3")}<span>${party.getName()}</span>
     `, actions = @`
         @if(ctx.can(PermissionCode.PARTY_WRITE))

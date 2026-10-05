@@ -18,7 +18,8 @@
 @if(section.rows().isEmpty())
     @template.components.empty(message = "투입된 인력이 없습니다.", icon = "users")
 @else
-    <div class="overflow-x-auto">
+    <%-- 넓은 본문: 표 / 좁은 본문(모바일): 카드 목록 --%>
+    <div class="hidden overflow-x-auto @2xl:block">
         <table class="table">
             <thead><tr><th>직원</th><th>소속</th><th>역할</th><th>투입 기간</th><th>상태</th>@if(section.canWrite())<th></th>@endif</tr></thead>
             <tbody class="divide-y divide-stroke-neutral-subtle">
@@ -41,26 +42,38 @@
                     </td>
                     <td>${row.assignment().getRole() == null ? "-" : row.assignment().getRole().label()}</td>
                     <td class="tabular-nums">${Ui.period(row.assignment().getPeriod().startDate(), row.assignment().getPeriod().endDate())}</td>
-                    <td>
-                        @if(row.assignment().isActiveOn(today))
-                            <span class="${Seed.badge("informative")}">투입 중</span>
-                        @elseif(row.assignment().getPeriod().startDate().isAfter(today))
-                            <span class="${Seed.badge("neutral", "outline")}">예정</span>
-                        @else
-                            <span class="${Seed.badge("neutral")}">종료</span>
-                        @endif
-                    </td>
+                    <td>@template.project.staffStatus(row = row, today = today)</td>
                     @if(section.canWrite())
-                        <td class="text-right">
-                            <div class="flex justify-end gap-1">
-                                <button class="${Seed.button("ghost", "xsmall")}" hx-get="/projects/${projectId}/assignments/${row.assignment().id()}/edit" hx-target="#modal-body" aria-label="수정">${Icons.of("pencil", "size-4")}</button>
-                                <button class="${Seed.button("ghost", "xsmall")} text-fg-critical" hx-post="/projects/${projectId}/assignments/${row.assignment().id()}/delete" hx-target="#staffing-section" hx-confirm="투입 정보를 삭제할까요?" aria-label="삭제">${Icons.of("trash", "size-4")}</button>
-                            </div>
-                        </td>
+                        <td class="text-right">@template.project.staffActions(row = row, projectId = projectId)</td>
                     @endif
                 </tr>
             @endfor
             </tbody>
         </table>
     </div>
+    <ul class="divide-y divide-stroke-neutral-subtle @2xl:hidden">
+        @for(StaffRow row : section.rows())
+            <li class="px-x4 py-x3">
+                <div class="flex items-center gap-x2">
+                    @if(row.employee() != null)
+                        <a href="/employees/${row.employee().id()}" class="flex min-w-0 items-center gap-x2">
+                            @template.components.avatar(photoUrl = row.employee().photoUrl(), name = row.employee().getName(), size = "size-7")
+                            <span class="truncate t4-bold">${row.employee().getName()}</span>
+                            <span class="t3-regular text-fg-placeholder">${row.employee().getPosition().label()}</span>
+                        </a>
+                    @else
+                        <span class="text-fg-placeholder">(삭제된 직원)</span>
+                    @endif
+                    <span class="ml-auto shrink-0">@template.project.staffStatus(row = row, today = today)</span>
+                </div>
+                <div class="mt-x1_5 flex flex-wrap items-center gap-x2 t3-regular text-fg-neutral-subtle">
+                    <span>${row.departmentName()}</span>
+                    @if(row.supporting())<span class="${Seed.badge("neutral", "outline")}">지원</span>@endif
+                    <span>· ${row.assignment().getRole() == null ? "-" : row.assignment().getRole().label()}</span>
+                    <span class="tabular-nums">· ${Ui.period(row.assignment().getPeriod().startDate(), row.assignment().getPeriod().endDate())}</span>
+                    @if(section.canWrite())<div class="ml-auto">@template.project.staffActions(row = row, projectId = projectId)</div>@endif
+                </div>
+            </li>
+        @endfor
+    </ul>
 @endif
