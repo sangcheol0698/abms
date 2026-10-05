@@ -99,8 +99,8 @@
                 </section>
             @endif
 
-            <div class="grid grid-cols-1 gap-6 @6xl:grid-cols-5">
-                <section class="min-w-0 @6xl:col-span-3">
+            <div class="grid grid-cols-1 gap-6 @7xl:grid-cols-5">
+                <section class="min-w-0 @7xl:col-span-3">
                     <h2 class="section-title">프로젝트별 손익 <span class="section-count">${report.projects().size()}</span></h2>
                     <div class="list-box overflow-x-auto">
                         <div class="min-w-[560px]">
@@ -117,7 +117,7 @@
                         </div>
                     </div>
                 </section>
-                <section class="min-w-0 @6xl:col-span-2">
+                <section class="min-w-0 @7xl:col-span-2">
                     <h2 class="section-title">부서별 손익 <span class="section-count">주관 부서</span></h2>
                     <div class="list-box overflow-x-auto">
                         <div class="min-w-[440px]">
