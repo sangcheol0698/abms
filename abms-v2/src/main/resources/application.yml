@@ -66,6 +66,11 @@ abms:
   map:
     kakao-js-key: ${KAKAO_JS_KEY:}
     kakao-rest-key: ${KAKAO_REST_KEY:}
+  attachment:
+    # 삭제한 첨부는 보관 기간이 지나면 매일 새벽 파일 본문까지 지운다.
+    cleanup-enabled: true
+    cleanup-cron: "0 30 3 * * *"
+    retention-days: 30
   reminder:
     # 매일 아침 청구일 임박·기한 경과·종료 임박 알림
     enabled: true

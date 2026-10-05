@@ -111,6 +111,7 @@
     document.body.addEventListener('htmx:afterSwap', (e) => {
         if (e.detail.target && e.detail.target.id === 'modal-body') {
             const dialog = modal();
+            if (dialog) dialog.classList.toggle('modal-wide', !!dialog.querySelector('[data-modal-wide]'));
             if (dialog && !dialog.open) dialog.showModal();
             const first = dialog && dialog.querySelector('[autofocus], input:not([type=hidden]), select, textarea');
             if (first) first.focus();

@@ -15,6 +15,8 @@ abms:
     kakao-rest-key: ""
   reminder:
     enabled: false
+  attachment:
+    cleanup-enabled: false
   summary:
     schedule-enabled: false
   demo:

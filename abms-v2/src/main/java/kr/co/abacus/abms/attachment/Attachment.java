@@ -104,6 +104,21 @@ public class Attachment extends BaseEntity implements Auditable {
         return dot < 0 ? "" : originalName.substring(dot + 1).toLowerCase(java.util.Locale.ROOT);
     }
 
+    /** 브라우저에서 바로 볼 수 있는 형식이면 그 MIME 형식. 업로드 때 받은 형식이 아니라 확장자로 정한다. */
+    public java.util.Optional<String> previewType() {
+        return java.util.Optional.ofNullable(switch (extension()) {
+            case "pdf" -> "application/pdf";
+            case "png" -> "image/png";
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "gif" -> "image/gif";
+            default -> null;
+        });
+    }
+
+    public boolean isImage() {
+        return previewType().map(t -> t.startsWith("image/")).orElse(false);
+    }
+
     @Override
     public String auditLabel() {
         return "첨부 파일";

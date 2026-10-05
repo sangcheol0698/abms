@@ -32,10 +32,16 @@
             @for(Attachment a : section.attachments())
                 <div class="list-row">
                     <span class="flex h-6 w-9 shrink-0 items-center justify-center rounded-r1_5 bg-bg-neutral-weak t2-bold uppercase text-fg-neutral-muted">${a.extension().isEmpty() ? "?" : a.extension()}</span>
-                    <a href="/attachments/${a.id()}/download" class="min-w-0 flex-1 truncate t4-medium hover:underline" title="${a.getOriginalName()} 내려받기" hx-boost="false">${a.getOriginalName()}</a>
+                    @if(a.previewType().isPresent())
+                        <a href="/attachments/${a.id()}/inline" class="min-w-0 flex-1 truncate t4-medium hover:underline" title="${a.getOriginalName()} 미리보기"
+                           hx-get="/attachments/${a.id()}/view" hx-target="#modal-body" hx-push-url="false">${a.getOriginalName()}</a>
+                    @else
+                        <a href="/attachments/${a.id()}/download" class="min-w-0 flex-1 truncate t4-medium hover:underline" title="${a.getOriginalName()} 내려받기" hx-boost="false">${a.getOriginalName()}</a>
+                    @endif
                     <span class="${Seed.badge("neutral", "outline")}">${a.getCategory().label()}</span>
                     <span class="list-cell-muted hidden w-16 text-right tabular-nums @xl:block">${a.sizeLabel()}</span>
                     <span class="list-cell-muted hidden w-24 text-right tabular-nums @2xl:block">${Ui.date(a.getCreatedAt() == null ? null : a.getCreatedAt().toLocalDate())}</span>
+                    <a href="/attachments/${a.id()}/download" hx-boost="false" class="${Seed.iconButton("ghost", "xsmall")}" aria-label="${a.getOriginalName()} 내려받기" title="내려받기">${Icons.of("download", "size-4")}</a>
                     @if(section.canWrite())
                         <button type="button" class="${Seed.iconButton("ghost", "xsmall")} text-fg-critical" aria-label="${a.getOriginalName()} 삭제" title="삭제"
                                 hx-post="/attachments/${a.id()}/delete" hx-target="#attachments" hx-swap="outerHTML" hx-confirm="${a.getOriginalName()} 파일을 삭제할까요?">${Icons.of("trash", "size-4")}</button>

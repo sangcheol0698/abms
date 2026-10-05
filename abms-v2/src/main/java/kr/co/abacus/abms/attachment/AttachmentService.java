@@ -104,7 +104,17 @@ public class AttachmentService {
         }
     }
 
-    /** 메타데이터만 소프트 삭제한다. (파일 본문은 복구를 위해 남김) */
+    @Transactional(readOnly = true)
+    public Attachment preview(LoginUser user, Long id) {
+        Attachment attachment = get(id);
+        checkRead(user, attachment.getOwnerType(), attachment.getOwnerId());
+        if (attachment.previewType().isEmpty()) {
+            throw new BusinessException("미리 볼 수 없는 형식입니다. 내려받아 확인하세요.");
+        }
+        return attachment;
+    }
+
+    /** 메타데이터만 소프트 삭제한다. 파일 본문은 보관 기간 뒤 {@link AttachmentCleanupService} 가 지운다. */
     public Attachment delete(LoginUser user, Long id) {
         Attachment attachment = get(id);
         checkWrite(user, attachment.getOwnerType(), attachment.getOwnerId());
