@@ -9,7 +9,7 @@
         @template.components.globalError(errors = errors)
         <div class="prop-form">
             @template.components.propRow(label = "연봉 (원)", forId = "annualSalary", required = true, error = errors.get("annualSalary"), control = @`
-                <input id="annualSalary" name="annualSalary" type="number" min="1" step="100000" class="input tabular-nums" required autofocus placeholder="60000000">
+                <input id="annualSalary" name="annualSalary" type="number" min="1" step="1" class="input tabular-nums" required autofocus placeholder="60000000">
             `)
             @template.components.propRow(label = "적용일", forId = "startDate", required = true, error = errors.get("startDate"), control = @`
                 <input id="startDate" name="startDate" type="date" class="input" required value="${java.time.LocalDate.now().withDayOfMonth(1).toString()}">
