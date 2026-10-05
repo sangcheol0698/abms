@@ -61,7 +61,7 @@ public class LoginUserService implements UserDetailsService {
                 employee.getDepartmentId(),
                 account.getUsername(),
                 employee.getName(),
-                employee.getAvatar(),
+                employee.photoUrl(),
                 account.getPassword(),
                 enabled,
                 account.isLocked(),

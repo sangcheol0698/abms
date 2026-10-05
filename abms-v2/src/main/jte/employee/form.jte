@@ -5,7 +5,6 @@
 @import kr.co.abacus.abms.common.web.Ui.SelectOption
 @import kr.co.abacus.abms.common.web.ViewContext
 @import kr.co.abacus.abms.employee.Employee
-@import kr.co.abacus.abms.employee.EmployeeAvatar
 @import kr.co.abacus.abms.employee.EmployeeForm
 @import kr.co.abacus.abms.employee.EmployeeGrade
 @import kr.co.abacus.abms.employee.EmployeePosition
@@ -60,10 +59,6 @@
                     @template.components.input(name = "skills", label = "보유 기술", value = Ui.value(form.skills()), errors = errors, placeholder = "Java, Spring Boot, AWS", help = "쉼표로 구분해 입력하세요. 중복은 자동으로 정리됩니다.")
                 </div>
             </div>
-        </section>
-        <section class="form-section">
-            <div><h2 class="form-section-title">아바타</h2><p class="form-section-desc">목록과 상세 화면에 표시됩니다.</p></div>
-            <div>@template.employee.avatarPicker(selected = form.avatar() == null ? EmployeeAvatar.SKY_GLOW : form.avatar(), initial = form.name() == null || form.name().isBlank() ? "?" : form.name().substring(0, 1))</div>
         </section>
         <section class="form-section">
             <div><h2 class="form-section-title">메모</h2><p class="form-section-desc">관리자만 볼 수 있는 참고 사항입니다.</p></div>

@@ -18,7 +18,6 @@ import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.department.DepartmentType;
 import kr.co.abacus.abms.employee.Employee;
-import kr.co.abacus.abms.employee.EmployeeAvatar;
 import kr.co.abacus.abms.employee.EmployeeGrade;
 import kr.co.abacus.abms.employee.EmployeePosition;
 import kr.co.abacus.abms.employee.EmployeeProfile;
@@ -69,7 +68,7 @@ public class AdminBootstrap implements ApplicationRunner {
                 .orElseGet(() -> departmentRepository.save(Department.create("ROOT", "본사", DepartmentType.COMPANY, null)));
         Employee admin = employeeRepository.save(Employee.create(new EmployeeProfile(company.id(), "관리자", adminEmail,
                 LocalDate.now(), LocalDate.of(1990, 1, 1), EmployeePosition.TEAM_LEADER, EmployeeType.FULL_TIME,
-                EmployeeGrade.SENIOR, EmployeeAvatar.COBALT_WAVE, "초기 관리자 계정")));
+                EmployeeGrade.SENIOR, "초기 관리자 계정")));
         Account account = accountRepository.save(Account.create(admin.id(), adminEmail, passwordEncoder.encode(adminPassword)));
         groupAssignmentRepository.save(AccountGroupAssignment.of(account.id(), PermissionGroup.ADMIN_GROUP_ID));
         log.info("초기 관리자 계정을 생성했습니다: {}", adminEmail);

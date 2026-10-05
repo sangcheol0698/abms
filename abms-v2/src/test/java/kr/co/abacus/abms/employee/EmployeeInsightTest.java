@@ -19,7 +19,7 @@ class EmployeeInsightTest {
 
     private final Employee employee = withId(Employee.create(new EmployeeProfile(1L, "개발자", "dev@test.co",
             LocalDate.of(2022, 3, 1), LocalDate.of(1990, 1, 1), EmployeePosition.SENIOR_ASSOCIATE, EmployeeType.FULL_TIME,
-            EmployeeGrade.MID_LEVEL, EmployeeAvatar.SKY_GLOW, null, null, LocalDate.of(2018, 3, 1), EmployeeJob.DEVELOPMENT,
+            EmployeeGrade.MID_LEVEL, null, null, LocalDate.of(2018, 3, 1), EmployeeJob.DEVELOPMENT,
             "Java", WorkType.CLIENT_SITE)), 20L);
 
     private final Project project = withId(Project.create("P-1", new Project.ProjectInfo(1L, 1L, "프로젝트", null,

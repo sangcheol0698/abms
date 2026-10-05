@@ -3,7 +3,6 @@
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.common.web.ViewContext
 @import kr.co.abacus.abms.employee.Employee
-@import kr.co.abacus.abms.employee.EmployeeAvatar
 @import kr.co.abacus.abms.employee.OwnProfileForm
 @import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
@@ -28,10 +27,6 @@
         <section class="form-section">
             <div><h2 class="form-section-title">보유 기술</h2><p class="form-section-desc">인력 배치와 검색에 쓰입니다.</p></div>
             <div>@template.components.input(name = "skills", label = "보유 기술", value = Ui.value(form.skills()), errors = errors, placeholder = "Java, Spring Boot, AWS", help = "쉼표로 구분해 입력하세요.")</div>
-        </section>
-        <section class="form-section">
-            <div><h2 class="form-section-title">아바타</h2></div>
-            <div>@template.employee.avatarPicker(selected = form.avatar() == null ? EmployeeAvatar.SKY_GLOW : form.avatar(), initial = employee.initial())</div>
         </section>
         <div class="form-actions">
             <a href="/employees/${employee.id()}" class="${Seed.button("neutralOutline")}">취소</a>

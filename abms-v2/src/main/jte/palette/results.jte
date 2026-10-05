@@ -23,7 +23,7 @@
     <p class="palette-group">직원</p>
     @for(Employee e : employees)
         <a href="/employees/${e.id()}" class="palette-item" data-palette-item>
-            @template.components.avatar(avatar = e.getAvatar(), initial = e.initial(), size = "size-5 text-[10px]")
+            @template.components.avatar(photoUrl = e.photoUrl(), name = e.getName(), size = "size-5")
             <span class="truncate">${e.getName()}</span>
             <span class="truncate t3-regular text-fg-neutral-subtle">${tree == null ? "" : tree.nameOf(e.getDepartmentId())} · ${e.getEmail()}</span>
         </a>

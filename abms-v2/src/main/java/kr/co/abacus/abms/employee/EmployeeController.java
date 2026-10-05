@@ -56,6 +56,7 @@ import kr.co.abacus.abms.security.LoginUser;
 @RequestMapping("/employees")
 public class EmployeeController {
     private final ProjectPlaceService placeService;
+    private final EmployeePhotoService photoService;
 
     private static final int PAGE_SIZE = 20;
 
@@ -69,7 +70,8 @@ public class EmployeeController {
     public EmployeeController(EmployeeService employeeService, DepartmentService departmentService,
                               ProjectAssignmentService assignmentService, ProjectRepository projectRepository,
                               AccountRepository accountRepository, AuditQueryService auditQueryService,
-                              ProjectPlaceService placeService) {
+                              ProjectPlaceService placeService, EmployeePhotoService photoService) {
+        this.photoService = photoService;
         this.auditQueryService = auditQueryService;
         this.placeService = placeService;
         this.employeeService = employeeService;
@@ -156,6 +158,7 @@ public class EmployeeController {
         model.addAttribute("positions", employeeService.positionHistories(id));
         model.addAttribute("canWrite", employeeService.canFullWrite(user, employee.getDepartmentId()));
         model.addAttribute("canEditOwn", employeeService.canWriteOwnProfile(user, employee));
+        model.addAttribute("canChangePhoto", photoService.canChange(user, employee));
         model.addAttribute("account", accountRepository.findByEmployeeId(id).orElse(null));
         model.addAttribute("auditHistory", auditQueryService.history("Employee", id, 30));
         return "employee/detail";
@@ -206,7 +209,7 @@ public class EmployeeController {
             model.addAttribute("errors", FormErrors.of(binding));
             return "employee/ownProfile";
         }
-        employeeService.updateOwnProfile(user, id, form.name(), form.birthDate(), form.avatar(), form.phone(), form.skills());
+        employeeService.updateOwnProfile(user, id, form.name(), form.birthDate(), form.phone(), form.skills());
         Toast.success(redirect, "내 정보를 수정했습니다.");
         return "redirect:/employees/" + id;
     }

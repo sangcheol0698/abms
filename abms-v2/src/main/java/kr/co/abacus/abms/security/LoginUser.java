@@ -16,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.access.PermissionScope;
-import kr.co.abacus.abms.employee.EmployeeAvatar;
 
 /**
  * 인증된 사용자. 로그인 시점의 권한(코드별 범위)을 보관한다.
@@ -32,21 +31,21 @@ public final class LoginUser implements UserDetails, CredentialsContainer, Seria
     private final Long departmentId;
     private final String username;
     private final String name;
-    private final EmployeeAvatar avatar;
+    private final @Nullable String photoUrl;
     private final boolean enabled;
     private final boolean locked;
     private final Map<PermissionCode, Set<PermissionScope>> grants;
     private @Nullable String password;
 
     public LoginUser(Long accountId, Long employeeId, Long departmentId, String username, String name,
-                     EmployeeAvatar avatar, @Nullable String password, boolean enabled, boolean locked,
+                     @Nullable String photoUrl, @Nullable String password, boolean enabled, boolean locked,
                      Map<PermissionCode, Set<PermissionScope>> grants) {
         this.accountId = accountId;
         this.employeeId = employeeId;
         this.departmentId = departmentId;
         this.username = username;
         this.name = name;
-        this.avatar = avatar;
+        this.photoUrl = photoUrl;
         this.password = password;
         this.enabled = enabled;
         this.locked = locked;
@@ -87,8 +86,14 @@ public final class LoginUser implements UserDetails, CredentialsContainer, Seria
         return name;
     }
 
-    public EmployeeAvatar avatar() {
-        return avatar;
+    /** 프로필 사진 주소 (없으면 null → 기본 아바타) */
+    public @Nullable String photoUrl() {
+        return photoUrl;
+    }
+
+    /** 본인 사진을 바꾼 뒤 세션의 로그인 정보를 갱신할 때 쓴다. */
+    public LoginUser withPhotoUrl(@Nullable String photoUrl) {
+        return new LoginUser(accountId, employeeId, departmentId, username, name, photoUrl, password, enabled, locked, grants);
     }
 
     public String initial() {

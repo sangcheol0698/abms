@@ -42,7 +42,9 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
     private static final Set<String> IGNORED = Set.of("createdAt", "updatedAt", "createdBy", "updatedBy", "deleted", "deletedAt",
             "deletedBy", "password", "passwordChangedAt", "loginFailCount", "lastLoginAt",
             // 첨부 파일: 저장 위치·형식·소유자는 내부 값이거나 상위 이력으로 드러난다.
-            "storedPath", "contentType", "ownerType", "ownerId");
+            "storedPath", "contentType", "ownerType", "ownerId",
+            // 프로필 사진은 경로 대신 별도 항목(photo)으로 기록한다.
+            "photoPath");
 
     private final EntityManagerFactory entityManagerFactory;
     private final JdbcTemplate jdbcTemplate;

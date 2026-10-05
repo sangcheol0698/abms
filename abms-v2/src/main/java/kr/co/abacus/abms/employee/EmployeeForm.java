@@ -27,7 +27,6 @@ public record EmployeeForm(
         @NotNull(message = "직급을 선택하세요.") @Nullable EmployeePosition position,
         @NotNull(message = "고용유형을 선택하세요.") @Nullable EmployeeType type,
         @NotNull(message = "등급을 선택하세요.") @Nullable EmployeeGrade grade,
-        @Nullable EmployeeAvatar avatar,
         @Size(max = 2000, message = "메모는 2000자 이하로 입력하세요.") @Nullable String memo,
         @Positive(message = "연봉은 0보다 커야 합니다.") @Nullable Long annualSalary,
         @Pattern(regexp = "^$|^[0-9+()\\- ]{7,20}$", message = "연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)") @Nullable String phone,
@@ -39,18 +38,18 @@ public record EmployeeForm(
 
     public static EmployeeForm empty() {
         return new EmployeeForm(null, null, null, LocalDate.now(), null, EmployeePosition.ASSOCIATE, EmployeeType.FULL_TIME,
-                EmployeeGrade.JUNIOR, EmployeeAvatar.SKY_GLOW, null, null, null, null, EmployeeJob.DEVELOPMENT, null, WorkType.OFFICE);
+                EmployeeGrade.JUNIOR, null, null, null, null, EmployeeJob.DEVELOPMENT, null, WorkType.OFFICE);
     }
 
     public static EmployeeForm of(Employee e) {
         return new EmployeeForm(e.getDepartmentId(), e.getName(), e.getEmail(), e.getJoinDate(), e.getBirthDate(),
-                e.getPosition(), e.getType(), e.getGrade(), e.getAvatar(), e.getMemo(), null,
+                e.getPosition(), e.getType(), e.getGrade(), e.getMemo(), null,
                 e.getPhone(), e.getCareerStartDate(), e.getJob(), e.getSkills(), e.getWorkType());
     }
 
     public EmployeeProfile toProfile() {
         return new EmployeeProfile(departmentId, name, email, joinDate, birthDate, position, type, grade,
-                avatar == null ? EmployeeAvatar.SKY_GLOW : avatar, memo, phone, careerStartDate, job, skills, workType);
+                memo, phone, careerStartDate, job, skills, workType);
     }
 
 }
