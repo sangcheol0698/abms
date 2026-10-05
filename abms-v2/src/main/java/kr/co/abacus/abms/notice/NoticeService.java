@@ -43,8 +43,10 @@ public class NoticeService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Notice> list(LoginUser user, Pageable pageable) {
-        return canManage(user) ? noticeRepository.findAllForManage(pageable) : noticeRepository.findPublished(LocalDateTime.now(), pageable);
+    public Page<Notice> list(LoginUser user, NoticeSearch search, Pageable pageable) {
+        NoticeSearch.Status status = canManage(user) ? search.status() : NoticeSearch.Status.ACTIVE;
+        return noticeRepository.search(LocalDateTime.now(), status == null ? null : status.name(), search.likePattern(), search.importance(),
+                search.unreadOnly() ? user.accountId() : null, pageable);
     }
 
     /** 공지 상세. 게시 기간 밖의 공지는 관리자만 볼 수 있다. 열면 읽음으로 표시한다. */
