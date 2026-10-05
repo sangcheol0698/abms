@@ -875,3 +875,26 @@
 #modal.modal-wide {
     max-width: min(64rem, calc(100vw - 2rem));
 }
+
+/* 형식 입력에서 숫자가 아닌 문자를 막았을 때 잠깐 흔들어 알린다. (forms.js) */
+.input.is-rejected {
+    animation: input-reject 0.3s ease;
+    box-shadow: inset 0 0 0 1px var(--seed-color-fg-critical), 0 0 0 3px var(--seed-color-bg-critical-weak);
+}
+
+@keyframes input-reject {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .input.is-rejected {
+        animation-duration: 0.3s;
+        animation-name: input-reject-fade;
+    }
+    @keyframes input-reject-fade {
+        from { opacity: 1; }
+        to { opacity: 1; }
+    }
+}

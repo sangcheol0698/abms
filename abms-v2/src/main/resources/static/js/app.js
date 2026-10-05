@@ -770,7 +770,7 @@ window.abmsChat = {
     }
 
     function render(input) {
-        const text = korean(input.value.trim());
+        const text = korean(input.value.replace(/,/g, '').trim());
         hint(input).textContent = text ? '= ' + text : '';
     }
 
@@ -783,7 +783,7 @@ window.abmsChat = {
     document.addEventListener('submit', (e) => {
         const form = e.target;
         for (const input of form.querySelectorAll('[data-money]')) {
-            const raw = input.value.trim();
+            const raw = input.value.replace(/,/g, '').trim();
             if (!/^\d+$/.test(raw)) continue;
             const value = BigInt(raw);
             const reasons = [];

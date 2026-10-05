@@ -5,6 +5,9 @@
 //   보이는 칸은 이름 없는 텍스트 입력, 실제 값(ISO)은 옆의 hidden 입력이 보낸다.
 // - 검색 선택(select[data-combobox]): 입력해서 고르는 목록. 초성(ㅎㄱㄷ)으로도 찾는다.
 // - 파일 놓기([data-file-drop]): 끌어다 놓거나 눌러서 고르고, 고른 파일 이름·크기를 보여준다.
+// - 형식 입력(마스크): 숫자만 받고 구분자는 자동으로 넣는다.
+//   날짜(2026-03-05), 전화번호(010-1234-5678 · 02-123-4567 · 1588-1234), 사업자등록번호(000-00-00000),
+//   우편번호(5자리), 금액(1,000,000 — 서버에는 숫자만 보낸다).
 // - 숫자 입력: 포커스 중 마우스 휠로 값이 바뀌지 않게 한다.
 // ---------------------------------------------------------------------
 (function () {
@@ -77,6 +80,133 @@
     document.body.addEventListener('htmx:beforeHistorySave', () => closeFloating());
 
     // ---------------------------------------------------------------------
+    // 형식 입력(마스크)
+    // ---------------------------------------------------------------------
+    const digitsOf = (text) => text.replace(/\D/g, '');
+
+    /** 숫자 외 입력은 막고, 입력할 때마다 format(숫자) 로 다시 그린다. 커서는 같은 숫자 뒤에 둔다. */
+    function mask(input, format, validate) {
+        input.inputMode = 'numeric';
+        input.autocomplete = 'off';
+
+        function reformat() {
+            const value = input.value;
+            const atEnd = input.selectionStart === null || input.selectionStart >= value.length;
+            const before = digitsOf(value.slice(0, input.selectionStart ?? value.length)).length;
+            const formatted = format(digitsOf(value));
+            if (formatted !== value) {
+                input.value = formatted;
+                if (document.activeElement === input) {
+                    let pos = formatted.length;
+                    if (!atEnd) {
+                        let seen = 0;
+                        pos = 0;
+                        while (pos < formatted.length && seen < before) {
+                            if (/\d/.test(formatted[pos])) seen++;
+                            pos++;
+                        }
+                    }
+                    input.setSelectionRange(pos, pos);
+                }
+            }
+            if (validate) input.setCustomValidity(input.value ? validate(digitsOf(input.value)) : '');
+        }
+
+        input.addEventListener('beforeinput', (e) => {
+            if (e.inputType === 'insertText' && e.data && /\D/.test(e.data)) {
+                e.preventDefault();
+                // 구분자(- . / : 공백 등)는 자동으로 들어가므로 조용히 무시하고, 문자만 알린다.
+                if (/^[-./: ()+,]$/.test(e.data)) return;
+                input.classList.remove('is-rejected');
+                void input.offsetWidth;
+                input.classList.add('is-rejected');
+            }
+        });
+        input.addEventListener('animationend', () => input.classList.remove('is-rejected'));
+        input.addEventListener('input', reformat);
+        // 구분자 바로 뒤에서 지우면 구분자 대신 그 앞 숫자를 지운다. (구분자는 다시 생기므로)
+        input.addEventListener('keydown', (e) => {
+            const {selectionStart: start, selectionEnd: end, value} = input;
+            if (start === null || start !== end) return;
+            if (e.key === 'Backspace' && start > 0 && /\D/.test(value[start - 1])) input.setSelectionRange(start - 1, start - 1);
+            if (e.key === 'Delete' && start < value.length && /\D/.test(value[start])) input.setSelectionRange(start + 1, start + 1);
+        });
+        reformat();
+    }
+
+    /** 월·일·시·분 앞자리가 클 수 없는 숫자면 0 을 붙인다. (3 → 03월) */
+    function dateDigits(digits, parts) {
+        const out = [digits.slice(0, 4)];
+        let rest = digits.slice(4);
+        for (const firstMax of parts) {
+            if (!rest) break;
+            if (+rest[0] > firstMax) {
+                out.push('0' + rest[0]);
+                rest = rest.slice(1);
+            } else {
+                out.push(rest.slice(0, 2));
+                rest = rest.slice(2);
+            }
+        }
+        return out;
+    }
+
+    const FORMATS = {
+        date: (d) => dateDigits(d, [1, 3]).join('-'),
+        month: (d) => dateDigits(d, [1]).join('-'),
+        'datetime-local': (d) => {
+            const [y, mo, day, h, mi] = dateDigits(d, [1, 3, 2, 5]);
+            return [y, mo, day].filter((x) => x !== undefined).join('-') + (h !== undefined ? ' ' + h : '') + (mi !== undefined ? ':' + mi : '');
+        },
+        phone: (d) => {
+            if (d.startsWith('02')) {
+                d = d.slice(0, 10);
+                if (d.length <= 2) return d;
+                if (d.length <= 5) return `02-${d.slice(2)}`;
+                return d.length <= 9 ? `02-${d.slice(2, 5)}-${d.slice(5)}` : `02-${d.slice(2, 6)}-${d.slice(6)}`;
+            }
+            if (/^1[5-9]/.test(d)) {
+                d = d.slice(0, 8);
+                return d.length <= 4 ? d : `${d.slice(0, 4)}-${d.slice(4)}`;
+            }
+            d = d.slice(0, 11);
+            if (d.length <= 3) return d;
+            if (d.length <= 6) return `${d.slice(0, 3)}-${d.slice(3)}`;
+            return d.length <= 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+        },
+        business: (d) => {
+            d = d.slice(0, 10);
+            return [d.slice(0, 3), d.slice(3, 5), d.slice(5)].filter(Boolean).join('-');
+        },
+        zip: (d) => d.slice(0, 5),
+        money: (d) => d.replace(/^0+(?=\d)/, '').slice(0, 15).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    };
+
+    const VALIDATORS = {
+        phone: (d) => {
+            const ok = d.startsWith('02') ? d.length >= 9 : /^1[5-9]/.test(d) ? d.length === 8 : d.length >= 10;
+            return ok ? '' : '전화번호를 끝까지 입력하세요.';
+        },
+        business: (d) => (d.length === 10 ? '' : '사업자등록번호 10자리를 입력하세요.')
+    };
+
+    /** 금액: 보이는 칸은 쉼표, 실제 값(숫자)은 hidden 이 보낸다. */
+    function moneyField(input) {
+        const hidden = el('input');
+        hidden.type = 'hidden';
+        hidden.name = input.name;
+        if (input.getAttribute('form')) hidden.setAttribute('form', input.getAttribute('form'));
+        input.after(hidden);
+        input.removeAttribute('name');
+        ['min', 'max', 'step'].forEach((a) => input.removeAttribute(a));
+        input.type = 'text';
+        const sync = () => (hidden.value = digitsOf(input.value));
+        input.addEventListener('input', sync);
+        mask(input, FORMATS.money);
+        sync();
+    }
+
+    // ---------------------------------------------------------------------
     // 날짜·월·일시
     // ---------------------------------------------------------------------
     const KINDS = {
@@ -146,8 +276,6 @@
         input.type = 'text';
         input.value = initial;
         input.dataset.dateKind = kind;
-        input.autocomplete = 'off';
-        input.inputMode = 'numeric';
         input.spellcheck = false;
         input.placeholder = spec.placeholder;
         input.setAttribute('aria-haspopup', 'dialog');
@@ -202,6 +330,7 @@
             input.dispatchEvent(new Event('change', {bubbles: true}));
         }
 
+        mask(input, FORMATS[kind]);
         input.addEventListener('input', sync);
         input.addEventListener('change', () => {
             const parsed = sync();
@@ -634,6 +763,15 @@
     function enhance(root) {
         root.querySelectorAll('input[type=date], input[type=month], input[type=datetime-local]').forEach((input) => {
             if (!input.hasAttribute('data-native')) dateField(input);
+        });
+        root.querySelectorAll('input[data-money]:not([data-ready]), input[data-mask=money]:not([data-ready])').forEach((input) => {
+            input.dataset.ready = 'true';
+            moneyField(input);
+        });
+        root.querySelectorAll('input[type=tel]:not([data-ready]), input[data-mask]:not([data-ready])').forEach((input) => {
+            input.dataset.ready = 'true';
+            const kind = input.dataset.mask || 'phone';
+            mask(input, FORMATS[kind], VALIDATORS[kind]);
         });
         root.querySelectorAll('select[data-combobox]:not([data-ready])').forEach((select) => {
             select.dataset.ready = 'true';
