@@ -18,7 +18,7 @@
         <label for="address" class="label">주소</label>
         <div class="flex gap-x2">
             <input id="zipCode" name="zipCode" value="${Ui.value(zipCode)}" placeholder="우편번호" aria-label="우편번호" maxlength="7"
-                   class="input w-24 shrink-0 tabular-nums ${errors.has("zipCode") ? "input-error" : ""}" autocomplete="off" data-address-zip>
+                   class="input w-24 shrink-0 tabular-nums ${errors.has("zipCode") ? "input-error" : ""}" autocomplete="off" data-mask="zip" data-address-zip>
             <input id="address" name="address" value="${Ui.value(address)}" placeholder="도로명 또는 지번 주소" maxlength="255"
                    class="input min-w-0 flex-1 ${errors.has("address") ? "input-error" : ""}" autocomplete="off" data-address-main>
             <button type="button" class="${Seed.button("neutralOutline")} shrink-0" data-address-search>${Icons.of("search", "size-4")} 주소 검색</button>

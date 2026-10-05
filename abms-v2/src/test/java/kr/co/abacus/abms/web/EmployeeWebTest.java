@@ -102,6 +102,16 @@ class EmployeeWebTest {
     }
 
     @Test
+    void 등록_폼은_부서를_검색_선택으로_고르고_날짜는_ISO_값으로_보낸다() throws Exception {
+        mvc.perform(get("/employees/new").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-combobox")))
+                .andExpect(content().string(containsString("name=\"birthDate\" type=\"date\"")))
+                .andExpect(content().string(containsString("/js/forms.js")))
+                .andExpect(content().string(containsString("/js/confirm.js")));
+    }
+
+    @Test
     void 쓰기_권한이_없으면_등록_화면에_접근할_수_없다() throws Exception {
         LoginUser reader = Fixtures.user(me, Fixtures.grants(PermissionScope.ALL, PermissionCode.EMPLOYEE_READ));
         mvc.perform(get("/employees/new").with(user(reader))).andExpect(status().isForbidden());

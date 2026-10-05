@@ -46,7 +46,7 @@
             <div><h2 class="form-section-title">계약</h2><p class="form-section-desc">손익은 투입 직원의 소속 부서가 아니라 <b>주관 부서</b>에 귀속됩니다.</p></div>
             <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 @template.components.select(name = "partyId", label = "협력사", options = partyOptions, value = Ui.value(form.partyId()), errors = errors, required = true, emptyLabel = "협력사 선택")
-                @template.components.select(name = "leadDepartmentId", label = "주관 부서", options = departmentOptions, value = Ui.value(form.leadDepartmentId()), errors = errors, required = true, emptyLabel = "주관 부서 선택")
+                @template.components.select(name = "leadDepartmentId", label = "주관 부서", options = departmentOptions, searchable = true, value = Ui.value(form.leadDepartmentId()), errors = errors, required = true, emptyLabel = "주관 부서 선택")
                 @template.components.input(name = "contractAmount", label = "계약금액 (원)", value = Ui.value(form.contractAmount()), errors = errors, money = true, type = "number", required = true)
             </div>
         </section>

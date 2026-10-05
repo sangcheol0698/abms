@@ -42,7 +42,7 @@
                 <textarea id="description" name="description" rows="2" maxlength="500" class="textarea" placeholder="부서의 역할과 담당 업무">${Ui.value(form.description())}</textarea>
             `)
             @template.components.propRow(label = "상위 부서", forId = "parentId", error = errors.get("parentId"), control = @`
-                <select id="parentId" name="parentId" class="select">
+                <select id="parentId" name="parentId" class="select" data-combobox>
                     <option value="">(최상위)</option>
                     @for(SelectOption o : departmentOptions)
                         <option value="${o.value()}" selected="${o.value().equals(Ui.value(form.parentId()))}">${o.label()}</option>

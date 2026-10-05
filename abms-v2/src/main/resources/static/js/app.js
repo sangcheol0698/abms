@@ -770,7 +770,7 @@ window.abmsChat = {
     }
 
     function render(input) {
-        const text = korean(input.value.trim());
+        const text = korean(input.value.replace(/,/g, '').trim());
         hint(input).textContent = text ? '= ' + text : '';
     }
 
@@ -779,24 +779,39 @@ window.abmsChat = {
     });
     htmx.onLoad((root) => root.querySelectorAll && root.querySelectorAll('[data-money]').forEach((input) => { if (input.value) render(input); }));
 
-    // htmx 보다 먼저(캡처 단계) 확인해, 취소하면 요청을 보내지 않는다.
+    // htmx 보다 먼저(캡처 단계) 막고 확인창(confirm.js)으로 묻는다. 확인하면 같은 제출 버튼으로 다시 제출한다.
     document.addEventListener('submit', (e) => {
         const form = e.target;
+        if (form.dataset.moneyConfirmed) {
+            delete form.dataset.moneyConfirmed;
+            return;
+        }
         for (const input of form.querySelectorAll('[data-money]')) {
-            const raw = input.value.trim();
+            const raw = input.value.replace(/,/g, '').trim();
             if (!/^\d+$/.test(raw)) continue;
             const value = BigInt(raw);
             const reasons = [];
-            if (input.dataset.moneyMax && value > BigInt(input.dataset.moneyMax)) reasons.push(korean(input.dataset.moneyMax) + '을 넘습니다');
+            if (input.dataset.moneyMax && value > BigInt(input.dataset.moneyMax)) reasons.push('상한(' + korean(input.dataset.moneyMax) + ')을 넘습니다.');
             if (input.dataset.moneyPrev && BigInt(input.dataset.moneyPrev) > 0n && value > BigInt(input.dataset.moneyPrev) * 3n) {
-                reasons.push('이전 값(' + korean(input.dataset.moneyPrev) + ')의 3배를 넘습니다');
+                reasons.push('이전 값(' + korean(input.dataset.moneyPrev) + ')의 3배를 넘습니다.');
             }
-            if (reasons.length && !window.confirm(input.dataset.money + ' ' + korean(raw) + ' — ' + reasons.join(', ') + '.\n입력한 금액이 맞나요?')) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                input.focus();
-                return;
-            }
+            if (!reasons.length) continue;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const submitter = e.submitter;
+            window.abmsConfirm({
+                title: input.dataset.money + ' ' + korean(raw) + '이 맞나요?',
+                description: Number(raw).toLocaleString('ko-KR') + '원\n' + reasons.join('\n') + '\n자릿수를 잘못 입력하지 않았는지 확인하세요.',
+                confirmLabel: '이 금액으로 저장'
+            }).then((yes) => {
+                if (yes) {
+                    form.dataset.moneyConfirmed = 'true';
+                    form.requestSubmit(submitter && submitter.form === form ? submitter : undefined);
+                } else {
+                    input.focus();
+                }
+            });
+            return;
         }
     }, true);
 })();

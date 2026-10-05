@@ -10,7 +10,7 @@
     @template.components.modal(title = "부서장 지정", context = department.getName(), hint = "저장", body = @`
         <div class="prop-form">
             @template.components.propRow(label = "부서장", forId = "leaderEmployeeId", control = @`
-                <select id="leaderEmployeeId" name="leaderEmployeeId" class="select" autofocus>
+                <select id="leaderEmployeeId" name="leaderEmployeeId" class="select" data-combobox autofocus>
                     <option value="">(지정 안 함)</option>
                     @for(Employee e : employees)
                         <option value="${e.id()}" selected="${e.id().equals(department.getLeaderEmployeeId())}">${e.getName()} · ${e.getPosition().label()} · ${tree.nameOf(e.getDepartmentId())}</option>

@@ -17,7 +17,7 @@
             <div class="prop-form">
                 @template.components.propRow(label = "직원", forId = "employeeId", required = true, error = errors.get("employeeId"),
                     help = "발급된 계정에는 기본 권한 그룹(일반 사용자)이 할당됩니다.", control = @`
-                    <select id="employeeId" name="employeeId" class="select" required autofocus>
+                    <select id="employeeId" name="employeeId" class="select" data-combobox required autofocus>
                         <option value="">직원 선택</option>
                         @for(Employee e : candidates)
                             <option value="${e.id()}" selected="${e.id().equals(selected)}">${e.getName()} · ${tree.nameOf(e.getDepartmentId())} · ${e.getEmail()}</option>

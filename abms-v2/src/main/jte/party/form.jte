@@ -23,7 +23,7 @@
             <div class="grid grid-cols-1 gap-x4 @xl:grid-cols-2">
                 <div class="@xl:col-span-2">@template.components.input(name = "name", label = "협력사명", value = Ui.value(form.name()), errors = errors, required = true)</div>
                 @template.components.select(name = "partyType", label = "구분", options = Ui.options(PartyType.values()), value = Ui.value(form.partyType()), errors = errors, required = true)
-                @template.components.input(name = "businessNumber", label = "사업자등록번호", value = Ui.value(form.businessNumber()), errors = errors, placeholder = "000-00-00000")
+                @template.components.input(name = "businessNumber", label = "사업자등록번호", value = Ui.value(form.businessNumber()), errors = errors, placeholder = "000-00-00000", mask = "business")
                 @template.components.input(name = "ceoName", label = "대표자", value = Ui.value(form.ceoName()), errors = errors)
                 @template.components.input(name = "industry", label = "업종", value = Ui.value(form.industry()), errors = errors, placeholder = "예: 금융, 통신, 이커머스")
             </div>

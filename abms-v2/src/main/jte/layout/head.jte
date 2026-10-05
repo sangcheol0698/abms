@@ -28,3 +28,5 @@
 <script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/webjars/marked/lib/marked.umd.js"></script>
 <script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/js/app.js"></script>
 <script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/js/map.js"></script>
+<script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/js/forms.js"></script>
+<script nonce="${kr.co.abacus.abms.common.web.Csp.nonce()}" defer src="/js/confirm.js"></script>

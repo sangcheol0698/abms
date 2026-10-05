@@ -35,14 +35,26 @@
             <header class="flex h-12 shrink-0 items-center justify-between gap-x3 border-b border-stroke-neutral-subtle px-x4 sm:px-x6">
                 <div class="flex min-w-0 items-center gap-x2">
                     <span class="flex size-6 items-center justify-center rounded-r1_5 bg-gradient-highlight-magic-[135deg] text-white">${Icons.of("sparkles", "size-3.5")}</span>
-                    <h2 class="truncate t4-bold text-fg-neutral">${current == null ? "새 대화" : current.getTitle()}</h2>
+                    @if(current == null)
+                        <h2 class="truncate t4-bold text-fg-neutral">새 대화</h2>
+                    @else
+                        <%-- 제목을 누르면 그 자리에서 고친다 (Enter 저장 · Esc 취소 · 바깥을 누르면 바뀐 경우 저장) --%>
+                        <div class="min-w-0" data-inline-edit>
+                            <button type="button" class="inline-title" data-inline-edit-start title="제목 변경">
+                                <h2 class="truncate t4-bold text-fg-neutral">${current.getTitle()}</h2>
+                            </button>
+                            <form method="post" action="/assistant/${current.id()}/rename" hidden data-inline-edit-form>${kr.co.abacus.abms.common.web.Csrf.field()}
+                                <input name="title" value="${current.getTitle()}" maxlength="40" required aria-label="대화 제목" class="input filter-input w-64 max-w-full t4-bold" autocomplete="off">
+                            </form>
+                        </div>
+                    @endif
                 </div>
                 @if(current != null)
                     <div class="flex items-center gap-x0_5">
                         <form method="post" action="/assistant/${current.id()}/favorite">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="${Seed.iconButton("ghost", "xsmall")}" aria-label="즐겨찾기" title="즐겨찾기">${Icons.of("star", current.isFavorite() ? "size-4 fill-palette-yellow-400 text-palette-yellow-400" : "size-4")}</button>
                         </form>
-                        <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" hx-post="/assistant/${current.id()}/rename" hx-prompt="새 대화 제목" aria-label="제목 변경" title="제목 변경">${Icons.of("pencil", "size-4")}</button>
+                        <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" data-inline-edit-start aria-label="제목 변경" title="제목 변경">${Icons.of("pencil", "size-4")}</button>
                         <form method="post" action="/assistant/${current.id()}/delete" hx-confirm="이 대화를 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                             <button class="${Seed.iconButton("ghost", "xsmall")} text-fg-critical" aria-label="삭제" title="삭제">${Icons.of("trash", "size-4")}</button>
                         </form>
