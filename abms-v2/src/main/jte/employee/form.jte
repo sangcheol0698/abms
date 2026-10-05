@@ -33,7 +33,7 @@
                 @template.components.input(name = "name", label = "이름", value = Ui.value(form.name()), errors = errors, required = true)
                 @template.components.input(name = "email", label = "이메일", value = Ui.value(form.email()), errors = errors, type = "email", required = true)
                 @template.components.input(name = "birthDate", label = "생년월일", value = Ui.value(form.birthDate()), errors = errors, type = "date", required = true)
-                @template.components.select(name = "departmentId", label = "부서", options = departmentOptions, value = Ui.value(form.departmentId()), errors = errors, required = true, emptyLabel = "부서 선택")
+                @template.components.select(name = "departmentId", label = "부서", options = departmentOptions, searchable = true, value = Ui.value(form.departmentId()), errors = errors, required = true, emptyLabel = "부서 선택")
                 @template.components.input(name = "phone", label = "연락처", value = Ui.value(form.phone()), errors = errors, type = "tel", placeholder = "010-0000-0000")
             </div>
         </section>

@@ -37,7 +37,7 @@
             `)
             @template.components.propRow(label = "대표 담당자", forId = "primary", control = @`
                 <label class="inline-flex items-center gap-x2 t4-regular text-fg-neutral-muted">
-                    <input id="primary" name="primary" type="checkbox" value="true" checked="${Boolean.TRUE.equals(form.primary())}"> 목록에 표시되는 대표 연락 창구
+                    <input id="primary" name="primary" type="checkbox" class="checkbox" value="true" checked="${Boolean.TRUE.equals(form.primary())}"> 목록에 표시되는 대표 연락 창구
                 </label>
             `)
         </div>

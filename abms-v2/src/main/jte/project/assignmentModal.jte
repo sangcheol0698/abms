@@ -20,7 +20,7 @@
         @template.components.globalError(errors = errors)
         <div class="prop-form">
             @template.components.propRow(label = "직원", forId = "employeeId", required = true, error = errors.get("employeeId"), control = @`
-                <select id="employeeId" name="employeeId" class="select" required autofocus>
+                <select id="employeeId" name="employeeId" class="select" data-combobox required autofocus>
                     <option value="">직원 선택</option>
                     @for(Employee e : employees)
                         <option value="${e.id()}" selected="${e.id().equals(form.employeeId())}">${e.getName()} · ${e.getPosition().label()} · ${tree.nameOf(e.getDepartmentId())}${e.getType() != kr.co.abacus.abms.employee.EmployeeType.FULL_TIME ? " (" + e.getType().label() + ")" : ""}</option>

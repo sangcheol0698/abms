@@ -115,6 +115,14 @@ class AttachmentTest {
     }
 
     @Test
+    void 쓰기_권한이_있으면_파일_놓기_영역에서_첨부한다() throws Exception {
+        mvc.perform(get("/projects/{id}", project.id()).with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-file-drop")))
+                .andExpect(content().string(containsString("data-max-size=\"" + AttachmentService.MAX_SIZE + "\"")));
+    }
+
+    @Test
     void 허용하지_않는_형식은_거부한다() throws Exception {
         mvc.perform(multipart("/attachments").file(file("악성.html", "<script>")).param("ownerType", "PROJECT")
                         .param("ownerId", String.valueOf(project.id())).with(user(admin)).with(csrf()).header("HX-Request", "true"))

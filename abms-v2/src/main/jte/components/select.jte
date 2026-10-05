@@ -8,9 +8,10 @@
 @param FormErrors errors
 @param boolean required = false
 @param String emptyLabel = null
+@param boolean searchable = false
 <div>
     <label for="${name}" class="label">${label}@if(required)<span class="required-mark">*</span>@endif</label>
-    <select id="${name}" name="${name}" required="${required}" class="select ${errors.has(name) ? "input-error" : ""}">
+    <select id="${name}" name="${name}" required="${required}" data-combobox="${searchable}" class="select ${errors.has(name) ? "input-error" : ""}">
         @if(emptyLabel != null)
             <option value="">${emptyLabel}</option>
         @endif

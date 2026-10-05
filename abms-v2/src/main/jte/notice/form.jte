@@ -36,12 +36,12 @@
                 @template.components.select(name = "importance", label = "중요도", options = Ui.options(NoticeImportance.values()), value = Ui.value(form.importance()), errors = errors, required = true)
                 <div class="flex flex-col justify-end gap-x2">
                     <label class="inline-flex items-center gap-x2 t4-regular text-fg-neutral">
-                        <input type="checkbox" name="pinned" value="true" checked="${Boolean.TRUE.equals(form.pinned())}"> 목록 상단에 고정
+                        <input type="checkbox" name="pinned" value="true" class="checkbox" checked="${Boolean.TRUE.equals(form.pinned())}"> 목록 상단에 고정
                     </label>
                 </div>
                 <div class="rounded-r3 border border-stroke-neutral-subtle p-x4 @xl:col-span-2">
                     <label class="flex items-start gap-x2">
-                        <input type="checkbox" name="popup" value="true" class="mt-0.5" checked="${Boolean.TRUE.equals(form.popup())}">
+                        <input type="checkbox" name="popup" value="true" class="checkbox mt-0.5" checked="${Boolean.TRUE.equals(form.popup())}">
                         <span>
                             <span class="block t4-medium text-fg-neutral">안내 팝업으로 제공</span>
                             <span class="mt-x0_5 block t3-regular text-fg-neutral-subtle">게시 기간 동안 사용자가 화면을 열면 팝업으로 보여줍니다. 사용자는 '닫기', '오늘 하루 보지 않기', '다시 보지 않기'를 고를 수 있습니다.</span>

@@ -1,6 +1,7 @@
 @import kr.co.abacus.abms.attachment.Attachment
 @import kr.co.abacus.abms.attachment.AttachmentCategory
 @import kr.co.abacus.abms.attachment.AttachmentSection
+@import kr.co.abacus.abms.attachment.AttachmentService
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.Seed
 @import kr.co.abacus.abms.common.web.Ui
@@ -9,21 +10,25 @@
     <h2 class="section-title">첨부 파일 <span class="section-count">${section.attachments().size()}</span></h2>
     <div class="list-box">
         @if(section.canWrite())
-            <form class="flex flex-wrap items-center gap-x2 border-b border-stroke-neutral-subtle px-x4 py-x2_5" hx-post="/attachments"
+            <form class="flex flex-wrap items-center gap-x2 border-b border-stroke-neutral-subtle px-x4 py-x3" hx-post="/attachments"
                   hx-encoding="multipart/form-data" hx-target="#attachments" hx-swap="outerHTML">
                 <input type="hidden" name="ownerType" value="${section.ownerType().name()}">
                 <input type="hidden" name="ownerId" value="${section.ownerId()}">
+                <label class="file-drop" data-file-drop data-max-size="${AttachmentService.MAX_SIZE}">
+                    <input id="attachment-file" type="file" name="file" required accept="${section.accept()}" class="sr-only">
+                    <span class="flex size-8 shrink-0 items-center justify-center rounded-r2 bg-bg-neutral-weak text-fg-neutral-muted">${Icons.of("upload", "size-4")}</span>
+                    <span class="flex min-w-0 flex-1 flex-wrap items-center gap-x-x2 gap-y-x0_5" data-file-drop-text>
+                        <span class="t4-medium text-fg-neutral">파일을 끌어다 놓거나 눌러서 선택</span>
+                        <span>문서·이미지·zip, 20MB 이하</span>
+                    </span>
+                </label>
                 <label for="attachment-category" class="sr-only">분류</label>
                 <select id="attachment-category" name="category" class="select filter-select w-28">
                     @for(var o : Ui.options(AttachmentCategory.values()))
                         <option value="${o.value()}">${o.label()}</option>
                     @endfor
                 </select>
-                <label for="attachment-file" class="sr-only">파일</label>
-                <input id="attachment-file" type="file" name="file" required accept="${section.accept()}"
-                       class="min-w-0 flex-1 t3-regular text-fg-neutral-muted file:mr-x2 file:cursor-pointer file:rounded-r2 file:border file:border-stroke-neutral-weak file:bg-bg-layer-default file:px-x2 file:py-x1 file:t3-medium file:text-fg-neutral">
-                <button type="submit" class="${Seed.button("neutralOutline", "small")}">${Icons.of("plus", "size-4")} 첨부</button>
-                <p class="w-full t2-regular text-fg-neutral-subtle">문서·이미지·zip, 20MB 이하</p>
+                <button type="submit" class="${Seed.button("neutralOutline", "small")} ml-auto">${Icons.of("plus", "size-4")} 첨부</button>
             </form>
         @endif
         @if(section.attachments().isEmpty())

@@ -40,7 +40,7 @@
             <div class="flex items-center rounded-r2 border border-stroke-neutral-subtle">
                 <a href="/summary?month=${report.month().minusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>
                 <form action="/summary" method="get" class="border-x border-stroke-neutral-subtle">
-                    <input type="month" name="month" value="${month}" class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" data-submit-on-change aria-label="조회 월">
+                    <input type="month" name="month" value="${month}" required class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" data-submit-on-change aria-label="조회 월">
                 </form>
                 <a href="/summary?month=${report.month().plusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-l-none" aria-label="다음 달" title="다음 달">${Icons.of("chevron-right", "size-4")}</a>
             </div>
