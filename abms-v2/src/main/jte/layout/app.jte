@@ -98,6 +98,9 @@
                 @if(ctx.can(PermissionCode.PROJECT_READ))
                     @template.layout.navItem(href = "/projects", label = "프로젝트", icon = "folder", current = ctx.active("/projects"))
                 @endif
+                @if(ctx.can(PermissionCode.PROJECT_WRITE))
+                    @template.layout.navItem(href = "/staffing", label = "인력 찾기", icon = "search", current = ctx.active("/staffing"))
+                @endif
                 @if(ctx.can(PermissionCode.PARTY_READ))
                     @template.layout.navItem(href = "/parties", label = "협력사", icon = "briefcase", current = ctx.active("/parties"))
                 @endif
