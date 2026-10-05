@@ -22,7 +22,7 @@
 
     <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
         <div class="z-10 shrink-0 bg-bg-layer-default md:sticky md:top-(--sticky-top)">
-        <form class="view-bar sm:px-x6 lg:px-x8" action="/staffing" method="get">
+        <form class="view-bar sm:px-x6 lg:px-x8" action="/staffing" method="get" hx-push-url="true">
             <div class="flex flex-wrap items-center gap-x2">
                 <input type="month" name="from" value="${criteria.from().toString()}" class="input filter-input w-36" aria-label="시작 월">
                 <span class="t3-regular text-fg-neutral-subtle">~</span>
