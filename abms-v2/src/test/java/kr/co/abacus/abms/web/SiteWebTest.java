@@ -169,7 +169,7 @@ class SiteWebTest {
 
         mvc.perform(get("/sites").with(user(admin)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("부서 2곳")))
+                .andExpect(content().string(containsString(">2곳<")))
                 .andExpect(content().string(containsString("3명")));
     }
 

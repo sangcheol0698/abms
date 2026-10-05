@@ -100,6 +100,21 @@ class AuditLogTest {
     @Autowired
     private org.springframework.test.web.servlet.MockMvc mvc;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @Test
+    void 이전_규칙으로_남은_내부_속성도_화면에는_보이지_않는다() {
+        Party party = fixtures.party("이전이력상사");
+        entityManager.flush();
+        Long logId = jdbcTemplate.queryForObject("select max(id) from tb_audit_log where entity_type = 'Party' and entity_id = ?", Long.class, party.id());
+        jdbcTemplate.update("insert into tb_audit_log_change (audit_log_id, field, before_value, after_value) values (?, 'contentType', null, 'application/pdf')", logId);
+
+        AuditEntry entry = auditQueryService.history("Party", party.id(), 10).getFirst();
+
+        assertThat(entry.changes()).extracting(AuditEntry.Change::field).doesNotContain("contentType");
+    }
+
     @Test
     void 첨부_파일_이력은_표시명을_쓰고_내부_값은_남기지_않는다() {
         Project project = fixtures.project(team, 100_000_000, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
