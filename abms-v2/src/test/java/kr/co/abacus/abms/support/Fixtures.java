@@ -29,7 +29,10 @@ import kr.co.abacus.abms.party.Party;
 import kr.co.abacus.abms.party.PartyRepository;
 import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.project.ProjectAssignment;
+import kr.co.abacus.abms.project.ExpenseCategory;
 import kr.co.abacus.abms.project.ProjectAssignmentRepository;
+import kr.co.abacus.abms.project.ProjectExpense;
+import kr.co.abacus.abms.project.ProjectExpenseRepository;
 import kr.co.abacus.abms.project.ProjectRepository;
 import kr.co.abacus.abms.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.project.ProjectRevenuePlanRepository;
@@ -52,10 +55,12 @@ public class Fixtures {
     private final ProjectRepository projectRepository;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
     private final ProjectAssignmentRepository assignmentRepository;
+    private final ProjectExpenseRepository expenseRepository;
 
     public Fixtures(DepartmentRepository departmentRepository, EmployeeRepository employeeRepository,
                     PayrollRepository payrollRepository, PartyRepository partyRepository, ProjectRepository projectRepository,
-                    ProjectRevenuePlanRepository revenuePlanRepository, ProjectAssignmentRepository assignmentRepository) {
+                    ProjectRevenuePlanRepository revenuePlanRepository, ProjectAssignmentRepository assignmentRepository,
+                    ProjectExpenseRepository expenseRepository) {
         this.departmentRepository = departmentRepository;
         this.employeeRepository = employeeRepository;
         this.payrollRepository = payrollRepository;
@@ -63,6 +68,7 @@ public class Fixtures {
         this.projectRepository = projectRepository;
         this.revenuePlanRepository = revenuePlanRepository;
         this.assignmentRepository = assignmentRepository;
+        this.expenseRepository = expenseRepository;
     }
 
     public Department department(String name, @Nullable Department parent) {
@@ -110,6 +116,15 @@ public class Fixtures {
 
     public ProjectAssignment assign(Project project, Employee employee, LocalDate start, @Nullable LocalDate end) {
         return assignmentRepository.save(ProjectAssignment.assign(project, employee, null, new Period(start, end)));
+    }
+
+    public ProjectAssignment assign(Project project, Employee employee, LocalDate start, @Nullable LocalDate end, int allocationRate) {
+        return assignmentRepository.save(ProjectAssignment.assign(project, employee, null, new Period(start, end), allocationRate));
+    }
+
+    public ProjectExpense expense(Project project, LocalDate date, long amount) {
+        return expenseRepository.save(ProjectExpense.create(project.id(),
+                new ProjectExpense.ExpenseInfo(date, ExpenseCategory.OUTSOURCING, Money.wons(amount), "외주 용역", null)));
     }
 
     public static LoginUser user(Employee employee, Map<PermissionCode, Set<PermissionScope>> grants) {

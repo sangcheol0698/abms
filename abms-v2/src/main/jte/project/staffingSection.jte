@@ -9,7 +9,7 @@
 <div class="card-header">
     <div>
         <h2 class="card-title">투입 인력 <span class="ml-1 text-xs font-normal text-fg-neutral-subtle">현재 ${section.activeCount()}명 / 전체 ${section.rows().size()}건</span></h2>
-        <p class="mt-0.5 text-xs text-fg-neutral-subtle">비용 = 직원 월 원가 × 투입 M/M (월 총일수 대비 투입일수)</p>
+        <p class="mt-0.5 text-xs text-fg-neutral-subtle">인건비 = 직원 월 원가 × 투입 M/M (월 총일수 대비 투입일수 × 투입률)</p>
     </div>
     @if(section.canWrite())
         <button type="button" class="${Seed.button("neutralWeak", "xsmall")}" hx-get="/projects/${projectId}/assignments/new" hx-target="#modal-body">${Icons.of("plus", "size-4")} 인력 투입</button>
@@ -21,7 +21,7 @@
     <%-- 넓은 본문: 표 / 좁은 본문(모바일): 카드 목록 --%>
     <div class="hidden overflow-x-auto @2xl:block">
         <table class="table">
-            <thead><tr><th>직원</th><th>소속</th><th>역할</th><th>투입 기간</th><th>상태</th>@if(section.canWrite())<th></th>@endif</tr></thead>
+            <thead><tr><th>직원</th><th>소속</th><th>역할</th><th class="num">투입률</th><th>투입 기간</th><th>상태</th>@if(section.canWrite())<th></th>@endif</tr></thead>
             <tbody class="divide-y divide-stroke-neutral-subtle">
             @for(StaffRow row : section.rows())
                 <tr>
@@ -41,6 +41,7 @@
                         @if(row.supporting())<span class="${Seed.badge("neutral", "outline")} ml-x1">지원</span>@endif
                     </td>
                     <td>${row.assignment().getRole() == null ? "-" : row.assignment().getRole().label()}</td>
+                    <td class="num">${row.assignment().getAllocationRate()}%</td>
                     <td class="tabular-nums">${Ui.period(row.assignment().getPeriod().startDate(), row.assignment().getPeriod().endDate())}</td>
                     <td>@template.project.staffStatus(row = row, today = today)</td>
                     @if(section.canWrite())
@@ -70,6 +71,7 @@
                     <span>${row.departmentName()}</span>
                     @if(row.supporting())<span class="${Seed.badge("neutral", "outline")}">지원</span>@endif
                     <span>· ${row.assignment().getRole() == null ? "-" : row.assignment().getRole().label()}</span>
+                    <span class="tabular-nums">· ${row.assignment().getAllocationRate()}%</span>
                     <span class="tabular-nums">· ${Ui.period(row.assignment().getPeriod().startDate(), row.assignment().getPeriod().endDate())}</span>
                     @if(section.canWrite())<div class="ml-auto">@template.project.staffActions(row = row, projectId = projectId)</div>@endif
                 </div>

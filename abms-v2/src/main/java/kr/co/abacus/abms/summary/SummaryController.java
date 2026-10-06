@@ -32,12 +32,13 @@ public class SummaryController {
     }
 
     @GetMapping
-    public String index(@AuthenticationPrincipal LoginUser user, @RequestParam(required = false) @Nullable String month, Model model) {
+    public String index(@AuthenticationPrincipal LoginUser user, @RequestParam(required = false) @Nullable String month,
+                        @RequestParam(required = false) @Nullable String basis, Model model) {
         if (!user.has(PermissionCode.DASHBOARD_READ)) {
             throw new AccessDeniedException("손익 조회 권한이 없습니다.");
         }
         YearMonth target = parse(month);
-        model.addAttribute("report", queryService.monthReport(user, target));
+        model.addAttribute("report", queryService.monthReport(user, target, RevenueBasis.parse(basis)));
         model.addAttribute("canManage", user.has(PermissionCode.SUMMARY_MANAGE));
         model.addAttribute("isPast", target.isBefore(YearMonth.now()));
         return "summary/index";

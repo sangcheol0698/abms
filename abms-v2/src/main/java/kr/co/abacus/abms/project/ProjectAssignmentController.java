@@ -49,7 +49,8 @@ public class ProjectAssignmentController {
         Project project = projectService.getForWrite(user, projectId);
         LocalDate start = LocalDate.now().isBefore(project.getPeriod().startDate()) || LocalDate.now().isAfter(endOf(project))
                 ? project.getPeriod().startDate() : LocalDate.now();
-        return modal(model, project, null, new AssignmentForm(null, AssignmentRole.DEV, start, project.getPeriod().endDate()), FormErrors.none());
+        return modal(model, project, null, new AssignmentForm(null, AssignmentRole.DEV, start, project.getPeriod().endDate(),
+                ProjectAssignment.FULL_RATE), FormErrors.none());
     }
 
     @PostMapping
@@ -58,7 +59,7 @@ public class ProjectAssignmentController {
         Project project = projectService.getForWrite(user, projectId);
         try {
             form.validate();
-            assignmentService.assign(user, projectId, form.employeeId(), form.role(), form.startDate(), form.endDate());
+            assignmentService.assign(user, projectId, form.employeeId(), form.role(), form.startDate(), form.endDate(), form.rate());
         } catch (BusinessException e) {
             response.setStatus(422);
             return modal(model, project, null, form, FormErrors.global(e.getMessage()));
@@ -70,8 +71,8 @@ public class ProjectAssignmentController {
     public String editModal(@AuthenticationPrincipal LoginUser user, @PathVariable Long projectId, @PathVariable Long assignmentId, Model model) {
         Project project = projectService.getForWrite(user, projectId);
         ProjectAssignment a = assignmentService.get(projectId, assignmentId);
-        return modal(model, project, a, new AssignmentForm(a.getEmployeeId(), a.getRole(), a.getPeriod().startDate(), a.getPeriod().endDate()),
-                FormErrors.none());
+        return modal(model, project, a, new AssignmentForm(a.getEmployeeId(), a.getRole(), a.getPeriod().startDate(), a.getPeriod().endDate(),
+                a.getAllocationRate()), FormErrors.none());
     }
 
     @PostMapping("/{assignmentId}")
@@ -81,7 +82,8 @@ public class ProjectAssignmentController {
         ProjectAssignment assignment = assignmentService.get(projectId, assignmentId);
         try {
             form.validate();
-            assignmentService.update(user, projectId, assignmentId, form.employeeId(), form.role(), form.startDate(), form.endDate());
+            assignmentService.update(user, projectId, assignmentId, form.employeeId(), form.role(), form.startDate(), form.endDate(),
+                    form.rate());
         } catch (BusinessException e) {
             response.setStatus(422);
             return modal(model, project, assignment, form, FormErrors.global(e.getMessage()));
@@ -127,8 +129,14 @@ public class ProjectAssignmentController {
             @Nullable Long employeeId,
             @Nullable AssignmentRole role,
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Nullable LocalDate startDate,
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Nullable LocalDate endDate
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Nullable LocalDate endDate,
+            @Nullable Integer allocationRate
     ) {
+
+        /** 투입률 미입력은 전담(100%) */
+        public int rate() {
+            return allocationRate == null ? ProjectAssignment.FULL_RATE : allocationRate;
+        }
 
         void validate() {
             if (employeeId == null) {

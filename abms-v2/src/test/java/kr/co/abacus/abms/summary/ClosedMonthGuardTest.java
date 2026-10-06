@@ -19,9 +19,13 @@ import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.employee.EmployeeService;
 import kr.co.abacus.abms.employee.EmployeeType;
 import kr.co.abacus.abms.project.AssignmentRole;
+import kr.co.abacus.abms.project.ExpenseCategory;
 import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.project.ProjectAssignment;
 import kr.co.abacus.abms.project.ProjectAssignmentService;
+import kr.co.abacus.abms.project.ProjectExpense;
+import kr.co.abacus.abms.project.ProjectExpense.ExpenseInfo;
+import kr.co.abacus.abms.project.ProjectExpenseService;
 import kr.co.abacus.abms.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.project.ProjectRevenuePlan.RevenuePlanInfo;
 import kr.co.abacus.abms.project.ProjectRevenueService;
@@ -46,6 +50,9 @@ class ClosedMonthGuardTest {
 
     @Autowired
     private ProjectAssignmentService assignmentService;
+
+    @Autowired
+    private ProjectExpenseService expenseService;
 
     @Autowired
     private EmployeeService employeeService;
@@ -106,6 +113,40 @@ class ClosedMonthGuardTest {
     }
 
     @Test
+    void 마감_월의_직접비는_등록_삭제하거나_금액_귀속일을_바꿀_수_없다() {
+        ProjectExpense feb = fixtures.expense(project, LocalDate.of(2026, 2, 10), 1_000_000);
+        ProjectExpense march = fixtures.expense(project, LocalDate.of(2026, 3, 10), 1_000_000);
+        closingService.close(admin, FEB);
+
+        assertThatThrownBy(() -> expenseService.add(admin, project.id(),
+                new ExpenseInfo(LocalDate.of(2026, 2, 20), ExpenseCategory.TRAVEL, Money.wons(500_000), "출장", null)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("직접비 등록");
+        assertThatThrownBy(() -> expenseService.update(admin, project.id(), feb.id(),
+                new ExpenseInfo(LocalDate.of(2026, 2, 10), ExpenseCategory.OUTSOURCING, Money.wons(2_000_000), "외주 용역", null)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("직접비 수정");
+        assertThatThrownBy(() -> expenseService.update(admin, project.id(), march.id(),
+                new ExpenseInfo(LocalDate.of(2026, 2, 28), ExpenseCategory.OUTSOURCING, Money.wons(1_000_000), "외주 용역", null)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("직접비 수정");
+        assertThatThrownBy(() -> expenseService.delete(admin, project.id(), feb.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("직접비 삭제");
+        // 분류·내용만 바꾸는 것은 집계 금액에 영향이 없으므로 허용한다.
+        expenseService.update(admin, project.id(), feb.id(),
+                new ExpenseInfo(LocalDate.of(2026, 2, 10), ExpenseCategory.EQUIPMENT, Money.wons(1_000_000), "장비 임차", "메모"));
+        assertThat(feb.getCategory()).isEqualTo(ExpenseCategory.EQUIPMENT);
+    }
+
+    @Test
+    void 마감_월에_걸친_투입의_투입률은_바꿀_수_없다() {
+        ProjectAssignment assignment = assignmentService.assign(admin, project.id(), member.id(), AssignmentRole.DEV,
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30));
+        closingService.close(admin, FEB);
+
+        assertThatThrownBy(() -> assignmentService.update(admin, project.id(), assignment.id(), member.id(), AssignmentRole.DEV,
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30), 50))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("투입 수정");
+    }
+
+    @Test
     void 마감_월에_걸친_투입은_마감_월의_MM이_바뀌는_변경만_막는다() {
         ProjectAssignment assignment = assignmentService.assign(admin, project.id(), member.id(), AssignmentRole.DEV,
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30));
@@ -113,14 +154,14 @@ class ClosedMonthGuardTest {
 
         // 마감 이후 구간(종료일)과 역할 변경은 허용
         assignmentService.update(admin, project.id(), assignment.id(), member.id(), AssignmentRole.PL,
-                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 9, 30));
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 9, 30), 100);
         assertThat(assignment.getPeriod().endDate()).isEqualTo(LocalDate.of(2026, 9, 30));
 
         assertThatThrownBy(() -> assignmentService.update(admin, project.id(), assignment.id(), member.id(), AssignmentRole.PL,
-                LocalDate.of(2026, 2, 15), LocalDate.of(2026, 9, 30)))
+                LocalDate.of(2026, 2, 15), LocalDate.of(2026, 9, 30), 100))
                 .isInstanceOf(BusinessException.class).hasMessageContaining("투입 수정");
         assertThatThrownBy(() -> assignmentService.update(admin, project.id(), assignment.id(), member.id(), AssignmentRole.PL,
-                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31)))
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), 100))
                 .isInstanceOf(BusinessException.class);
         assertThatThrownBy(() -> assignmentService.delete(admin, project.id(), assignment.id()))
                 .isInstanceOf(BusinessException.class).hasMessageContaining("투입 삭제");

@@ -14,6 +14,12 @@ import kr.co.abacus.abms.common.domain.Money;
 /**
  * 프로젝트별 월 손익 집계. (프로젝트, 월) 당 한 행이며 재집계 시 갱신된다.
  * 프로젝트명/주관 부서는 집계 시점의 값을 스냅샷으로 보관한다.
+ * <ul>
+ *     <li>매출(revenueAmount): 청구 기준 — 발행된 매출 계획</li>
+ *     <li>관리 매출(managedRevenueAmount): 진행 기준 — 계약금액의 기간 일할</li>
+ *     <li>비용(costAmount) = 인건비(laborCostAmount) + 직접비(directCostAmount)</li>
+ *     <li>이익(profitAmount)은 청구 기준 매출로 계산한다.</li>
+ * </ul>
  */
 @Entity
 @Table(name = "tb_monthly_revenue_summary")
@@ -44,7 +50,16 @@ public class MonthlyRevenueSummary extends BaseEntity {
     private Money revenueAmount;
 
     @Column(nullable = false)
+    private Money managedRevenueAmount;
+
+    @Column(nullable = false)
     private Money costAmount;
+
+    @Column(nullable = false)
+    private Money laborCostAmount;
+
+    @Column(nullable = false)
+    private Money directCostAmount;
 
     @Column(nullable = false)
     private Money profitAmount;
@@ -66,6 +81,9 @@ public class MonthlyRevenueSummary extends BaseEntity {
         this.leadDepartmentId = s.leadDepartmentId();
         this.leadDepartmentName = s.leadDepartmentName();
         this.revenueAmount = s.revenue();
+        this.managedRevenueAmount = s.managedRevenue();
+        this.laborCostAmount = s.laborCost();
+        this.directCostAmount = s.directCost();
         this.costAmount = s.cost();
         this.profitAmount = s.revenue().minus(s.cost());
         this.calculatedAt = LocalDateTime.now();
@@ -103,12 +121,30 @@ public class MonthlyRevenueSummary extends BaseEntity {
         return revenueAmount;
     }
 
+    public Money getManagedRevenueAmount() {
+        return managedRevenueAmount;
+    }
+
     public Money getCostAmount() {
         return costAmount;
     }
 
+    public Money getLaborCostAmount() {
+        return laborCostAmount;
+    }
+
+    public Money getDirectCostAmount() {
+        return directCostAmount;
+    }
+
+    /** 청구 기준 이익 */
     public Money getProfitAmount() {
         return profitAmount;
+    }
+
+    /** 진행 기준 이익 */
+    public Money getManagedProfitAmount() {
+        return managedRevenueAmount.minus(costAmount);
     }
 
     public record Snapshot(
@@ -117,8 +153,15 @@ public class MonthlyRevenueSummary extends BaseEntity {
             Long leadDepartmentId,
             String leadDepartmentName,
             Money revenue,
-            Money cost
+            Money managedRevenue,
+            Money laborCost,
+            Money directCost
     ) {
+
+        public Money cost() {
+            return laborCost.plus(directCost);
+        }
+
     }
 
 }

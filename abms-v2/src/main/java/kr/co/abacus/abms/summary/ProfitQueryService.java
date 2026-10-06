@@ -45,6 +45,10 @@ public class ProfitQueryService {
     }
 
     public MonthReport monthReport(LoginUser user, YearMonth month) {
+        return monthReport(user, month, RevenueBasis.BILLING);
+    }
+
+    public MonthReport monthReport(LoginUser user, YearMonth month, RevenueBasis basis) {
         DataScope scope = scope(user);
         LocalDate monthStart = month.atDay(1);
         List<MonthlyRevenueSummary> summaries = summaryRepository.findAllByTargetMonthOrderByProjectNameAsc(monthStart).stream()
@@ -52,7 +56,7 @@ public class ProfitQueryService {
                 .toList();
 
         List<ProfitRow> projects = summaries.stream()
-                .map(s -> new ProfitRow(s.getProjectId(), s.getProjectCode(), s.getProjectName(), s.getRevenueAmount(), s.getCostAmount()))
+                .map(s -> new ProfitRow(s.getProjectId(), s.getProjectCode(), s.getProjectName(), basis.revenueOf(s), s.getCostAmount()))
                 .sorted(Comparator.comparing(ProfitRow::profit).reversed())
                 .toList();
         LocalDateTime calculatedAt = summaries.stream().map(MonthlyRevenueSummary::getCalculatedAt)
@@ -62,7 +66,8 @@ public class ProfitQueryService {
             calculatedAt = companyCost.getCalculatedAt();
         }
         boolean closed = closingRepository.existsByTargetMonthAndClosedTrue(monthStart);
-        return new MonthReport(month, closed, calculatedAt, projects, byDepartment(summaries), companyCost);
+        Money directCost = summaries.stream().map(MonthlyRevenueSummary::getDirectCostAmount).reduce(Money.ZERO, Money::plus);
+        return new MonthReport(month, basis, closed, calculatedAt, projects, byDepartment(summaries, basis), directCost, companyCost);
     }
 
     /** 연간 월별 추이 (1~12월) */
@@ -83,12 +88,12 @@ public class ProfitQueryService {
 
     /** 연간 프로젝트별 누적 손익 */
     public List<ProfitRow> yearlyProjects(LoginUser user, int year) {
-        return aggregate(yearSummaries(user, year), s -> s.getProjectId(), s -> s.getProjectCode(), s -> s.getProjectName());
+        return aggregate(yearSummaries(user, year), RevenueBasis.BILLING, s -> s.getProjectId(), s -> s.getProjectCode(), s -> s.getProjectName());
     }
 
     /** 연간 부서별 누적 손익 */
     public List<ProfitRow> yearlyDepartments(LoginUser user, int year) {
-        return byDepartment(yearSummaries(user, year));
+        return byDepartment(yearSummaries(user, year), RevenueBasis.BILLING);
     }
 
     public List<CompanyMonthlyCostSummary> companyCosts(int year) {
@@ -126,11 +131,11 @@ public class ProfitQueryService {
                 .toList();
     }
 
-    private static List<ProfitRow> byDepartment(List<MonthlyRevenueSummary> summaries) {
-        return aggregate(summaries, MonthlyRevenueSummary::getLeadDepartmentId, s -> "", MonthlyRevenueSummary::getLeadDepartmentName);
+    private static List<ProfitRow> byDepartment(List<MonthlyRevenueSummary> summaries, RevenueBasis basis) {
+        return aggregate(summaries, basis, MonthlyRevenueSummary::getLeadDepartmentId, s -> "", MonthlyRevenueSummary::getLeadDepartmentName);
     }
 
-    private static List<ProfitRow> aggregate(List<MonthlyRevenueSummary> summaries,
+    private static List<ProfitRow> aggregate(List<MonthlyRevenueSummary> summaries, RevenueBasis basis,
                                              java.util.function.Function<MonthlyRevenueSummary, Long> key,
                                              java.util.function.Function<MonthlyRevenueSummary, String> code,
                                              java.util.function.Function<MonthlyRevenueSummary, String> name) {
@@ -139,7 +144,7 @@ public class ProfitQueryService {
             Long id = key.apply(s);
             ProfitRow row = rows.get(id);
             rows.put(id, Objects.requireNonNullElseGet(row, () -> new ProfitRow(id, code.apply(s), name.apply(s), Money.ZERO, Money.ZERO))
-                    .plus(s.getRevenueAmount(), s.getCostAmount()));
+                    .plus(basis.revenueOf(s), s.getCostAmount()));
         }
         List<ProfitRow> result = new ArrayList<>(rows.values());
         result.sort(Comparator.comparing(ProfitRow::profit).reversed());

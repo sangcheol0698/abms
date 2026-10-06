@@ -93,6 +93,70 @@ class ProfitCalculationServiceTest {
     }
 
     @Test
+    void 직접비는_귀속일이_속한_월의_프로젝트_비용에_더한다() {
+        fixtures.expense(project, LocalDate.of(2026, 2, 5), 3_000_000);
+        fixtures.expense(project, LocalDate.of(2026, 2, 28), 2_000_000);
+        fixtures.expense(project, LocalDate.of(2026, 3, 1), 9_000_000);   // 다른 월 → 제외
+
+        calculationService.calculate(FEB);
+
+        MonthlyRevenueSummary summary = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id()));
+        assertThat(summary.getLaborCostAmount()).isEqualTo(Money.wons(14_375_000));
+        assertThat(summary.getDirectCostAmount()).isEqualTo(Money.wons(5_000_000));
+        assertThat(summary.getCostAmount()).isEqualTo(Money.wons(19_375_000));
+        assertThat(summary.getProfitAmount()).isEqualTo(Money.wons(100_000_000 - 19_375_000));
+    }
+
+    @Test
+    void 직접비만_있는_프로젝트도_집계한다() {
+        Project expenseOnly = fixtures.project(lead, 0, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31));
+        fixtures.expense(expenseOnly, LocalDate.of(2026, 2, 10), 1_000_000);   // 종료 후 발생한 하자 보수 비용
+
+        calculationService.calculate(FEB);
+
+        MonthlyRevenueSummary summary = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(expenseOnly.id()));
+        assertThat(summary.getDirectCostAmount()).isEqualTo(Money.wons(1_000_000));
+        assertThat(summary.getProfitAmount()).isEqualTo(Money.wons(-1_000_000));
+    }
+
+    @Test
+    void 투입률만큼_인건비와_전사_배분액을_나눈다() {
+        Project other = fixtures.project(lead, 100_000_000, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
+        fixtures.assign(project, idle, LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), 30);   // 345만 × 0.3
+        fixtures.assign(other, idle, LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), 50);     // 345만 × 0.5
+
+        calculationService.calculate(FEB);
+
+        MonthlyRevenueSummary main = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id()));
+        MonthlyRevenueSummary sub = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(other.id()));
+        assertThat(main.getLaborCostAmount()).isEqualTo(Money.wons(14_375_000 + 1_035_000));
+        assertThat(sub.getLaborCostAmount()).isEqualTo(Money.wons(1_725_000));
+        CompanyMonthlyCostSummary company = companySummaryRepository.findByTargetMonth(FEB.atDay(1)).orElseThrow();
+        assertThat(company.getUnallocatedFullTimeCost()).isEqualTo(Money.wons(2_875_000 + 690_000));   // 지원팀원 절반 + 대기인력 남은 20%
+    }
+
+    @Test
+    void 관리_매출은_계약금액을_프로젝트_기간에_일할한다() {
+        calculationService.calculate(FEB);
+
+        MonthlyRevenueSummary summary = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id()));
+        // 10억 × 59/365 − 10억 × 31/365 (2026-01-01 ~ 12-31, 누적 일할의 차이)
+        assertThat(summary.getManagedRevenueAmount()).isEqualTo(Money.wons(161_643_836 - 84_931_507));
+        assertThat(summary.getRevenueAmount()).isEqualTo(Money.wons(100_000_000));   // 청구 기준은 그대로
+        assertThat(summary.getManagedProfitAmount()).isEqualTo(Money.wons(76_712_329 - 14_375_000));
+    }
+
+    @Test
+    void 취소된_프로젝트의_관리_매출은_청구_기준과_같다() {
+        projectService.cancel(Fixtures.admin(leadMember), project.id());
+
+        calculationService.calculate(FEB);
+
+        MonthlyRevenueSummary summary = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id()));
+        assertThat(summary.getManagedRevenueAmount()).isEqualTo(Money.wons(100_000_000));
+    }
+
+    @Test
     void 직원_월_원가를_스냅샷으로_저장한다() {
         calculationService.calculate(FEB);
 

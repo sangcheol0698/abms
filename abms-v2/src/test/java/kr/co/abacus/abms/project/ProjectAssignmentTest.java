@@ -40,6 +40,25 @@ class ProjectAssignmentTest {
     }
 
     @Test
+    void 투입률만큼_MM을_줄인다() {
+        ProjectAssignment assignment = ProjectAssignment.assign(project, employee, AssignmentRole.PM,
+                new Period(LocalDate.of(2026, 2, 15), LocalDate.of(2026, 4, 10)), 50);
+
+        assertThat(assignment.manMonth(YearMonth.of(2026, 2))).isEqualByComparingTo("0.25"); // 0.5 × 50%
+        assertThat(assignment.manMonth(YearMonth.of(2026, 3))).isEqualByComparingTo("0.5");
+        assertThat(assignment.manMonth(YearMonth.of(2026, 4))).isEqualByComparingTo("0.15"); // 0.3 × 50%
+    }
+
+    @Test
+    void 투입률은_1에서_100퍼센트_사이여야_한다() {
+        Period period = new Period(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28));
+        assertThatThrownBy(() -> ProjectAssignment.assign(project, employee, null, period, 0))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("투입률");
+        assertThatThrownBy(() -> ProjectAssignment.assign(project, employee, null, period, 101))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("투입률");
+    }
+
+    @Test
     void 투입_기간은_프로젝트_기간_안이어야_한다() {
         assertThatThrownBy(() -> ProjectAssignment.assign(project, employee, null,
                 new Period(LocalDate.of(2025, 12, 31), LocalDate.of(2026, 3, 1))))

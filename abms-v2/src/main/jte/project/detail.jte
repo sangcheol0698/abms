@@ -7,6 +7,7 @@
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.party.Party
 @import kr.co.abacus.abms.project.Project
+@import kr.co.abacus.abms.project.ProjectSections.ExpenseSection
 @import kr.co.abacus.abms.project.ProjectSections.RevenueSection
 @import kr.co.abacus.abms.project.ProjectSections.StaffingSection
 @import kr.co.abacus.abms.project.ProjectStatus
@@ -18,6 +19,7 @@
 @param DepartmentTree tree
 @param boolean canWrite
 @param RevenueSection revenue
+@param ExpenseSection expense
 @param StaffingSection staffing
 @param List<MonthlyRevenueSummary> history
 @param boolean showHistory
@@ -46,13 +48,16 @@
             </dl>
             @if(showHistory && !history.isEmpty())
             !{Money sumRevenue = history.stream().map(MonthlyRevenueSummary::getRevenueAmount).reduce(Money.ZERO, Money::plus);}
+            !{Money sumManaged = history.stream().map(MonthlyRevenueSummary::getManagedRevenueAmount).reduce(Money.ZERO, Money::plus);}
             !{Money sumCost = history.stream().map(MonthlyRevenueSummary::getCostAmount).reduce(Money.ZERO, Money::plus);}
             <div class="mt-x5 border-t border-stroke-neutral-subtle pt-x4">
                 <h2 class="mb-x3 t3-medium text-fg-neutral-subtle">누적 손익</h2>
                 <dl class="property-list">
-                    <dt>매출</dt><dd class="tabular-nums">${Ui.won(sumRevenue)}</dd>
+                    <dt>매출 (청구)</dt><dd class="tabular-nums">${Ui.won(sumRevenue)}</dd>
+                    <dt>매출 (진행)</dt><dd class="tabular-nums">${Ui.won(sumManaged)}</dd>
                     <dt>비용</dt><dd class="tabular-nums">${Ui.won(sumCost)}</dd>
-                    <dt>이익</dt><dd class="t4-bold tabular-nums ${Ui.signClass(sumRevenue.minus(sumCost))}">${Ui.won(sumRevenue.minus(sumCost))}</dd>
+                    <dt>이익 (청구)</dt><dd class="t4-bold tabular-nums ${Ui.signClass(sumRevenue.minus(sumCost))}">${Ui.won(sumRevenue.minus(sumCost))}</dd>
+                    <dt>이익 (진행)</dt><dd class="t4-bold tabular-nums ${Ui.signClass(sumManaged.minus(sumCost))}">${Ui.won(sumManaged.minus(sumCost))}</dd>
                 </dl>
             </div>
             @endif
@@ -73,7 +78,7 @@
                             <button class="menu-item">취소 처리</button>
                         </form>
                     @endif
-                    <form method="post" action="/projects/${project.id()}/delete" hx-confirm="프로젝트와 매출 계획, 투입 정보를 모두 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
+                    <form method="post" action="/projects/${project.id()}/delete" hx-confirm="프로젝트와 매출 계획, 투입 정보, 직접비를 모두 삭제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
                         <button class="menu-item text-fg-critical">삭제</button>
                     </form>
                 </div>
@@ -94,27 +99,39 @@
         @template.project.staffingSection(section = staffing)
     </section>
 
+    <section class="card" id="expense-section">
+        @template.project.expenseSection(section = expense)
+    </section>
+
     @if(showHistory)
         <section class="card overflow-hidden">
             <div class="card-header">
                 <h2 class="card-title">월별 손익 집계</h2>
-                <span class="text-xs text-fg-neutral-subtle">매일 새벽 자동 집계 · 손익 현황에서 재집계할 수 있습니다.</span>
+                <span class="text-xs text-fg-neutral-subtle">청구 = 발행된 매출 · 진행 = 계약금액 기간 일할 · 매일 새벽 자동 집계</span>
             </div>
             @if(history.isEmpty())
                 @template.components.empty(message = "아직 집계된 손익이 없습니다.", icon = "chart")
             @else
                 !{Money totalRevenue = history.stream().map(MonthlyRevenueSummary::getRevenueAmount).reduce(Money.ZERO, Money::plus);}
-                !{Money totalCost = history.stream().map(MonthlyRevenueSummary::getCostAmount).reduce(Money.ZERO, Money::plus);}
+                !{Money totalManaged = history.stream().map(MonthlyRevenueSummary::getManagedRevenueAmount).reduce(Money.ZERO, Money::plus);}
+                !{Money totalLabor = history.stream().map(MonthlyRevenueSummary::getLaborCostAmount).reduce(Money.ZERO, Money::plus);}
+                !{Money totalDirect = history.stream().map(MonthlyRevenueSummary::getDirectCostAmount).reduce(Money.ZERO, Money::plus);}
+                !{Money totalCost = totalLabor.plus(totalDirect);}
                 <div class="overflow-x-auto">
                     <table class="table">
-                        <thead><tr><th>월</th><th class="num">매출</th><th class="num">비용</th><th class="num">이익</th><th>집계 시각</th></tr></thead>
+                        <thead>
+                            <tr><th>월</th><th class="num">매출 (청구)</th><th class="num">매출 (진행)</th><th class="num">인건비</th><th class="num">직접비</th><th class="num">이익 (청구)</th><th class="num">이익 (진행)</th><th>집계 시각</th></tr>
+                        </thead>
                         <tbody class="divide-y divide-stroke-neutral-subtle">
                         @for(MonthlyRevenueSummary s : history)
                             <tr>
                                 <td><a class="link" href="/summary?month=${java.time.YearMonth.from(s.getTargetMonth()).toString()}">${Ui.month(java.time.YearMonth.from(s.getTargetMonth()))}</a></td>
                                 <td class="num">${Ui.won(s.getRevenueAmount())}</td>
-                                <td class="num">${Ui.won(s.getCostAmount())}</td>
+                                <td class="num text-fg-neutral-muted">${Ui.won(s.getManagedRevenueAmount())}</td>
+                                <td class="num">${Ui.won(s.getLaborCostAmount())}</td>
+                                <td class="num">${Ui.won(s.getDirectCostAmount())}</td>
                                 <td class="num font-semibold ${Ui.signClass(s.getProfitAmount())}">${Ui.won(s.getProfitAmount())}</td>
+                                <td class="num font-semibold ${Ui.signClass(s.getManagedProfitAmount())}">${Ui.won(s.getManagedProfitAmount())}</td>
                                 <td class="text-xs text-fg-neutral-subtle">${Ui.dateTime(s.getCalculatedAt())}</td>
                             </tr>
                         @endfor
@@ -123,8 +140,11 @@
                             <tr>
                                 <td class="px-4 py-3">합계</td>
                                 <td class="px-4 py-3 text-right tabular-nums">${Ui.won(totalRevenue)}</td>
-                                <td class="px-4 py-3 text-right tabular-nums">${Ui.won(totalCost)}</td>
+                                <td class="px-4 py-3 text-right tabular-nums">${Ui.won(totalManaged)}</td>
+                                <td class="px-4 py-3 text-right tabular-nums">${Ui.won(totalLabor)}</td>
+                                <td class="px-4 py-3 text-right tabular-nums">${Ui.won(totalDirect)}</td>
                                 <td class="px-4 py-3 text-right tabular-nums ${Ui.signClass(totalRevenue.minus(totalCost))}">${Ui.won(totalRevenue.minus(totalCost))}</td>
+                                <td class="px-4 py-3 text-right tabular-nums ${Ui.signClass(totalManaged.minus(totalCost))}">${Ui.won(totalManaged.minus(totalCost))}</td>
                                 <td></td>
                             </tr>
                         </tfoot>

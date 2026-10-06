@@ -1,5 +1,10 @@
 package kr.co.abacus.abms.project;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 import jakarta.persistence.AttributeOverride;
@@ -163,6 +168,29 @@ public class Project extends BaseEntity implements Auditable {
 
     public Period getPeriod() {
         return period;
+    }
+
+    /**
+     * 진행 기준(관리) 매출: 계약금액을 프로젝트 기간에 일 단위로 고르게 배분한 해당 월의 몫.
+     * 누적 배분액의 차이로 구하므로 월별 금액을 모두 더하면 계약금액과 정확히 같다.
+     */
+    public Money managedRevenue(YearMonth month) {
+        return recognizedThrough(month.atEndOfMonth()).minus(recognizedThrough(month.minusMonths(1).atEndOfMonth()));
+    }
+
+    private Money recognizedThrough(LocalDate date) {
+        LocalDate start = period.startDate();
+        LocalDate end = Objects.requireNonNull(period.endDate(), "프로젝트 종료일은 필수입니다.");
+        if (date.isBefore(start)) {
+            return Money.ZERO;
+        }
+        if (!date.isBefore(end)) {
+            return contractAmount;
+        }
+        long elapsed = ChronoUnit.DAYS.between(start, date) + 1;
+        long total = ChronoUnit.DAYS.between(start, end) + 1;
+        return new Money(contractAmount.amount().multiply(BigDecimal.valueOf(elapsed))
+                .divide(BigDecimal.valueOf(total), 0, RoundingMode.HALF_UP));
     }
 
     public record ProjectInfo(

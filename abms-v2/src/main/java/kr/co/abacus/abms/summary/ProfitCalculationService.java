@@ -29,9 +29,12 @@ import kr.co.abacus.abms.employee.PayrollRepository;
 import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.project.ProjectAssignment;
 import kr.co.abacus.abms.project.ProjectAssignmentRepository;
+import kr.co.abacus.abms.project.ProjectExpense;
+import kr.co.abacus.abms.project.ProjectExpenseRepository;
 import kr.co.abacus.abms.project.ProjectRepository;
 import kr.co.abacus.abms.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.project.ProjectRevenuePlanRepository;
+import kr.co.abacus.abms.project.ProjectStatus;
 import kr.co.abacus.abms.summary.EmployeeCostPolicy.CostBreakdown;
 import kr.co.abacus.abms.summary.MonthlyRevenueSummary.Snapshot;
 
@@ -39,8 +42,9 @@ import kr.co.abacus.abms.summary.MonthlyRevenueSummary.Snapshot;
  * 월 손익 집계.
  * <ol>
  *     <li>직원 월 원가 = 월 기본급(연봉/12) × (1 + 제경비율 + 판관비율)</li>
- *     <li>프로젝트 매출 = 해당 월 청구일 + 발행 완료된 매출 계획 합계</li>
- *     <li>프로젝트 비용 = Σ(투입 직원 월 원가 × 투입 M/M)</li>
+ *     <li>프로젝트 매출(청구 기준) = 해당 월 청구일 + 발행 완료된 매출 계획 합계</li>
+ *     <li>프로젝트 관리 매출(진행 기준) = 계약금액을 프로젝트 기간에 일할 배분한 해당 월 몫 (취소된 프로젝트는 청구 기준과 같다)</li>
+ *     <li>프로젝트 비용 = 인건비 Σ(투입 직원 월 원가 × 투입 M/M × 투입률) + 해당 월 귀속 직접비</li>
  *     <li>손익은 프로젝트 <b>주관 부서</b>에 귀속</li>
  *     <li>전사 정직원 비용 중 프로젝트에 배분되지 않은 금액을 별도 집계</li>
  * </ol>
@@ -58,6 +62,7 @@ public class ProfitCalculationService {
     private final ProjectRepository projectRepository;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
     private final ProjectAssignmentRepository assignmentRepository;
+    private final ProjectExpenseRepository expenseRepository;
     private final DepartmentRepository departmentRepository;
     private final MonthlyRevenueSummaryRepository summaryRepository;
     private final CompanyMonthlyCostSummaryRepository companySummaryRepository;
@@ -69,6 +74,7 @@ public class ProfitCalculationService {
                                     ProjectRepository projectRepository,
                                     ProjectRevenuePlanRepository revenuePlanRepository,
                                     ProjectAssignmentRepository assignmentRepository,
+                                    ProjectExpenseRepository expenseRepository,
                                     DepartmentRepository departmentRepository,
                                     MonthlyRevenueSummaryRepository summaryRepository,
                                     CompanyMonthlyCostSummaryRepository companySummaryRepository,
@@ -80,6 +86,7 @@ public class ProfitCalculationService {
         this.projectRepository = projectRepository;
         this.revenuePlanRepository = revenuePlanRepository;
         this.assignmentRepository = assignmentRepository;
+        this.expenseRepository = expenseRepository;
         this.departmentRepository = departmentRepository;
         this.summaryRepository = summaryRepository;
         this.companySummaryRepository = companySummaryRepository;
@@ -154,6 +161,8 @@ public class ProfitCalculationService {
                 .collect(Collectors.groupingBy(ProjectRevenuePlan::getProjectId));
         Map<Long, List<ProjectAssignment>> assignmentsByProject = assignmentRepository.findOverlapping(monthStart, monthEnd).stream()
                 .collect(Collectors.groupingBy(ProjectAssignment::getProjectId));
+        Map<Long, List<ProjectExpense>> expensesByProject = expenseRepository.findAllByExpenseDateBetween(monthStart, monthEnd).stream()
+                .collect(Collectors.groupingBy(ProjectExpense::getProjectId));
         Map<Long, MonthlyRevenueSummary> existing = summaryRepository.findAllByTargetMonthOrderByProjectNameAsc(monthStart).stream()
                 .collect(Collectors.toMap(MonthlyRevenueSummary::getProjectId, Function.identity(), (a, b) -> a));
 
@@ -161,6 +170,7 @@ public class ProfitCalculationService {
         projectRepository.findOverlapping(monthStart, monthEnd).forEach(p -> projectIds.add(p.id()));
         projectIds.addAll(plansByProject.keySet());
         projectIds.addAll(assignmentsByProject.keySet());
+        projectIds.addAll(expensesByProject.keySet());
 
         // 삭제된 프로젝트는 조회되지 않으므로 자연스럽게 집계 대상에서 빠진다.
         Map<Long, Project> projects = projectRepository.findAllById(projectIds).stream()
@@ -173,18 +183,23 @@ public class ProfitCalculationService {
             Money revenue = plansByProject.getOrDefault(project.id(), List.of()).stream()
                     .map(ProjectRevenuePlan::getAmount)
                     .reduce(Money.ZERO, Money::plus);
-            Money cost = Money.ZERO;
+            // 취소된 프로젝트는 계약금액을 다 받지 못하므로 진행 기준 대신 실제 청구액을 관리 매출로 본다.
+            Money managedRevenue = project.getStatus() == ProjectStatus.CANCELLED ? revenue : project.managedRevenue(month);
+            Money laborCost = Money.ZERO;
             for (ProjectAssignment assignment : assignmentsByProject.getOrDefault(project.id(), List.of())) {
                 EmployeeMonthlyCost employeeCost = costs.get(assignment.getEmployeeId());
                 if (employeeCost == null) {
                     warnings.add("투입 직원 원가 없음: 프로젝트 " + project.getCode() + ", 직원 id=" + assignment.getEmployeeId());
                     continue;
                 }
-                cost = cost.plus(employeeCost.getTotalCost().times(assignment.manMonth(month)));
+                laborCost = laborCost.plus(employeeCost.getTotalCost().times(assignment.manMonth(month)));
             }
+            Money directCost = expensesByProject.getOrDefault(project.id(), List.of()).stream()
+                    .map(ProjectExpense::getAmount)
+                    .reduce(Money.ZERO, Money::plus);
             Department lead = departments.get(project.getLeadDepartmentId());
             Snapshot snapshot = new Snapshot(project.getCode(), project.getName(), project.getLeadDepartmentId(),
-                    lead == null ? "-" : lead.getName(), revenue, cost);
+                    lead == null ? "-" : lead.getName(), revenue, managedRevenue, laborCost, directCost);
 
             MonthlyRevenueSummary summary = existing.remove(project.id());
             if (summary == null) {
@@ -192,7 +207,7 @@ public class ProfitCalculationService {
             } else {
                 summary.update(snapshot);
             }
-            totals.add(revenue, cost);
+            totals.add(revenue, snapshot.cost());
         }
         // 더 이상 집계 대상이 아닌 프로젝트(삭제, 기간 변경 등)의 기존 집계는 제거한다.
         summaryRepository.deleteAll(existing.values());

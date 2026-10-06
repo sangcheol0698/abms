@@ -2,6 +2,7 @@ package kr.co.abacus.abms.project;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -57,28 +58,35 @@ public class ProjectAssignmentService {
                 .orElseThrow(() -> NotFoundException.of("투입 정보", assignmentId));
     }
 
+    /** 전담(투입률 100%) 투입 */
     public ProjectAssignment assign(LoginUser user, Long projectId, Long employeeId, @Nullable AssignmentRole role,
                                     LocalDate startDate, @Nullable LocalDate endDate) {
+        return assign(user, projectId, employeeId, role, startDate, endDate, ProjectAssignment.FULL_RATE);
+    }
+
+    public ProjectAssignment assign(LoginUser user, Long projectId, Long employeeId, @Nullable AssignmentRole role,
+                                    LocalDate startDate, @Nullable LocalDate endDate, int allocationRate) {
         Project project = projectService.getForWrite(user, projectId);
         Employee employee = employee(employeeId);
-        checkOverlap(employeeId, startDate, endDate, -1L);
+        checkCapacity(employeeId, startDate, endDate, allocationRate, -1L);
         closedMonthGuard.checkOpen(startDate, endDate, "투입 등록");
         ProjectAssignment assignment = assignmentRepository.save(
-                ProjectAssignment.assign(project, employee, role, ProjectAssignment.periodOf(startDate, endDate)));
+                ProjectAssignment.assign(project, employee, role, ProjectAssignment.periodOf(startDate, endDate), allocationRate));
         notificationService.notifyEmployee(employeeId, NotificationType.INFO,
                 "프로젝트 투입: " + project.getName(),
-                startDate + " ~ " + (endDate == null ? "" : endDate) + " 기간으로 투입되었습니다.",
+                startDate + " ~ " + (endDate == null ? "" : endDate) + " 기간으로 투입되었습니다."
+                        + (allocationRate == ProjectAssignment.FULL_RATE ? "" : " (투입률 " + allocationRate + "%)"),
                 "/projects/" + projectId);
         return assignment;
     }
 
     public void update(LoginUser user, Long projectId, Long assignmentId, Long employeeId, @Nullable AssignmentRole role,
-                       LocalDate startDate, @Nullable LocalDate endDate) {
+                       LocalDate startDate, @Nullable LocalDate endDate, int allocationRate) {
         Project project = projectService.getForWrite(user, projectId);
         ProjectAssignment assignment = get(projectId, assignmentId);
-        checkOverlap(employeeId, startDate, endDate, assignmentId);
-        checkChangedPeriodOpen(assignment, employeeId, startDate, endDate);
-        assignment.update(project, employee(employeeId), role, ProjectAssignment.periodOf(startDate, endDate));
+        checkCapacity(employeeId, startDate, endDate, allocationRate, assignmentId);
+        checkChangedPeriodOpen(assignment, employeeId, startDate, endDate, allocationRate);
+        assignment.update(project, employee(employeeId), role, ProjectAssignment.periodOf(startDate, endDate), allocationRate);
     }
 
     public void delete(LoginUser user, Long projectId, Long assignmentId) {
@@ -89,9 +97,11 @@ public class ProjectAssignmentService {
     }
 
     /** 투입 M/M이 달라지는 구간에 마감된 월이 있으면 막는다. (역할만 바꾸는 것은 허용) */
-    private void checkChangedPeriodOpen(ProjectAssignment assignment, Long employeeId, LocalDate startDate, @Nullable LocalDate endDate) {
+    private void checkChangedPeriodOpen(ProjectAssignment assignment, Long employeeId, LocalDate startDate, @Nullable LocalDate endDate,
+                                        int allocationRate) {
         Period before = assignment.getPeriod();
-        if (!assignment.getEmployeeId().equals(employeeId)) {
+        // 직원이나 투입률이 바뀌면 이전·이후 기간 전체의 M/M이 달라진다.
+        if (!assignment.getEmployeeId().equals(employeeId) || assignment.getAllocationRate() != allocationRate) {
             closedMonthGuard.checkOpen(before.startDate(), before.endDate(), "투입 수정");
             closedMonthGuard.checkOpen(startDate, endDate, "투입 수정");
             return;
@@ -111,16 +121,23 @@ public class ProjectAssignmentService {
     }
 
     /**
-     * 투입 M/M은 투입 기간 전체를 1.0으로 계산하므로, 동일 직원은 프로젝트와 관계없이 기간이 겹치게 투입될 수 없다.
-     * (겹치면 같은 원가가 여러 프로젝트에 중복 배분된다)
+     * 같은 직원의 투입률 합계는 어느 날짜에서도 100%를 넘을 수 없다. (넘으면 같은 원가가 여러 프로젝트에 중복 배분된다)
+     * 동시 투입률은 투입이 시작되는 날에만 늘어나므로, 새 기간의 시작일과 그 안에서 시작하는 기존 투입의 시작일만 확인하면 된다.
      */
-    private void checkOverlap(Long employeeId, LocalDate startDate, @Nullable LocalDate endDate, Long excludeId) {
+    private void checkCapacity(Long employeeId, LocalDate startDate, @Nullable LocalDate endDate, int allocationRate, Long excludeId) {
         LocalDate to = endDate == null ? LocalDate.of(9999, 12, 31) : endDate;
-        assignmentRepository.findOverlappingOfEmployee(employeeId, startDate, to, excludeId).stream().findFirst()
-                .ifPresent(overlap -> {
-                    Period period = overlap.getPeriod();
-                    throw new BusinessException("이미 같은 기간에 다른 투입이 있는 직원입니다. ("
-                            + period.startDate() + " ~ " + (period.endDate() == null ? "" : period.endDate()) + ")");
+        List<ProjectAssignment> overlapping = assignmentRepository.findOverlappingOfEmployee(employeeId, startDate, to, excludeId);
+        Stream.concat(Stream.of(startDate), overlapping.stream().map(a -> a.getPeriod().startDate()).filter(d -> d.isAfter(startDate)))
+                .distinct()
+                .forEach(date -> {
+                    List<ProjectAssignment> active = overlapping.stream().filter(a -> a.isActiveOn(date)).toList();
+                    int used = active.stream().mapToInt(ProjectAssignment::getAllocationRate).sum();
+                    if (used + allocationRate > ProjectAssignment.FULL_RATE) {
+                        Period period = active.getFirst().getPeriod();
+                        throw new BusinessException("같은 기간 투입률 합계가 100%를 넘습니다. " + date + " 기준 다른 투입 " + used
+                                + "% + 이번 투입 " + allocationRate + "% (예: " + period.startDate() + " ~ "
+                                + (period.endDate() == null ? "" : period.endDate()) + ")");
+                    }
                 });
     }
 

@@ -103,39 +103,66 @@ class ProjectServiceTest {
     }
 
     @Test
-    void 같은_직원을_같은_프로젝트에_겹치는_기간으로_투입할_수_없다() {
+    void 같은_직원을_같은_프로젝트에_투입률_합계_100퍼센트를_넘겨_투입할_수_없다() {
         LoginUser admin = Fixtures.admin(member);
 
         assertThatThrownBy(() -> assignmentService.assign(admin, joined.id(), member.id(), AssignmentRole.DEV, today, null))
-                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 같은 기간");
+                .isInstanceOf(BusinessException.class).hasMessageContaining("투입률 합계가 100%를 넘습니다");
         // 기존 투입이 끝난 다음 날부터는 다시 투입할 수 있다.
         assignmentService.assign(admin, joined.id(), member.id(), AssignmentRole.PL, today.plusMonths(1).plusDays(1), today.plusMonths(2));
         assertThat(assignmentService.assignments(joined.id())).hasSize(2);
     }
 
     @Test
-    void 같은_직원을_다른_프로젝트에도_겹치는_기간으로_투입할_수_없다() {
+    void 같은_직원을_다른_프로젝트에도_투입률_합계_100퍼센트를_넘겨_투입할_수_없다() {
         LoginUser admin = Fixtures.admin(member);
 
         assertThatThrownBy(() -> assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV, today, today.plusMonths(2)))
-                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 같은 기간");
+                .isInstanceOf(BusinessException.class).hasMessageContaining("투입률 합계가 100%를 넘습니다");
         // 다른 프로젝트 투입이 끝난 다음 날부터는 투입할 수 있다.
         assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV, today.plusMonths(1).plusDays(1), today.plusMonths(2));
         assertThat(assignmentService.assignments(otherTeam.id())).hasSize(1);
     }
 
     @Test
-    void 투입_기간을_수정해_다른_프로젝트_투입과_겹치게_할_수_없다() {
+    void 투입률을_나누면_같은_기간에_여러_프로젝트에_투입할_수_있다() {
+        LoginUser admin = Fixtures.admin(member);
+        Employee pm = fixtures.employee(teamA, "겸임PM");
+
+        assignmentService.assign(admin, joined.id(), pm.id(), AssignmentRole.PM, today, today.plusMonths(1), 50);
+        assignmentService.assign(admin, otherTeam.id(), pm.id(), AssignmentRole.PM, today, today.plusMonths(1), 50);
+
+        assertThat(assignmentService.assignmentsOfEmployee(pm.id())).hasSize(2);
+        assertThatThrownBy(() -> assignmentService.assign(admin, otherTeam.id(), pm.id(), AssignmentRole.DEV,
+                today.plusDays(5), today.plusMonths(1), 10))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("다른 투입 100% + 이번 투입 10%");
+    }
+
+    @Test
+    void 새_투입_기간_중간에_시작하는_기존_투입까지_합쳐_투입률을_확인한다() {
+        LoginUser admin = Fixtures.admin(member);
+        Employee dev = fixtures.employee(teamA, "개발자");
+        assignmentService.assign(admin, joined.id(), dev.id(), AssignmentRole.DEV, today.plusDays(10), today.plusMonths(1), 60);
+
+        // 새 투입 시작일에는 다른 투입이 없지만, 10일 뒤부터 60% + 50% 가 된다.
+        assertThatThrownBy(() -> assignmentService.assign(admin, otherTeam.id(), dev.id(), AssignmentRole.DEV,
+                today, today.plusMonths(1), 50))
+                .isInstanceOf(BusinessException.class).hasMessageContaining(today.plusDays(10) + " 기준");
+        assignmentService.assign(admin, otherTeam.id(), dev.id(), AssignmentRole.DEV, today, today.plusMonths(1), 40);
+    }
+
+    @Test
+    void 투입_기간을_수정해_다른_프로젝트_투입과_합계_100퍼센트를_넘게_할_수_없다() {
         LoginUser admin = Fixtures.admin(member);
         ProjectAssignment later = assignmentService.assign(admin, otherTeam.id(), member.id(), AssignmentRole.DEV,
                 today.plusMonths(1).plusDays(1), today.plusMonths(2));
 
         assertThatThrownBy(() -> assignmentService.update(admin, otherTeam.id(), later.id(), member.id(), AssignmentRole.DEV,
-                today, today.plusMonths(2)))
-                .isInstanceOf(BusinessException.class).hasMessageContaining("이미 같은 기간");
+                today, today.plusMonths(2), 100))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("투입률 합계가 100%를 넘습니다");
         // 자기 자신과의 겹침은 무시한다.
         assignmentService.update(admin, otherTeam.id(), later.id(), member.id(), AssignmentRole.PL,
-                today.plusMonths(1).plusDays(1), today.plusMonths(3));
+                today.plusMonths(1).plusDays(1), today.plusMonths(3), 100);
     }
 
     @Test
@@ -149,6 +176,15 @@ class ProjectServiceTest {
         fixtures.assign(otherTeam, newcomer, today.plusDays(1), today.plusMonths(1));
         projectService.delete(admin, otherTeam.id());
         assertThat(assignmentService.assignments(otherTeam.id())).isEmpty();
+    }
+
+    @Test
+    void 직접비가_있는_프로젝트는_삭제할_수_없다() {
+        LoginUser admin = Fixtures.admin(member);
+        fixtures.expense(otherTeam, today, 1_000_000);
+
+        assertThatThrownBy(() -> projectService.delete(admin, otherTeam.id()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("직접비");
     }
 
     @Test

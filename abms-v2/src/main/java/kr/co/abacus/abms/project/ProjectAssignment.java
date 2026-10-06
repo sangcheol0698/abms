@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.project;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Objects;
@@ -23,12 +24,14 @@ import kr.co.abacus.abms.common.domain.Period;
 import kr.co.abacus.abms.employee.Employee;
 
 /**
- * 직원의 프로젝트 투입.
+ * 직원의 프로젝트 투입. 투입률(%)로 한 직원을 같은 기간 여러 프로젝트에 나눠 투입할 수 있다.
  */
 @Entity
 @Table(name = "tb_project_assignment")
 @SQLRestriction("deleted = false")
 public class ProjectAssignment extends BaseEntity implements Auditable {
+
+    public static final int FULL_RATE = 100;
 
     @Column(nullable = false)
     private Long projectId;
@@ -43,27 +46,41 @@ public class ProjectAssignment extends BaseEntity implements Auditable {
     @Embedded
     private Period period;
 
+    @Column(nullable = false)
+    private int allocationRate;
+
     protected ProjectAssignment() {
     }
 
+    /** 전담(투입률 100%) 투입 */
     public static ProjectAssignment assign(Project project, Employee employee, @Nullable AssignmentRole role, Period period) {
-        validate(project, employee, period);
+        return assign(project, employee, role, period, FULL_RATE);
+    }
+
+    public static ProjectAssignment assign(Project project, Employee employee, @Nullable AssignmentRole role, Period period,
+                                           int allocationRate) {
+        validate(project, employee, period, allocationRate);
         ProjectAssignment assignment = new ProjectAssignment();
         assignment.projectId = project.id();
         assignment.employeeId = employee.id();
         assignment.role = role;
         assignment.period = period;
+        assignment.allocationRate = allocationRate;
         return assignment;
     }
 
-    public void update(Project project, Employee employee, @Nullable AssignmentRole role, Period period) {
-        validate(project, employee, period);
+    public void update(Project project, Employee employee, @Nullable AssignmentRole role, Period period, int allocationRate) {
+        validate(project, employee, period, allocationRate);
         this.employeeId = employee.id();
         this.role = role;
         this.period = period;
+        this.allocationRate = allocationRate;
     }
 
-    private static void validate(Project project, Employee employee, Period period) {
+    private static void validate(Project project, Employee employee, Period period, int allocationRate) {
+        if (allocationRate < 1 || allocationRate > FULL_RATE) {
+            throw new BusinessException("투입률은 1~100% 사이여야 합니다.");
+        }
         Period projectPeriod = project.getPeriod();
         if (period.startDate().isBefore(projectPeriod.startDate())) {
             throw new BusinessException("투입 시작일은 프로젝트 시작일보다 빠를 수 없습니다.");
@@ -81,9 +98,13 @@ public class ProjectAssignment extends BaseEntity implements Auditable {
         }
     }
 
-    /** 해당 월의 투입 M/M. 월 총일수 대비 실제 투입일수 (소수 첫째 자리 반올림). */
+    /** 해당 월의 투입 M/M. 월 총일수 대비 실제 투입일수 (소수 첫째 자리 반올림) × 투입률. */
     public BigDecimal manMonth(YearMonth month) {
-        return period.manMonth(month);
+        BigDecimal byPeriod = period.manMonth(month);
+        if (allocationRate == FULL_RATE) {
+            return byPeriod;
+        }
+        return byPeriod.multiply(BigDecimal.valueOf(allocationRate)).divide(BigDecimal.valueOf(FULL_RATE), 2, RoundingMode.HALF_UP);
     }
 
     public boolean isActiveOn(LocalDate date) {
@@ -104,6 +125,10 @@ public class ProjectAssignment extends BaseEntity implements Auditable {
 
     public Period getPeriod() {
         return period;
+    }
+
+    public int getAllocationRate() {
+        return allocationRate;
     }
 
     public static Period periodOf(LocalDate start, @Nullable LocalDate end) {

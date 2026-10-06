@@ -32,16 +32,18 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectRevenuePlanRepository revenuePlanRepository;
     private final ProjectAssignmentRepository assignmentRepository;
+    private final ProjectExpenseRepository expenseRepository;
     private final PartyRepository partyRepository;
     private final DepartmentRepository departmentRepository;
     private final AccessService accessService;
 
     public ProjectService(ProjectRepository projectRepository, ProjectRevenuePlanRepository revenuePlanRepository,
-                          ProjectAssignmentRepository assignmentRepository, PartyRepository partyRepository,
-                          DepartmentRepository departmentRepository, AccessService accessService) {
+                          ProjectAssignmentRepository assignmentRepository, ProjectExpenseRepository expenseRepository,
+                          PartyRepository partyRepository, DepartmentRepository departmentRepository, AccessService accessService) {
         this.projectRepository = projectRepository;
         this.revenuePlanRepository = revenuePlanRepository;
         this.assignmentRepository = assignmentRepository;
+        this.expenseRepository = expenseRepository;
         this.partyRepository = partyRepository;
         this.departmentRepository = departmentRepository;
         this.accessService = accessService;
@@ -150,7 +152,7 @@ public class ProjectService {
 
     /**
      * 프로젝트와 하위 매출 계획/투입을 함께 삭제한다. 손익 집계는 다음 재집계 시 제거된다.
-     * 삭제하면 실적이 집계에서 사라지므로, 발행된 매출이나 이미 시작된 투입이 있으면 삭제 대신 취소 처리해야 한다.
+     * 삭제하면 실적이 집계에서 사라지므로, 발행된 매출이나 이미 시작된 투입, 직접비가 있으면 삭제 대신 취소 처리해야 한다.
      */
     public void delete(LoginUser user, Long id) {
         Project project = getForWrite(user, id);
@@ -159,6 +161,9 @@ public class ProjectService {
         }
         if (assignmentRepository.existsByProjectIdAndPeriodStartDateLessThanEqual(id, LocalDate.now())) {
             throw new BusinessException("이미 시작된 투입이 있는 프로젝트는 삭제할 수 없습니다. 프로젝트를 취소 처리하세요.");
+        }
+        if (expenseRepository.existsByProjectId(id)) {
+            throw new BusinessException("직접비가 등록된 프로젝트는 삭제할 수 없습니다. 프로젝트를 취소 처리하세요.");
         }
         revenuePlanRepository.findAllByProjectIdOrderBySequenceAsc(id).forEach(plan -> plan.softDelete(user.accountId()));
         assignmentRepository.findAllByProjectIdOrderByPeriodStartDateAsc(id).forEach(a -> a.softDelete(user.accountId()));
