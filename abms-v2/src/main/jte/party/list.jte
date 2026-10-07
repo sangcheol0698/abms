@@ -25,8 +25,8 @@
     <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
         <%-- 필터 바와 열 제목: 데스크톱은 목록 위에 고정, 태블릿은 문서 스크롤 중 툴바 아래에 고정, 모바일은 함께 스크롤 --%>
         <div class="z-10 shrink-0 bg-bg-layer-default md:sticky md:top-(--sticky-top)">
-        <form class="view-bar sm:px-x6 lg:px-x8" action="/parties" hx-get="/parties" hx-target="#party-results" hx-push-url="true"
-              hx-trigger="input changed delay:300ms from:input[name=q], submit">
+        <form id="party-filter" class="view-bar sm:px-x6 lg:px-x8" action="/parties" hx-get="/parties" hx-target="#party-results" hx-push-url="true"
+              hx-trigger="input changed delay:300ms from:(#party-filter input[name=q]), submit">
             <div class="relative">
                 <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-fg-placeholder">${Icons.of("search", "size-3.5")}</span>
                 <input type="search" name="q" value="${Ui.value(q)}" placeholder="협력사명 검색" class="input filter-input w-60 pl-x8" aria-label="협력사명 검색">

@@ -26,9 +26,9 @@
     </div>
 
     <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
-        <form class="view-bar shrink-0 sm:px-x6 lg:px-x8" action="/notices" method="get"
+        <form id="notice-filter" class="view-bar shrink-0 sm:px-x6 lg:px-x8" action="/notices" method="get"
               hx-get="/notices" hx-target="#notice-results" hx-select="#notice-results" hx-swap="outerHTML" hx-push-url="true"
-              hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], change from:input[type=checkbox], submit">
+              hx-trigger="input changed delay:300ms from:(#notice-filter input[name=q]), change from:(#notice-filter select), change from:(#notice-filter input[type=radio]), change from:(#notice-filter input[type=checkbox]), submit">
             <div class="flex flex-wrap items-center gap-x1">
                 @if(canManage)
                     <div class="flex flex-wrap items-center gap-x1" role="radiogroup" aria-label="게시 상태">

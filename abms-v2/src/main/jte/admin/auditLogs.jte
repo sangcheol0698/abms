@@ -14,8 +14,8 @@
     </div>
 
     <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
-    <form class="view-bar shrink-0 sm:px-x6 lg:px-x8" action="/admin/audit-logs" hx-get="/admin/audit-logs" hx-target="#audit-results" hx-push-url="true"
-          hx-trigger="change from:select[name=type], submit">
+    <form id="audit-filter" class="view-bar shrink-0 sm:px-x6 lg:px-x8" action="/admin/audit-logs" hx-get="/admin/audit-logs" hx-target="#audit-results" hx-push-url="true"
+          hx-trigger="change from:(#audit-filter select[name=type]), submit">
         <label for="type" class="sr-only">대상</label>
         <select id="type" name="type" class="select filter-select w-44">
             <option value="">전체 대상</option>
