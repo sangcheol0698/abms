@@ -19,7 +19,7 @@
 @template.layout.app(ctx = ctx, title = "손익 현황", content = @`
 <%-- 월·매출 기준을 바꾸면 이 영역만 바꿔 끼운다. (스크롤·포커스 유지, 주소는 갱신) --%>
 <div id="summary-view">
-    @template.components.pageHeader(title = "손익 현황", subtitle = "프로젝트 주관 부서 기준 월 손익 · " + (managed ? "진행 기준 매출(계약금액 기간 일할)" : "청구(발행) 기준 매출") + ", 비용 = 인건비(투입 M/M) + 직접비", actions = @`
+    @template.components.pageHeader(title = "손익 현황", subtitle = "프로젝트 주관 부서 기준 월 손익 · 비용 = 인건비(투입 M/M) + 직접비", actions = @`
         @if(canManage)
             @if(!report.closed())
                 <form method="post" action="/summary/recalculate" hx-disabled-elt="find button">${kr.co.abacus.abms.common.web.Csrf.field()}
@@ -80,6 +80,11 @@
             </div>
             <span class="ml-auto t3-regular text-fg-neutral-subtle">마지막 집계 ${Ui.dateTime(report.calculatedAt())}</span>
         </div>
+        <%-- 지금 보는 매출 기준을 한 줄로 설명한다 (기준을 바꾸면 함께 바뀐다) --%>
+        <p class="flex items-start gap-x1_5 border-b border-stroke-neutral-subtle px-x4 py-x2 t3-regular text-fg-neutral-muted sm:px-x6 lg:px-x8" data-basis-description>
+            ${Icons.of("info", "mt-0.5 size-3.5 shrink-0 text-fg-neutral-subtle")}
+            <span><span class="t3-medium text-fg-neutral">${report.basis().label()}</span> · ${report.basis().description()}</span>
+        </p>
     </div>
 
     @if(notices != null && !notices.isEmpty())
