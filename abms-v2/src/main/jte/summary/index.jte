@@ -11,7 +11,9 @@
 @param boolean canManage
 @param boolean isPast
 @param CalculationResult calculation = null
+@param java.util.List<String> warnings = null
 !{String month = report.month().toString();}
+!{java.util.List<String> notices = calculation != null ? calculation.warnings() : warnings;}
 !{boolean managed = report.basis() == RevenueBasis.MANAGED;}
 !{String basisQuery = managed ? "&basis=managed" : "";}
 @template.layout.app(ctx = ctx, title = "손익 현황", content = @`
@@ -36,6 +38,18 @@
                     <button class="${Seed.button("neutralOutline")}">마감 해제</button>
                 </form>
             @endif
+            !{int year = report.month().getYear();}
+            !{int lastMonth = year == java.time.YearMonth.now().getYear() ? java.time.YearMonth.now().getMonthValue() : 12;}
+            <details class="relative" data-dropdown>
+                <summary class="${Seed.iconButton("neutralOutline", "small")}" aria-label="더보기" title="더보기">${Icons.of("ellipsis", "size-4")}</summary>
+                <div class="dropdown-panel w-56 p-x1">
+                    <form method="post" action="/summary/recalculate-year" hx-disabled-elt="find button"
+                          hx-confirm="${year}년 1~${lastMonth}월 손익을 모두 다시 집계할까요? 마감된 달은 건너뜁니다.">${kr.co.abacus.abms.common.web.Csrf.field()}
+                        <input type="hidden" name="year" value="${year}"><input type="hidden" name="month" value="${month}">@if(managed)<input type="hidden" name="basis" value="managed">@endif
+                        <button class="menu-item">${Icons.of("refresh", "size-4")} ${year}년 전체 재집계</button>
+                    </form>
+                </div>
+            </details>
         @endif
     `)
 
@@ -68,13 +82,13 @@
         </div>
     </div>
 
-    @if(calculation != null && !calculation.warnings().isEmpty())
+    @if(notices != null && !notices.isEmpty())
         <div role="alert" class="seed-callout__root seed-callout__root--tone_warning mb-x6 items-start!">
             ${Icons.of("warning", "size-4 shrink-0 text-fg-warning")}
             <div class="seed-callout__content">
-                <p class="seed-callout__title seed-callout__title--tone_warning">확인이 필요한 항목 ${calculation.warnings().size()}건</p>
+                <p class="seed-callout__title seed-callout__title--tone_warning">확인이 필요한 항목 ${notices.size()}건</p>
                 <ul class="seed-callout__description seed-callout__description--tone_warning mt-x1 list-disc pl-x5">
-                    @for(String warning : calculation.warnings())
+                    @for(String warning : notices)
                         <li>${warning}</li>
                     @endfor
                 </ul>

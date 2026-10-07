@@ -96,6 +96,15 @@ class PageRenderingTest {
     }
 
     @Test
+    void 연도_재집계_후_보던_월과_매출_기준으로_돌아온다() throws Exception {
+        mvc.perform(post("/summary/recalculate-year").param("year", "2025").param("month", "2025-06").param("basis", "managed")
+                        .with(user(admin)).with(csrf()))
+                .andExpect(header().string("Location", "/summary?month=2025-06&basis=managed"));
+        mvc.perform(get("/summary").param("month", "2025-06").with(user(admin)))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("2025년 전체 재집계")));
+    }
+
+    @Test
     void 재집계와_마감_해제_후에도_보던_매출_기준을_유지한다() throws Exception {
         mvc.perform(post("/summary/recalculate").param("month", "2026-01").param("basis", "managed").with(user(admin)).with(csrf()))
                 .andExpect(header().string("Location", "/summary?month=2026-01&basis=managed"));

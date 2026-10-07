@@ -1,6 +1,7 @@
 package kr.co.abacus.abms.summary;
 
 import java.time.YearMonth;
+import java.util.List;
 import java.time.format.DateTimeParseException;
 
 import org.jspecify.annotations.Nullable;
@@ -56,6 +57,18 @@ public class SummaryController {
             Toast.success(redirect, target + " 손익을 재집계했습니다. (프로젝트 " + result.projectCount() + "건)");
         }
         return back(target, basis);
+    }
+
+    @PostMapping("/recalculate-year")
+    public String recalculateYear(@AuthenticationPrincipal LoginUser user, @RequestParam int year, @RequestParam String month,
+                                  @RequestParam(required = false) @Nullable String basis, RedirectAttributes redirect) {
+        YearCalculationResult result = closingService.recalculateYear(user, year);
+        redirect.addFlashAttribute("warnings", result.warnings());
+        List<YearMonth> done = result.recalculated();
+        String range = done.isEmpty() ? "" : done.getFirst().getMonthValue() + "~" + done.getLast().getMonthValue() + "월 ";
+        Toast.success(redirect, year + "년 " + range + "손익을 다시 집계했습니다. (" + done.size() + "개월"
+                + (result.skipped().isEmpty() ? "" : ", 마감 " + result.skipped().size() + "개월 건너뜀") + ")");
+        return back(parse(month), basis);
     }
 
     @PostMapping("/close")

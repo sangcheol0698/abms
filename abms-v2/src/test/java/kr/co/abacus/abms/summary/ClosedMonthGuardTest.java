@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.department.Department;
@@ -240,6 +241,26 @@ class ClosedMonthGuardTest {
                 .isInstanceOf(BusinessException.class).hasMessageContaining("직원 복구");
         assertThatThrownBy(() -> employeeService.delete(admin, member.id()))
                 .isInstanceOf(BusinessException.class).hasMessageContaining("직원 삭제");
+    }
+
+    @Test
+    void 연도_재집계는_1월부터_12월까지_다시_집계하고_마감된_월은_건너뛴다() {
+        closingService.close(admin, YearMonth.of(2025, 3));
+
+        YearCalculationResult result = closingService.recalculateYear(admin, 2025);
+
+        assertThat(result.months()).hasSize(12);
+        assertThat(result.skipped()).containsExactly(YearMonth.of(2025, 3));
+        assertThat(result.recalculated()).hasSize(11).doesNotContain(YearMonth.of(2025, 3));
+    }
+
+    @Test
+    void 미래_연도는_재집계할_수_없고_손익_관리_권한이_필요하다() {
+        assertThatThrownBy(() -> closingService.recalculateYear(admin, YearMonth.now().getYear() + 1))
+                .isInstanceOf(BusinessException.class);
+        LoginUser viewer = Fixtures.user(member, Fixtures.grants(kr.co.abacus.abms.access.PermissionScope.ALL, PermissionCode.DASHBOARD_READ));
+        assertThatThrownBy(() -> closingService.recalculateYear(viewer, 2025))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
     }
 
 }
