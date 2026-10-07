@@ -16,6 +16,10 @@
             apply();
             query.addEventListener('change', function () { apply(); window.abmsThemeChanged && window.abmsThemeChanged(); });
         } catch (e) {}
+        // 입력 보강(forms.js) 전 기본 날짜·금액 입력이 한 프레임 보였다 바뀌지 않도록 숨겨 둔다. (app.css [data-forms-pending])
+        // forms.js 를 못 불러오면 3초 뒤 기본 입력을 그대로 보여준다.
+        document.documentElement.dataset.formsPending = '';
+        setTimeout(function () { delete document.documentElement.dataset.formsPending; }, 3000);
     })();
 </script>
 <title>${title} · ABMS</title>

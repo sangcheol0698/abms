@@ -927,3 +927,12 @@
         to { opacity: 1; }
     }
 }
+
+/* 첫 로드에서 forms.js 가 보강하기 전까지 기본 날짜·금액 입력을 숨긴다. (보강 후 크기가 같아 자리가 밀리지 않는다)
+   손익 현황의 작은 월 입력은 보강 후 폭(5rem)을 미리 맞춘다. */
+[data-forms-pending] :is(input[type=date], input[type=month], input[type=datetime-local], input[data-money]) {
+    visibility: hidden;
+}
+[data-forms-pending] input[type=month]:not(.input) {
+    width: 5rem;
+}
