@@ -36,6 +36,24 @@ public class MonthClosingService {
         return calculationService.calculate(month);
     }
 
+    /**
+     * 한 해를 1월부터 이번 달(지난 해면 12월)까지 다시 집계한다. 마감된 월은 건너뛴다.
+     * 집계 방식이 바뀐 뒤(예: 진행 기준 매출 추가) 지난 달들을 한 번에 맞출 때 쓴다.
+     */
+    public YearCalculationResult recalculateYear(LoginUser user, int year) {
+        accessService.require(user, PermissionCode.SUMMARY_MANAGE);
+        YearMonth now = YearMonth.now();
+        if (year > now.getYear()) {
+            throw new BusinessException("미래 연도는 집계할 수 없습니다.");
+        }
+        YearMonth last = year == now.getYear() ? now : YearMonth.of(year, 12);
+        java.util.List<CalculationResult> results = new java.util.ArrayList<>();
+        for (YearMonth month = YearMonth.of(year, 1); !month.isAfter(last); month = month.plusMonths(1)) {
+            results.add(calculationService.calculate(month));
+        }
+        return new YearCalculationResult(year, results);
+    }
+
     /** 최신 값으로 집계한 뒤 마감한다. */
     public void close(LoginUser user, YearMonth month) {
         accessService.require(user, PermissionCode.SUMMARY_MANAGE);
