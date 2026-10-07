@@ -42,7 +42,7 @@
     <%-- 월 이동 · 상태 --%>
     <div class="-mx-4 mb-x6 sm:-mx-6 lg:-mx-8">
         <div class="view-bar border-t sm:px-x6 lg:px-x8" hx-target="#summary-view" hx-select="#summary-view" hx-swap="outerHTML"
-             hx-push-url="true" hx-indicator="#summary-view">
+             hx-push-url="true">
             <div class="flex items-center rounded-r2 border border-stroke-neutral-subtle">
                 <a id="month-prev" href="/summary?month=${report.month().minusMonths(1).toString()}${basisQuery}" hx-get="/summary?month=${report.month().minusMonths(1).toString()}${basisQuery}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>
                 <form action="/summary" method="get" hx-get="/summary" class="border-x border-stroke-neutral-subtle">
@@ -83,11 +83,11 @@
     @endif
 
     @if(!report.calculated())
-        <div class="list-box" data-summary-data>
+        <div class="list-box">
             @template.components.empty(message = "이 달은 아직 집계되지 않았습니다." + (canManage ? " [재집계] 버튼으로 집계할 수 있습니다." : " 매일 새벽 자동 집계됩니다."), icon = "chart")
         </div>
     @else
-        <div class="space-y-6" data-summary-data>
+        <div class="space-y-6">
             <%-- 지표 줄 --%>
             <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle @3xl:grid-cols-4 [&>div]:bg-bg-layer-default">
                 <div class="px-x4 py-x3"><p class="stat-label">매출 <span class="text-fg-placeholder">${report.basis().label()}</span></p><p class="stat-value">${Ui.won(report.revenue())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>

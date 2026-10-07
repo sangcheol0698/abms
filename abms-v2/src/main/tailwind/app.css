@@ -263,12 +263,6 @@
         @apply bg-bg-layer-default text-fg-neutral shadow-s1;
     }
 
-    /* 부분 갱신 중인 데이터는 살짝 흐리게 (빠른 응답에서는 깜빡이지 않도록 늦게 시작) */
-    .htmx-request [data-summary-data] {
-        opacity: 0.55;
-        transition: opacity 0.15s ease 0.12s;
-    }
-
     /* 제자리 수정 제목 (forms.js) */
     .inline-title {
         @apply -mx-1.5 flex max-w-full min-w-0 cursor-text items-center rounded-r1_5 px-x1_5 py-x0_5 text-left hover:bg-bg-transparent-pressed

@@ -785,7 +785,9 @@ window.abmsChat = {
     document.addEventListener('input', (e) => {
         if (e.target.matches && e.target.matches('[data-money]')) render(e.target);
     });
-    htmx.onLoad((root) => root.querySelectorAll && root.querySelectorAll('[data-money]').forEach((input) => { if (input.value) render(input); }));
+    const renderAll = (root) => root.querySelectorAll && root.querySelectorAll('[data-money]').forEach((input) => { if (input.value) render(input); });
+    htmx.onLoad(renderAll);
+    document.body.addEventListener('htmx:afterSwap', () => renderAll(document.body));
 
     // htmx 보다 먼저(캡처 단계) 막고 확인창(confirm.js)으로 묻는다. 확인하면 같은 제출 버튼으로 다시 제출한다.
     document.addEventListener('submit', (e) => {
