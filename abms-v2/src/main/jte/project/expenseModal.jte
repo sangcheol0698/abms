@@ -10,13 +10,17 @@
 @param ExpenseForm form
 @param FormErrors errors
 !{boolean editing = expense != null;}
+!{java.time.LocalDate firstDate = project.getPeriod().startDate();}
+!{java.time.LocalDate lastDate = ProjectExpense.lastDateOf(project);}
 <form hx-post="/projects/${project.id()}/expenses${editing ? "/" + expense.id() : ""}" hx-target="#modal-body">
     @template.components.modal(title = editing ? "직접비 수정" : "직접비 추가", context = project.getName(), hint = editing ? "저장" : "추가",
         description = "귀속일이 속한 월의 프로젝트 비용으로 집계됩니다. 금액은 부가세를 뺀 공급가액으로 입력하세요.", body = @`
         @template.components.globalError(errors = errors)
         <div class="prop-form">
-            @template.components.propRow(label = "귀속일", forId = "expenseDate", required = true, error = errors.get("expenseDate"), control = @`
-                <input id="expenseDate" name="expenseDate" type="date" class="input" value="${Ui.value(form.expenseDate())}" required>
+            @template.components.propRow(label = "귀속일", forId = "expenseDate", required = true, error = errors.get("expenseDate"),
+                help = "프로젝트 시작일부터 종료 " + ProjectExpense.MONTHS_AFTER_END + "개월 후까지 (" + Ui.period(firstDate, lastDate) + ")", control = @`
+                <input id="expenseDate" name="expenseDate" type="date" class="input" value="${Ui.value(form.expenseDate())}" required
+                       min="${firstDate.toString()}" max="${lastDate.equals(java.time.LocalDate.MAX) ? null : lastDate.toString()}">
             `)
             @template.components.propRow(label = "분류", forId = "category", error = errors.get("category"), control = @`
                 <select id="category" name="category" class="select">

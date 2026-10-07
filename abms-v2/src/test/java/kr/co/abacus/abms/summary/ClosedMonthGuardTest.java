@@ -136,6 +136,28 @@ class ClosedMonthGuardTest {
     }
 
     @Test
+    void 직접비_귀속일은_프로젝트_시작일부터_종료_3개월_후까지만_입력한다() {
+        assertThatThrownBy(() -> expenseService.add(admin, project.id(),
+                new ExpenseInfo(LocalDate.of(2025, 12, 31), ExpenseCategory.TRAVEL, Money.wons(500_000), "착수 전 출장", null)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("2026-01-01 ~ 2027-03-31");
+        assertThatThrownBy(() -> expenseService.add(admin, project.id(),
+                new ExpenseInfo(LocalDate.of(2062, 3, 10), ExpenseCategory.LICENSE, Money.wons(500_000), "오타", null)))
+                .isInstanceOf(BusinessException.class);
+        ProjectExpense warranty = expenseService.add(admin, project.id(),
+                new ExpenseInfo(LocalDate.of(2027, 3, 31), ExpenseCategory.OUTSOURCING, Money.wons(500_000), "하자보수", null));
+
+        // 프로젝트 기간이 줄어도 귀속일을 그대로 두면 분류·메모는 고칠 수 있다.
+        project.update(new Project.ProjectInfo(project.getPartyId(), project.getLeadDepartmentId(), project.getName(), null,
+                project.getStatus(), project.getContractAmount(), new kr.co.abacus.abms.common.domain.Period(LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 6, 30))));
+        expenseService.update(admin, project.id(), warranty.id(),
+                new ExpenseInfo(LocalDate.of(2027, 3, 31), ExpenseCategory.EQUIPMENT, Money.wons(500_000), "하자보수", "메모"));
+        assertThatThrownBy(() -> expenseService.update(admin, project.id(), warranty.id(),
+                new ExpenseInfo(LocalDate.of(2027, 3, 30), ExpenseCategory.EQUIPMENT, Money.wons(500_000), "하자보수", "메모")))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("2026-09-30");
+    }
+
+    @Test
     void 마감_월에_걸친_투입의_투입률은_바꿀_수_없다() {
         ProjectAssignment assignment = assignmentService.assign(admin, project.id(), member.id(), AssignmentRole.DEV,
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30));

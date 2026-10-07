@@ -34,7 +34,6 @@ import kr.co.abacus.abms.project.ProjectExpenseRepository;
 import kr.co.abacus.abms.project.ProjectRepository;
 import kr.co.abacus.abms.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.project.ProjectRevenuePlanRepository;
-import kr.co.abacus.abms.project.ProjectStatus;
 import kr.co.abacus.abms.summary.EmployeeCostPolicy.CostBreakdown;
 import kr.co.abacus.abms.summary.MonthlyRevenueSummary.Snapshot;
 
@@ -43,7 +42,7 @@ import kr.co.abacus.abms.summary.MonthlyRevenueSummary.Snapshot;
  * <ol>
  *     <li>직원 월 원가 = 월 기본급(연봉/12) × (1 + 제경비율 + 판관비율)</li>
  *     <li>프로젝트 매출(청구 기준) = 해당 월 청구일 + 발행 완료된 매출 계획 합계</li>
- *     <li>프로젝트 관리 매출(진행 기준) = 계약금액을 프로젝트 기간에 일할 배분한 해당 월 몫 (취소된 프로젝트는 청구 기준과 같다)</li>
+ *     <li>프로젝트 관리 매출(진행 기준) = 계약금액을 프로젝트 기간에 일할 배분한 해당 월 몫 (취소·보류된 프로젝트는 청구 기준과 같다)</li>
  *     <li>프로젝트 비용 = 인건비 Σ(투입 직원 월 원가 × 투입 M/M × 투입률) + 해당 월 귀속 직접비</li>
  *     <li>손익은 프로젝트 <b>주관 부서</b>에 귀속</li>
  *     <li>전사 정직원 비용 중 프로젝트에 배분되지 않은 금액을 별도 집계</li>
@@ -183,8 +182,8 @@ public class ProfitCalculationService {
             Money revenue = plansByProject.getOrDefault(project.id(), List.of()).stream()
                     .map(ProjectRevenuePlan::getAmount)
                     .reduce(Money.ZERO, Money::plus);
-            // 취소된 프로젝트는 계약금액을 다 받지 못하므로 진행 기준 대신 실제 청구액을 관리 매출로 본다.
-            Money managedRevenue = project.getStatus() == ProjectStatus.CANCELLED ? revenue : project.managedRevenue(month);
+            // 취소·보류된 프로젝트는 계약금액을 기간대로 받는다고 볼 수 없으므로 실제 청구액을 관리 매출로 본다.
+            Money managedRevenue = project.getStatus().accruesManagedRevenue() ? project.managedRevenue(month) : revenue;
             Money laborCost = Money.ZERO;
             for (ProjectAssignment assignment : assignmentsByProject.getOrDefault(project.id(), List.of())) {
                 EmployeeMonthlyCost employeeCost = costs.get(assignment.getEmployeeId());

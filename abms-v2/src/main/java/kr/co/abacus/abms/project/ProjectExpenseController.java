@@ -41,7 +41,12 @@ public class ProjectExpenseController {
     @GetMapping("/new")
     public String createModal(@AuthenticationPrincipal LoginUser user, @PathVariable Long projectId, Model model) {
         Project project = projectService.getForWrite(user, projectId);
-        ExpenseForm form = new ExpenseForm(LocalDate.now(), ExpenseCategory.OUTSOURCING, null, null, null);
+        // 기본 귀속일은 오늘이되, 입력할 수 있는 범위 밖이면 가장 가까운 날로 맞춘다.
+        LocalDate today = LocalDate.now();
+        LocalDate first = project.getPeriod().startDate();
+        LocalDate last = ProjectExpense.lastDateOf(project);
+        LocalDate date = today.isBefore(first) ? first : today.isAfter(last) ? last : today;
+        ExpenseForm form = new ExpenseForm(date, ExpenseCategory.OUTSOURCING, null, null, null);
         return modal(model, project, null, form, FormErrors.none());
     }
 

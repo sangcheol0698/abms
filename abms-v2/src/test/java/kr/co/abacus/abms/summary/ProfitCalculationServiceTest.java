@@ -17,6 +17,7 @@ import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.employee.EmployeeType;
 import kr.co.abacus.abms.project.Project;
+import kr.co.abacus.abms.project.ProjectStatus;
 import kr.co.abacus.abms.project.ProjectService;
 import kr.co.abacus.abms.security.LoginUser;
 import kr.co.abacus.abms.support.Fixtures;
@@ -149,6 +150,17 @@ class ProfitCalculationServiceTest {
     @Test
     void 취소된_프로젝트의_관리_매출은_청구_기준과_같다() {
         projectService.cancel(Fixtures.admin(leadMember), project.id());
+
+        calculationService.calculate(FEB);
+
+        MonthlyRevenueSummary summary = only(summaryRepository.findAllByProjectIdOrderByTargetMonthAsc(project.id()));
+        assertThat(summary.getManagedRevenueAmount()).isEqualTo(Money.wons(100_000_000));
+    }
+
+    @Test
+    void 보류된_프로젝트의_관리_매출도_청구_기준과_같다() {
+        project.update(new Project.ProjectInfo(project.getPartyId(), project.getLeadDepartmentId(), project.getName(), project.getDescription(),
+                ProjectStatus.ON_HOLD, project.getContractAmount(), project.getPeriod()));
 
         calculationService.calculate(FEB);
 

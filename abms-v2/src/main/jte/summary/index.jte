@@ -19,18 +19,18 @@
         @if(canManage)
             @if(!report.closed())
                 <form method="post" action="/summary/recalculate" hx-disabled-elt="find button">${kr.co.abacus.abms.common.web.Csrf.field()}
-                    <input type="hidden" name="month" value="${month}">
+                    <input type="hidden" name="month" value="${month}">@if(managed)<input type="hidden" name="basis" value="managed">@endif
                     <button class="${Seed.button("brandSolid")}">${Icons.of("refresh", "size-4")} 재집계</button>
                 </form>
                 @if(isPast)
                     <form method="post" action="/summary/close" hx-confirm="${month} 손익을 최신 값으로 재집계한 뒤 마감할까요? 마감된 월은 자동 재집계되지 않습니다.">${kr.co.abacus.abms.common.web.Csrf.field()}
-                        <input type="hidden" name="month" value="${month}">
+                        <input type="hidden" name="month" value="${month}">@if(managed)<input type="hidden" name="basis" value="managed">@endif
                         <button class="${Seed.button("neutralOutline")}">${Icons.of("lock", "size-4")} 마감</button>
                     </form>
                 @endif
             @else
                 <form method="post" action="/summary/reopen" hx-confirm="${month} 마감을 해제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
-                    <input type="hidden" name="month" value="${month}">
+                    <input type="hidden" name="month" value="${month}">@if(managed)<input type="hidden" name="basis" value="managed">@endif
                     <button class="${Seed.button("neutralOutline")}">마감 해제</button>
                 </form>
             @endif

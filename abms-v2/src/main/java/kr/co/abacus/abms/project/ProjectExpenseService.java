@@ -41,20 +41,20 @@ public class ProjectExpenseService {
     }
 
     public ProjectExpense add(LoginUser user, Long projectId, ExpenseInfo info) {
-        projectService.getForWrite(user, projectId);
+        Project project = projectService.getForWrite(user, projectId);
         closedMonthGuard.checkOpen(info.expenseDate(), "직접비 등록");
-        return expenseRepository.save(ProjectExpense.create(projectId, info));
+        return expenseRepository.save(ProjectExpense.create(project, info));
     }
 
     public void update(LoginUser user, Long projectId, Long expenseId, ExpenseInfo info) {
-        projectService.getForWrite(user, projectId);
+        Project project = projectService.getForWrite(user, projectId);
         ProjectExpense expense = get(projectId, expenseId);
         // 금액·귀속일이 바뀌면 이전·이후 월 모두의 비용이 달라진다. (분류·내용·메모만 바꾸는 것은 허용)
         if (!expense.getExpenseDate().equals(info.expenseDate()) || !expense.getAmount().equals(info.amount())) {
             closedMonthGuard.checkOpen(expense.getExpenseDate(), "직접비 수정");
             closedMonthGuard.checkOpen(info.expenseDate(), "직접비 수정");
         }
-        expense.update(info);
+        expense.update(project, info);
     }
 
     public void delete(LoginUser user, Long projectId, Long expenseId) {

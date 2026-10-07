@@ -49,15 +49,39 @@ public class ProjectExpense extends BaseEntity implements Auditable {
     protected ProjectExpense() {
     }
 
-    public static ProjectExpense create(Long projectId, ExpenseInfo info) {
+    /** 귀속일은 프로젝트 시작일부터 종료일 이후 이 개월 수까지 (마무리·하자보수 비용) */
+    public static final int MONTHS_AFTER_END = 3;
+
+    public static ProjectExpense create(Project project, ExpenseInfo info) {
+        checkWithinProject(project, info.expenseDate());
         ProjectExpense expense = new ProjectExpense();
-        expense.projectId = Objects.requireNonNull(projectId);
+        expense.projectId = Objects.requireNonNull(project.id());
         expense.apply(info);
         return expense;
     }
 
-    public void update(ExpenseInfo info) {
+    /** 귀속일을 바꿀 때만 기간을 확인한다. (나중에 프로젝트 기간이 바뀌어도 분류·메모 수정은 막지 않는다) */
+    public void update(Project project, ExpenseInfo info) {
+        if (!info.expenseDate().equals(expenseDate)) {
+            checkWithinProject(project, info.expenseDate());
+        }
         apply(info);
+    }
+
+    /** 귀속일로 입력할 수 있는 마지막 날 */
+    public static LocalDate lastDateOf(Project project) {
+        LocalDate end = project.getPeriod().endDate();
+        return end == null ? LocalDate.MAX : end.plusMonths(MONTHS_AFTER_END);
+    }
+
+    private static void checkWithinProject(Project project, @Nullable LocalDate date) {
+        Objects.requireNonNull(date, "귀속일은 필수입니다.");
+        LocalDate first = project.getPeriod().startDate();
+        LocalDate last = lastDateOf(project);
+        if (date.isBefore(first) || date.isAfter(last)) {
+            throw new BusinessException("귀속일은 프로젝트 시작일부터 종료 " + MONTHS_AFTER_END + "개월 후까지(" + first + " ~ "
+                    + (last.equals(LocalDate.MAX) ? "" : last) + ") 입력할 수 있습니다: " + date);
+        }
     }
 
     private void apply(ExpenseInfo info) {

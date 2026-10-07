@@ -96,6 +96,16 @@ class PageRenderingTest {
     }
 
     @Test
+    void 재집계와_마감_해제_후에도_보던_매출_기준을_유지한다() throws Exception {
+        mvc.perform(post("/summary/recalculate").param("month", "2026-01").param("basis", "managed").with(user(admin)).with(csrf()))
+                .andExpect(header().string("Location", "/summary?month=2026-01&basis=managed"));
+        mvc.perform(post("/summary/recalculate").param("month", "2026-01").with(user(admin)).with(csrf()))
+                .andExpect(header().string("Location", "/summary?month=2026-01"));
+        mvc.perform(get("/summary").param("month", "2026-01").param("basis", "managed").with(user(admin)))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<input type=\"hidden\" name=\"month\" value=\"2026-01\"><input type=\"hidden\" name=\"basis\" value=\"managed\">")));
+    }
+
+    @Test
     void 없는_페이지는_404_오류_화면() throws Exception {
         mvc.perform(get("/projects/{id}", 9_999_999).with(user(admin))).andExpect(status().isNotFound());
     }

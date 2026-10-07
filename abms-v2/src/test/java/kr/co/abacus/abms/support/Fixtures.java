@@ -123,7 +123,7 @@ public class Fixtures {
     }
 
     public ProjectExpense expense(Project project, LocalDate date, long amount) {
-        return expenseRepository.save(ProjectExpense.create(project.id(),
+        return expenseRepository.save(ProjectExpense.create(project,
                 new ProjectExpense.ExpenseInfo(date, ExpenseCategory.OUTSOURCING, Money.wons(amount), "외주 용역", null)));
     }
 
