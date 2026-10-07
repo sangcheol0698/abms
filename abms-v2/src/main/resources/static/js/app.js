@@ -308,6 +308,19 @@
         });
     }
 
+    // 빈 검색어의 기본 목록을 기억해 두고 열 때 바로 보여준다. (팔레트는 페이지 이동마다 비워지므로,
+    // 그대로 열면 빈 창이 먼저 떴다가 목록이 와서 창이 길어지며 깜빡인다) 최신 목록은 뒤에서 다시 받아 바꾼다.
+    let defaultResults = null;
+
+    function prefetchDefault() {
+        if (defaultResults !== null) return;
+        fetch('/palette?q=', {headers: {'HX-Request': 'true'}, credentials: 'same-origin'})
+            .then((r) => (r.ok ? r.text() : null))
+            .then((html) => { if (html !== null && defaultResults === null) defaultResults = html; })
+            .catch(() => {});
+    }
+    if (palette()) (window.requestIdleCallback || ((f) => setTimeout(f, 1500)))(prefetchDefault);
+
     function openPalette() {
         const dialog = palette();
         if (!dialog || dialog.open) return;
@@ -315,6 +328,12 @@
         input.value = '';
         stale = true;
         enterPending = false;
+        const results = document.getElementById('palette-results');
+        if (defaultResults !== null && results) {
+            results.innerHTML = defaultResults;
+            htmx.process(results);
+            setActive(0);
+        }
         dialog.showModal();
         input.focus();
         htmx.trigger(input, 'palette-open');
@@ -363,6 +382,7 @@
 
     document.body.addEventListener('htmx:afterSwap', (e) => {
         if (!e.detail.target || e.detail.target.id !== 'palette-results') return;
+        if (!document.getElementById('palette-input').value.trim()) defaultResults = e.detail.target.innerHTML;
         // 마지막 입력에 대한 응답만 최신 결과로 본다. (hx-sync=replace 로 이전 요청은 취소된다)
         stale = false;
         setActive(0);

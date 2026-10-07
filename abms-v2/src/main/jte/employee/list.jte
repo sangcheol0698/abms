@@ -34,9 +34,9 @@
     <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
         <%-- 필터 바와 열 제목: 데스크톱은 목록 위에 고정(목록만 스크롤), 태블릿은 문서 스크롤 중 툴바 아래에 고정, 모바일은 함께 스크롤 --%>
         <div class="z-10 shrink-0 bg-bg-layer-default md:sticky md:top-(--sticky-top)">
-        <form class="view-bar sm:px-x6 lg:px-x8" action="/employees" method="get"
+        <form id="employee-filter" class="view-bar sm:px-x6 lg:px-x8" action="/employees" method="get"
               hx-get="/employees" hx-target="#employee-results" hx-push-url="true"
-              hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], change from:input[type=checkbox], submit">
+              hx-trigger="input changed delay:300ms from:(#employee-filter input[name=q]), change from:(#employee-filter select), change from:(#employee-filter input[type=radio]), change from:(#employee-filter input[type=checkbox]), submit">
             <div class="flex flex-wrap items-center gap-x1" role="radiogroup" aria-label="상태">
                 <label class="chip"><input type="radio" name="status" value="" checked="${search.status() == null}">전체</label>
                 @for(EmployeeStatus s : EmployeeStatus.values())

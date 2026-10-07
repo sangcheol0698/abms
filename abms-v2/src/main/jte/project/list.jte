@@ -35,9 +35,9 @@
     <div class="flex min-h-0 flex-1 flex-col border-t border-stroke-neutral-subtle">
         <%-- 필터 바와 열 제목: 데스크톱은 목록 위에 고정. 태블릿·모바일은 상태별 그룹 머리가 툴바 아래에 고정되므로 함께 스크롤 --%>
         <div class="z-10 shrink-0 bg-bg-layer-default">
-        <form class="view-bar sm:px-x6 lg:px-x8" action="/projects"
+        <form id="project-filter" class="view-bar sm:px-x6 lg:px-x8" action="/projects"
               hx-get="/projects" hx-target="#project-results" hx-push-url="true"
-              hx-trigger="input changed delay:300ms from:input[name=q], change from:select, change from:input[type=radio], submit">
+              hx-trigger="input changed delay:300ms from:(#project-filter input[name=q]), change from:(#project-filter select), change from:(#project-filter input[type=radio]), submit">
             <div class="flex flex-wrap items-center gap-x1" role="radiogroup" aria-label="상태">
                 <label class="chip"><input type="radio" name="status" value="" checked="${search.status() == null}">전체</label>
                 @for(ProjectStatus s : ProjectStatus.values())
