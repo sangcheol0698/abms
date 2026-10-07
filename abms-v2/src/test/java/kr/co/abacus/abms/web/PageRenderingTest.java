@@ -4,6 +4,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,7 +53,7 @@ class PageRenderingTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"/", "/employees", "/employees/new", "/departments", "/departments/new", "/parties", "/parties/new", "/sites", "/sites/new", "/projects",
-            "/projects/new", "/summary", "/summary?month=2026-01", "/reports", "/assistant", "/admin/accounts",
+            "/projects/new", "/summary", "/summary?month=2026-01", "/summary?month=2026-01&basis=managed", "/reports", "/assistant", "/admin/accounts",
             "/admin/permission-groups", "/admin/permission-groups/1", "/admin/cost-policies", "/admin/audit-logs", "/notices", "/notices/new", "/notifications"})
     void 목록과_폼_화면을_렌더링한다(String path) throws Exception {
         mvc.perform(get(path).with(user(admin))).andExpect(status().isOk());
@@ -67,6 +68,7 @@ class PageRenderingTest {
         mvc.perform(get("/projects/{id}/edit", project.id()).with(user(admin))).andExpect(status().isOk());
         mvc.perform(get("/projects/{id}/revenues/new", project.id()).with(user(admin))).andExpect(status().isOk());
         mvc.perform(get("/projects/{id}/assignments/new", project.id()).with(user(admin))).andExpect(status().isOk());
+        mvc.perform(get("/projects/{id}/expenses/new", project.id()).with(user(admin))).andExpect(status().isOk());
         mvc.perform(get("/departments/{id}", employee.getDepartmentId()).with(user(admin)).header("HX-Request", "true")
                 .header("HX-Target", "department-detail")).andExpect(status().isOk());
     }
@@ -78,6 +80,29 @@ class PageRenderingTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("HX-Retarget", "#revenue-section"))
                 .andExpect(header().string("HX-Trigger", org.hamcrest.Matchers.containsString("closeModal")));
+    }
+
+    @Test
+    void 모달에서_직접비를_추가하면_섹션을_다시_그린다() throws Exception {
+        mvc.perform(post("/projects/{id}/expenses", project.id()).with(user(admin)).with(csrf()).header("HX-Request", "true")
+                        .param("expenseDate", "2026-03-15").param("category", "LICENSE").param("amount", "1200000")
+                        .param("description", "IDE 라이선스"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("HX-Retarget", "#expense-section"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("IDE 라이선스")));
+        // 상세 화면에도 직접비 섹션이 보인다.
+        mvc.perform(get("/projects/{id}", project.id()).with(user(admin)))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("1,200,000")));
+    }
+
+    @Test
+    void 재집계와_마감_해제_후에도_보던_매출_기준을_유지한다() throws Exception {
+        mvc.perform(post("/summary/recalculate").param("month", "2026-01").param("basis", "managed").with(user(admin)).with(csrf()))
+                .andExpect(header().string("Location", "/summary?month=2026-01&basis=managed"));
+        mvc.perform(post("/summary/recalculate").param("month", "2026-01").with(user(admin)).with(csrf()))
+                .andExpect(header().string("Location", "/summary?month=2026-01"));
+        mvc.perform(get("/summary").param("month", "2026-01").param("basis", "managed").with(user(admin)))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<input type=\"hidden\" name=\"month\" value=\"2026-01\"><input type=\"hidden\" name=\"basis\" value=\"managed\">")));
     }
 
     @Test

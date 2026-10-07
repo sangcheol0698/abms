@@ -32,19 +32,21 @@ public class SummaryController {
     }
 
     @GetMapping
-    public String index(@AuthenticationPrincipal LoginUser user, @RequestParam(required = false) @Nullable String month, Model model) {
+    public String index(@AuthenticationPrincipal LoginUser user, @RequestParam(required = false) @Nullable String month,
+                        @RequestParam(required = false) @Nullable String basis, Model model) {
         if (!user.has(PermissionCode.DASHBOARD_READ)) {
             throw new AccessDeniedException("손익 조회 권한이 없습니다.");
         }
         YearMonth target = parse(month);
-        model.addAttribute("report", queryService.monthReport(user, target));
+        model.addAttribute("report", queryService.monthReport(user, target, RevenueBasis.parse(basis)));
         model.addAttribute("canManage", user.has(PermissionCode.SUMMARY_MANAGE));
         model.addAttribute("isPast", target.isBefore(YearMonth.now()));
         return "summary/index";
     }
 
     @PostMapping("/recalculate")
-    public String recalculate(@AuthenticationPrincipal LoginUser user, @RequestParam String month, RedirectAttributes redirect) {
+    public String recalculate(@AuthenticationPrincipal LoginUser user, @RequestParam String month,
+                         @RequestParam(required = false) @Nullable String basis, RedirectAttributes redirect) {
         YearMonth target = parse(month);
         CalculationResult result = closingService.recalculate(user, target);
         redirect.addFlashAttribute("calculation", result);
@@ -53,23 +55,31 @@ public class SummaryController {
         } else {
             Toast.success(redirect, target + " 손익을 재집계했습니다. (프로젝트 " + result.projectCount() + "건)");
         }
-        return "redirect:/summary?month=" + target;
+        return back(target, basis);
     }
 
     @PostMapping("/close")
-    public String close(@AuthenticationPrincipal LoginUser user, @RequestParam String month, RedirectAttributes redirect) {
+    public String close(@AuthenticationPrincipal LoginUser user, @RequestParam String month,
+                         @RequestParam(required = false) @Nullable String basis, RedirectAttributes redirect) {
         YearMonth target = parse(month);
         closingService.close(user, target);
         Toast.success(redirect, target + " 손익을 마감했습니다. 마감된 월은 재집계되지 않습니다.");
-        return "redirect:/summary?month=" + target;
+        return back(target, basis);
     }
 
     @PostMapping("/reopen")
-    public String reopen(@AuthenticationPrincipal LoginUser user, @RequestParam String month, RedirectAttributes redirect) {
+    public String reopen(@AuthenticationPrincipal LoginUser user, @RequestParam String month,
+                         @RequestParam(required = false) @Nullable String basis, RedirectAttributes redirect) {
         YearMonth target = parse(month);
         closingService.reopen(user, target);
         Toast.success(redirect, target + " 마감을 해제했습니다.");
-        return "redirect:/summary?month=" + target;
+        return back(target, basis);
+    }
+
+    /** 작업 후에도 보던 매출 기준(청구/진행)을 유지한다. */
+    private static String back(YearMonth month, @Nullable String basis) {
+        RevenueBasis revenueBasis = RevenueBasis.parse(basis);
+        return "redirect:/summary?month=" + month + (revenueBasis == RevenueBasis.MANAGED ? "&basis=" + revenueBasis.param() : "");
     }
 
     private static YearMonth parse(@Nullable String month) {

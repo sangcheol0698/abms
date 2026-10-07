@@ -251,6 +251,18 @@
         @apply border-(--seed-color-fg-critical);
     }
 
+    /* 세그먼트 전환 (청구 기준 / 진행 기준 등). 누르는 즉시 선택이 옮겨 간다 (app.js) */
+    .segmented {
+        @apply inline-flex h-7 items-center gap-0.5 rounded-r2 bg-bg-neutral-weak p-0.5;
+    }
+    .segmented > a {
+        @apply flex h-6 items-center rounded-r1_5 px-x2_5 t3-medium whitespace-nowrap text-fg-neutral-subtle transition-colors hover:text-fg-neutral
+        focus-visible:outline-2 focus-visible:outline-(--seed-color-stroke-focus-ring);
+    }
+    .segmented > a[aria-current=true] {
+        @apply bg-bg-layer-default text-fg-neutral shadow-s1;
+    }
+
     /* 제자리 수정 제목 (forms.js) */
     .inline-title {
         @apply -mx-1.5 flex max-w-full min-w-0 cursor-text items-center rounded-r1_5 px-x1_5 py-x0_5 text-left hover:bg-bg-transparent-pressed
@@ -914,4 +926,13 @@
         from { opacity: 1; }
         to { opacity: 1; }
     }
+}
+
+/* 첫 로드에서 forms.js 가 보강하기 전까지 기본 날짜·금액 입력을 숨긴다. (보강 후 크기가 같아 자리가 밀리지 않는다)
+   손익 현황의 작은 월 입력은 보강 후 폭(5rem)을 미리 맞춘다. */
+[data-forms-pending] :is(input[type=date], input[type=month], input[type=datetime-local], input[data-money]) {
+    visibility: hidden;
+}
+[data-forms-pending] input[type=month]:not(.input) {
+    width: 5rem;
 }

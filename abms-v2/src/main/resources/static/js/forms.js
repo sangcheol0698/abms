@@ -840,4 +840,10 @@
     }
 
     htmx.onLoad((node) => enhance(node));
+    enhance(document.body);
+    delete document.documentElement.dataset.formsPending;
+    // htmx.onLoad 는 settle 뒤에 불려, 그 사이 한두 프레임 동안 브라우저 기본 컨트롤이 보였다 바뀐다(깜빡임).
+    // 바꿔 끼운 직후(그리기 전에) 먼저 보강한다. 이미 보강한 요소는 건너뛰므로 여러 번 불려도 된다.
+    document.body.addEventListener('htmx:afterSwap', () => enhance(document.body));
+    document.body.addEventListener('htmx:historyRestore', () => enhance(document.body));
 })();

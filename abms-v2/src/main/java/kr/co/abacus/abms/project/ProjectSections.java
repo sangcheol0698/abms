@@ -16,19 +16,22 @@ import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.employee.EmployeeService;
 
 /**
- * 프로젝트 상세의 부분 갱신 영역(매출 계획, 투입 인력) 뷰 모델 생성.
+ * 프로젝트 상세의 부분 갱신 영역(매출 계획, 직접비, 투입 인력) 뷰 모델 생성.
  */
 @Component
 public class ProjectSections {
 
     private final ProjectRevenueService revenueService;
+    private final ProjectExpenseService expenseService;
     private final ProjectAssignmentService assignmentService;
     private final EmployeeService employeeService;
     private final DepartmentService departmentService;
 
-    public ProjectSections(ProjectRevenueService revenueService, ProjectAssignmentService assignmentService,
-                           EmployeeService employeeService, DepartmentService departmentService) {
+    public ProjectSections(ProjectRevenueService revenueService, ProjectExpenseService expenseService,
+                           ProjectAssignmentService assignmentService, EmployeeService employeeService,
+                           DepartmentService departmentService) {
         this.revenueService = revenueService;
+        this.expenseService = expenseService;
         this.assignmentService = assignmentService;
         this.employeeService = employeeService;
         this.departmentService = departmentService;
@@ -36,6 +39,10 @@ public class ProjectSections {
 
     public RevenueSection revenue(Project project, boolean canWrite) {
         return new RevenueSection(project, revenueService.plans(project.id()), canWrite);
+    }
+
+    public ExpenseSection expense(Project project, boolean canWrite) {
+        return new ExpenseSection(project, expenseService.expenses(project.id()), canWrite);
     }
 
     public StaffingSection staffing(Project project, boolean canWrite) {
@@ -74,6 +81,33 @@ public class ProjectSections {
             }
             return issued().amount().multiply(java.math.BigDecimal.valueOf(100))
                     .divide(project.getContractAmount().amount(), 0, java.math.RoundingMode.DOWN).intValue();
+        }
+
+    }
+
+    public record ExpenseSection(Project project, List<ProjectExpense> expenses, boolean canWrite) {
+
+        public Money total() {
+            return expenses.stream().map(ProjectExpense::getAmount).reduce(Money.ZERO, Money::plus);
+        }
+
+        /** 분류별 합계 (금액이 큰 순) */
+        public List<Map.Entry<ExpenseCategory, Money>> byCategory() {
+            return expenses.stream()
+                    .collect(Collectors.groupingBy(ProjectExpense::getCategory, () -> new java.util.EnumMap<>(ExpenseCategory.class),
+                            Collectors.reducing(Money.ZERO, ProjectExpense::getAmount, Money::plus)))
+                    .entrySet().stream()
+                    .sorted(Map.Entry.<ExpenseCategory, Money>comparingByValue().reversed())
+                    .toList();
+        }
+
+        /** 계약금액 대비 직접비 비율(%) */
+        public int contractPercent() {
+            if (project.getContractAmount().amount().signum() == 0) {
+                return 0;
+            }
+            return total().amount().multiply(java.math.BigDecimal.valueOf(100))
+                    .divide(project.getContractAmount().amount(), 0, java.math.RoundingMode.HALF_UP).intValue();
         }
 
     }

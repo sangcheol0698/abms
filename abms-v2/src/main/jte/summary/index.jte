@@ -4,6 +4,7 @@
 @import kr.co.abacus.abms.summary.CalculationResult
 @import kr.co.abacus.abms.summary.MonthReport
 @import kr.co.abacus.abms.summary.ProfitRow
+@import kr.co.abacus.abms.summary.RevenueBasis
 @import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
 @param MonthReport report
@@ -11,23 +12,27 @@
 @param boolean isPast
 @param CalculationResult calculation = null
 !{String month = report.month().toString();}
+!{boolean managed = report.basis() == RevenueBasis.MANAGED;}
+!{String basisQuery = managed ? "&basis=managed" : "";}
 @template.layout.app(ctx = ctx, title = "손익 현황", content = @`
-    @template.components.pageHeader(title = "손익 현황", subtitle = "프로젝트 주관 부서 기준 월 손익 · 청구(발행) 기준 매출, 투입 M/M 기준 비용", actions = @`
+<%-- 월·매출 기준을 바꾸면 이 영역만 바꿔 끼운다. (스크롤·포커스 유지, 주소는 갱신) --%>
+<div id="summary-view">
+    @template.components.pageHeader(title = "손익 현황", subtitle = "프로젝트 주관 부서 기준 월 손익 · " + (managed ? "진행 기준 매출(계약금액 기간 일할)" : "청구(발행) 기준 매출") + ", 비용 = 인건비(투입 M/M) + 직접비", actions = @`
         @if(canManage)
             @if(!report.closed())
                 <form method="post" action="/summary/recalculate" hx-disabled-elt="find button">${kr.co.abacus.abms.common.web.Csrf.field()}
-                    <input type="hidden" name="month" value="${month}">
+                    <input type="hidden" name="month" value="${month}">@if(managed)<input type="hidden" name="basis" value="managed">@endif
                     <button class="${Seed.button("brandSolid")}">${Icons.of("refresh", "size-4")} 재집계</button>
                 </form>
                 @if(isPast)
                     <form method="post" action="/summary/close" hx-confirm="${month} 손익을 최신 값으로 재집계한 뒤 마감할까요? 마감된 월은 자동 재집계되지 않습니다.">${kr.co.abacus.abms.common.web.Csrf.field()}
-                        <input type="hidden" name="month" value="${month}">
+                        <input type="hidden" name="month" value="${month}">@if(managed)<input type="hidden" name="basis" value="managed">@endif
                         <button class="${Seed.button("neutralOutline")}">${Icons.of("lock", "size-4")} 마감</button>
                     </form>
                 @endif
             @else
                 <form method="post" action="/summary/reopen" hx-confirm="${month} 마감을 해제할까요?">${kr.co.abacus.abms.common.web.Csrf.field()}
-                    <input type="hidden" name="month" value="${month}">
+                    <input type="hidden" name="month" value="${month}">@if(managed)<input type="hidden" name="basis" value="managed">@endif
                     <button class="${Seed.button("neutralOutline")}">마감 해제</button>
                 </form>
             @endif
@@ -36,19 +41,29 @@
 
     <%-- 월 이동 · 상태 --%>
     <div class="-mx-4 mb-x6 sm:-mx-6 lg:-mx-8">
-        <div class="view-bar border-t sm:px-x6 lg:px-x8">
+        <div class="view-bar border-t sm:px-x6 lg:px-x8" hx-target="#summary-view" hx-select="#summary-view" hx-swap="outerHTML"
+             hx-push-url="true">
             <div class="flex items-center rounded-r2 border border-stroke-neutral-subtle">
-                <a href="/summary?month=${report.month().minusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>
-                <form action="/summary" method="get" class="border-x border-stroke-neutral-subtle">
-                    <input type="month" name="month" value="${month}" required class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" data-submit-on-change aria-label="조회 월">
+                <a id="month-prev" href="/summary?month=${report.month().minusMonths(1).toString()}${basisQuery}" hx-get="/summary?month=${report.month().minusMonths(1).toString()}${basisQuery}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>
+                <form action="/summary" method="get" hx-get="/summary" class="border-x border-stroke-neutral-subtle">
+                    <input id="summary-month" type="month" name="month" value="${month}" required class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" data-submit-on-change aria-label="조회 월">
+                    @if(managed)<input type="hidden" name="basis" value="managed">@endif
                 </form>
-                <a href="/summary?month=${report.month().plusMonths(1).toString()}" class="${Seed.iconButton("ghost", "xsmall")} rounded-l-none" aria-label="다음 달" title="다음 달">${Icons.of("chevron-right", "size-4")}</a>
+                <a id="month-next" href="/summary?month=${report.month().plusMonths(1).toString()}${basisQuery}" hx-get="/summary?month=${report.month().plusMonths(1).toString()}${basisQuery}" class="${Seed.iconButton("ghost", "xsmall")} rounded-l-none" aria-label="다음 달" title="다음 달">${Icons.of("chevron-right", "size-4")}</a>
             </div>
             @if(report.closed())
                 <span class="${Seed.badge("neutral")}">${Icons.of("lock", "size-3")} 마감</span>
             @else
                 <span class="${Seed.badge("informative")}">집계 중</span>
             @endif
+            <div class="segmented" role="group" aria-label="매출 인식 기준" data-segmented>
+                @for(RevenueBasis b : RevenueBasis.values())
+                    !{boolean active = b == report.basis();}
+                    !{String href = "/summary?month=" + month + (b == RevenueBasis.MANAGED ? "&basis=managed" : "");}
+                    <a id="basis-${b.param()}" href="${href}" hx-get="${href}" aria-current="${active ? "true" : null}"
+                       title="${b == RevenueBasis.MANAGED ? "계약금액을 프로젝트 기간에 일할 배분한 관리 매출" : "세금계산서가 발행된 청구 계획 기준 매출"}">${b.label()}</a>
+                @endfor
+            </div>
             <span class="ml-auto t3-regular text-fg-neutral-subtle">마지막 집계 ${Ui.dateTime(report.calculatedAt())}</span>
         </div>
     </div>
@@ -75,8 +90,9 @@
         <div class="space-y-6">
             <%-- 지표 줄 --%>
             <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle @3xl:grid-cols-4 [&>div]:bg-bg-layer-default">
-                <div class="px-x4 py-x3"><p class="stat-label">매출</p><p class="stat-value">${Ui.won(report.revenue())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
-                <div class="px-x4 py-x3"><p class="stat-label">비용</p><p class="stat-value">${Ui.won(report.cost())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
+                <div class="px-x4 py-x3"><p class="stat-label">매출 <span class="text-fg-placeholder">${report.basis().label()}</span></p><p class="stat-value">${Ui.won(report.revenue())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
+                <div class="px-x4 py-x3"><p class="stat-label">비용</p><p class="stat-value">${Ui.won(report.cost())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p>
+                    <p class="mt-x0_5 t3-regular text-fg-neutral-subtle tabular-nums">인건비 ${Ui.won(report.laborCost())} · 직접비 ${Ui.won(report.directCost())}</p></div>
                 <div class="px-x4 py-x3"><p class="stat-label">이익</p><p class="stat-value ${Ui.signClass(report.profit())}">${Ui.won(report.profit())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
                 <div class="px-x4 py-x3"><p class="stat-label">이익률</p><p class="stat-value">${Ui.percent(report.margin())}</p><p class="mt-x0_5 t3-regular text-fg-neutral-subtle">프로젝트 ${report.projects().size()}건</p></div>
             </div>
@@ -136,4 +152,5 @@
             </div>
         </div>
     @endif
+</div>
 `)

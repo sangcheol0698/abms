@@ -43,6 +43,10 @@
                     <input id="endDate" name="endDate" type="date" class="input" value="${Ui.value(form.endDate())}" aria-label="투입 종료일">
                 </div>
             `)
+            @template.components.propRow(label = "투입률 (%)", forId = "allocationRate", required = true, error = errors.get("allocationRate"),
+                help = "전담이면 100%. 같은 기간 이 직원의 모든 투입률 합계는 100%를 넘을 수 없습니다.", control = @`
+                <input id="allocationRate" name="allocationRate" type="number" min="1" max="100" step="1" class="input w-24 tabular-nums" value="${form.rate()}" required>
+            `)
         </div>
     `, footer = @`
         <button type="button" class="${Seed.button("ghost")}" data-close-modal>취소</button>
