@@ -15,6 +15,8 @@
 !{boolean managed = report.basis() == RevenueBasis.MANAGED;}
 !{String basisQuery = managed ? "&basis=managed" : "";}
 @template.layout.app(ctx = ctx, title = "손익 현황", content = @`
+<%-- 월·매출 기준을 바꾸면 이 영역만 바꿔 끼운다. (스크롤·포커스 유지, 주소는 갱신) --%>
+<div id="summary-view">
     @template.components.pageHeader(title = "손익 현황", subtitle = "프로젝트 주관 부서 기준 월 손익 · " + (managed ? "진행 기준 매출(계약금액 기간 일할)" : "청구(발행) 기준 매출") + ", 비용 = 인건비(투입 M/M) + 직접비", actions = @`
         @if(canManage)
             @if(!report.closed())
@@ -39,24 +41,26 @@
 
     <%-- 월 이동 · 상태 --%>
     <div class="-mx-4 mb-x6 sm:-mx-6 lg:-mx-8">
-        <div class="view-bar border-t sm:px-x6 lg:px-x8">
+        <div class="view-bar border-t sm:px-x6 lg:px-x8" hx-target="#summary-view" hx-select="#summary-view" hx-swap="outerHTML"
+             hx-push-url="true" hx-indicator="#summary-view">
             <div class="flex items-center rounded-r2 border border-stroke-neutral-subtle">
-                <a href="/summary?month=${report.month().minusMonths(1).toString()}${basisQuery}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>
-                <form action="/summary" method="get" class="border-x border-stroke-neutral-subtle">
-                    <input type="month" name="month" value="${month}" required class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" data-submit-on-change aria-label="조회 월">
+                <a id="month-prev" href="/summary?month=${report.month().minusMonths(1).toString()}${basisQuery}" hx-get="/summary?month=${report.month().minusMonths(1).toString()}${basisQuery}" class="${Seed.iconButton("ghost", "xsmall")} rounded-r-none" aria-label="이전 달" title="이전 달">${Icons.of("chevron-left", "size-4")}</a>
+                <form action="/summary" method="get" hx-get="/summary" class="border-x border-stroke-neutral-subtle">
+                    <input id="summary-month" type="month" name="month" value="${month}" required class="h-7 bg-transparent px-x2 t4-medium text-fg-neutral outline-none" data-submit-on-change aria-label="조회 월">
                     @if(managed)<input type="hidden" name="basis" value="managed">@endif
                 </form>
-                <a href="/summary?month=${report.month().plusMonths(1).toString()}${basisQuery}" class="${Seed.iconButton("ghost", "xsmall")} rounded-l-none" aria-label="다음 달" title="다음 달">${Icons.of("chevron-right", "size-4")}</a>
+                <a id="month-next" href="/summary?month=${report.month().plusMonths(1).toString()}${basisQuery}" hx-get="/summary?month=${report.month().plusMonths(1).toString()}${basisQuery}" class="${Seed.iconButton("ghost", "xsmall")} rounded-l-none" aria-label="다음 달" title="다음 달">${Icons.of("chevron-right", "size-4")}</a>
             </div>
             @if(report.closed())
                 <span class="${Seed.badge("neutral")}">${Icons.of("lock", "size-3")} 마감</span>
             @else
                 <span class="${Seed.badge("informative")}">집계 중</span>
             @endif
-            <div class="flex items-center rounded-r2 border border-stroke-neutral-subtle" role="group" aria-label="매출 인식 기준">
+            <div class="segmented" role="group" aria-label="매출 인식 기준" data-segmented>
                 @for(RevenueBasis b : RevenueBasis.values())
                     !{boolean active = b == report.basis();}
-                    <a href="/summary?month=${month}${b == RevenueBasis.MANAGED ? "&basis=managed" : ""}" class="${Seed.button(active ? "neutralWeak" : "ghost", "xsmall")}" aria-current="${active ? "true" : null}"
+                    !{String href = "/summary?month=" + month + (b == RevenueBasis.MANAGED ? "&basis=managed" : "");}
+                    <a id="basis-${b.param()}" href="${href}" hx-get="${href}" aria-current="${active ? "true" : null}"
                        title="${b == RevenueBasis.MANAGED ? "계약금액을 프로젝트 기간에 일할 배분한 관리 매출" : "세금계산서가 발행된 청구 계획 기준 매출"}">${b.label()}</a>
                 @endfor
             </div>
@@ -79,11 +83,11 @@
     @endif
 
     @if(!report.calculated())
-        <div class="list-box">
+        <div class="list-box" data-summary-data>
             @template.components.empty(message = "이 달은 아직 집계되지 않았습니다." + (canManage ? " [재집계] 버튼으로 집계할 수 있습니다." : " 매일 새벽 자동 집계됩니다."), icon = "chart")
         </div>
     @else
-        <div class="space-y-6">
+        <div class="space-y-6" data-summary-data>
             <%-- 지표 줄 --%>
             <div class="list-box grid grid-cols-2 gap-px bg-stroke-neutral-subtle @3xl:grid-cols-4 [&>div]:bg-bg-layer-default">
                 <div class="px-x4 py-x3"><p class="stat-label">매출 <span class="text-fg-placeholder">${report.basis().label()}</span></p><p class="stat-value">${Ui.won(report.revenue())}<span class="ml-x0_5 t4-regular text-fg-neutral-subtle">원</span></p></div>
@@ -148,4 +152,5 @@
             </div>
         </div>
     @endif
+</div>
 `)

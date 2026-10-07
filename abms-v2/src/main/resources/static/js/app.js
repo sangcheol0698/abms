@@ -103,6 +103,14 @@
 
     document.body.addEventListener('htmx:sendError', () => showToast('error', '서버에 연결할 수 없습니다.'));
 
+    // 세그먼트 전환([data-segmented]): 응답을 기다리지 않고 누른 항목을 바로 선택 상태로 보여준다.
+    document.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-segmented] > a');
+        if (!item || e.metaKey || e.ctrlKey || e.shiftKey) return;
+        item.parentElement.querySelectorAll(':scope > a').forEach((a) => a.removeAttribute('aria-current'));
+        item.setAttribute('aria-current', 'true');
+    });
+
     // ---------------------------------------------------------------------
     // 모달: #modal-body 로 콘텐츠가 들어오면 열고, closeModal 이벤트로 닫는다.
     // ---------------------------------------------------------------------
