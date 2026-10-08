@@ -236,6 +236,7 @@ src/main/resources
 ## 문서
 
 - [도메인 모델](docs/도메인모델.md)
+- [ERD](docs/ERD.md)
 - [권한 가이드](docs/권한가이드.md)
 - [매출관리 요구사항](docs/매출관리_요구사항.md)
 - [멀티 테넌시 설계안](docs/멀티테넌시_설계.md)
