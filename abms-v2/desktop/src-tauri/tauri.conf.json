@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ABMS",
+  "version": "1.0.0",
+  "identifier": "kr.co.abacus.abms",
+  "build": {
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "nsis", "msi"],
+    "category": "Business",
+    "shortDescription": "ABMS 프로젝트·부서 손익 관리",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "nsis": { "languages": ["Korean"], "installMode": "currentUser" }
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
+  }
+}
