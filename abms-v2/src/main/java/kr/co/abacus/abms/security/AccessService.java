@@ -4,11 +4,10 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.access.PermissionScope;
@@ -20,33 +19,27 @@ import kr.co.abacus.abms.access.PermissionScope;
 @Transactional(readOnly = true)
 public class AccessService {
 
-    private static final String SCOPE_CACHE_PREFIX = AccessService.class.getName() + ".scope.";
-
     private final DepartmentHierarchy departmentHierarchy;
     private final ParticipationLookup participationLookup;
+    private final ObjectProvider<DataScopeCache> scopeCache;
 
-    public AccessService(DepartmentHierarchy departmentHierarchy, ParticipationLookup participationLookup) {
+    public AccessService(DepartmentHierarchy departmentHierarchy, ParticipationLookup participationLookup,
+                         ObjectProvider<DataScopeCache> scopeCache) {
         this.departmentHierarchy = departmentHierarchy;
         this.participationLookup = participationLookup;
+        this.scopeCache = scopeCache;
     }
 
     /**
-     * 사용자의 권한 범위. 웹 요청 안에서는 (사용자, 권한 코드)별로 한 번만 계산해 요청 속성에 보관한다.
+     * 사용자의 권한 범위. 웹 요청 안에서는 (사용자, 권한 코드)별로 한 번만 계산해 {@link DataScopeCache} 에 보관한다.
      * 목록을 권한으로 걸러낼 때 항목마다 부서 트리·참여 프로젝트를 다시 조회하지 않기 위해서다.
      */
     public DataScope scopeOf(LoginUser user, PermissionCode code) {
-        RequestAttributes request = RequestContextHolder.getRequestAttributes();
-        if (request == null) {
+        DataScopeCache cache = scopeCache.getIfAvailable();
+        if (cache == null) {
             return computeScope(user, code);
         }
-        String key = SCOPE_CACHE_PREFIX + user.accountId() + "." + code.name();
-        Object cached = request.getAttribute(key, RequestAttributes.SCOPE_REQUEST);
-        if (cached instanceof DataScope scope) {
-            return scope;
-        }
-        DataScope scope = computeScope(user, code);
-        request.setAttribute(key, scope, RequestAttributes.SCOPE_REQUEST);
-        return scope;
+        return cache.get(user.accountId() + "." + code.name(), () -> computeScope(user, code));
     }
 
     private DataScope computeScope(LoginUser user, PermissionCode code) {

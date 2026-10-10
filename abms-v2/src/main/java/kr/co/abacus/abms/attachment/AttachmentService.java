@@ -95,7 +95,7 @@ public class AttachmentService {
         try {
             return new Download(attachment, fileStorage.open(attachment.getStoredPath()));
         } catch (IOException e) {
-            throw new NotFoundException("첨부 파일 본문을 찾을 수 없습니다: " + attachment.getOriginalName());
+            throw NotFoundException.withMessage("첨부 파일 본문을 찾을 수 없습니다: " + attachment.getOriginalName());
         }
     }
 

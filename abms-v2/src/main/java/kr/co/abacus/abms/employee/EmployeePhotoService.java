@@ -75,12 +75,12 @@ public class EmployeePhotoService {
     public InputStream open(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId).orElseThrow(() -> NotFoundException.of("직원", employeeId));
         if (employee.getPhotoPath() == null) {
-            throw new NotFoundException("등록된 프로필 사진이 없습니다.");
+            throw NotFoundException.withMessage("등록된 프로필 사진이 없습니다.");
         }
         try {
             return fileStorage.open(employee.getPhotoPath());
         } catch (IOException e) {
-            throw new NotFoundException("프로필 사진 파일을 찾을 수 없습니다.");
+            throw NotFoundException.withMessage("프로필 사진 파일을 찾을 수 없습니다.");
         }
     }
 

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,7 +19,9 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.assistant.AssistantProperties;
@@ -75,13 +78,15 @@ public class WeeklyReportService {
     private final AccessService accessService;
     private final AssistantProperties aiProperties;
     private final ObjectProvider<ChatClient.Builder> chatClientBuilder;
+    private final TransactionTemplate readOnlyTransaction;
 
     public WeeklyReportService(WeeklyReportRepository reportRepository, ProjectRepository projectRepository,
                                ProjectRevenuePlanRepository revenuePlanRepository,
                                ProjectAssignmentRepository assignmentRepository, EmployeeRepository employeeRepository,
                                PartyRepository partyRepository, DepartmentRepository departmentRepository,
                                ProfitQueryService profitQueryService, AccessService accessService,
-                               AssistantProperties aiProperties, ObjectProvider<ChatClient.Builder> chatClientBuilder) {
+                               AssistantProperties aiProperties, ObjectProvider<ChatClient.Builder> chatClientBuilder,
+                               PlatformTransactionManager transactionManager) {
         this.reportRepository = reportRepository;
         this.projectRepository = projectRepository;
         this.revenuePlanRepository = revenuePlanRepository;
@@ -93,6 +98,8 @@ public class WeeklyReportService {
         this.accessService = accessService;
         this.aiProperties = aiProperties;
         this.chatClientBuilder = chatClientBuilder;
+        this.readOnlyTransaction = new TransactionTemplate(transactionManager);
+        this.readOnlyTransaction.setReadOnly(true);
     }
 
     @Transactional(readOnly = true)
@@ -115,7 +122,8 @@ public class WeeklyReportService {
         if (weekStart.isAfter(LocalDate.now())) {
             throw new BusinessException("미래 주차의 보고서는 만들 수 없습니다.");
         }
-        WeeklySnapshot snapshot = snapshot(user, weekStart);
+        // 스냅샷은 한 읽기 트랜잭션에서 모으고, AI 호출은 트랜잭션 밖에서 한다. (자기 호출은 @Transactional 프록시를 거치지 않는다)
+        WeeklySnapshot snapshot = Objects.requireNonNull(readOnlyTransaction.execute(status -> buildSnapshot(user, weekStart)));
         String templateReport = WeeklyReportTemplate.render(snapshot);
 
         String content = templateReport;
@@ -151,6 +159,10 @@ public class WeeklyReportService {
 
     @Transactional(readOnly = true)
     public WeeklySnapshot snapshot(LoginUser user, LocalDate weekStart) {
+        return buildSnapshot(user, weekStart);
+    }
+
+    private WeeklySnapshot buildSnapshot(LoginUser user, LocalDate weekStart) {
         LocalDate weekEnd = weekStart.plusDays(6);
         DataScope scope = accessService.scopeOf(user, PermissionCode.PROJECT_READ);
         List<Project> projects = projectRepository.findAllInScope(scope.all(), scope.departmentIds(), scope.projectIds());
