@@ -1,6 +1,7 @@
 @import java.util.List
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.notification.Notification
+@import kr.co.abacus.abms.web.Badges
 @param List<Notification> notifications
 @param long unread
 <div class="-m-4">
@@ -18,7 +19,7 @@
                 <li>
                     <button type="button" class="flex w-full cursor-pointer gap-x3 px-x4 py-x2_5 text-left hover:bg-bg-layer-floating-pressed ${n.isRead() ? "opacity-60" : ""}"
                             hx-post="/notifications/${n.id()}/read" hx-target="#notification-panel">
-                        <span class="mt-1.5 size-2 shrink-0 rounded-full ${n.isRead() ? "bg-palette-gray-400" : Ui.badge(n.getType())}"></span>
+                        <span class="mt-1.5 size-2 shrink-0 rounded-full ${n.isRead() ? "bg-palette-gray-400" : Badges.of(n.getType())}"></span>
                         <span class="min-w-0 flex-1">
                             <span class="block t4-medium text-fg-neutral">${n.getTitle()}</span>
                             @if(n.getDescription() != null)

@@ -3,25 +3,23 @@ package kr.co.abacus.abms.attachment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
-import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
-import kr.co.abacus.abms.party.PartyService;
-import kr.co.abacus.abms.project.ProjectService;
 import kr.co.abacus.abms.security.LoginUser;
 
 /**
@@ -41,15 +39,13 @@ public class AttachmentService {
 
     private final AttachmentRepository attachmentRepository;
     private final FileStorage fileStorage;
-    private final ProjectService projectService;
-    private final PartyService partyService;
+    private final Map<AttachmentOwner, AttachmentOwnerPolicy> policies;
 
-    public AttachmentService(AttachmentRepository attachmentRepository, FileStorage fileStorage, ProjectService projectService,
-                             PartyService partyService) {
+    public AttachmentService(AttachmentRepository attachmentRepository, FileStorage fileStorage, List<AttachmentOwnerPolicy> policies) {
         this.attachmentRepository = attachmentRepository;
         this.fileStorage = fileStorage;
-        this.projectService = projectService;
-        this.partyService = partyService;
+        this.policies = new EnumMap<>(AttachmentOwner.class);
+        policies.forEach(policy -> this.policies.put(policy.owner(), policy));
     }
 
     @Transactional(readOnly = true)
@@ -64,10 +60,7 @@ public class AttachmentService {
      */
     @Transactional(readOnly = true)
     public boolean canWrite(LoginUser user, AttachmentOwner owner, Long ownerId) {
-        return switch (owner) {
-            case PROJECT -> projectService.canWrite(user, projectService.get(ownerId));
-            case PARTY -> user.has(PermissionCode.PARTY_WRITE);
-        };
+        return policy(owner).canWrite(user, ownerId);
     }
 
     public Attachment upload(LoginUser user, AttachmentOwner owner, Long ownerId, @Nullable AttachmentCategory category,
@@ -102,7 +95,7 @@ public class AttachmentService {
         try {
             return new Download(attachment, fileStorage.open(attachment.getStoredPath()));
         } catch (IOException e) {
-            throw new NotFoundException("첨부 파일 본문을 찾을 수 없습니다: " + attachment.getOriginalName());
+            throw NotFoundException.withMessage("첨부 파일 본문을 찾을 수 없습니다: " + attachment.getOriginalName());
         }
     }
 
@@ -129,29 +122,19 @@ public class AttachmentService {
     }
 
     private void checkRead(LoginUser user, AttachmentOwner owner, Long ownerId) {
-        switch (owner) {
-            case PROJECT -> projectService.getForRead(user, ownerId);
-            case PARTY -> {
-                require(user, PermissionCode.PARTY_READ);
-                partyService.get(ownerId);
-            }
-        }
+        policy(owner).checkRead(user, ownerId);
     }
 
     private void checkWrite(LoginUser user, AttachmentOwner owner, Long ownerId) {
-        switch (owner) {
-            case PROJECT -> projectService.getForWrite(user, ownerId);
-            case PARTY -> {
-                require(user, PermissionCode.PARTY_WRITE);
-                partyService.get(ownerId);
-            }
-        }
+        policy(owner).checkWrite(user, ownerId);
     }
 
-    private static void require(LoginUser user, PermissionCode code) {
-        if (!user.has(code)) {
-            throw new AccessDeniedException("첨부 파일 권한이 없습니다.");
+    private AttachmentOwnerPolicy policy(AttachmentOwner owner) {
+        AttachmentOwnerPolicy policy = policies.get(owner);
+        if (policy == null) {
+            throw new IllegalStateException("첨부 대상 권한 확인이 등록되지 않았습니다: " + owner);
         }
+        return policy;
     }
 
     /** 경로를 떼어 낸 파일명 (브라우저에 따라 전체 경로가 오기도 한다) */

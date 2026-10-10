@@ -2,12 +2,17 @@ package kr.co.abacus.abms.project;
 
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +20,9 @@ import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.common.domain.NotFoundException;
+import kr.co.abacus.abms.department.DepartmentDeleting;
 import kr.co.abacus.abms.department.DepartmentRepository;
+import kr.co.abacus.abms.party.PartyDeleting;
 import kr.co.abacus.abms.party.PartyRepository;
 import kr.co.abacus.abms.project.Project.ProjectInfo;
 import kr.co.abacus.abms.security.AccessService;
@@ -47,6 +54,39 @@ public class ProjectService {
         this.partyRepository = partyRepository;
         this.departmentRepository = departmentRepository;
         this.accessService = accessService;
+    }
+
+    /** 협력사의 프로젝트 수 */
+    @Transactional(readOnly = true)
+    public long partyProjectCount(Long partyId) {
+        return projectRepository.countByPartyId(partyId);
+    }
+
+    /** 협력사별 프로젝트 수 (한 번의 집계 쿼리) */
+    @Transactional(readOnly = true)
+    public Map<Long, Long> partyProjectCounts(Collection<Long> partyIds) {
+        if (partyIds.isEmpty()) {
+            return Map.of();
+        }
+        return projectRepository.countGroupByPartyId(partyIds).stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+    }
+
+    /** 주관 프로젝트가 있는 부서는 삭제할 수 없다. */
+    @EventListener
+    @Order(2)
+    public void onDepartmentDeleting(DepartmentDeleting event) {
+        if (!projectRepository.findAllByLeadDepartmentIdInOrderByPeriodStartDateDesc(List.of(event.departmentId())).isEmpty()) {
+            throw new BusinessException("주관 프로젝트가 있는 부서는 삭제할 수 없습니다.");
+        }
+    }
+
+    /** 프로젝트가 연결된 협력사는 삭제할 수 없다. */
+    @EventListener
+    public void onPartyDeleting(PartyDeleting event) {
+        if (projectRepository.existsByPartyId(event.partyId())) {
+            throw new BusinessException("프로젝트가 연결된 협력사는 삭제할 수 없습니다.");
+        }
     }
 
     @Transactional(readOnly = true)

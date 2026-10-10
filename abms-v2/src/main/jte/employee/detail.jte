@@ -4,17 +4,18 @@
 @import kr.co.abacus.abms.account.Account
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.Ui
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.department.Department
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.employee.Employee
-@import kr.co.abacus.abms.employee.EmployeeInsight
+@import kr.co.abacus.abms.web.employee.EmployeeInsight
 @import kr.co.abacus.abms.employee.EmployeeStatus
 @import kr.co.abacus.abms.employee.Payroll
 @import kr.co.abacus.abms.employee.PositionHistory
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.project.ProjectAssignment
 @import kr.co.abacus.abms.common.web.Seed
+@import kr.co.abacus.abms.web.Badges
 @param ViewContext ctx
 @param Employee employee
 @param DepartmentTree tree
@@ -42,9 +43,9 @@
             @endif
             <dl class="property-list">
                 <dt>상태</dt>
-                <dd><span class="${Ui.badge(employee.getStatus())}">${employee.getStatus().label()}</span></dd>
+                <dd><span class="${Badges.of(employee.getStatus())}">${employee.getStatus().label()}</span></dd>
                 <dt>고용유형</dt>
-                <dd><span class="${Ui.badge(employee.getType())}">${employee.getType().label()}</span></dd>
+                <dd><span class="${Badges.of(employee.getType())}">${employee.getType().label()}</span></dd>
                 <dt>부서</dt>
                 <dd class="whitespace-normal">
                     @for(Department d : tree.path(employee.getDepartmentId()))
@@ -148,8 +149,8 @@
 
         <div class="min-w-0 space-y-6">
             <div class="-mt-x3 flex flex-wrap items-center gap-x1_5">
-                <span class="${Ui.badge(employee.getStatus())}">${employee.getStatus().label()}</span>
-                <span class="${Ui.badge(employee.getType())}">${employee.getType().label()}</span>
+                <span class="${Badges.of(employee.getStatus())}">${employee.getStatus().label()}</span>
+                <span class="${Badges.of(employee.getType())}">${employee.getType().label()}</span>
                 @if(employee.getJob() != null)<span class="${Seed.badge("neutral", "outline")}">${employee.getJob().label()}</span>@endif
                 @if(employee.getWorkType() != null)<span class="${Seed.badge("neutral", "outline")}">${employee.getWorkType().label()}</span>@endif
                 <span class="t3-regular text-fg-neutral-subtle">${employee.getPosition().label()} · ${employee.getGrade().label()} · ${tree.nameOf(employee.getDepartmentId())}</span>

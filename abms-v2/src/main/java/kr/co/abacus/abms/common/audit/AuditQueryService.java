@@ -3,7 +3,6 @@ package kr.co.abacus.abms.common.audit;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,21 +16,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import kr.co.abacus.abms.access.PermissionGroup;
-import kr.co.abacus.abms.access.PermissionGroupRepository;
-import kr.co.abacus.abms.account.Account;
-import kr.co.abacus.abms.account.AccountRepository;
-import kr.co.abacus.abms.department.Department;
-import kr.co.abacus.abms.department.DepartmentRepository;
-import kr.co.abacus.abms.employee.Employee;
-import kr.co.abacus.abms.employee.EmployeeRepository;
-import kr.co.abacus.abms.party.Party;
-import kr.co.abacus.abms.party.PartyRepository;
-import kr.co.abacus.abms.project.Project;
-import kr.co.abacus.abms.project.ProjectRepository;
-import kr.co.abacus.abms.site.Site;
-import kr.co.abacus.abms.site.SiteRepository;
 
 /**
  * 변경 이력 조회. 참조 id(부서·직원·협력사 …)는 현재 이름으로 바꿔서 돌려준다. (삭제된 대상은 #id)
@@ -51,25 +35,11 @@ public class AuditQueryService {
     private static final Set<String> HIDDEN = Set.of("storedPath", "contentType", "ownerType", "ownerId", "photoPath");
 
     private final NamedParameterJdbcTemplate jdbc;
-    private final DepartmentRepository departmentRepository;
-    private final EmployeeRepository employeeRepository;
-    private final PartyRepository partyRepository;
-    private final SiteRepository siteRepository;
-    private final ProjectRepository projectRepository;
-    private final PermissionGroupRepository permissionGroupRepository;
-    private final AccountRepository accountRepository;
+    private final Map<String, AuditNameResolver> resolvers;
 
-    public AuditQueryService(NamedParameterJdbcTemplate jdbc, DepartmentRepository departmentRepository, EmployeeRepository employeeRepository,
-                             PartyRepository partyRepository, SiteRepository siteRepository, ProjectRepository projectRepository,
-                             PermissionGroupRepository permissionGroupRepository, AccountRepository accountRepository) {
+    public AuditQueryService(NamedParameterJdbcTemplate jdbc, List<AuditNameResolver> resolvers) {
         this.jdbc = jdbc;
-        this.departmentRepository = departmentRepository;
-        this.employeeRepository = employeeRepository;
-        this.partyRepository = partyRepository;
-        this.siteRepository = siteRepository;
-        this.projectRepository = projectRepository;
-        this.permissionGroupRepository = permissionGroupRepository;
-        this.accountRepository = accountRepository;
+        this.resolvers = resolvers.stream().collect(Collectors.toMap(AuditNameResolver::auditKind, Function.identity()));
     }
 
     /** 대상과 그 하위 엔티티(예: 프로젝트의 매출 계획·투입 인력)의 최근 이력 */
@@ -140,21 +110,11 @@ public class AuditQueryService {
             }
         }
         Map<String, Map<Long, String>> names = new HashMap<>();
-        ids.forEach((kind, set) -> names.put(kind, switch (kind) {
-            case "Department" -> byId(departmentRepository.findAllById(set), Department::id, Department::getName);
-            case "Employee" -> byId(employeeRepository.findAllById(set), Employee::id, Employee::getName);
-            case "Party" -> byId(partyRepository.findAllById(set), Party::id, Party::getName);
-            case "Site" -> byId(siteRepository.findAllById(set), Site::id, Site::getName);
-            case "Project" -> byId(projectRepository.findAllById(set), Project::id, Project::getName);
-            case "PermissionGroup" -> byId(permissionGroupRepository.findAllById(set), PermissionGroup::id, PermissionGroup::getName);
-            case "Account" -> byId(accountRepository.findAllById(set), Account::id, Account::getUsername);
-            default -> Map.of();
-        }));
+        ids.forEach((kind, set) -> {
+            AuditNameResolver resolver = resolvers.get(kind);
+            names.put(kind, resolver == null ? Map.of() : resolver.auditNames(set));
+        });
         return new Names(names);
-    }
-
-    private static <T> Map<Long, String> byId(Collection<T> items, Function<T, Long> id, Function<T, String> name) {
-        return items.stream().collect(Collectors.toMap(id, name));
     }
 
     private record Names(Map<String, Map<Long, String>> names) {

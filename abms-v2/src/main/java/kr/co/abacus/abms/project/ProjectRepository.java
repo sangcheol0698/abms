@@ -3,13 +3,16 @@ package kr.co.abacus.abms.project;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project> {
+import kr.co.abacus.abms.common.audit.AuditNameResolver;
+
+public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project>, AuditNameResolver {
 
     boolean existsByCode(String code);
 
@@ -54,5 +57,15 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpec
 
     @Query("select count(p) from Project p where p.code like concat(:prefix, '%')")
     long countByCodePrefix(String prefix);
+
+    @Override
+    default String auditKind() {
+        return "Project";
+    }
+
+    @Override
+    default Map<Long, String> auditNames(Collection<Long> ids) {
+        return AuditNameResolver.byId(findAllById(ids), Project::id, Project::getName);
+    }
 
 }

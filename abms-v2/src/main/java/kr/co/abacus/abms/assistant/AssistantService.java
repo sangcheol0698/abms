@@ -85,6 +85,11 @@ public class AssistantService {
 
     @Transactional(readOnly = true)
     public ChatSession session(LoginUser user, Long sessionId) {
+        return ownedSession(user, sessionId);
+    }
+
+    /** 본인 대화만 찾는다. 트랜잭션 없이 부르는 ask() 와 공유하므로 프록시를 거치지 않는 private 메서드로 둔다. */
+    private ChatSession ownedSession(LoginUser user, Long sessionId) {
         return sessionRepository.findById(sessionId)
                 .filter(s -> s.getAccountId().equals(user.accountId()))
                 .orElseThrow(() -> NotFoundException.of("대화", sessionId));
@@ -92,7 +97,7 @@ public class AssistantService {
 
     @Transactional(readOnly = true)
     public List<ChatMessage> messages(LoginUser user, Long sessionId) {
-        session(user, sessionId);
+        ownedSession(user, sessionId);
         return messageRepository.findAllBySessionIdOrderByIdAsc(sessionId);
     }
 
@@ -108,7 +113,7 @@ public class AssistantService {
      */
     public Exchange ask(LoginUser user, Long sessionId, String message) {
         validate(message);
-        ChatSession session = session(user, sessionId);
+        ChatSession session = ownedSession(user, sessionId);
         ChatMessage question = transactionTemplate.execute(status -> {
             sessionRepository.findById(sessionId).ifPresent(ChatSession::touch);
             return messageRepository.save(ChatMessage.of(sessionId, ChatMessage.Role.USER, message.strip()));
@@ -133,17 +138,17 @@ public class AssistantService {
 
     @Transactional
     public void rename(LoginUser user, Long sessionId, String title) {
-        session(user, sessionId).rename(title);
+        ownedSession(user, sessionId).rename(title);
     }
 
     @Transactional
     public void toggleFavorite(LoginUser user, Long sessionId) {
-        session(user, sessionId).toggleFavorite();
+        ownedSession(user, sessionId).toggleFavorite();
     }
 
     @Transactional
     public void delete(LoginUser user, Long sessionId) {
-        ChatSession session = session(user, sessionId);
+        ChatSession session = ownedSession(user, sessionId);
         chatMemory.clear(session.getConversationId());
         session.softDelete(user.accountId());
     }

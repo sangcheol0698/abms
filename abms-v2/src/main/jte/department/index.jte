@@ -1,7 +1,7 @@
 @import java.util.List
 @import kr.co.abacus.abms.access.PermissionCode
 @import kr.co.abacus.abms.common.web.Icons
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.department.Department
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.employee.Employee
@@ -18,7 +18,7 @@
 @param List<Project> projects = null
 @param List<MonthPoint> trend = null
 @param boolean canWrite = false
-@param kr.co.abacus.abms.department.DepartmentInsight insight = null
+@param kr.co.abacus.abms.web.department.DepartmentInsight insight = null
 @param String trendChart = null
 @param kr.co.abacus.abms.site.Site site = null
 @param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null

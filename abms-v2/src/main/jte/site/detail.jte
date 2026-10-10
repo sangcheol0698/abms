@@ -4,10 +4,10 @@
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.MapMarker
 @import kr.co.abacus.abms.common.web.Seed
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.department.Department
 @import kr.co.abacus.abms.site.Site
-@import kr.co.abacus.abms.site.SiteController.NearbyParty
+@import kr.co.abacus.abms.web.site.SiteController.NearbyParty
 @import kr.co.abacus.abms.site.SiteType
 @param ViewContext ctx
 @param Site site

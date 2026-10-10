@@ -16,12 +16,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.access.PermissionScope;
+import kr.co.abacus.abms.common.audit.AuditActor;
 
 /**
  * 인증된 사용자. 로그인 시점의 권한(코드별 범위)을 보관한다.
  * 권한 그룹이 변경되면 다음 로그인부터 반영된다.
  */
-public final class LoginUser implements UserDetails, CredentialsContainer, Serializable {
+public final class LoginUser implements UserDetails, CredentialsContainer, Serializable, AuditActor {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -70,6 +71,7 @@ public final class LoginUser implements UserDetails, CredentialsContainer, Seria
         return grants;
     }
 
+    @Override
     public Long accountId() {
         return accountId;
     }
@@ -82,6 +84,7 @@ public final class LoginUser implements UserDetails, CredentialsContainer, Seria
         return departmentId;
     }
 
+    @Override
     public String name() {
         return name;
     }

@@ -119,6 +119,11 @@ abms:
   demo:
     calculate-on-startup: true
 
+# BootUI 개발자 콘솔의 MCP 서버(/bootui/api/mcp)를 켜 Claude Code 같은 AI 에이전트가 붙을 수 있게 한다. 루프백 접속만 허용된다.
+bootui:
+  mcp:
+    enabled: "ON"
+
 logging:
   level:
     kr.co.abacus.abms: debug

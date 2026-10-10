@@ -29,7 +29,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import kr.co.abacus.abms.common.audit.Auditable.AuditRef;
-import kr.co.abacus.abms.security.LoginUser;
 
 /**
  * {@link Auditable} 엔티티의 등록·수정·(소프트)삭제를 tb_audit_log 에 기록한다.
@@ -140,7 +139,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 
     private void write(Auditable auditable, Long id, String action, List<Change> changes) {
         AuditRef parent = auditable.auditParent();
-        LoginUser actor = currentUser();
+        AuditActor actor = currentActor();
         GeneratedKeyHolder key = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("""
@@ -179,9 +178,9 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         return value == null || value.length() <= max ? value : value.substring(0, max);
     }
 
-    private static @Nullable LoginUser currentUser() {
+    private static @Nullable AuditActor currentActor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && authentication.getPrincipal() instanceof LoginUser user ? user : null;
+        return authentication != null && authentication.getPrincipal() instanceof AuditActor actor ? actor : null;
     }
 
     private record Change(String field, @Nullable String before, @Nullable String after) {

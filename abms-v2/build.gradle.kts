@@ -56,6 +56,7 @@ dependencies {
     compileOnly("org.jspecify:jspecify:1.0.0")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+    developmentOnly("com.julien-dubois.bootui:bootui-spring-boot-starter:1.21.0")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")

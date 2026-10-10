@@ -3,7 +3,7 @@
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.common.web.Ui.SelectOption
 @import kr.co.abacus.abms.department.Department
-@import kr.co.abacus.abms.department.DepartmentController.DepartmentForm
+@import kr.co.abacus.abms.web.department.DepartmentController.DepartmentForm
 @import kr.co.abacus.abms.department.DepartmentType
 @import kr.co.abacus.abms.common.web.Seed
 @import kr.co.abacus.abms.site.Site

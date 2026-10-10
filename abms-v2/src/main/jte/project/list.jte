@@ -5,7 +5,7 @@
 @import kr.co.abacus.abms.common.web.PageView
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.common.web.Ui.SelectOption
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.project.ProjectSearchForm

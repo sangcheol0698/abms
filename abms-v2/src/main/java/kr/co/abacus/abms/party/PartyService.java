@@ -3,6 +3,7 @@ package kr.co.abacus.abms.party;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.party.Party.PartyInfo;
-import kr.co.abacus.abms.project.ProjectRepository;
 
 @Service
 @Transactional
@@ -23,13 +23,14 @@ public class PartyService {
             .thenComparing(PartyContact::getName);
 
     private final PartyRepository partyRepository;
-    private final ProjectRepository projectRepository;
     private final PartyContactRepository contactRepository;
 
-    public PartyService(PartyRepository partyRepository, ProjectRepository projectRepository, PartyContactRepository contactRepository) {
+    private final ApplicationEventPublisher eventPublisher;
+
+    public PartyService(PartyRepository partyRepository, PartyContactRepository contactRepository, ApplicationEventPublisher eventPublisher) {
         this.contactRepository = contactRepository;
         this.partyRepository = partyRepository;
-        this.projectRepository = projectRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -45,21 +46,6 @@ public class PartyService {
     @Transactional(readOnly = true)
     public Party get(Long id) {
         return partyRepository.findById(id).orElseThrow(() -> NotFoundException.of("협력사", id));
-    }
-
-    @Transactional(readOnly = true)
-    public long projectCount(Long partyId) {
-        return projectRepository.countByPartyId(partyId);
-    }
-
-    /** 협력사별 프로젝트 수 (한 번의 집계 쿼리) */
-    @Transactional(readOnly = true)
-    public java.util.Map<Long, Long> projectCounts(java.util.Collection<Long> partyIds) {
-        if (partyIds.isEmpty()) {
-            return java.util.Map.of();
-        }
-        return projectRepository.countGroupByPartyId(partyIds).stream()
-                .collect(java.util.stream.Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
     }
 
     /** 담당자: 대표 담당자 → 역할 → 이름 순 */
@@ -128,9 +114,7 @@ public class PartyService {
 
     public void delete(Long id, Long accountId) {
         Party party = get(id);
-        if (projectRepository.existsByPartyId(id)) {
-            throw new BusinessException("프로젝트가 연결된 협력사는 삭제할 수 없습니다.");
-        }
+        eventPublisher.publishEvent(new PartyDeleting(id));
         party.softDelete(accountId);
     }
 

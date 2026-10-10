@@ -105,6 +105,8 @@ flowchart LR
 ### 설계 포인트
 
 - **기능 단위 패키지**: `employee`, `project`, `summary` … 각 패키지에 엔티티·리포지토리·서비스·컨트롤러가 함께 있습니다.
+  - 패키지는 한 방향으로만 의존합니다(`common` → … → `web`). 아래 패키지가 위를 알아야 할 때는 아래에 인터페이스(포트)나 이벤트를 두고 위에서 구현·구독합니다. 예: 부서 삭제 시 `DepartmentDeleting` 이벤트를 직원·프로젝트가 받아 막음, 마감 확인 `ClosedMonthGuard` 는 common 계약을 summary 가 구현.
+  - 여러 기능을 조립하는 상세 화면은 `web.<기능>` 패키지에 둡니다.
 - **풍부한 엔티티**: 상태 전이와 검증(퇴사일, 투입 기간, 승진 규칙 등)을 엔티티가 직접 책임집니다.
 - **권한 = 코드 × 범위**: `AccessService`가 권한 범위(전체/부서 트리/부서/참여/본인)를 `DataScope`로 해석하고, 서비스 계층에서 일관되게 적용합니다. AI 어시스턴트 도구도 같은 서비스를 거쳐 권한 범위를 벗어나지 않습니다.
 - **하이퍼미디어 UI**
@@ -204,22 +206,27 @@ Docker가 필요합니다. 통합 테스트는 Testcontainers로 MySQL 8.4를 �
 ## 프로젝트 구조
 
 ```text
-src/main/java/kr/co/abacus/abms
-├── common          # BaseEntity, Money, Period, Location, 변경 이력(audit), 좌표 변환(geo), HTMX 도우미, 공통 예외/뷰 모델
-├── security        # Spring Security 설정, LoginUser, 권한 범위 해석(AccessService)
+src/main/java/kr/co/abacus/abms   # 아래 패키지는 위 패키지를 모른다 (패키지 간 순환 없음)
+├── common          # BaseEntity, Money, Period, Location, 변경 이력(audit), 마감 확인 계약, 좌표 변환(geo), HTMX 도우미
+├── account         # 계정, 로그인
 ├── access          # 권한, 권한 그룹, 그룹 권한/계정 할당
-├── account         # 계정, 로그인, 내 정보, 계정 관리, 초기 관리자 생성
+├── security        # Spring Security 설정, LoginUser, 권한 범위 해석(AccessService)과 그에 필요한 조회 포트
+├── notification    # 알림
+├── attachment      # 첨부 파일 (FileStorage, 첨부 대상별 권한 확인 포트)
+├── site            # 사업장 (본사·지사)
 ├── department      # 부서, 조직도 트리
 ├── employee        # 직원, 연봉/직급 이력
 ├── party           # 협력사
-├── site            # 사업장 (본사·지사)
-├── attachment      # 첨부 파일 (FileStorage)
 ├── project         # 프로젝트, 매출 계획, 투입 인력
 ├── summary         # 원가 정책, 월 손익 집계/조회, 마감, 스케줄러
+├── staffing        # 인력 가용 현황
 ├── dashboard       # 대시보드
-├── report          # 주간 보고서
 ├── assistant       # AI 어시스턴트 (Spring AI)
-└── notification    # 알림
+├── report          # 주간 보고서
+├── notice          # 공지
+├── palette         # 명령 팔레트
+├── admin           # 계정·권한 그룹·변경 이력 관리, 초기 관리자 생성
+└── web             # 앱 셸(ViewContext, 공통 모델·예외 처리), 여러 기능을 조립하는 화면(부서·직원·협력사·프로젝트·사업장 상세, 내 정보)
 src/main/jte        # JTE 템플릿 (layout, components, 기능별 화면)
 src/main/tailwind   # Tailwind CSS 소스 (SEED 토큰·컴포넌트 import)
 src/main/resources

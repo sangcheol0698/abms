@@ -14,8 +14,11 @@ import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import kr.co.abacus.abms.access.PermissionCode;
@@ -28,12 +31,18 @@ class AccessServiceTest {
 
     private final DepartmentRepository departmentRepository = mock(DepartmentRepository.class);
     private final ProjectAssignmentRepository assignmentRepository = mock(ProjectAssignmentRepository.class);
-    private final AccessService accessService = new AccessService(departmentRepository, assignmentRepository);
+    /** request 스코프가 등록된 실제 컨텍스트: 요청이 있을 때만 DataScopeCache 를 얻는지 함께 검증한다. */
+    private final AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+    private AccessService accessService;
     private final LoginUser member = new LoginUser(1L, 10L, 100L, "m@test.co", "참여자", null, "{noop}x", true, false,
             Fixtures.grants(PermissionScope.CURRENT_PARTICIPATION, PermissionCode.PROJECT_READ));
 
     @BeforeEach
     void setUp() {
+        context.getBeanFactory().registerScope(WebApplicationContext.SCOPE_REQUEST, new RequestScope());
+        context.register(DataScopeCache.class);
+        context.refresh();
+        accessService = new AccessService(departmentRepository, assignmentRepository, context.getBeanProvider(DataScopeCache.class));
         when(departmentRepository.findAll()).thenReturn(List.of());
         when(assignmentRepository.findActiveProjectIds(anyLong(), any())).thenReturn(List.of(7L));
     }
@@ -41,6 +50,7 @@ class AccessServiceTest {
     @AfterEach
     void tearDown() {
         RequestContextHolder.resetRequestAttributes();
+        context.close();
     }
 
     @Test

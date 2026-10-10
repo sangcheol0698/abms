@@ -1,9 +1,9 @@
 @import kr.co.abacus.abms.common.web.FormErrors
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.Ui
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.party.Party
-@import kr.co.abacus.abms.party.PartyController.PartyForm
+@import kr.co.abacus.abms.web.party.PartyController.PartyForm
 @import kr.co.abacus.abms.party.PartyType
 @import kr.co.abacus.abms.common.web.Seed
 @param ViewContext ctx
