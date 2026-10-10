@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "앱 내장 연결 페이지에만 허용한다. 서버에서 받은 화면에는 Tauri API를 열지 않는다.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "core:window:allow-start-dragging", "core:window:allow-internal-toggle-maximize"]
 }

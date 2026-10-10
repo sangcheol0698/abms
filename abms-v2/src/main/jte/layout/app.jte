@@ -20,14 +20,20 @@
     @template.layout.head(title = title)
 </head>
 <body class="app-body" hx-boost="true" hx-headers="${ctx.csrfHeaderJson()}" data-map-key="${ctx.mapKey()}">
-<header class="app-header">
-    <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" data-toggle-panel="left" aria-controls="left-sidebar" aria-label="왼쪽 사이드바 열기/닫기" title="사이드바 ( [ )">
-        ${Icons.of("sidebar-left", "size-4")}
-    </button>
+<%-- data-tauri-drag-region: 데스크톱 앱(macOS)에서 상단 바의 빈 곳을 끌어 창을 옮긴다. 브라우저에서는 쓰이지 않는다. --%>
+<header class="app-header" data-tauri-drag-region="deep">
     <a href="/" class="flex items-center gap-x2 rounded-r2 px-x1_5 py-x1 hover:bg-bg-transparent-pressed">
         <span class="flex size-x5 shrink-0 items-center justify-center rounded-r1 bg-bg-brand-solid t2-bold text-fg-on-brand-solid">A</span>
         <span class="hidden t4-bold text-fg-neutral sm:inline">ABMS</span>
     </a>
+    <button type="button" class="app-left-toggle ${Seed.iconButton("ghost", "xsmall")}" data-toggle-panel="left" aria-controls="left-sidebar" aria-label="왼쪽 사이드바 열기/닫기" title="사이드바 ( [ )">
+        ${Icons.of("sidebar-left", "size-4")}
+    </button>
+    <%-- 데스크톱 앱에는 브라우저의 뒤로·앞으로 버튼이 없어 앱에서만 보인다. --%>
+    <span class="app-shell-history">
+        <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" data-history="back" aria-label="뒤로" title="뒤로 ( ⌘[ )">${Icons.of("chevron-left", "size-4")}</button>
+        <button type="button" class="${Seed.iconButton("ghost", "xsmall")}" data-history="forward" aria-label="앞으로" title="앞으로 ( ⌘] )">${Icons.of("chevron-right", "size-4")}</button>
+    </span>
     <div class="flex flex-1 justify-center px-x2">
         <button type="button" data-open-palette
                 class="flex h-8 w-full max-w-md cursor-pointer items-center gap-x2 rounded-r2 border border-stroke-neutral-subtle bg-bg-layer-default px-x2_5 t4-regular text-fg-neutral-subtle shadow-s1 transition-colors hover:text-fg-neutral">
@@ -130,6 +136,7 @@
             @endif
         </nav>
     </aside>
+    <div class="app-resize" data-resize-panel="left" role="separator" aria-orientation="vertical" aria-controls="left-sidebar" aria-label="왼쪽 사이드바 너비" tabindex="0"></div>
 
     <%-- 본문 패널 + 오른쪽 사이드바 --%>
     <div class="app-panel">
@@ -140,6 +147,7 @@
                 <div class="mx-auto w-full max-w-[1400px] px-x4 py-x5 sm:px-x6 lg:px-x8 lg:py-x6">${content}</div>
             @endif
         </main>
+        <div class="app-resize" data-resize-panel="right" role="separator" aria-orientation="vertical" aria-controls="right-sidebar" aria-label="오른쪽 사이드바 너비" tabindex="0"></div>
 
         <aside id="right-sidebar" class="app-right" aria-label="오른쪽 사이드바">
             <div class="flex h-11 shrink-0 items-center gap-x1 border-b border-stroke-neutral-subtle px-x3" role="tablist">

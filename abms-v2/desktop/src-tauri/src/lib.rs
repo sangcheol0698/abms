@@ -110,6 +110,29 @@ fn file_name_of(path: &Path) -> String {
     path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
 }
 
+/// macOS 메인 창은 제목 표시줄 없이 서버 화면의 상단 바(48px)가 창 맨 위에 붙는다.
+/// 서버 화면은 html[data-shell="macos"]를 보고 창 버튼 자리를 비우고 뒤로·앞으로 버튼을 보인다(app.css).
+#[cfg(target_os = "macos")]
+const MAC_SHELL_MARKER: &str = r#"
+(() => {
+  const mark = () => document.documentElement && (document.documentElement.dataset.shell = 'macos');
+  if (!mark()) new MutationObserver((_, observer) => { if (mark()) observer.disconnect(); }).observe(document, { childList: true });
+})();
+"#;
+
+/// 서버 화면에는 Tauri API를 열지 않지만, 제목 표시줄이 없는 창을 상단 바로 옮길 수 있도록 창 끌기·확대만 허용한다.
+#[cfg(target_os = "macos")]
+fn allow_window_drag(app: &AppHandle) -> tauri::Result<()> {
+    let server = &app.state::<Server>().0;
+    app.add_capability(
+        tauri::ipc::CapabilityBuilder::new("server-window-drag")
+            .remote(format!("{}/*", server.origin().ascii_serialization()))
+            .window("main")
+            .permission("core:window:allow-start-dragging")
+            .permission("core:window:allow-internal-toggle-maximize"),
+    )
+}
+
 /// 트랙패드에 손가락이 닿고 떨어지는 순간을 화면 스크립트(history.js)에 알린다.
 /// 웹 화면의 wheel 이벤트로는 손을 뗐는지와 관성 스크롤을 구분할 수 없어, Chrome처럼 macOS 이벤트의 phase로 판단한다.
 #[cfg(target_os = "macos")]
@@ -229,9 +252,18 @@ pub fn run() {
                 .title("ABMS")
                 .inner_size(1440.0, 900.0)
                 .min_inner_size(1024.0, 640.0);
+            #[cfg(target_os = "macos")]
+            let builder = builder
+                .title_bar_style(tauri::TitleBarStyle::Overlay)
+                .hidden_title(true)
+                .traffic_light_position(tauri::LogicalPosition::new(18.0, 24.0))
+                .initialization_script(MAC_SHELL_MARKER);
             configure(handle, builder).build()?;
             #[cfg(target_os = "macos")]
-            watch_trackpad_touch(handle);
+            {
+                allow_window_drag(handle)?;
+                watch_trackpad_touch(handle);
+            }
             Ok(())
         })
         .run(tauri::generate_context!())

@@ -13,10 +13,11 @@ ABMS 서버 화면을 그대로 띄우는 macOS·Windows 앱입니다. [Tauri 2]
 | 파일 내려받기 (CSV, 첨부) | 다운로드 폴더에 저장. 같은 이름이 있으면 `이름 (1).csv`처럼 번호를 붙이고 결과는 스낵바로 알림 |
 | 뒤로·앞으로 | macOS: 트랙패드 두 손가락 가로 스와이프(Chrome처럼 화면 가장자리에서 화살표가 따라 나오고, 끝까지 밀어 파랗게 된 상태에서 손을 떼면 이동. 떼기 전에 되돌리면 취소. 가로 스크롤 표 안에서는 스크롤 우선), `⌘[` `⌘]`, 입력 중이 아닐 때 `⌘←` `⌘→`, 마우스 뒤로·앞으로 버튼. Windows: WebView2 기본(`Alt+←` `Alt+→`, 마우스 버튼). 연결 화면은 기록에 남기지 않아 뒤로 가도 돌아오지 않음 |
 | 새로고침 | macOS: `⌘R`. Windows: WebView2 기본(`Ctrl+R`, `F5`) |
+| 창 모양 (macOS) | 제목 표시줄 없이 서버 상단 바가 창 맨 위에 붙고, 창 버튼 옆에 사이드바 토글·뒤로·앞으로 버튼 표시 (서버 `html[data-shell="macos"]`) |
 | 창 크기·위치 | 다음 실행 때 복원 |
 | 중복 실행 | 이미 떠 있는 창을 앞으로 가져옴 |
 
-서버에서 받은 화면에는 Tauri API(IPC)를 열지 않습니다. `capabilities/default.json`은 내장 연결 화면에만 적용됩니다.
+서버에서 받은 화면에는 Tauri API(IPC)를 열지 않습니다. 예외로 macOS 메인 창은 제목 표시줄이 없어 상단 바를 끌어 창을 옮길 수 있도록 창 끌기·확대(`core:window:allow-start-dragging`, `allow-internal-toggle-maximize`)만 서버 주소에 허용합니다(`allow_window_drag`). `capabilities/default.json`은 내장 연결 화면에만 적용됩니다.
 
 ## 서버 주소
 
