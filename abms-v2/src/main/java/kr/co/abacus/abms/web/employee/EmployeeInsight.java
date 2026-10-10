@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.employee;
+package kr.co.abacus.abms.web.employee;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -6,6 +6,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
+import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.project.ProjectAssignment;
 
 /**

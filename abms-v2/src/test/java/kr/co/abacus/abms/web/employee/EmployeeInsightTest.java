@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.employee;
+package kr.co.abacus.abms.web.employee;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +10,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.Period;
+import kr.co.abacus.abms.employee.Employee;
+import kr.co.abacus.abms.employee.EmployeeGrade;
+import kr.co.abacus.abms.employee.EmployeeJob;
+import kr.co.abacus.abms.employee.EmployeePosition;
+import kr.co.abacus.abms.employee.EmployeeProfile;
+import kr.co.abacus.abms.employee.EmployeeType;
+import kr.co.abacus.abms.employee.WorkType;
 import kr.co.abacus.abms.project.AssignmentRole;
 import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.project.ProjectAssignment;

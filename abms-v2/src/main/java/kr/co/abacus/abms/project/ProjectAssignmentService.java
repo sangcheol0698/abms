@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import kr.co.abacus.abms.common.domain.ClosedMonthGuard;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.common.domain.Period;
 import kr.co.abacus.abms.employee.Employee;
+import kr.co.abacus.abms.employee.EmployeeDeleting;
 import kr.co.abacus.abms.employee.EmployeeRepository;
 import kr.co.abacus.abms.notification.NotificationService;
 import kr.co.abacus.abms.notification.NotificationType;
@@ -39,6 +41,14 @@ public class ProjectAssignmentService {
         this.employeeRepository = employeeRepository;
         this.notificationService = notificationService;
         this.closedMonthGuard = closedMonthGuard;
+    }
+
+    /** 삭제된 직원은 원가 집계에서 빠지므로, 투입 이력이 있는 직원은 삭제 대신 퇴사 처리해야 한다. */
+    @EventListener
+    public void onEmployeeDeleting(EmployeeDeleting event) {
+        if (assignmentRepository.existsByEmployeeId(event.employeeId())) {
+            throw new BusinessException("프로젝트 투입 이력이 있는 직원은 삭제할 수 없습니다. 퇴사 처리하세요.");
+        }
     }
 
     @Transactional(readOnly = true)

@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.access;
+package kr.co.abacus.abms.admin;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -22,8 +22,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import kr.co.abacus.abms.access.PermissionGroup;
+import kr.co.abacus.abms.access.PermissionGroupService;
+import kr.co.abacus.abms.access.PermissionScope;
 import kr.co.abacus.abms.account.Account;
-import kr.co.abacus.abms.account.AccountService;
+import kr.co.abacus.abms.admin.AccountService;
 import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.web.FormErrors;

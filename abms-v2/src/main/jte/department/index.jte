@@ -18,7 +18,7 @@
 @param List<Project> projects = null
 @param List<MonthPoint> trend = null
 @param boolean canWrite = false
-@param kr.co.abacus.abms.department.DepartmentInsight insight = null
+@param kr.co.abacus.abms.web.department.DepartmentInsight insight = null
 @param String trendChart = null
 @param kr.co.abacus.abms.site.Site site = null
 @param java.util.List<kr.co.abacus.abms.common.audit.AuditEntry> auditHistory = null

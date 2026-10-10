@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.account;
+package kr.co.abacus.abms.admin;
 
 import java.time.LocalDate;
 
@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.co.abacus.abms.access.AccountGroupAssignment;
 import kr.co.abacus.abms.access.AccountGroupAssignmentRepository;
 import kr.co.abacus.abms.access.PermissionGroup;
+import kr.co.abacus.abms.account.Account;
+import kr.co.abacus.abms.account.AccountRepository;
 import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.department.DepartmentType;

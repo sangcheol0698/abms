@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.party;
+package kr.co.abacus.abms.web.party;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,8 +11,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.Period;
 import kr.co.abacus.abms.project.Project;
-import kr.co.abacus.abms.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.project.ProjectRevenuePlan.RevenuePlanInfo;
+import kr.co.abacus.abms.project.ProjectRevenuePlan;
 import kr.co.abacus.abms.project.ProjectStatus;
 import kr.co.abacus.abms.project.RevenueType;
 

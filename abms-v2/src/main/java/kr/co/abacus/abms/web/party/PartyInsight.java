@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.party;
+package kr.co.abacus.abms.web.party;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

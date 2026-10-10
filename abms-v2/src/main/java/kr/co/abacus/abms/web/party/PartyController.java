@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.party;
+package kr.co.abacus.abms.web.party;
 
 import java.math.BigDecimal;
 
@@ -43,6 +43,9 @@ import kr.co.abacus.abms.common.web.PageView;
 import kr.co.abacus.abms.common.web.Toast;
 import kr.co.abacus.abms.department.DepartmentService;
 import kr.co.abacus.abms.party.Party.PartyInfo;
+import kr.co.abacus.abms.party.Party;
+import kr.co.abacus.abms.party.PartyService;
+import kr.co.abacus.abms.party.PartyType;
 import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.project.ProjectRevenuePlanRepository;
 import kr.co.abacus.abms.project.ProjectService;
@@ -82,7 +85,7 @@ public class PartyController {
         model.addAttribute("page", PageView.of(result, baseUrl));
         model.addAttribute("q", q);
         java.util.List<Long> partyIds = result.getContent().stream().map(Party::id).toList();
-        model.addAttribute("projectCounts", partyService.projectCounts(partyIds));
+        model.addAttribute("projectCounts", projectService.partyProjectCounts(partyIds));
         model.addAttribute("primaryContacts", partyService.primaryContacts(partyIds));
         if (Htmx.targets(request, "party-results")) {
             return "party/results";
@@ -127,7 +130,7 @@ public class PartyController {
         model.addAttribute("insight", PartyInsight.of(projects,
                 projects.isEmpty() ? java.util.List.of() : revenuePlanRepository.findAllByProjectIdIn(projects.stream().map(Project::id).toList()),
                 java.time.LocalDate.now()));
-        model.addAttribute("projectCount", partyService.projectCount(id));
+        model.addAttribute("projectCount", projectService.partyProjectCount(id));
         model.addAttribute("tree", departmentService.tree());
         MapMarker marker = MapMarker.of(party.getName(), party.getLocation().fullAddress(), party.getLocation(), null);
         model.addAttribute("markers", marker == null ? java.util.List.of() : java.util.List.of(marker));

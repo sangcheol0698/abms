@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.employee;
+package kr.co.abacus.abms.web.employee;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -45,6 +45,14 @@ import kr.co.abacus.abms.common.web.Toast;
 import kr.co.abacus.abms.department.DepartmentOptions;
 import kr.co.abacus.abms.department.DepartmentService;
 import kr.co.abacus.abms.department.DepartmentTree;
+import kr.co.abacus.abms.employee.Employee;
+import kr.co.abacus.abms.employee.EmployeeForm;
+import kr.co.abacus.abms.employee.EmployeeGrade;
+import kr.co.abacus.abms.employee.EmployeePhotoService;
+import kr.co.abacus.abms.employee.EmployeePosition;
+import kr.co.abacus.abms.employee.EmployeeSearchForm;
+import kr.co.abacus.abms.employee.EmployeeService;
+import kr.co.abacus.abms.employee.OwnProfileForm;
 import kr.co.abacus.abms.project.Project;
 import kr.co.abacus.abms.project.ProjectAssignment;
 import kr.co.abacus.abms.project.ProjectAssignmentService;

@@ -3,39 +3,34 @@ package kr.co.abacus.abms.department;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
-import kr.co.abacus.abms.employee.Employee;
-import kr.co.abacus.abms.employee.EmployeeRepository;
-import kr.co.abacus.abms.project.ProjectRepository;
 import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.LoginUser;
+import kr.co.abacus.abms.site.SiteDeleting;
 import kr.co.abacus.abms.site.SiteRepository;
 
 @Service
 @Transactional
 public class DepartmentService {
 
-    private static final java.util.Comparator<Employee> MEMBER_ORDER =
-            java.util.Comparator.comparingInt((Employee e) -> e.getPosition().level()).reversed().thenComparing(Employee::getName);
-
     private final DepartmentRepository departmentRepository;
-    private final EmployeeRepository employeeRepository;
-    private final ProjectRepository projectRepository;
     private final AccessService accessService;
     private final SiteRepository siteRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public DepartmentService(DepartmentRepository departmentRepository, EmployeeRepository employeeRepository,
-                             ProjectRepository projectRepository, AccessService accessService, SiteRepository siteRepository) {
+    public DepartmentService(DepartmentRepository departmentRepository, AccessService accessService, SiteRepository siteRepository,
+                             ApplicationEventPublisher eventPublisher) {
         this.siteRepository = siteRepository;
         this.departmentRepository = departmentRepository;
-        this.employeeRepository = employeeRepository;
-        this.projectRepository = projectRepository;
         this.accessService = accessService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -46,27 +41,6 @@ public class DepartmentService {
     @Transactional(readOnly = true)
     public Department get(Long id) {
         return departmentRepository.findById(id).orElseThrow(() -> NotFoundException.of("부서", id));
-    }
-
-    @Transactional(readOnly = true)
-    public List<Employee> members(Long departmentId) {
-        return employeeRepository.findAllByDepartmentIdAndDeletedFalse(departmentId).stream()
-                .sorted(MEMBER_ORDER)
-                .toList();
-    }
-
-    /** 여러 부서의 소속 직원을 한 번에 조회한다. 부서마다 members() 와 같은 순서(직위 높은 순 → 이름). */
-    @Transactional(readOnly = true)
-    public java.util.Map<Long, List<Employee>> membersByDepartment(java.util.Collection<Long> departmentIds) {
-        java.util.Map<Long, List<Employee>> result = new java.util.HashMap<>();
-        departmentIds.forEach(id -> result.put(id, new java.util.ArrayList<>()));
-        if (departmentIds.isEmpty()) {
-            return result;
-        }
-        employeeRepository.findAllByDepartmentIdInAndDeletedFalse(departmentIds).stream()
-                .sorted(MEMBER_ORDER)
-                .forEach(e -> result.get(e.getDepartmentId()).add(e));
-        return result;
     }
 
     public Department create(LoginUser user, String code, String name, DepartmentType type, @Nullable Long parentId,
@@ -110,11 +84,7 @@ public class DepartmentService {
         Department department = get(id);
         accessService.checkDepartment(user, PermissionCode.DEPARTMENT_WRITE, id);
         if (leaderEmployeeId != null) {
-            Employee leader = employeeRepository.findByIdAndDeletedFalse(leaderEmployeeId)
-                    .orElseThrow(() -> NotFoundException.of("직원", leaderEmployeeId));
-            if (leader.isResigned()) {
-                throw new BusinessException("퇴사한 직원은 부서장으로 지정할 수 없습니다.");
-            }
+            eventPublisher.publishEvent(new DepartmentLeaderAssigning(leaderEmployeeId));
         }
         department.assignLeader(leaderEmployeeId);
     }
@@ -125,13 +95,16 @@ public class DepartmentService {
         if (!departmentRepository.findAllByParentId(id).isEmpty()) {
             throw new BusinessException("하위 부서가 있는 부서는 삭제할 수 없습니다.");
         }
-        if (!members(id).isEmpty()) {
-            throw new BusinessException("소속 직원이 있는 부서는 삭제할 수 없습니다.");
-        }
-        if (!projectRepository.findAllByLeadDepartmentIdInOrderByPeriodStartDateDesc(List.of(id)).isEmpty()) {
-            throw new BusinessException("주관 프로젝트가 있는 부서는 삭제할 수 없습니다.");
-        }
+        eventPublisher.publishEvent(new DepartmentDeleting(id));
         department.softDelete(user.accountId());
+    }
+
+    /** 부서가 연결된 사업장은 삭제할 수 없다. */
+    @EventListener
+    public void onSiteDeleting(SiteDeleting event) {
+        if (departmentRepository.existsBySiteId(event.siteId())) {
+            throw new BusinessException("부서가 연결된 사업장은 삭제할 수 없습니다. 부서의 사업장을 먼저 바꿔 주세요.");
+        }
     }
 
 }

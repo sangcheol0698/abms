@@ -8,7 +8,7 @@
 @import kr.co.abacus.abms.department.Department
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.employee.Employee
-@import kr.co.abacus.abms.employee.EmployeeInsight
+@import kr.co.abacus.abms.web.employee.EmployeeInsight
 @import kr.co.abacus.abms.employee.EmployeeStatus
 @import kr.co.abacus.abms.employee.Payroll
 @import kr.co.abacus.abms.employee.PositionHistory

@@ -2,11 +2,18 @@ package kr.co.abacus.abms.employee;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,9 +25,10 @@ import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.ClosedMonthGuard;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.NotFoundException;
+import kr.co.abacus.abms.department.DepartmentDeleting;
+import kr.co.abacus.abms.department.DepartmentLeaderAssigning;
 import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.department.DepartmentTree;
-import kr.co.abacus.abms.project.ProjectAssignmentRepository;
 import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.DataScope;
 import kr.co.abacus.abms.security.LoginUser;
@@ -34,25 +42,28 @@ import kr.co.abacus.abms.security.LoginUser;
 @Transactional
 public class EmployeeService {
 
+    private static final Comparator<Employee> MEMBER_ORDER =
+            Comparator.comparingInt((Employee e) -> e.getPosition().level()).reversed().thenComparing(Employee::getName);
+
     private final EmployeeRepository employeeRepository;
     private final PayrollRepository payrollRepository;
     private final PositionHistoryRepository positionHistoryRepository;
     private final DepartmentRepository departmentRepository;
     private final AccessService accessService;
     private final ClosedMonthGuard closedMonthGuard;
-    private final ProjectAssignmentRepository assignmentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public EmployeeService(EmployeeRepository employeeRepository, PayrollRepository payrollRepository,
                            PositionHistoryRepository positionHistoryRepository,
                            DepartmentRepository departmentRepository, AccessService accessService,
-                           ClosedMonthGuard closedMonthGuard, ProjectAssignmentRepository assignmentRepository) {
+                           ClosedMonthGuard closedMonthGuard, ApplicationEventPublisher eventPublisher) {
         this.employeeRepository = employeeRepository;
         this.payrollRepository = payrollRepository;
         this.positionHistoryRepository = positionHistoryRepository;
         this.departmentRepository = departmentRepository;
         this.accessService = accessService;
         this.closedMonthGuard = closedMonthGuard;
-        this.assignmentRepository = assignmentRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -197,9 +208,7 @@ public class EmployeeService {
     /** 삭제된 직원은 원가 집계에서 빠지므로, 투입 이력이 있는 직원은 삭제 대신 퇴사 처리해야 한다. */
     public void delete(LoginUser user, Long id) {
         Employee employee = getForWrite(user, id);
-        if (assignmentRepository.existsByEmployeeId(id)) {
-            throw new BusinessException("프로젝트 투입 이력이 있는 직원은 삭제할 수 없습니다. 퇴사 처리하세요.");
-        }
+        eventPublisher.publishEvent(new EmployeeDeleting(id));
         checkEmploymentPeriodOpen(employee, "직원 삭제");
         employee.softDelete(user.accountId());
     }
@@ -228,6 +237,47 @@ public class EmployeeService {
             open.closeAt(startDate.minusDays(1));
         });
         payrollRepository.save(Payroll.start(id, annualSalary, startDate));
+    }
+
+    /** 부서의 소속 직원: 직위 높은 순 → 이름 */
+    @Transactional(readOnly = true)
+    public List<Employee> members(Long departmentId) {
+        return employeeRepository.findAllByDepartmentIdAndDeletedFalse(departmentId).stream()
+                .sorted(MEMBER_ORDER)
+                .toList();
+    }
+
+    /** 여러 부서의 소속 직원을 한 번에 조회한다. 부서마다 members() 와 같은 순서(직위 높은 순 → 이름). */
+    @Transactional(readOnly = true)
+    public Map<Long, List<Employee>> membersByDepartment(Collection<Long> departmentIds) {
+        Map<Long, List<Employee>> result = new HashMap<>();
+        departmentIds.forEach(id -> result.put(id, new ArrayList<>()));
+        if (departmentIds.isEmpty()) {
+            return result;
+        }
+        employeeRepository.findAllByDepartmentIdInAndDeletedFalse(departmentIds).stream()
+                .sorted(MEMBER_ORDER)
+                .forEach(e -> result.get(e.getDepartmentId()).add(e));
+        return result;
+    }
+
+    /** 소속 직원이 있는 부서는 삭제할 수 없다. 주관 프로젝트 확인보다 먼저 알린다. */
+    @EventListener
+    @Order(1)
+    public void onDepartmentDeleting(DepartmentDeleting event) {
+        if (!employeeRepository.findAllByDepartmentIdAndDeletedFalse(event.departmentId()).isEmpty()) {
+            throw new BusinessException("소속 직원이 있는 부서는 삭제할 수 없습니다.");
+        }
+    }
+
+    /** 퇴사한(또는 없는) 직원은 부서장으로 지정할 수 없다. */
+    @EventListener
+    public void onDepartmentLeaderAssigning(DepartmentLeaderAssigning event) {
+        Employee leader = employeeRepository.findByIdAndDeletedFalse(event.employeeId())
+                .orElseThrow(() -> NotFoundException.of("직원", event.employeeId()));
+        if (leader.isResigned()) {
+            throw new BusinessException("퇴사한 직원은 부서장으로 지정할 수 없습니다.");
+        }
     }
 
     @Transactional(readOnly = true)

@@ -6,7 +6,7 @@
 @import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.party.Party
-@import kr.co.abacus.abms.party.PartyInsight
+@import kr.co.abacus.abms.web.party.PartyInsight
 @import kr.co.abacus.abms.party.PartyType
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.common.web.Seed

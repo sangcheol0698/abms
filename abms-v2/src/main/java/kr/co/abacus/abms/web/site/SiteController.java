@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.site;
+package kr.co.abacus.abms.web.site;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
@@ -36,11 +36,14 @@ import kr.co.abacus.abms.common.web.MapMarker;
 import kr.co.abacus.abms.common.web.Toast;
 import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.department.DepartmentRepository;
-import kr.co.abacus.abms.department.DepartmentService;
+import kr.co.abacus.abms.employee.EmployeeService;
 import kr.co.abacus.abms.party.Party;
 import kr.co.abacus.abms.party.PartyService;
 import kr.co.abacus.abms.security.LoginUser;
 import kr.co.abacus.abms.site.Site.SiteInfo;
+import kr.co.abacus.abms.site.Site;
+import kr.co.abacus.abms.site.SiteService;
+import kr.co.abacus.abms.site.SiteType;
 
 /**
  * 사업장(본사·지사) 화면. 조회는 로그인 사용자 모두, 등록·수정은 부서 관리 권한.
@@ -53,19 +56,19 @@ public class SiteController {
 
     private final SiteService siteService;
     private final DepartmentRepository departmentRepository;
-    private final DepartmentService departmentService;
+    private final EmployeeService employeeService;
     private final PartyService partyService;
     private final Geocoder geocoder;
     private final AuditQueryService auditQueryService;
 
-    public SiteController(SiteService siteService, DepartmentRepository departmentRepository, DepartmentService departmentService,
+    public SiteController(SiteService siteService, DepartmentRepository departmentRepository, EmployeeService employeeService,
                           PartyService partyService, Geocoder geocoder,
                           AuditQueryService auditQueryService) {
         this.auditQueryService = auditQueryService;
         this.geocoder = geocoder;
         this.siteService = siteService;
         this.departmentRepository = departmentRepository;
-        this.departmentService = departmentService;
+        this.employeeService = employeeService;
         this.partyService = partyService;
     }
 
@@ -75,7 +78,7 @@ public class SiteController {
         // 사업장 → 부서 → 인원을 각각 한 번씩만 조회한다.
         Map<Long, List<Department>> departments = departmentRepository.findAllBySiteIdIsNotNull().stream()
                 .collect(Collectors.groupingBy(Department::getSiteId));
-        Map<Long, List<kr.co.abacus.abms.employee.Employee>> members = departmentService.membersByDepartment(
+        Map<Long, List<kr.co.abacus.abms.employee.Employee>> members = employeeService.membersByDepartment(
                 departments.values().stream().flatMap(List::stream).map(Department::id).toList());
         model.addAttribute("sites", sites);
         model.addAttribute("departmentCounts", departments.entrySet().stream()
@@ -95,7 +98,7 @@ public class SiteController {
         List<Department> departments = departmentRepository.findAllBySiteId(id).stream()
                 .sorted(Comparator.comparing(Department::getName))
                 .toList();
-        Map<Long, Integer> memberCounts = departmentService.membersByDepartment(departments.stream().map(Department::id).toList())
+        Map<Long, Integer> memberCounts = employeeService.membersByDepartment(departments.stream().map(Department::id).toList())
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().size()));
         model.addAttribute("site", site);
         model.addAttribute("departments", departments);

@@ -4,9 +4,9 @@
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.department.Department
-@import kr.co.abacus.abms.department.DepartmentInsight
+@import kr.co.abacus.abms.web.department.DepartmentInsight
 @import kr.co.abacus.abms.department.DepartmentTree
-@import kr.co.abacus.abms.employee.EmployeeInsight
+@import kr.co.abacus.abms.web.employee.EmployeeInsight
 @import kr.co.abacus.abms.employee.Employee
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.summary.ProfitQueryService.MonthPoint

@@ -4,7 +4,7 @@
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.site.Site
-@import kr.co.abacus.abms.site.SiteController.SiteForm
+@import kr.co.abacus.abms.web.site.SiteController.SiteForm
 @import kr.co.abacus.abms.site.SiteType
 @param ViewContext ctx
 @param SiteForm form

@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.department;
+package kr.co.abacus.abms.web.department;
 
 import java.time.LocalDate;
 import java.util.EnumMap;
@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.employee.EmployeeJob;
 import kr.co.abacus.abms.employee.EmployeePosition;

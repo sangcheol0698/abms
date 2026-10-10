@@ -4,13 +4,13 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
-import kr.co.abacus.abms.department.DepartmentRepository;
 import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.LoginUser;
 import kr.co.abacus.abms.site.Site.SiteInfo;
@@ -23,13 +23,13 @@ import kr.co.abacus.abms.site.Site.SiteInfo;
 public class SiteService {
 
     private final SiteRepository siteRepository;
-    private final DepartmentRepository departmentRepository;
     private final AccessService accessService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public SiteService(SiteRepository siteRepository, DepartmentRepository departmentRepository, AccessService accessService) {
+    public SiteService(SiteRepository siteRepository, AccessService accessService, ApplicationEventPublisher eventPublisher) {
         this.siteRepository = siteRepository;
-        this.departmentRepository = departmentRepository;
         this.accessService = accessService;
+        this.eventPublisher = eventPublisher;
     }
 
     /** 본사 → 지사 → … 유형 순, 같은 유형은 이름 순 */
@@ -70,9 +70,7 @@ public class SiteService {
     public void delete(LoginUser user, Long id) {
         accessService.require(user, PermissionCode.DEPARTMENT_WRITE);
         Site site = get(id);
-        if (departmentRepository.existsBySiteId(id)) {
-            throw new BusinessException("부서가 연결된 사업장은 삭제할 수 없습니다. 부서의 사업장을 먼저 바꿔 주세요.");
-        }
+        eventPublisher.publishEvent(new SiteDeleting(id));
         site.softDelete(user.accountId());
     }
 

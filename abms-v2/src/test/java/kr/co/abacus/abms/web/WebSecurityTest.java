@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
 import kr.co.abacus.abms.account.AccountRepository;
-import kr.co.abacus.abms.account.AccountService;
+import kr.co.abacus.abms.admin.AccountService;
 import kr.co.abacus.abms.department.Department;
 import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.security.LoginUser;

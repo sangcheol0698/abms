@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.department;
+package kr.co.abacus.abms.web.department;
 
 import java.time.Year;
 import java.util.List;
@@ -24,6 +24,11 @@ import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Htmx;
 import kr.co.abacus.abms.common.web.Toast;
+import kr.co.abacus.abms.department.Department;
+import kr.co.abacus.abms.department.DepartmentOptions;
+import kr.co.abacus.abms.department.DepartmentService;
+import kr.co.abacus.abms.department.DepartmentTree;
+import kr.co.abacus.abms.department.DepartmentType;
 import kr.co.abacus.abms.employee.Employee;
 import kr.co.abacus.abms.employee.EmployeeService;
 import kr.co.abacus.abms.project.ProjectRepository;
@@ -152,7 +157,7 @@ public class DepartmentController {
     private void addDetail(LoginUser user, Long id, DepartmentTree tree, Model model) {
         Department department = departmentService.get(id);
         Set<Long> subtree = tree.subtreeIds(id);
-        java.util.Map<Long, List<Employee>> membersByDepartment = departmentService.membersByDepartment(subtree);
+        java.util.Map<Long, List<Employee>> membersByDepartment = employeeService.membersByDepartment(subtree);
         List<Employee> members = membersByDepartment.get(id);
         List<Employee> subtreeMembers = membersByDepartment.values().stream().flatMap(List::stream).toList();
         model.addAttribute("department", department);

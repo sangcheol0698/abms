@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.account;
+package kr.co.abacus.abms.admin;
 
 import jakarta.servlet.http.HttpServletRequest;
 

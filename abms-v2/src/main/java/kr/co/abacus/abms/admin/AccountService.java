@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.account;
+package kr.co.abacus.abms.admin;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.co.abacus.abms.access.AccountGroupAssignment;
 import kr.co.abacus.abms.access.AccountGroupAssignmentRepository;
 import kr.co.abacus.abms.access.PermissionGroup;
+import kr.co.abacus.abms.account.Account;
+import kr.co.abacus.abms.account.AccountRepository;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.employee.Employee;

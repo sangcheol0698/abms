@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.account;
+package kr.co.abacus.abms.admin;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import kr.co.abacus.abms.access.PermissionGroup;
 import kr.co.abacus.abms.access.PermissionGroupService;
+import kr.co.abacus.abms.account.Account;
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.web.FormErrors;
 import kr.co.abacus.abms.common.web.Toast;

@@ -135,7 +135,7 @@ public class AssistantTools {
         List<kr.co.abacus.abms.party.Party> parties = partyService.search(name, PageRequest.of(0, MAX_RESULTS, Sort.by("name"))).getContent();
         List<Long> ids = parties.stream().map(kr.co.abacus.abms.party.Party::id).toList();
         java.util.Map<Long, kr.co.abacus.abms.party.PartyContact> contacts = partyService.primaryContacts(ids);
-        java.util.Map<Long, Long> counts = partyService.projectCounts(ids);
+        java.util.Map<Long, Long> counts = projectService.partyProjectCounts(ids);
         return parties.stream()
                 .map(p -> {
                     kr.co.abacus.abms.party.PartyContact c = contacts.get(p.id());
@@ -190,7 +190,7 @@ public class AssistantTools {
             }
         }
         return new DepartmentItem(d.id(), d.getName(), d.getType().label(), path, leader,
-                departmentService.members(d.id()).size(), "/departments/" + d.id());
+                employeeService.members(d.id()).size(), "/departments/" + d.id());
     }
 
     private static @Nullable ProjectStatus parseStatus(@Nullable String status) {
