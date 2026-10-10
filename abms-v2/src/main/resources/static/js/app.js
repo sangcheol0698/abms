@@ -505,6 +505,11 @@
             togglePanel(toggle.dataset.togglePanel);
             return;
         }
+        const step = e.target.closest('[data-history]');
+        if (step) {
+            if (step.dataset.history === 'back') history.back(); else history.forward();
+            return;
+        }
         if (e.target.closest('[data-open-notifications]')) {
             selectRightTab('notifications');
             togglePanel('right', true);
@@ -515,6 +520,65 @@
         if (e.target.closest('[data-close-panels]')) delete root.dataset.drawer;
         // 모바일 서랍 안의 링크를 누르면 서랍을 닫는다.
         if (!desktop.matches && e.target.closest('#left-sidebar a')) delete root.dataset.drawer;
+    });
+
+    // 사이드바 너비 조절(데스크톱): 경계를 끌거나 손잡이에 초점을 두고 ←/→ 로 바꾸고, 두 번 누르면 기본 너비로 돌린다.
+    const PANEL_WIDTH = {left: {min: 200, max: 400}, right: {min: 280, max: 560}};
+    const KEY_STEP = 16;
+
+    function panelWidth(side) {
+        return document.getElementById(side + '-sidebar').getBoundingClientRect().width;
+    }
+
+    function setPanelWidth(side, width, save) {
+        const {min, max} = PANEL_WIDTH[side];
+        const next = Math.round(Math.min(max, Math.max(min, width)));
+        root.style.setProperty('--app-' + side + '-w', next + 'px');
+        if (save) store('abms-' + side + '-w', String(next));
+    }
+
+    // 왼쪽은 오른쪽으로 끌수록, 오른쪽은 왼쪽으로 끌수록 넓어진다.
+    const growDirection = (side) => (side === 'left' ? 1 : -1);
+
+    document.addEventListener('pointerdown', (e) => {
+        const handle = e.target.closest('[data-resize-panel]');
+        if (!handle || e.button !== 0) return;
+        e.preventDefault();
+        const side = handle.dataset.resizePanel;
+        const startX = e.clientX;
+        const startWidth = panelWidth(side);
+        handle.setPointerCapture(e.pointerId);
+        handle.dataset.dragging = '';
+        root.dataset.resizing = '';
+        const move = (ev) => setPanelWidth(side, startWidth + growDirection(side) * (ev.clientX - startX), false);
+        const end = () => {
+            handle.removeEventListener('pointermove', move);
+            handle.removeEventListener('pointerup', end);
+            handle.removeEventListener('pointercancel', end);
+            delete handle.dataset.dragging;
+            delete root.dataset.resizing;
+            setPanelWidth(side, panelWidth(side), true);
+        };
+        handle.addEventListener('pointermove', move);
+        handle.addEventListener('pointerup', end);
+        handle.addEventListener('pointercancel', end);
+    });
+
+    document.addEventListener('dblclick', (e) => {
+        const handle = e.target.closest('[data-resize-panel]');
+        if (!handle) return;
+        const side = handle.dataset.resizePanel;
+        root.style.removeProperty('--app-' + side + '-w');
+        try { localStorage.removeItem('abms-' + side + '-w'); } catch (err) {}
+    });
+
+    document.addEventListener('keydown', (e) => {
+        const handle = e.target.closest && e.target.closest('[data-resize-panel]');
+        if (!handle || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+        e.preventDefault();
+        const side = handle.dataset.resizePanel;
+        const delta = (e.key === 'ArrowRight' ? KEY_STEP : -KEY_STEP) * growDirection(side);
+        setPanelWidth(side, panelWidth(side) + delta, true);
     });
 
     document.addEventListener('keydown', (e) => {

@@ -736,6 +736,11 @@
         display: block;
     }
 
+    /* 사이드바 너비 조절은 데스크톱(lg+)에서만 */
+    .app-resize {
+        display: none;
+    }
+
     .app-panel {
         display: flex;
         flex: 1;
@@ -897,6 +902,67 @@
         .app-backdrop {
             display: none !important;
         }
+
+        /* 사이드바 너비 조절 손잡이: 경계선 위에 겹쳐 두어 배치 폭은 차지하지 않는다 */
+        .app-resize {
+            position: relative;
+            z-index: 5;
+            display: block;
+            flex-shrink: 0;
+            width: 8px;
+            margin: 0 -4px;
+            cursor: col-resize;
+            touch-action: none;
+            outline: none;
+        }
+
+        .app-resize::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 3px;
+            width: 2px;
+            transition: background-color 150ms;
+        }
+
+        .app-resize:hover::after,
+        .app-resize:focus-visible::after,
+        .app-resize[data-dragging]::after {
+            background-color: var(--seed-color-stroke-focus-ring);
+        }
+
+        html[data-left="closed"] [data-resize-panel="left"],
+        html[data-right="closed"] [data-resize-panel="right"] {
+            display: none;
+        }
+
+        html[data-resizing],
+        html[data-resizing] * {
+            cursor: col-resize !important;
+            user-select: none;
+        }
+    }
+
+    .app-shell-history {
+        display: none;
+    }
+
+    /* 데스크톱 앱(macOS): 창 제목 표시줄 없이 상단 바가 창 맨 위에 붙는다.
+       왼쪽에 창 버튼(닫기·최소화·확대) 자리를 비우고 그 옆에 사이드바 토글·뒤로·앞으로를 둔다. (desktop/src-tauri/src/lib.rs) */
+    html[data-shell="macos"] .app-header {
+        padding-left: 80px;
+    }
+
+    html[data-shell="macos"] .app-left-toggle {
+        order: -2;
+    }
+
+    html[data-shell="macos"] .app-shell-history {
+        display: flex;
+        gap: 2px;
+        order: -1;
+        margin-right: 4px;
     }
 }
 

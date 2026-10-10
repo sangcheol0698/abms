@@ -10,6 +10,10 @@
             var mode = localStorage.getItem('abms-theme') || 'system';
             root.dataset.left = localStorage.getItem('abms-left') || 'open';
             root.dataset.right = localStorage.getItem('abms-right') || (window.innerWidth >= 1440 ? 'open' : 'closed');
+            ['left', 'right'].forEach(function (side) {
+                var width = Number(localStorage.getItem('abms-' + side + '-w'));
+                if (width) root.style.setProperty('--app-' + side + '-w', width + 'px');
+            });
             root.dataset.seedColorMode = mode === 'light' ? 'light-only' : mode === 'dark' ? 'dark-only' : 'system';
             var query = window.matchMedia('(prefers-color-scheme: dark)');
             var apply = function () { root.dataset.seedUserColorScheme = query.matches ? 'dark' : 'light'; };
