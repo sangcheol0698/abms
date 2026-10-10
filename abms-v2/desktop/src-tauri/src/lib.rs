@@ -110,6 +110,35 @@ fn file_name_of(path: &Path) -> String {
     path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
 }
 
+/// 트랙패드에 손가락이 닿고 떨어지는 순간을 화면 스크립트(history.js)에 알린다.
+/// 웹 화면의 wheel 이벤트로는 손을 뗐는지와 관성 스크롤을 구분할 수 없어, Chrome처럼 macOS 이벤트의 phase로 판단한다.
+#[cfg(target_os = "macos")]
+fn watch_trackpad_touch(app: &AppHandle) {
+    use objc2_app_kit::{NSEvent, NSEventMask, NSEventPhase};
+    use std::ptr::NonNull;
+
+    let app = app.clone();
+    let handler = block2::RcBlock::new(move |event: NonNull<NSEvent>| -> *mut NSEvent {
+        let phase = unsafe { event.as_ref() }.phase();
+        let touch = if phase.contains(NSEventPhase::Began) {
+            Some("down")
+        } else if phase.intersects(NSEventPhase::Ended | NSEventPhase::Cancelled) {
+            Some("up")
+        } else {
+            None
+        };
+        if let Some(touch) = touch {
+            for window in app.webview_windows().values() {
+                let _ = window.eval(format!("window.__abmsTrackpad && window.__abmsTrackpad('{touch}');"));
+            }
+        }
+        event.as_ptr()
+    });
+    // 앱이 끝날 때까지 감시하므로 해제하지 않는다.
+    let monitor = unsafe { NSEvent::addLocalMonitorForEventsMatchingMask_handler(NSEventMask::ScrollWheel, &handler) };
+    std::mem::forget(monitor);
+}
+
 /// 메인 창과 새 창이 같은 규칙(서버 밖 주소는 기본 브라우저, 다운로드는 다운로드 폴더)을 따르도록 공통 설정을 붙인다.
 fn configure<'a>(
     app: &'a AppHandle,
@@ -201,6 +230,8 @@ pub fn run() {
                 .inner_size(1440.0, 900.0)
                 .min_inner_size(1024.0, 640.0);
             configure(handle, builder).build()?;
+            #[cfg(target_os = "macos")]
+            watch_trackpad_touch(handle);
             Ok(())
         })
         .run(tauri::generate_context!())

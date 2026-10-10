@@ -1,7 +1,8 @@
 // macOS WKWebView에는 브라우저의 뒤로·앞으로·새로고침 조작이 없어 모든 페이지에 붙인다.
 // - ⌘[ ⌘], 입력 중이 아닐 때 ⌘← ⌘→, 마우스 뒤로·앞으로 버튼, ⌘R
-// - 트랙패드 두 손가락 가로 스와이프: Chrome처럼 화면 가장자리에 화살표가 따라 나오고, 끝까지 밀면 바로 이동한다.
-//   손을 뗀 뒤에도 관성 스크롤이 1초 가까이 이어져 손 뗌을 기다리면 이동이 늦어지므로 끝에 닿는 순간 이동한다.
+// - 트랙패드 두 손가락 가로 스와이프: Chrome처럼 화면 가장자리에서 화살표가 따라 나오고,
+//   끝까지 밀어 파랗게 된 상태에서 손을 떼면 이동한다. 손을 떼기 전에 되돌리면 취소된다.
+//   손가락이 닿고 떨어지는 순간은 앱(lib.rs의 watch_trackpad_touch)이 window.__abmsTrackpad로 알려 준다.
 (() => {
   const editing = (target) => target instanceof HTMLElement
     && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
@@ -28,25 +29,16 @@
     event.preventDefault();
   }, true);
 
-  const THRESHOLD = 140;
+  const THRESHOLD = 80;
   const SIZE = 40;
-  const END_DELAY = 160;
+  const TRAVEL = 24;
+  // 손 뗌 신호를 받지 못했을 때(창이 포커스를 잃는 등) 화살표가 남지 않도록 이동 없이 정리한다.
+  const STALE_MS = 4000;
 
+  let touching = false;
   let pulled = 0;
-  let endTimer = 0;
-  let navigating = false;
+  let staleTimer = 0;
   let indicator = null;
-
-  // 이동한 직후 새 화면에 이어지는 관성 스크롤이 다시 스와이프로 잡히지 않게 잠시 무시한다.
-  const SETTLE_KEY = 'abms:swipe-navigated-at';
-  const SETTLE_MS = 800;
-  const settling = () => {
-    try {
-      return Date.now() - Number(sessionStorage.getItem(SETTLE_KEY) || 0) < SETTLE_MS;
-    } catch {
-      return false;
-    }
-  };
 
   const canGo = (back) => {
     const nav = window.navigation;
@@ -65,6 +57,8 @@
     return false;
   };
 
+  const armed = () => Math.abs(pulled) >= THRESHOLD;
+
   const show = () => {
     if (!indicator) {
       indicator = document.createElement('div');
@@ -75,20 +69,18 @@
         position: 'fixed', top: '50%', zIndex: '2147483647', width: `${SIZE}px`, height: `${SIZE}px`,
         marginTop: `${-SIZE / 2}px`, borderRadius: '50%', display: 'flex', alignItems: 'center',
         justifyContent: 'center', pointerEvents: 'none', boxShadow: '0 1px 4px rgba(0,0,0,.3)',
-        transition: 'background-color .15s, color .15s',
       });
     }
     const back = pulled < 0;
     const progress = Math.min(Math.abs(pulled) / THRESHOLD, 1);
-    const armed = progress >= 1;
-    const offset = -SIZE + progress * (SIZE + 24);
+    const offset = `${progress * TRAVEL}px`;
     Object.assign(indicator.style, {
-      left: back ? `${offset}px` : 'auto',
-      right: back ? 'auto' : `${offset}px`,
-      opacity: String(Math.min(progress * 1.5, 1)),
+      left: back ? offset : 'auto',
+      right: back ? 'auto' : offset,
+      opacity: String(0.4 + progress * 0.6),
       transform: back ? 'none' : 'scaleX(-1)',
-      backgroundColor: armed ? '#1a73e8' : '#fff',
-      color: armed ? '#fff' : '#5f6368',
+      backgroundColor: armed() ? '#1a73e8' : '#fff',
+      color: armed() ? '#fff' : '#5f6368',
       transition: 'background-color .15s, color .15s',
     });
     if (!indicator.isConnected) document.documentElement.appendChild(indicator);
@@ -103,43 +95,43 @@
     setTimeout(() => { if (pulled === 0) el.remove(); }, 200);
   };
 
-  const go = () => {
-    const back = pulled < 0;
-    navigating = true;
-    try { sessionStorage.setItem(SETTLE_KEY, String(Date.now())); } catch { /* 저장소를 못 써도 이동은 한다 */ }
-    back ? history.back() : history.forward();
-    setTimeout(() => { navigating = false; }, SETTLE_MS);
-    pulled = 0;
-    // 다음 화면이 뜨기 전까지 파란 화살표를 보여 준다. 같은 문서 안에서 이동했을 때를 위해 잠시 뒤 숨긴다.
-    setTimeout(hide, 250);
-  };
-
-  const cancel = () => {
+  const release = () => {
+    clearTimeout(staleTimer);
+    if (pulled === 0) return;
+    if (armed()) {
+      const back = pulled < 0;
+      back ? history.back() : history.forward();
+      pulled = 0;
+      // 다음 화면이 뜨기 전까지 파란 화살표를 보여 준다. 같은 문서 안에서 이동했을 때를 위해 잠시 뒤 숨긴다.
+      setTimeout(hide, 250);
+      return;
+    }
     pulled = 0;
     hide();
   };
 
+  window.__abmsTrackpad = (touch) => {
+    touching = touch === 'down';
+    if (!touching) release();
+  };
+
   window.addEventListener('wheel', (event) => {
-    if (navigating) {
-      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) event.preventDefault();
-      return;
-    }
-    if (event.ctrlKey || (pulled === 0 && settling())) return;
+    // 손을 뗀 뒤 이어지는 관성 스크롤은 스와이프로 세지 않는다.
+    if (!touching || event.ctrlKey) return;
     const { deltaX, deltaY } = event;
     if (pulled === 0) {
       if (Math.abs(deltaX) < 2 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.5) return;
       if (scrollsHorizontally(event.target, deltaX) || !canGo(deltaX < 0)) return;
     } else if (Math.sign(pulled + deltaX) !== Math.sign(pulled)) {
       // 반대 방향으로 되돌리면 취소한다.
-      clearTimeout(endTimer);
-      cancel();
+      pulled = 0;
+      hide();
       return;
     }
     event.preventDefault();
     pulled = Math.max(-THRESHOLD, Math.min(THRESHOLD, pulled + deltaX));
     show();
-    clearTimeout(endTimer);
-    if (Math.abs(pulled) >= THRESHOLD) go();
-    else endTimer = setTimeout(cancel, END_DELAY);
+    clearTimeout(staleTimer);
+    staleTimer = setTimeout(() => { touching = false; pulled = 0; hide(); }, STALE_MS);
   }, { passive: false, capture: true });
 })();
