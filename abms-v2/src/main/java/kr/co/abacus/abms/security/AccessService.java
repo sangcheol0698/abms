@@ -12,11 +12,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.access.PermissionScope;
-import kr.co.abacus.abms.department.DepartmentRepository;
-import kr.co.abacus.abms.department.DepartmentTree;
-import kr.co.abacus.abms.employee.Employee;
-import kr.co.abacus.abms.project.Project;
-import kr.co.abacus.abms.project.ProjectAssignmentRepository;
 
 /**
  * 권한 코드 + 범위(scope)를 실제 데이터 접근 범위로 해석한다.
@@ -27,12 +22,12 @@ public class AccessService {
 
     private static final String SCOPE_CACHE_PREFIX = AccessService.class.getName() + ".scope.";
 
-    private final DepartmentRepository departmentRepository;
-    private final ProjectAssignmentRepository assignmentRepository;
+    private final DepartmentHierarchy departmentHierarchy;
+    private final ParticipationLookup participationLookup;
 
-    public AccessService(DepartmentRepository departmentRepository, ProjectAssignmentRepository assignmentRepository) {
-        this.departmentRepository = departmentRepository;
-        this.assignmentRepository = assignmentRepository;
+    public AccessService(DepartmentHierarchy departmentHierarchy, ParticipationLookup participationLookup) {
+        this.departmentHierarchy = departmentHierarchy;
+        this.participationLookup = participationLookup;
     }
 
     /**
@@ -66,8 +61,7 @@ public class AccessService {
         Set<Long> employeeIds = new HashSet<>();
         Set<Long> projectIds = new HashSet<>();
         if (scopes.contains(PermissionScope.OWN_DEPARTMENT_TREE)) {
-            DepartmentTree tree = new DepartmentTree(departmentRepository.findAll());
-            departmentIds.addAll(tree.subtreeIds(user.departmentId()));
+            departmentIds.addAll(departmentHierarchy.subtreeIds(user.departmentId()));
         }
         if (scopes.contains(PermissionScope.OWN_DEPARTMENT)) {
             departmentIds.add(user.departmentId());
@@ -76,16 +70,16 @@ public class AccessService {
             employeeIds.add(user.employeeId());
         }
         if (scopes.contains(PermissionScope.CURRENT_PARTICIPATION) || scopes.contains(PermissionScope.SELF)) {
-            projectIds.addAll(assignmentRepository.findActiveProjectIds(user.employeeId(), LocalDate.now()));
+            projectIds.addAll(participationLookup.findActiveProjectIds(user.employeeId(), LocalDate.now()));
         }
         return new DataScope(false, Set.copyOf(departmentIds), Set.copyOf(employeeIds), Set.copyOf(projectIds));
     }
 
-    public boolean canAccessEmployee(LoginUser user, PermissionCode code, Employee employee) {
+    public boolean canAccessEmployee(LoginUser user, PermissionCode code, ScopedEmployee employee) {
         return scopeOf(user, code).coversEmployee(employee.id(), employee.getDepartmentId());
     }
 
-    public void checkEmployee(LoginUser user, PermissionCode code, Employee employee) {
+    public void checkEmployee(LoginUser user, PermissionCode code, ScopedEmployee employee) {
         if (!canAccessEmployee(user, code, employee)) {
             throw new AccessDeniedException("해당 직원에 대한 권한이 없습니다.");
         }
@@ -97,11 +91,11 @@ public class AccessService {
         }
     }
 
-    public boolean canAccessProject(LoginUser user, PermissionCode code, Project project) {
+    public boolean canAccessProject(LoginUser user, PermissionCode code, ScopedProject project) {
         return scopeOf(user, code).coversProject(project.id(), project.getLeadDepartmentId());
     }
 
-    public void checkProject(LoginUser user, PermissionCode code, Project project) {
+    public void checkProject(LoginUser user, PermissionCode code, ScopedProject project) {
         if (!canAccessProject(user, code, project)) {
             throw new AccessDeniedException("해당 프로젝트에 대한 권한이 없습니다.");
         }

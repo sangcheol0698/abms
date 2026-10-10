@@ -1,11 +1,15 @@
 package kr.co.abacus.abms.account;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AccountRepository extends JpaRepository<Account, Long> {
+import kr.co.abacus.abms.common.audit.AuditNameResolver;
+
+public interface AccountRepository extends JpaRepository<Account, Long>, AuditNameResolver {
 
     Optional<Account> findByUsername(String username);
 
@@ -16,5 +20,15 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     boolean existsByUsername(String username);
 
     List<Account> findAllByOrderByUsernameAsc();
+
+    @Override
+    default String auditKind() {
+        return "Account";
+    }
+
+    @Override
+    default Map<Long, String> auditNames(Collection<Long> ids) {
+        return AuditNameResolver.byId(findAllById(ids), Account::id, Account::getUsername);
+    }
 
 }

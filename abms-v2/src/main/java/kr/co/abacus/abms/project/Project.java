@@ -24,6 +24,7 @@ import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.Location;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.Period;
+import kr.co.abacus.abms.security.ScopedProject;
 
 /**
  * 프로젝트 Aggregate Root. 손익은 주관 부서({@link #leadDepartmentId})에 귀속된다.
@@ -31,7 +32,7 @@ import kr.co.abacus.abms.common.domain.Period;
 @Entity
 @Table(name = "tb_project")
 @SQLRestriction("deleted = false")
-public class Project extends BaseEntity implements Auditable {
+public class Project extends BaseEntity implements Auditable, ScopedProject {
 
     @Column(nullable = false)
     private Long partyId;

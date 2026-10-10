@@ -1,7 +1,7 @@
 @import java.util.List
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.Ui
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.dashboard.DashboardService.Dashboard
 @import kr.co.abacus.abms.dashboard.DashboardService.UpcomingRevenue
 @import kr.co.abacus.abms.project.ProjectStatus

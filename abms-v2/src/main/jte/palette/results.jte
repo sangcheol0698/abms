@@ -7,6 +7,7 @@
 @import kr.co.abacus.abms.palette.CommandPaletteController.Command
 @import kr.co.abacus.abms.party.Party
 @import kr.co.abacus.abms.project.Project
+@import kr.co.abacus.abms.web.Badges
 @param String q
 @param List<Command> commands
 @param List<Employee> employees
@@ -36,7 +37,7 @@
             ${Icons.of("folder", "size-4 text-fg-neutral-subtle")}
             <span class="truncate">${p.getName()}</span>
             <span class="t3-regular text-fg-neutral-subtle">${p.getCode()}</span>
-            <span class="ml-auto ${Ui.badge(p.getStatus())}">${p.getStatus().label()}</span>
+            <span class="ml-auto ${Badges.of(p.getStatus())}">${p.getStatus().label()}</span>
         </a>
     @endfor
 @endif

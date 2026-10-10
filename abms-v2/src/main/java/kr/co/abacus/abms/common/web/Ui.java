@@ -12,10 +12,6 @@ import org.jspecify.annotations.Nullable;
 
 import kr.co.abacus.abms.common.domain.Labeled;
 import kr.co.abacus.abms.common.domain.Money;
-import kr.co.abacus.abms.employee.EmployeeStatus;
-import kr.co.abacus.abms.employee.EmployeeType;
-import kr.co.abacus.abms.notification.NotificationType;
-import kr.co.abacus.abms.project.ProjectStatus;
 
 /**
  * JTE 템플릿에서 쓰는 표시 형식/스타일 도우미.
@@ -100,42 +96,6 @@ public final class Ui {
                     : "잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의하세요.";
         }
         return message;
-    }
-
-    public static String badge(EmployeeStatus status) {
-        return switch (status) {
-            case ACTIVE -> Seed.badge("positive");
-            case ON_LEAVE -> Seed.badge("warning");
-            case RESIGNED -> Seed.badge("neutral");
-        };
-    }
-
-    public static String badge(EmployeeType type) {
-        return switch (type) {
-            case FULL_TIME -> Seed.badge("informative");
-            case FREELANCER -> Seed.badge("neutral", "outline");
-            case OUTSOURCING -> Seed.badge("neutral", "outline");
-            case PART_TIME -> Seed.badge("neutral");
-        };
-    }
-
-    public static String badge(ProjectStatus status) {
-        return switch (status) {
-            case SCHEDULED -> Seed.badge("neutral", "outline");
-            case IN_PROGRESS -> Seed.badge("informative");
-            case COMPLETED -> Seed.badge("positive");
-            case ON_HOLD -> Seed.badge("warning");
-            case CANCELLED -> Seed.badge("neutral");
-        };
-    }
-
-    public static String badge(NotificationType type) {
-        return switch (type) {
-            case INFO -> "bg-bg-informative-solid";
-            case SUCCESS -> "bg-bg-positive-solid";
-            case WARNING -> "bg-bg-warning-solid";
-            case ERROR -> "bg-bg-critical-solid";
-        };
     }
 
     public static <E extends Enum<E> & Labeled> List<SelectOption> options(E[] values) {

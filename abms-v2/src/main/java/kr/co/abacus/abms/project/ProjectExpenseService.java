@@ -5,10 +5,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.co.abacus.abms.common.domain.ClosedMonthGuard;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.project.ProjectExpense.ExpenseInfo;
 import kr.co.abacus.abms.security.LoginUser;
-import kr.co.abacus.abms.summary.ClosedMonthGuard;
 
 /**
  * 프로젝트 직접비 관리. 직접비는 등록 즉시 귀속일이 속한 월의 비용이 되므로, 마감된 월에는 등록·수정·삭제할 수 없다.

@@ -4,6 +4,7 @@
 @import kr.co.abacus.abms.employee.Employee
 @import kr.co.abacus.abms.employee.EmployeeSearchForm
 @import kr.co.abacus.abms.common.web.Seed
+@import kr.co.abacus.abms.web.Badges
 @param PageView<Employee> page
 @param DepartmentTree tree
 @param EmployeeSearchForm search
@@ -21,12 +22,12 @@
             <span class="list-cell-muted hidden w-40 @2xl:block">${tree.nameOf(e.getDepartmentId())}</span>
             <span class="list-cell-muted hidden w-28 @4xl:block">${e.getJob() == null ? "-" : e.getJob().label()}</span>
             <span class="list-cell-muted hidden w-24 @3xl:block">${e.getPosition().label()} · ${e.getGrade().label()}</span>
-            <span class="hidden w-20 @3xl:block"><span class="${Ui.badge(e.getType())}">${e.getType().label()}</span></span>
+            <span class="hidden w-20 @3xl:block"><span class="${Badges.of(e.getType())}">${e.getType().label()}</span></span>
             <span class="w-16 shrink-0">
                 @if(e.isDeleted())
                     <span class="${Seed.badge("critical")}">삭제됨</span>
                 @else
-                    <span class="${Ui.badge(e.getStatus())}">${e.getStatus().label()}</span>
+                    <span class="${Badges.of(e.getStatus())}">${e.getStatus().label()}</span>
                 @endif
             </span>
             <span class="list-cell-muted hidden w-24 text-right tabular-nums @5xl:block">${Ui.date(e.getJoinDate())}</span>

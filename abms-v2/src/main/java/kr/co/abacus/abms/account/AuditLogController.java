@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.common.audit;
+package kr.co.abacus.abms.account;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.common.audit.AuditQueryService;
 import kr.co.abacus.abms.common.web.Htmx;
 import kr.co.abacus.abms.common.web.PageView;
 import kr.co.abacus.abms.security.LoginUser;

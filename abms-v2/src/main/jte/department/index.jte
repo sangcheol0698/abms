@@ -1,7 +1,7 @@
 @import java.util.List
 @import kr.co.abacus.abms.access.PermissionCode
 @import kr.co.abacus.abms.common.web.Icons
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.department.Department
 @import kr.co.abacus.abms.department.DepartmentTree
 @import kr.co.abacus.abms.employee.Employee

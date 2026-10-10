@@ -1,9 +1,10 @@
-package kr.co.abacus.abms.common.web;
+package kr.co.abacus.abms.web;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.web.csrf.CsrfToken;
 
 import kr.co.abacus.abms.access.PermissionCode;
+import kr.co.abacus.abms.common.web.Toast;
 import kr.co.abacus.abms.security.LoginUser;
 
 /**

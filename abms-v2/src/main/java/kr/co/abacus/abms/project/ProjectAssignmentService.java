@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.domain.ClosedMonthGuard;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.common.domain.Period;
 import kr.co.abacus.abms.employee.Employee;
@@ -16,7 +17,6 @@ import kr.co.abacus.abms.employee.EmployeeRepository;
 import kr.co.abacus.abms.notification.NotificationService;
 import kr.co.abacus.abms.notification.NotificationType;
 import kr.co.abacus.abms.security.LoginUser;
-import kr.co.abacus.abms.summary.ClosedMonthGuard;
 
 /**
  * 프로젝트 투입 인력 관리.

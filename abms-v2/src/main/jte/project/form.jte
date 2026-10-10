@@ -3,7 +3,7 @@
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.Ui
 @import kr.co.abacus.abms.common.web.Ui.SelectOption
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.project.ProjectForm
 @import kr.co.abacus.abms.project.ProjectStatus

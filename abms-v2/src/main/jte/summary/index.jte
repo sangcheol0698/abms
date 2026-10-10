@@ -1,6 +1,6 @@
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.Ui
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.summary.CalculationResult
 @import kr.co.abacus.abms.summary.MonthReport
 @import kr.co.abacus.abms.summary.ProfitRow

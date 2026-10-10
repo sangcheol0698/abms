@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.common.web;
+package kr.co.abacus.abms.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,6 +14,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import kr.co.abacus.abms.common.domain.BusinessException;
 import kr.co.abacus.abms.common.domain.NotFoundException;
+import kr.co.abacus.abms.common.web.Htmx;
 
 /**
  * 컨트롤러 예외를 화면 응답으로 변환한다.

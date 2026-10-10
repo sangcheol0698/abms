@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.access.PermissionCode;
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.domain.ClosedMonthGuard;
 import kr.co.abacus.abms.common.domain.Money;
 import kr.co.abacus.abms.common.domain.NotFoundException;
 import kr.co.abacus.abms.department.DepartmentRepository;
@@ -23,7 +24,6 @@ import kr.co.abacus.abms.project.ProjectAssignmentRepository;
 import kr.co.abacus.abms.security.AccessService;
 import kr.co.abacus.abms.security.DataScope;
 import kr.co.abacus.abms.security.LoginUser;
-import kr.co.abacus.abms.summary.ClosedMonthGuard;
 
 /**
  * 직원 관리 유스케이스.

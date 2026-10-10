@@ -4,7 +4,7 @@
 @import kr.co.abacus.abms.common.web.PageView
 @import kr.co.abacus.abms.common.web.Seed
 @import kr.co.abacus.abms.common.web.Ui
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.notice.Notice
 @import kr.co.abacus.abms.notice.NoticeImportance
 @import kr.co.abacus.abms.notice.NoticeSearch

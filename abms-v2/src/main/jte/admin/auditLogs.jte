@@ -1,7 +1,7 @@
 @import java.util.Map
 @import kr.co.abacus.abms.common.audit.AuditEntry
 @import kr.co.abacus.abms.common.web.PageView
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @param ViewContext ctx
 @param PageView<AuditEntry> page
 @param Map<String, String> types

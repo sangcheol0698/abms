@@ -2,7 +2,7 @@
 @import kr.co.abacus.abms.common.domain.Money
 @import kr.co.abacus.abms.common.web.Icons
 @import kr.co.abacus.abms.common.web.Ui
-@import kr.co.abacus.abms.common.web.ViewContext
+@import kr.co.abacus.abms.web.ViewContext
 @import kr.co.abacus.abms.department.Department
 @import kr.co.abacus.abms.department.DepartmentInsight
 @import kr.co.abacus.abms.department.DepartmentTree
@@ -11,6 +11,7 @@
 @import kr.co.abacus.abms.project.Project
 @import kr.co.abacus.abms.summary.ProfitQueryService.MonthPoint
 @import kr.co.abacus.abms.common.web.Seed
+@import kr.co.abacus.abms.web.Badges
 @param ViewContext ctx
 @param Department department
 @param DepartmentTree tree
@@ -142,7 +143,7 @@
                             @template.components.avatar(photoUrl = e.photoUrl(), name = e.getName(), size = "size-6")
                             <span class="min-w-0 flex-1 truncate t4-medium">${e.getName()}</span>
                             <span class="list-cell-muted hidden w-28 @xl:block">${e.getPosition().label()} · ${e.getGrade().label()}</span>
-                            <span class="w-14 shrink-0"><span class="${Ui.badge(e.getStatus())}">${e.getStatus().label()}</span></span>
+                            <span class="w-14 shrink-0"><span class="${Badges.of(e.getStatus())}">${e.getStatus().label()}</span></span>
                         </a>
                     @endfor
                 </div>

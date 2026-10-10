@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssignment, Long> {
+import kr.co.abacus.abms.security.ParticipationLookup;
+
+public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssignment, Long>, ParticipationLookup {
 
     List<ProjectAssignment> findAllByProjectIdOrderByPeriodStartDateAsc(Long projectId);
 
@@ -45,6 +47,7 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
             where a.employeeId = :employeeId
               and a.period.startDate <= :date and (a.period.endDate is null or a.period.endDate >= :date)
             """)
+    @Override
     List<Long> findActiveProjectIds(Long employeeId, LocalDate date);
 
 }

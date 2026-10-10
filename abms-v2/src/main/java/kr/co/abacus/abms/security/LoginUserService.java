@@ -23,25 +23,24 @@ import kr.co.abacus.abms.access.PermissionRepository;
 import kr.co.abacus.abms.access.PermissionScope;
 import kr.co.abacus.abms.account.Account;
 import kr.co.abacus.abms.account.AccountRepository;
-import kr.co.abacus.abms.employee.Employee;
-import kr.co.abacus.abms.employee.EmployeeRepository;
+import kr.co.abacus.abms.security.LoginProfileLookup.LoginProfile;
 
 @Service
 @Transactional(readOnly = true)
 public class LoginUserService implements UserDetailsService {
 
     private final AccountRepository accountRepository;
-    private final EmployeeRepository employeeRepository;
+    private final LoginProfileLookup loginProfileLookup;
     private final AccountGroupAssignmentRepository assignmentRepository;
     private final GroupPermissionGrantRepository grantRepository;
     private final PermissionRepository permissionRepository;
 
-    public LoginUserService(AccountRepository accountRepository, EmployeeRepository employeeRepository,
+    public LoginUserService(AccountRepository accountRepository, LoginProfileLookup loginProfileLookup,
                             AccountGroupAssignmentRepository assignmentRepository,
                             GroupPermissionGrantRepository grantRepository,
                             PermissionRepository permissionRepository) {
         this.accountRepository = accountRepository;
-        this.employeeRepository = employeeRepository;
+        this.loginProfileLookup = loginProfileLookup;
         this.assignmentRepository = assignmentRepository;
         this.grantRepository = grantRepository;
         this.permissionRepository = permissionRepository;
@@ -51,17 +50,17 @@ public class LoginUserService implements UserDetailsService {
     public LoginUser loadUserByUsername(String username) {
         Account account = accountRepository.findByUsername(username.trim().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("계정을 찾을 수 없습니다."));
-        Employee employee = employeeRepository.findByIdAndDeletedFalse(account.getEmployeeId())
+        LoginProfile profile = loginProfileLookup.findLoginProfile(account.getEmployeeId())
                 .orElseThrow(() -> new UsernameNotFoundException("직원 정보를 찾을 수 없습니다."));
 
-        boolean enabled = account.isEnabled() && !employee.isResigned();
+        boolean enabled = account.isEnabled() && !profile.resigned();
         return new LoginUser(
                 account.id(),
-                employee.id(),
-                employee.getDepartmentId(),
+                profile.employeeId(),
+                profile.departmentId(),
                 account.getUsername(),
-                employee.getName(),
-                employee.photoUrl(),
+                profile.name(),
+                profile.photoUrl(),
                 account.getPassword(),
                 enabled,
                 account.isLocked(),

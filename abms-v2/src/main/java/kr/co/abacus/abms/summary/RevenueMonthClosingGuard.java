@@ -8,29 +8,24 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.abacus.abms.common.domain.BusinessException;
+import kr.co.abacus.abms.common.domain.ClosedMonthGuard;
 
 /**
- * 마감된 월의 손익에 영향을 주는 원천 데이터 변경을 막는다.
- * 마감 월 집계는 다시 계산되지 않으므로, 원천 데이터가 바뀌면 집계와 어긋나기 때문이다.
+ * 월 마감 기록({@link RevenueMonthClosing})으로 {@link ClosedMonthGuard} 를 구현한다.
  */
 @Component
 @Transactional(readOnly = true)
-public class ClosedMonthGuard {
+public class RevenueMonthClosingGuard implements ClosedMonthGuard {
 
     private static final LocalDate FAR_FUTURE = LocalDate.of(9999, 12, 1);
 
     private final RevenueMonthClosingRepository closingRepository;
 
-    public ClosedMonthGuard(RevenueMonthClosingRepository closingRepository) {
+    public RevenueMonthClosingGuard(RevenueMonthClosingRepository closingRepository) {
         this.closingRepository = closingRepository;
     }
 
-    /** 해당 날짜가 속한 월이 마감되었으면 막는다. */
-    public void checkOpen(LocalDate date, String subject) {
-        checkOpen(date, date, subject);
-    }
-
-    /** from ~ to(없으면 무기한) 사이에 마감된 월이 있으면 막는다. */
+    @Override
     public void checkOpen(LocalDate from, @Nullable LocalDate to, String subject) {
         LocalDate fromMonth = from.withDayOfMonth(1);
         LocalDate toMonth = to == null ? FAR_FUTURE : to.withDayOfMonth(1);

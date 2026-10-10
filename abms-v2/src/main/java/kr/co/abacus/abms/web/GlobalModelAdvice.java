@@ -1,4 +1,4 @@
-package kr.co.abacus.abms.common.web;
+package kr.co.abacus.abms.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import kr.co.abacus.abms.assistant.AssistantProperties;
+import kr.co.abacus.abms.common.web.Htmx;
+import kr.co.abacus.abms.common.web.MapProperties;
+import kr.co.abacus.abms.common.web.Toast;
 import kr.co.abacus.abms.notice.NoticeController;
 import kr.co.abacus.abms.notice.NoticeService;
 import kr.co.abacus.abms.notification.NotificationService;
